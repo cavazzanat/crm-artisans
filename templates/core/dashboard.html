@@ -290,7 +290,7 @@
             <a href="#">Clients</a>
         </nav>
         <div class="user-info">
-            Connecté : {{ user.username }} | <a href="{% url 'logout' %}" style="color: white;">Déconnexion</a>
+            Connecté : {{ user.username }} | <a href="{% url 'logout' %}" style="color: #333;">Déconnexion</a>
         </div>
     </header>
 
@@ -327,11 +327,7 @@
         <div class="section">
             <div class="section-header">
                 <h2 class="section-title">Prochaines opérations</h2>
-                <div class="actions-rapides">
-                    <a href="#" class="btn btn-primary">Nouvelle opération</a>
-                    <a href="#" class="btn btn-secondary">Nouveau client</a>
-                    <a href="#" class="btn btn-secondary">Voir plus</a>
-                </div>
+                <a href="#" class="btn btn-secondary">Voir plus</a>
             </div>
 
             {% if prochaines_operations %}
@@ -372,9 +368,20 @@
             {% else %}
                 <div class="empty-state">
                     <p>Aucune opération planifiée pour le moment.</p>
-                    <p><a href="#" class="btn btn-primary" style="margin-top: 1rem;">Créer votre première opération</a></p>
                 </div>
             {% endif %}
+        </div>
+
+        <!-- Actions rapides -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Actions rapides</h2>
+            </div>
+            <div class="actions-rapides">
+                <a href="#" class="btn btn-primary">Nouvelle opération</a>
+                <a href="#" class="btn btn-secondary">Nouveau client</a>
+                <a href="#" class="btn btn-secondary">Exporter rapport</a>
+            </div>
         </div>
     </div>
 </body>
