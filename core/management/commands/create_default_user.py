@@ -1,24 +1,3 @@
-# Créer la structure de dossiers :
-# core/
-# ├── management/
-# │   ├── __init__.py
-# │   └── commands/
-# │       ├── __init__.py
-# │       └── create_default_user.py
-
-# ================================
-# core/management/__init__.py (fichier vide)
-# ================================
-
-
-# ================================
-# core/management/commands/__init__.py (fichier vide)
-# ================================
-
-
-# ================================
-# core/management/commands/create_default_user.py
-# ================================
 from django.core.management.base import BaseCommand
 from django.contrib.auth.models import User
 
@@ -37,15 +16,3 @@ class Command(BaseCommand):
             )
         else:
             self.stdout.write('Superutilisateur existe déjà')
-
-# ================================
-# Modifier build.sh (ajouter à la fin)
-# ================================
-#!/usr/bin/env bash
-set -o errexit
-
-pip install -r requirements.txt
-
-python manage.py collectstatic --no-input
-python manage.py migrate
-python manage.py create_default_user
