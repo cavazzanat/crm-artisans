@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - CRM Artisans</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-menu a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        
+        .nav-menu a:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .user-info {
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .kpi-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .kpi-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+        
+        .kpi-card h3 {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .kpi-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .kpi-card.ca {
+            border-left-color: #27ae60;
+        }
+        
+        .kpi-card.clients {
+            border-left-color: #3498db;
+        }
+        
+        .kpi-card.devis {
+            border-left-color: #f39c12;
+        }
+        
+        .kpi-card.planifier {
+            border-left-color: #e74c3c;
+        }
+        
+        .kpi-card.paiement {
+            border-left-color: #9b59b6;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f1f3f4;
+        }
+        
+        .section-title {
+            font-size: 1.3rem;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .actions-rapides {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.6rem 1.2rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #dee2e6;
+        }
+        
+        .btn-secondary:hover {
+            background: #e9ecef;
+        }
+        
+        .operations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .operations-table th,
+        .operations-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .operations-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .operations-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .operation-id {
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .client-name {
+            font-weight: 500;
+        }
+        
+        .date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .status-planifie {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .btn-view {
+            padding: 0.4rem 0.8rem;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+        }
+        
+        .btn-view:hover {
+            background: #5a6fd8;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-menu {
+                justify-content: center;
+            }
+            
+            .container {
+                padding: 0 0.5rem;
+            }
+            
+            .kpi-section {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions-rapides {
+                justify-content: center;
+            }
+            
+            .operations-table {
+                font-size: 0.9rem;
+            }
+            
+            .operations-table th,
+            .operations-table td {
+                padding: 0.8rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🔧 CRM Artisans</h1>
+        <nav class="nav-menu">
+            <a href="{% url 'dashboard' %}">Accueil</a>
+            <a href="#">Opérations</a>
+            <a href="#">Clients</a>
+        </nav>
+        <div class="user-info">
+            Connecté : {{ user.username }} | <a href="{% url 'logout' %}" style="color: white;">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Section KPI -->
+        <div class="kpi-section">
+            <div class="kpi-card ca">
+                <h3>CA du mois</h3>
+                <div class="kpi-value">{{ ca_mois|floatformat:0 }} €</div>
+            </div>
+            
+            <div class="kpi-card clients">
+                <h3>Nombre de clients</h3>
+                <div class="kpi-value">{{ nb_clients }}</div>
+            </div>
+            
+            <div class="kpi-card devis">
+                <h3>En attente devis</h3>
+                <div class="kpi-value">{{ nb_en_attente_devis }}</div>
+            </div>
+            
+            <div class="kpi-card planifier">
+                <h3>À planifier</h3>
+                <div class="kpi-value">{{ nb_a_planifier }}</div>
+            </div>
+            
+            <div class="kpi-card paiement">
+                <h3>Attente paiement</h3>
+                <div class="kpi-value">{{ nb_realise }}</div>
+            </div>
+        </div>
+
+        <!-- Prochaines opérations -->
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Prochaines opérations</h2>
+                <div class="actions-rapides">
+                    <a href="#" class="btn btn-primary">Nouvelle opération</a>
+                    <a href="#" class="btn btn-secondary">Nouveau client</a>
+                    <a href="#" class="btn btn-secondary">Voir plus</a>
+                </div>
+            </div>
+
+            {% if prochaines_operations %}
+                <table class="operations-table">
+                    <thead>
+                        <tr>
+                            <th>Id Client</th>
+                            <th>Date planifié</th>
+                            <th>Client</th>
+                            <th>Opération</th>
+                            <th>Adresse</th>
+                            <th>Téléphone</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for operation in prochaines_operations %}
+                        <tr>
+                            <td class="operation-id">{{ operation.client.id_client }}</td>
+                            <td class="date">
+                                {% if operation.date_prevue %}
+                                    {{ operation.date_prevue|date:"d/m : H\hi" }}
+                                {% else %}
+                                    Non planifié
+                                {% endif %}
+                            </td>
+                            <td class="client-name">{{ operation.client.nom }} {{ operation.client.prenom }}</td>
+                            <td>{{ operation.type_prestation|truncatechars:30 }}</td>
+                            <td>{{ operation.adresse_intervention|truncatechars:25 }}</td>
+                            <td>{{ operation.client.telephone }}</td>
+                            <td>
+                                <a href="#" class="btn-view">Voir</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="empty-state">
+                    <p>Aucune opération planifiée pour le moment.</p>
+                    <p><a href="#" class="btn btn-primary" style="margin-top: 1rem;">Créer votre première opération</a></p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
