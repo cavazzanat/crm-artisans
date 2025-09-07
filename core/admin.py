@@ -14,15 +14,11 @@ class InterventionInline(admin.TabularInline):
 
 @admin.register(Operation)
 class OperationAdmin(admin.ModelAdmin):
-    list_display = ['id_operation', 'client', 'type_prestation', 'statut', 'date_prevue', 'montant_total']
+    list_display = ['id_operation', 'client', 'type_prestation', 'statut', 'date_prevue']
     list_filter = ['statut', 'date_creation']
     search_fields = ['id_operation', 'client__nom', 'type_prestation']
     readonly_fields = ['id_operation', 'date_creation', 'date_modification']
     inlines = [InterventionInline]
-    
-    def montant_total(self, obj):
-        return f"{obj.montant_total}€"
-    montant_total.short_description = "Montant total"
 
 @admin.register(HistoriqueOperation)
 class HistoriqueOperationAdmin(admin.ModelAdmin):
