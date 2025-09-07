@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Opérations - CRM Artisans</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #ffffff;
+            color: #333;
+        }
+        
+        .header {
+            background: #ffffff;
+            color: #333;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-menu a {
+            color: #333;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+        
+        .nav-menu a:hover {
+            background: #f8f9fa;
+        }
+        
+        .nav-menu a.active {
+            background: #333;
+            color: white;
+        }
+        
+        .user-info {
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+            color: #333;
+        }
+        
+        .btn-clear {
+            padding: 0.6rem 1.2rem;
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: background 0.3s;
+        }
+        
+        .btn-clear:hover {
+            background: #e9ecef;
+        }
+        
+        .filters-section {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        .filters-title {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #333;
+            font-weight: 600;
+        }
+        
+        .filters-quick {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 0.6rem 1.2rem;
+            border: 1px solid #e1e5e9;
+            background: white;
+            color: #333;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn:hover {
+            background: #f8f9fa;
+        }
+        
+        .filter-btn.active {
+            background: #333;
+            color: white;
+            border-color: #333;
+        }
+        
+        .filters-advanced {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .form-control {
+            padding: 0.6rem;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #333;
+        }
+        
+        .operations-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .operations-table th,
+        .operations-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #f1f3f4;
+        }
+        
+        .operations-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .operations-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .operation-id {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .client-name {
+            font-weight: 500;
+        }
+        
+        .date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #e1e5e9;
+            background: #f8f9fa;
+            color: #666;
+        }
+        
+        .documents {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .doc-btn {
+            padding: 0.3rem 0.6rem;
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #666;
+            font-size: 0.8rem;
+        }
+        
+        .doc-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .btn-view {
+            padding: 0.4rem 0.8rem;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+        }
+        
+        .btn-view:hover {
+            background: #555;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 3rem;
+            font-style: italic;
+        }
+        
+        .total-count {
+            margin-bottom: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 1rem;
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-menu {
+                justify-content: center;
+            }
+            
+            .container {
+                padding: 0 0.5rem;
+            }
+            
+            .page-header {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: stretch;
+            }
+            
+            .filters-quick {
+                justify-content: center;
+            }
+            
+            .filters-advanced {
+                grid-template-columns: 1fr;
+            }
+            
+            .operations-table {
+                font-size: 0.9rem;
+            }
+            
+            .operations-table th,
+            .operations-table td {
+                padding: 0.8rem 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>CRM Artisans</h1>
+        <nav class="nav-menu">
+            <a href="{% url 'dashboard' %}">Accueil</a>
+            <a href="{% url 'operations' %}" class="active">Opérations</a>
+            <a href="#">Clients</a>
+        </nav>
+        <div class="user-info">
+            Connecté : {{ user.username }} | <a href="{% url 'logout' %}" style="color: #333;">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Header de page -->
+        <div class="page-header">
+            <h1 class="page-title">{{ titre_filtre }}</h1>
+            {% if statut_filtre or ville_filtre or search %}
+                <a href="{% url 'operations' %}" class="btn-clear">Tout défilter</a>
+            {% endif %}
+        </div>
+
+        <!-- Section des filtres -->
+        <div class="filters-section">
+            <h3 class="filters-title">Filtres rapides</h3>
+            
+            <div class="filters-quick">
+                <a href="?statut=en_attente_devis" class="filter-btn {% if statut_filtre == 'en_attente_devis' %}active{% endif %}">
+                    En attente devis
+                </a>
+                <a href="?statut=a_planifier" class="filter-btn {% if statut_filtre == 'a_planifier' %}active{% endif %}">
+                    À planifier
+                </a>
+                <a href="?statut=realise" class="filter-btn {% if statut_filtre == 'realise' %}active{% endif %}">
+                    Attente paiement
+                </a>
+            </div>
+
+            <form method="GET" class="filters-advanced">
+                <div class="form-group">
+                    <label for="tri">Tri par date</label>
+                    <select name="tri" id="tri" class="form-control">
+                        <option value="date_prevue" {% if tri == 'date_prevue' %}selected{% endif %}>Date prochaine ↑</option>
+                        <option value="date_prevue_desc" {% if tri == 'date_prevue_desc' %}selected{% endif %}>Date prochaine ↓</option>
+                        <option value="date_creation" {% if tri == 'date_creation' %}selected{% endif %}>Plus récentes</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="ville">Ville</label>
+                    <select name="ville" id="ville" class="form-control">
+                        <option value="">Toutes les villes</option>
+                        {% for ville in villes %}
+                            <option value="{{ ville }}" {% if ville_filtre == ville %}selected{% endif %}>{{ ville }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="search">Recherche</label>
+                    <input type="text" name="search" id="search" value="{{ search|default:'' }}" 
+                           placeholder="Nom, ville, téléphone..." class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-view" style="background: #333; border: none; padding: 0.6rem 1.2rem;">
+                        Filtrer
+                    </button>
+                </div>
+                
+                <!-- Conserver les autres filtres -->
+                {% if statut_filtre %}
+                    <input type="hidden" name="statut" value="{{ statut_filtre }}">
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Tableau des opérations -->
+        {% if operations %}
+            <div class="total-count">
+                {{ operations|length }} opération{{ operations|length|pluralize }} trouvée{{ operations|length|pluralize }}
+            </div>
+            
+            <table class="operations-table">
+                <thead>
+                    <tr>
+                        <th>Id Client</th>
+                        <th>Date</th>
+                        <th>Opération</th>
+                        <th>Montant</th>
+                        <th>Statut</th>
+                        <th>Documents</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for operation in operations %}
+                    <tr>
+                        <td class="operation-id">{{ operation.client.id_client }}</td>
+                        <td class="date">
+                            {% if operation.date_prevue %}
+                                {{ operation.date_prevue|date:"d/m/Y H:i" }}
+                            {% else %}
+                                {{ operation.date_creation|date:"d/m/Y" }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="client-name">{{ operation.client.nom }} {{ operation.client.prenom }}</div>
+                            <div style="color: #666; font-size: 0.9rem;">{{ operation.type_prestation|truncatechars:40 }}</div>
+                        </td>
+                        <td>
+                            {% if operation.montant_total %}
+                                {{ operation.montant_total }}€
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="status-badge">{{ operation.get_statut_display }}</span>
+                        </td>
+                        <td>
+                            <div class="documents">
+                                <a href="#" class="doc-btn">📄</a>
+                                {% if operation.peut_generer_facture %}
+                                    <a href="#" class="doc-btn">🧾</a>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td>
+                            <a href="#" class="btn-view">Voir</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="empty-state">
+                <p>Aucune opération trouvée avec ces critères.</p>
+                <p><a href="{% url 'operations' %}" style="color: #333;">Voir toutes les opérations</a></p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Recherche instantanée
+        document.getElementById('search').addEventListener('input', function(e) {
+            clearTimeout(this.searchTimeout);
+            this.searchTimeout = setTimeout(() => {
+                const form = e.target.closest('form');
+                const formData = new FormData(form);
+                const params = new URLSearchParams(formData);
+                window.location.search = params.toString();
+            }, 500);
+        });
+        
+        // Auto-submit sur changement de select
+        document.getElementById('tri').addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+        
+        document.getElementById('ville').addEventListener('change', function() {
+            this.closest('form').submit();
+        });
+    </script>
+</body>
+</html>

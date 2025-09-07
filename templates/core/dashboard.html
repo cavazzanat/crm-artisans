@@ -295,6 +295,11 @@
     </header>
 
     <div class="container">
+        <!-- Header de page -->
+        <div class="page-header">
+            <h1 class="page-title">Tableau de bord</h1>
+        </div>
+
         <!-- Section KPI -->
         <div class="kpi-section">
             <div class="kpi-card ca">
@@ -327,7 +332,7 @@
         <div class="section">
             <div class="section-header">
                 <h2 class="section-title">Prochaines opérations</h2>
-                <a href="#" class="btn btn-secondary">Voir plus</a>
+                <a href="{% url 'operations' %}?statut=planifie" class="btn btn-secondary">Voir plus</a>
             </div>
 
             {% if prochaines_operations %}
