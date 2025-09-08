@@ -398,37 +398,59 @@ def operation_duplicate(request, operation_id):
 
 @login_required
 def clients_list(request):
-    """Page de gestion des clients avec recherche"""
-    
-    # Récupérer tous les clients de l'utilisateur
-    clients = Client.objects.filter(user=request.user)
-    
-    # Recherche
-    recherche = request.GET.get('recherche', '')
-    
-    if recherche:
-        clients = clients.filter(
-            Q(nom__icontains=recherche) |
-            Q(prenom__icontains=recherche) |
-            Q(email__icontains=recherche) |
-            Q(telephone__icontains=recherche) |
-            Q(ville__icontains=recherche) |
-            Q(adresse__icontains=recherche)
-        )
-    
-    # Tri par nom par défaut
-    clients = clients.order_by('nom', 'prenom')
-    
-    # Statistiques
-    total_clients = clients.count()
-    
-    context = {
-        'clients': clients,
-        'total_clients': total_clients,
-        'recherche': recherche,
-    }
-    
-    return render(request, 'clients/list.html', context)
+    """Page de gestion des clients avec recherche et opérations"""
+    try:
+        # Récupérer tous les clients de l'utilisateur avec prefetch des opérations
+        clients = Client.objects.filter(user=request.user).prefetch_related('operations')
+        
+        # Recherche
+        recherche = request.GET.get('recherche', '')
+        
+        if recherche:
+            clients = clients.filter(
+                Q(nom__icontains=recherche) |
+                Q(prenom__icontains=recherche) |
+                Q(email__icontains=recherche) |
+                Q(telephone__icontains=recherche) |
+                Q(ville__icontains=recherche) |
+                Q(adresse__icontains=recherche)
+            )
+        
+        # Tri par nom par défaut
+        clients = clients.order_by('nom', 'prenom')
+        
+        # Enrichir les clients avec les données d'opérations
+        clients_enrichis = []
+        for client in clients:
+            operations = client.operations.all().order_by('-date_creation')
+            
+            # Dernière opération
+            derniere_operation = operations.first() if operations.exists() else None
+            
+            # Prochaine opération (statut planifié + date future)
+            from django.utils import timezone
+            prochaine_operation = operations.filter(
+                statut='planifie',
+                date_prevue__gte=timezone.now()
+            ).order_by('date_prevue').first()
+            
+            client.derniere_op = derniere_operation
+            client.prochaine_op = prochaine_operation
+            clients_enrichis.append(client)
+        
+        # Statistiques
+        total_clients = len(clients_enrichis)
+        
+        context = {
+            'clients': clients_enrichis,
+            'total_clients': total_clients,
+            'recherche': recherche,
+        }
+        
+        return render(request, 'clients/list.html', context)
+        
+    except Exception as e:
+        return HttpResponse(f"Erreur clients: {str(e)}")
 
 @login_required
 def client_detail(request, client_id):
@@ -485,3 +507,107 @@ def client_detail(request, client_id):
     }
     
     return render(request, 'clients/detail.html', context)
+
+@login_required
+def operation_create(request):
+    """Formulaire de création d'une nouvelle opération"""
+    if request.method == 'POST':
+        # Récupération des données du formulaire
+        client_id = request.POST.get('client_id')
+        nouveau_client_nom = request.POST.get('nouveau_client_nom', '').strip()
+        nouveau_client_prenom = request.POST.get('nouveau_client_prenom', '').strip()
+        nouveau_client_email = request.POST.get('nouveau_client_email', '').strip()
+        nouveau_client_telephone = request.POST.get('nouveau_client_telephone', '').strip()
+        nouveau_client_adresse = request.POST.get('nouveau_client_adresse', '').strip()
+        nouveau_client_ville = request.POST.get('nouveau_client_ville', '').strip()
+        
+        type_prestation = request.POST.get('type_prestation', '').strip()
+        adresse_intervention = request.POST.get('adresse_intervention', '').strip()
+        date_prevue = request.POST.get('date_prevue', '')
+        heure_prevue = request.POST.get('heure_prevue', '')
+        statut = request.POST.get('statut', 'en_attente_devis')
+        
+        # Interventions (lignes du devis)
+        descriptions = request.POST.getlist('description[]')
+        montants = request.POST.getlist('montant[]')
+        
+        try:
+            # Déterminer le client
+            if client_id and client_id != 'nouveau':
+                client = get_object_or_404(Client, id=client_id, user=request.user)
+            else:
+                # Créer un nouveau client
+                if not (nouveau_client_nom and nouveau_client_prenom and nouveau_client_telephone):
+                    messages.error(request, "Nom, prénom et téléphone sont obligatoires pour un nouveau client")
+                    return redirect('operation_create')
+                
+                client = Client.objects.create(
+                    user=request.user,
+                    nom=nouveau_client_nom,
+                    prenom=nouveau_client_prenom,
+                    email=nouveau_client_email,
+                    telephone=nouveau_client_telephone,
+                    adresse=nouveau_client_adresse,
+                    ville=nouveau_client_ville
+                )
+            
+            # Créer l'opération
+            date_prevue_complete = None
+            if date_prevue:
+                from datetime import datetime, time
+                if heure_prevue:
+                    try:
+                        heure = datetime.strptime(heure_prevue, '%H:%M').time()
+                        date_prevue_complete = datetime.combine(
+                            datetime.strptime(date_prevue, '%Y-%m-%d').date(),
+                            heure
+                        )
+                    except ValueError:
+                        pass
+                else:
+                    date_prevue_complete = datetime.strptime(date_prevue, '%Y-%m-%d')
+            
+            operation = Operation.objects.create(
+                user=request.user,
+                client=client,
+                type_prestation=type_prestation,
+                adresse_intervention=adresse_intervention or f"{client.adresse}, {client.ville}",
+                date_prevue=date_prevue_complete,
+                statut=statut
+            )
+            
+            # Créer les interventions
+            for i, (description, montant) in enumerate(zip(descriptions, montants)):
+                if description.strip() and montant.strip():
+                    try:
+                        Intervention.objects.create(
+                            operation=operation,
+                            description=description.strip(),
+                            montant=float(montant),
+                            ordre=i + 1
+                        )
+                    except ValueError:
+                        pass  # Ignorer les montants invalides
+            
+            # Ajouter à l'historique
+            HistoriqueOperation.objects.create(
+                operation=operation,
+                action="Opération créée",
+                utilisateur=request.user
+            )
+            
+            messages.success(request, f"Opération {operation.id_operation} créée avec succès")
+            return redirect('operation_detail', operation_id=operation.id)
+            
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la création : {str(e)}")
+    
+    # GET - Afficher le formulaire
+    clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
+    
+    context = {
+        'clients': clients,
+        'statuts_choices': Operation.STATUTS,
+    }
+    
+    return render(request, 'operations/create.html', context)

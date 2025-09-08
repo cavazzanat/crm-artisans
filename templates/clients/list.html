@@ -310,21 +310,29 @@
                                 <small>{{ client.adresse|truncatechars:30 }}</small>
                             </td>
                             <td>{{ client.ville }}</td>
+                            <!-- REMPLACEZ les colonnes "Dernière opération" et "Prochaine opération" dans votre template par ceci : -->
+
                             <td>
-                                {% if client.derniere_operation %}
+                                {% if client.derniere_op %}
                                 <div class="operation-info">
-                                    <div>{{ client.derniere_operation.type_prestation|truncatechars:20 }}</div>
-                                    <div class="operation-date">{{ client.derniere_operation.date_creation|date:"d/m/Y" }}</div>
+                                    <div>{{ client.derniere_op.type_prestation|truncatechars:20 }}</div>
+                                    <div class="operation-date">{{ client.derniere_op.date_creation|date:"d/m/Y" }}</div>
                                 </div>
                                 {% else %}
                                 <span class="operation-date">Aucune</span>
                                 {% endif %}
                             </td>
                             <td>
-                                {% if client.prochaine_operation %}
+                                {% if client.prochaine_op %}
                                 <div class="operation-info">
-                                    <div class="operation-upcoming">{{ client.prochaine_operation.type_prestation|truncatechars:20 }}</div>
-                                    <div class="operation-date">{{ client.prochaine_operation.date_prevue|date:"d/m H:i" }}</div>
+                                    <div class="operation-upcoming">{{ client.prochaine_op.type_prestation|truncatechars:20 }}</div>
+                                    <div class="operation-date">
+                                        {% if client.prochaine_op.date_prevue %}
+                                            {{ client.prochaine_op.date_prevue|date:"d/m H:i" }}
+                                        {% else %}
+                                            Planifiée
+                                        {% endif %}
+                                    </div>
                                 </div>
                                 {% else %}
                                 <span class="operation-date">Aucune</span>
