@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestion des Clients - CRM Artisans</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: #ffffff;
+            color: #333;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e5e9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-menu a {
+            color: #333;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .nav-menu a.active {
+            background-color: #333;
+            color: white;
+        }
+        
+        .nav-menu a:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .nav-menu a.active:hover {
+            background-color: #555;
+        }
+        
+        .user-info {
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        
+        .search-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 4px;
+            border: 1px solid #e1e5e9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .search-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex: 1;
+        }
+        
+        .search-group label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .search-group input {
+            padding: 0.6rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            flex: 1;
+            min-width: 250px;
+        }
+        
+        .btn {
+            padding: 0.6rem 1.2rem;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #555;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-outline:hover {
+            background: #f8f9fa;
+        }
+        
+        .clients-table {
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e1e5e9;
+            overflow: hidden;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .client-name {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .client-contact {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .operation-info {
+            font-size: 0.9rem;
+        }
+        
+        .operation-date {
+            color: #666;
+        }
+        
+        .operation-upcoming {
+            color: #155724;
+            font-weight: 500;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .search-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-group input {
+                min-width: 100%;
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+            }
+            
+            .table {
+                min-width: 700px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>CRM Artisans</h1>
+        
+        <nav class="nav-menu">
+            <a href="/">Accueil</a>
+            <a href="/operations/">Opérations</a>
+            <a href="/clients/" class="active">Clients</a>
+        </nav>
+        
+        <div class="user-info">
+            Connecté : utilisateur | <a href="/logout/" style="color: #333;">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Gestion des clients</h1>
+        <p class="subtitle">{{ total_clients }} client(s) trouvé(s)</p>
+        
+        <!-- Recherche -->
+        <div class="search-section">
+            <form method="GET">
+                <div class="search-row">
+                    <div class="search-group">
+                        <label>Recherche :</label>
+                        <input type="text" name="recherche" value="{{ recherche }}" 
+                               placeholder="Nom, prénom, email, téléphone, ville, adresse...">
+                    </div>
+                    
+                    <button type="submit" class="btn">Rechercher</button>
+                    <a href="/clients/" class="btn btn-outline">Effacer</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Actions rapides -->
+        <div style="margin-bottom: 1.5rem;">
+            <a href="/admin/core/client/add/" class="btn">Nouveau client</a>
+            <a href="/operations/" class="btn btn-outline">Voir les opérations</a>
+        </div>
+
+        <!-- Tableau des clients -->
+        <div class="clients-table">
+            {% if clients %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Id Client</th>
+                            <th>Nom/Prénom</th>
+                            <th>Contact</th>
+                            <th>Adresse</th>
+                            <th>Ville</th>
+                            <td>
+                                <span class="operation-date">À implémenter</span>
+                            </td>
+                            <td>
+                                <span class="operation-date">À implémenter</span>
+                            </td>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for client in clients %}
+                        <tr>
+                            <td><strong>{{ client.id_client }}</strong></td>
+                            <td>
+                                <div class="client-name">{{ client.nom }} {{ client.prenom }}</div>
+                            </td>
+                            <td>
+                                <div class="client-contact">
+                                    {{ client.telephone }}<br>
+                                    {% if client.email %}
+                                    <small>{{ client.email }}</small>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <small>{{ client.adresse|truncatechars:30 }}</small>
+                            </td>
+                            <td>{{ client.ville }}</td>
+                            <td>
+                                {% if client.derniere_operation %}
+                                <div class="operation-info">
+                                    <div>{{ client.derniere_operation.type_prestation|truncatechars:20 }}</div>
+                                    <div class="operation-date">{{ client.derniere_operation.date_creation|date:"d/m/Y" }}</div>
+                                </div>
+                                {% else %}
+                                <span class="operation-date">Aucune</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if client.prochaine_operation %}
+                                <div class="operation-info">
+                                    <div class="operation-upcoming">{{ client.prochaine_operation.type_prestation|truncatechars:20 }}</div>
+                                    <div class="operation-date">{{ client.prochaine_operation.date_prevue|date:"d/m H:i" }}</div>
+                                </div>
+                                {% else %}
+                                <span class="operation-date">Aucune</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="/clients/{{ client.id }}/" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Voir profil</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>Aucun client trouvé</h3>
+                <p>Aucun client ne correspond à votre recherche.</p>
+                <a href="/admin/core/client/add/" class="btn" style="margin-top: 1rem;">Créer le premier client</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
