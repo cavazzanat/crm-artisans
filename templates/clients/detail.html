@@ -470,4 +470,45 @@
                 <!-- Statistiques -->
                 <div class="section">
                     <div class="section-header">
-                        <span>
+                    <span>Statistiques</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="stats-grid">
+                            <div class="stat-card">
+                                <div class="stat-value">{{ nb_operations }}</div>
+                                <div class="stat-label">Opérations</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">{{ ca_total }}€</div>
+                                <div class="stat-label">CA Total</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value">
+                                    {% if nb_operations > 0 %}
+                                        {{ ca_total|floatformat:0 }}€
+                                    {% else %}
+                                        0€
+                                    {% endif %}
+                                </div>
+                                <div class="stat-label">Panier moyen</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions rapides -->
+                <div class="section">
+                    <div class="section-header">
+                        <span>Actions rapides</span>
+                    </div>
+                    <div class="section-content">
+                        <a href="/admin/core/operation/add/?client={{ client.id }}" class="btn btn-success">Nouvelle opération</a>
+                        <a href="/admin/core/client/{{ client.id }}/change/" class="btn">Éditer client</a>
+                        <a href="/clients/" class="btn btn-outline">← Retour à la liste</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
