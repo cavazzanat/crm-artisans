@@ -1,11 +1,14 @@
 # ================================
-# core/views.py - Étape 1 : Dashboard avec KPI
+# core/views.py - Version complète et corrigée
 # ================================
 
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
-from .models import Client, Operation
+from django.db.models import Q, Max
+from django.db import models
+from django.contrib import messages
+from .models import Client, Operation, Intervention, HistoriqueOperation
 
 @login_required
 def dashboard(request):
@@ -192,6 +195,7 @@ def dashboard(request):
                 <!-- Actions -->
                 <div class="actions">
                     <h3>Actions rapides</h3>
+                    <a href="/operations/" class="btn">Voir les opérations</a>
                     <a href="/admin/core/operation/add/" class="btn">Nouvelle opération</a>
                     <a href="/admin/core/client/add/" class="btn-secondary btn">Nouveau client</a>
                     <a href="/admin/" class="btn-secondary btn">Interface complète</a>
@@ -206,7 +210,6 @@ def dashboard(request):
     except Exception as e:
         # En cas d'erreur, retour à la version simple
         return HttpResponse(f"<h1>CRM Artisans</h1><p>Erreur temporaire. <a href='/admin/'>Accéder à l'admin</a></p><p>Erreur : {str(e)}</p>")
-    
 
 @login_required
 def operations_list(request):
@@ -268,15 +271,127 @@ def operations_list(request):
 
 @login_required
 def operation_detail(request, operation_id):
-    """Fiche détaillée d'une opération"""
+    """Fiche détaillée d'une opération avec gestion complète"""
     operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    
+    # Changement de statut via POST
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'change_status':
+            nouveau_statut = request.POST.get('statut')
+            if nouveau_statut in dict(Operation.STATUTS):
+                ancien_statut = operation.get_statut_display()
+                operation.statut = nouveau_statut
+                operation.save()
+                
+                # Ajouter à l'historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Statut changé : {ancien_statut} → {operation.get_statut_display()}",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
+                return redirect('operation_detail', operation_id=operation.id)
+        
+        elif action == 'add_intervention':
+            description = request.POST.get('description')
+            montant = request.POST.get('montant')
+            
+            if description and montant:
+                try:
+                    # Calculer l'ordre (dernier + 1)
+                    last_order = operation.interventions.aggregate(
+                        max_order=Max('ordre')
+                    )['max_order'] or 0
+                    
+                    Intervention.objects.create(
+                        operation=operation,
+                        description=description,
+                        montant=float(montant),
+                        ordre=last_order + 1
+                    )
+                    
+                    # Ajouter à l'historique
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"Intervention ajoutée : {description} ({montant}€)",
+                        utilisateur=request.user
+                    )
+                    
+                    messages.success(request, "Intervention ajoutée avec succès")
+                except ValueError:
+                    messages.error(request, "Montant invalide")
+                
+                return redirect('operation_detail', operation_id=operation.id)
+        
+        elif action == 'delete_intervention':
+            intervention_id = request.POST.get('intervention_id')
+            try:
+                intervention = Intervention.objects.get(
+                    id=intervention_id, 
+                    operation=operation
+                )
+                description = intervention.description
+                intervention.delete()
+                
+                # Ajouter à l'historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Intervention supprimée : {description}",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, "Intervention supprimée")
+            except Intervention.DoesNotExist:
+                messages.error(request, "Intervention introuvable")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+    
+    # Récupérer les données pour l'affichage
     interventions = operation.interventions.all()
-    historique = operation.historique.all()
+    historique = operation.historique.all()[:10]  # 10 dernières actions
     
     context = {
         'operation': operation,
         'interventions': interventions,
         'historique': historique,
+        'statuts_choices': Operation.STATUTS,
+        'montant_total': operation.montant_total,
     }
     
     return render(request, 'operations/detail.html', context)
+
+@login_required
+def operation_duplicate(request, operation_id):
+    """Dupliquer une opération"""
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    
+    # Créer la nouvelle opération
+    nouvelle_operation = Operation.objects.create(
+        user=request.user,
+        client=operation.client,
+        type_prestation=f"Copie - {operation.type_prestation}",
+        adresse_intervention=operation.adresse_intervention,
+        statut='en_attente_devis'
+    )
+    
+    # Copier les interventions
+    for intervention in operation.interventions.all():
+        Intervention.objects.create(
+            operation=nouvelle_operation,
+            description=intervention.description,
+            montant=intervention.montant,
+            ordre=intervention.ordre
+        )
+    
+    # Historique
+    HistoriqueOperation.objects.create(
+        operation=nouvelle_operation,
+        action=f"Opération créée par duplication de {operation.id_operation}",
+        utilisateur=request.user
+    )
+    
+    messages.success(request, f"Opération dupliquée : {nouvelle_operation.id_operation}")
+    return redirect('operation_detail', operation_id=nouvelle_operation.id)

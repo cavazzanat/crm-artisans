@@ -1,4 +1,4 @@
-# core/urls.py - AJOUTEZ la nouvelle URL :
+# core/urls.py
 from django.urls import path
 from . import views
 
