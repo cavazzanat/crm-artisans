@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ client.nom }} {{ client.prenom }} - CRM Artisans</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: #ffffff;
+            color: #333;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e5e9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-menu a {
+            color: #333;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .nav-menu a.active {
+            background-color: #333;
+            color: white;
+        }
+        
+        .nav-menu a:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .nav-menu a.active:hover {
+            background-color: #555;
+        }
+        
+        .user-info {
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .breadcrumb {
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            color: #666;
+        }
+        
+        .breadcrumb a {
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 2rem;
+        }
+        
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        .section {
+            background: white;
+            border: 1px solid #e1e5e9;
+            border-radius: 4px;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e1e5e9;
+            background-color: #f8f9fa;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-content {
+            padding: 1.5rem;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+        
+        .info-item {
+            margin-bottom: 1rem;
+        }
+        
+        .info-label {
+            font-weight: 500;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .info-value {
+            color: #333;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card {
+            text-align: center;
+            padding: 1rem;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn {
+            padding: 0.6rem 1.2rem;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: #555;
+        }
+        
+        .btn-success {
+            background: #28a745;
+        }
+        
+        .btn-success:hover {
+            background: #218838;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-outline:hover {
+            background: #f8f9fa;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        
+        .table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-en_attente_devis {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-a_planifier {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-planifie {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-realise {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-paye {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .status-devis_refuse {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .messages {
+            margin-bottom: 1rem;
+        }
+        
+        .alert {
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+        }
+        
+        .alert-success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .alert-error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .operation-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .operation-row select {
+            padding: 0.4rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>CRM Artisans</h1>
+        
+        <nav class="nav-menu">
+            <a href="/">Accueil</a>
+            <a href="/operations/">Opérations</a>
+            <a href="/clients/" class="active">Clients</a>
+        </nav>
+        
+        <div class="user-info">
+            Connecté : utilisateur | <a href="/logout/" style="color: #333;">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="breadcrumb">
+            <a href="/">Accueil</a> / <a href="/clients/">Clients</a> / {{ client.nom }} {{ client.prenom }}
+        </div>
+        
+        <h1 class="page-title">{{ client.nom }} {{ client.prenom }} ({{ client.id_client }})</h1>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="main-grid">
+            <div class="left-column">
+                <!-- Informations client -->
+                <div class="section">
+                    <div class="section-header">
+                        <span>Informations client</span>
+                        <a href="/admin/core/client/{{ client.id }}/change/" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Éditer</a>
+                    </div>
+                    <div class="section-content">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">ID Client</div>
+                                <div class="info-value">{{ client.id_client }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Nom complet</div>
+                                <div class="info-value">{{ client.nom }} {{ client.prenom }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Email</div>
+                                <div class="info-value">
+                                    {% if client.email %}
+                                        <a href="mailto:{{ client.email }}">{{ client.email }}</a>
+                                    {% else %}
+                                        <em>Non renseigné</em>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Téléphone</div>
+                                <div class="info-value">
+                                    <a href="tel:{{ client.telephone }}">{{ client.telephone }}</a>
+                                </div>
+                            </div>
+                            <div class="info-item" style="grid-column: 1/-1;">
+                                <div class="info-label">Adresse</div>
+                                <div class="info-value">{{ client.adresse }}, {{ client.ville }}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Client depuis</div>
+                                <div class="info-value">{{ client.date_creation|date:"d/m/Y" }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historique des opérations -->
+                <div class="section">
+                    <div class="section-header">
+                        <span>Historique des opérations ({{ nb_operations }})</span>
+                        <a href="/admin/core/operation/add/?client={{ client.id }}" class="btn btn-success" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Nouvelle opération</a>
+                    </div>
+                    <div class="section-content">
+                        {% if operations %}
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID Opération</th>
+                                    <th>Date</th>
+                                    <th>Type opération</th>
+                                    <th>Montant</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for operation in operations %}
+                                <tr>
+                                    <td><strong>{{ operation.id_operation }}</strong></td>
+                                    <td>
+                                        {% if operation.date_prevue %}
+                                            {{ operation.date_prevue|date:"d/m H:i" }}
+                                        {% else %}
+                                            {{ operation.date_creation|date:"d/m/Y" }}
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ operation.type_prestation }}</td>
+                                    <td><strong>{{ operation.montant_total }}€</strong></td>
+                                    <td>
+                                        <div class="operation-row">
+                                            <form method="POST" style="display: inline;">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="action" value="change_operation_status">
+                                                <input type="hidden" name="operation_id" value="{{ operation.id }}">
+                                                <select name="statut" onchange="this.form.submit()">
+                                                    {% for value, label in statuts_choices %}
+                                                    <option value="{{ value }}" {% if value == operation.statut %}selected{% endif %}>
+                                                        {{ label }}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </form>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="/operations/{{ operation.id }}/" class="btn" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">Voir</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <div class="empty-state">
+                            <h4>Aucune opération</h4>
+                            <p>Ce client n'a pas encore d'opération enregistrée.</p>
+                            <a href="/admin/core/operation/add/?client={{ client.id }}" class="btn btn-success" style="margin-top: 1rem;">Créer la première opération</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <!-- Statistiques -->
+                <div class="section">
+                    <div class="section-header">
+                        <span>

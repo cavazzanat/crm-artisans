@@ -395,3 +395,93 @@ def operation_duplicate(request, operation_id):
     
     messages.success(request, f"Opération dupliquée : {nouvelle_operation.id_operation}")
     return redirect('operation_detail', operation_id=nouvelle_operation.id)
+
+@login_required
+def clients_list(request):
+    """Page de gestion des clients avec recherche"""
+    
+    # Récupérer tous les clients de l'utilisateur
+    clients = Client.objects.filter(user=request.user)
+    
+    # Recherche
+    recherche = request.GET.get('recherche', '')
+    
+    if recherche:
+        clients = clients.filter(
+            Q(nom__icontains=recherche) |
+            Q(prenom__icontains=recherche) |
+            Q(email__icontains=recherche) |
+            Q(telephone__icontains=recherche) |
+            Q(ville__icontains=recherche) |
+            Q(adresse__icontains=recherche)
+        )
+    
+    # Tri par nom par défaut
+    clients = clients.order_by('nom', 'prenom')
+    
+    # Statistiques
+    total_clients = clients.count()
+    
+    context = {
+        'clients': clients,
+        'total_clients': total_clients,
+        'recherche': recherche,
+    }
+    
+    return render(request, 'clients/list.html', context)
+
+@login_required
+def client_detail(request, client_id):
+    """Fiche détaillée d'un client avec historique des opérations"""
+    client = get_object_or_404(Client, id=client_id, user=request.user)
+    
+    # Changement de statut d'une opération depuis la fiche client
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        
+        if action == 'change_operation_status':
+            operation_id = request.POST.get('operation_id')
+            nouveau_statut = request.POST.get('statut')
+            
+            try:
+                operation = Operation.objects.get(
+                    id=operation_id, 
+                    client=client, 
+                    user=request.user
+                )
+                
+                if nouveau_statut in dict(Operation.STATUTS):
+                    ancien_statut = operation.get_statut_display()
+                    operation.statut = nouveau_statut
+                    operation.save()
+                    
+                    # Ajouter à l'historique
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"Statut changé depuis fiche client : {ancien_statut} → {operation.get_statut_display()}",
+                        utilisateur=request.user
+                    )
+                    
+                    messages.success(request, f"Statut de l'opération {operation.id_operation} mis à jour")
+                
+            except Operation.DoesNotExist:
+                messages.error(request, "Opération introuvable")
+            
+            return redirect('client_detail', client_id=client.id)
+    
+    # Récupérer toutes les opérations du client
+    operations = client.operations.all().order_by('-date_creation')
+    
+    # Statistiques du client
+    nb_operations = operations.count()
+    ca_total = sum(op.montant_total for op in operations if op.statut == 'paye')
+    
+    context = {
+        'client': client,
+        'operations': operations,
+        'nb_operations': nb_operations,
+        'ca_total': ca_total,
+        'statuts_choices': Operation.STATUTS,
+    }
+    
+    return render(request, 'clients/detail.html', context)
