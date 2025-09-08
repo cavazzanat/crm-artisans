@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gestion des Opérations - CRM Artisans</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: #ffffff;
+            color: #333;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e5e9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 2rem;
+        }
+        
+        .nav-menu a {
+            color: #333;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .nav-menu a.active {
+            background-color: #333;
+            color: white;
+        }
+        
+        .nav-menu a:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .nav-menu a.active:hover {
+            background-color: #555;
+        }
+        
+        .user-info {
+            font-size: 0.9rem;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 2rem;
+        }
+        
+        .filters-section {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 4px;
+            border: 1px solid #e1e5e9;
+            margin-bottom: 1.5rem;
+        }
+        
+        .filters-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-group label {
+            font-weight: 500;
+            color: #555;
+        }
+        
+        .filter-group select,
+        .filter-group input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .search-input {
+            min-width: 300px;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            background: #333;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            background: #555;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-outline:hover {
+            background: #f8f9fa;
+        }
+        
+        .operations-table {
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e1e5e9;
+            overflow: hidden;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .table th,
+        .table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            letter-spacing: 0.5px;
+        }
+        
+        .table tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-en_attente_devis {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-a_planifier {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+        
+        .status-planifie {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        
+        .status-realise {
+            background-color: #cce5ff;
+            color: #004085;
+        }
+        
+        .status-paye {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        
+        .status-devis_refuse {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        
+        .documents {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .doc-icon {
+            padding: 0.25rem 0.5rem;
+            background: #f0f0f0;
+            border-radius: 4px;
+            text-decoration: none;
+            color: #333;
+            font-size: 0.8rem;
+        }
+        
+        .doc-icon:hover {
+            background: #e0e0e0;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .nav-menu {
+                gap: 1rem;
+            }
+            
+            .filters-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-input {
+                min-width: 100%;
+            }
+            
+            .table-responsive {
+                overflow-x: auto;
+            }
+            
+            .table {
+                min-width: 600px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>CRM Artisans</h1>
+        
+        <nav class="nav-menu">
+            <a href="/">Accueil</a>
+            <a href="/operations/" class="active">Opérations</a>
+            <a href="/clients/">Clients</a>
+        </nav>
+        
+        <div class="user-info">
+            Connecté : utilisateur | <a href="/logout/" style="color: #333;">Déconnexion</a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">Gestion des opérations</h1>
+        <p class="subtitle">Opérations filtrées : {{ total_operations }} résultat(s)</p>
+        
+        <!-- Filtres -->
+        <div class="filters-section">
+            <form method="GET">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label>Statut :</label>
+                        <select name="statut">
+                            <option value="">Tous les statuts</option>
+                            <option value="en_attente_devis" {% if statut_filtre == 'en_attente_devis' %}selected{% endif %}>En attente devis</option>
+                            <option value="a_planifier" {% if statut_filtre == 'a_planifier' %}selected{% endif %}>À planifier</option>
+                            <option value="planifie" {% if statut_filtre == 'planifie' %}selected{% endif %}>Planifié</option>
+                            <option value="realise" {% if statut_filtre == 'realise' %}selected{% endif %}>Réalisé</option>
+                            <option value="paye" {% if statut_filtre == 'paye' %}selected{% endif %}>Payé</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Ville :</label>
+                        <select name="ville">
+                            <option value="">Toutes les villes</option>
+                            {% for ville in villes %}
+                            <option value="{{ ville }}" {% if ville_filtre == ville %}selected{% endif %}>{{ ville }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label>Tri :</label>
+                        <select name="tri">
+                            <option value="-date_creation" {% if tri == '-date_creation' %}selected{% endif %}>Plus récent</option>
+                            <option value="date_prochaine_asc" {% if tri == 'date_prochaine_asc' %}selected{% endif %}>Date prochaine ↑</option>
+                            <option value="date_prochaine_desc" {% if tri == 'date_prochaine_desc' %}selected{% endif %}>Date prochaine ↓</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn">Filtrer</button>
+                    <a href="/operations/" class="btn btn-outline">Réinitialiser</a>
+                </div>
+                
+                <div class="filters-row">
+                    <div class="filter-group" style="flex: 1;">
+                        <label>Recherche :</label>
+                        <input type="text" name="recherche" value="{{ recherche }}" 
+                               placeholder="Nom, ville, adresse, téléphone..." class="search-input">
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Actions rapides -->
+        <div style="margin-bottom: 1.5rem;">
+            <a href="/operations/nouvelle/" class="btn">Nouvelle opération</a>
+            <a href="/admin/core/operation/add/" class="btn btn-outline">Admin Django</a>
+        </div>
+
+        <!-- Tableau des opérations -->
+        <div class="operations-table">
+            {% if operations %}
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Id Client</th>
+                            <th>Date</th>
+                            <th>Client</th>
+                            <th>Opération</th>
+                            <th>Ville</th>
+                            <th>Montant</th>
+                            <th>Statut</th>
+                            <th>Documents</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for operation in operations %}
+                        <tr>
+                            <td><strong>{{ operation.client.id_client }}</strong></td>
+                            <td>
+                                {% if operation.date_prevue %}
+                                    {{ operation.date_prevue|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    {{ operation.date_creation|date:"d/m/Y" }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
+                                <small>{{ operation.client.telephone }}</small>
+                            </td>
+                            <td>{{ operation.type_prestation }}</td>
+                            <td>{{ operation.client.ville }}</td>
+                            <td><strong>{{ operation.montant_total }}€</strong></td>
+                            <td>
+                                <span class="status-badge status-{{ operation.statut }}">
+                                    {{ operation.get_statut_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="documents">
+                                    <a href="#" class="doc-icon" title="Devis">📄</a>
+                                    {% if operation.peut_generer_facture %}
+                                    <a href="#" class="doc-icon" title="Facture">🧾</a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                <a href="/operations/{{ operation.id }}/" class="btn" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">Voir</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>Aucune opération trouvée</h3>
+                <p>Aucune opération ne correspond à vos critères de recherche.</p>
+                <a href="/operations/nouvelle/" class="btn" style="margin-top: 1rem;">Créer la première opération</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
