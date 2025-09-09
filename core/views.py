@@ -31,11 +31,10 @@ def dashboard(request):
                 body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; }}
                 .header {{ background: #ffffff; color: #333; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e1e5e9; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
                 .header h1 {{ font-size: 1.5rem; }}
-                .nav-menu {{ display: flex; gap: 2rem; }}
-                .nav-menu a {{ color: #333; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; }}
-                .nav-menu a.active {{ background-color: #333; color: white; }}
-                .nav-menu a:hover {{ background-color: #f0f0f0; }}
-                .nav-menu a.active:hover {{ background-color: #555; }}
+                .nav-menu {{ display: flex; gap: 1rem; }}
+                .nav-menu a {{ color: #333; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background 0.3s; }}
+                .nav-menu a.active {{ background: #333; color: white; }}
+                .nav-menu a:hover {{ background: #f8f9fa; }}
                 .user-info {{ font-size: 0.9rem; }}
                 .container {{ max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }}
                 .page-title {{ font-size: 1.8rem; color: #333; margin-bottom: 2rem; }}
@@ -49,7 +48,12 @@ def dashboard(request):
                 .btn:hover {{ background: #555; }}
                 .btn-secondary {{ background: #f8f9fa; color: #333; border: 1px solid #e1e5e9; }}
                 .btn-secondary:hover {{ background: #e9ecef; }}
-                @media (max-width: 768px) {{ .header {{ flex-direction: column; gap: 1rem; }} .nav-menu {{ gap: 1rem; }} .container {{ padding: 0 0.5rem; }} .kpi-section {{ grid-template-columns: 1fr; }} }}
+                @media (max-width: 768px) {{ 
+                    .header {{ flex-direction: column; gap: 1rem; }} 
+                    .nav-menu {{ gap: 1rem; }} 
+                    .container {{ padding: 0 0.5rem; }} 
+                    .kpi-section {{ grid-template-columns: 1fr; }} 
+                }}
             </style>
         </head>
         <body>
@@ -106,8 +110,11 @@ def dashboard(request):
         return HttpResponse(html_content)
         
     except Exception as e:
-        return HttpResponse(f"<h1>CRM Artisans</h1><p>Erreur temporaire. <a href='/admin/'>Accéder à l'admin</a></p><p>Erreur : {str(e)}</p>")
-
+        import traceback
+        error_detail = traceback.format_exc()
+        return HttpResponse(f"<h1>CRM Artisans - Debug</h1><pre>{error_detail}</pre><p><a href='/admin/'>Accéder à l'admin</a></p>")
+    
+    
 @login_required
 def operations_list(request):
     """Page de gestion des opérations avec filtres"""
