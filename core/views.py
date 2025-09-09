@@ -47,7 +47,7 @@ def dashboard(request):
             'prochaines_operations': prochaines_operations,
         }
         
-        return render(request, 'dashboard.html', context)
+        return render(request, 'core/dashboard.html', context)
         
     except Exception as e:
         return HttpResponse(f"<h1>CRM Artisans</h1><p>Erreur : {str(e)}</p><p><a href='/admin/'>Admin</a></p>")
