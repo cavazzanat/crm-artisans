@@ -18,20 +18,18 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #ffffff;
+            color: #333;
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid #e1e5e9;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .header h1 {
             font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
         
         .nav-menu {
@@ -40,7 +38,7 @@
         }
         
         .nav-menu a {
-            color: white;
+            color: #333;
             text-decoration: none;
             padding: 0.5rem 1rem;
             border-radius: 4px;
@@ -48,7 +46,12 @@
         }
         
         .nav-menu a:hover {
-            background: rgba(255,255,255,0.2);
+            background: #f8f9fa;
+        }
+        
+        .nav-menu a.active {
+            background: #333;
+            color: white;
         }
         
         .user-info {
@@ -59,6 +62,12 @@
             max-width: 1200px;
             margin: 2rem auto;
             padding: 0 1rem;
+        }
+        
+        .page-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 2rem;
         }
         
         .kpi-section {
@@ -212,20 +221,6 @@
             font-size: 0.9rem;
         }
         
-        .status-badge {
-            padding: 0.3rem 0.8rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .status-planifie {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-        
         .btn-view {
             padding: 0.4rem 0.8rem;
             background: #667eea;
@@ -282,25 +277,20 @@
     </style>
 </head>
 <body>
-<header class="header">
-    <h1>CRM Artisans</h1>
-    
-    <nav class="nav-menu">
-        <a href="/" class="active">Accueil</a>
-        <a href="/operations/">Opérations</a>
-        <a href="/clients/">Clients</a>
-    </nav>
-    
-    <div class="user-info">
-        Connecté : {{ user.username }} | <a href="/logout/" style="color: #333;">Déconnexion</a>
-    </div>
-</header>
+    <header class="header">
+        <h1>CRM Artisans</h1>
+        <nav class="nav-menu">
+            <a href="{% url 'dashboard' %}" class="active">Accueil</a>
+            <a href="{% url 'operations' %}">Opérations</a>
+            <a href="{% url 'clients' %}">Clients</a>
+        </nav>
+        <div class="user-info">
+            Connecté : {{ user.username }} | <a href="/logout/" style="color: #333;">Déconnexion</a>
+        </div>
+    </header>
 
     <div class="container">
-        <!-- Header de page -->
-        <div class="page-header">
-            <h1 class="page-title">Tableau de bord</h1>
-        </div>
+        <h1 class="page-title">Tableau de bord</h1>
 
         <!-- Section KPI -->
         <div class="kpi-section">
@@ -366,7 +356,7 @@
                             <td>{{ operation.adresse_intervention|truncatechars:25 }}</td>
                             <td>{{ operation.client.telephone }}</td>
                             <td>
-                                <a href="#" class="btn-view">Voir</a>
+                                <a href="/operations/{{ operation.id }}/" class="btn-view">Voir</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -385,9 +375,9 @@
                 <h2 class="section-title">Actions rapides</h2>
             </div>
             <div class="actions-rapides">
-                <a href="{% url 'operations' %}" class="btn btn-primary">Nouvelle opération</a>
-                <a href="{% url 'clients' %}" class="btn btn-secondary">Nouveau client</a>
-                <a href="#" class="btn btn-secondary">Exporter rapport</a>
+                <a href="/operations/nouvelle/" class="btn btn-primary">Nouvelle opération</a>
+                <a href="{% url 'clients' %}" class="btn btn-secondary">Voir les clients</a>
+                <a href="/admin/" class="btn btn-secondary">Interface admin</a>
             </div>
         </div>
     </div>
