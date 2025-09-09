@@ -31,10 +31,11 @@ def dashboard(request):
                 body {{ font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; color: #333; }}
                 .header {{ background: #ffffff; color: #333; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e1e5e9; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }}
                 .header h1 {{ font-size: 1.5rem; }}
-                .nav-menu { display: flex; gap: 1rem; }
-                .nav-menu a { color: #333; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; transition: background 0.3s; }
-                .nav-menu a:hover { background: #f8f9fa; }
-                .nav-menu a.active { background: #333; color: white; }
+                .nav-menu {{ display: flex; gap: 2rem; }}
+                .nav-menu a {{ color: #333; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; }}
+                .nav-menu a.active {{ background-color: #333; color: white; }}
+                .nav-menu a:hover {{ background-color: #f0f0f0; }}
+                .nav-menu a.active:hover {{ background-color: #555; }}
                 .user-info {{ font-size: 0.9rem; }}
                 .container {{ max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }}
                 .page-title {{ font-size: 1.8rem; color: #333; margin-bottom: 2rem; }}
