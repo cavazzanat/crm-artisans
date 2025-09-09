@@ -18,20 +18,18 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: #ffffff;
+            color: #333;
             padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid #e1e5e9;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
         
         .header h1 {
             font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
         }
         
         .nav-menu {
@@ -39,8 +37,8 @@
             gap: 1rem;
         }
         
-       .nav-menu a {
-            color: white;
+        .nav-menu a {
+            color: #333;
             text-decoration: none;
             padding: 0.5rem 1rem;
             border-radius: 4px;
@@ -48,12 +46,12 @@
         }
 
         .nav-menu a:hover {
-            background: rgba(255,255,255,0.2);
+            background: #f8f9fa;
         }
 
         .nav-menu a.active {
-            background: rgba(255,255,255,0.3);
-            font-weight: 600;
+            background: #333;
+            color: white;
         }
         
         .user-info {
@@ -289,13 +287,11 @@
 <body>
     <header class="header">
         <h1>CRM Artisans</h1>
-        
         <nav class="nav-menu">
-            <a href="/" class="active">Accueil</a>
-            <a href="/operations/">Opérations</a>
-            <a href="/clients/">Clients</a>
+            <a href="/" {% if request.resolver_match.url_name == 'dashboard' %}class="active"{% endif %}>Accueil</a>
+            <a href="/operations/" {% if 'operation' in request.resolver_match.url_name %}class="active"{% endif %}>Opérations</a>
+            <a href="/clients/" {% if 'client' in request.resolver_match.url_name %}class="active"{% endif %}>Clients</a>
         </nav>
-        
         <div class="user-info">
             Connecté : {{ user.username }} | <a href="/logout/" style="color: #333;">Déconnexion</a>
         </div>
@@ -339,7 +335,7 @@
         <div class="section">
             <div class="section-header">
                 <h2 class="section-title">Prochaines opérations</h2>
-                <a href="{% url 'operations' %}?statut=planifie" class="btn btn-secondary">Voir plus</a>
+                <a href="/operations/?statut=planifie" class="btn btn-secondary">Voir plus</a>
             </div>
 
             {% if prochaines_operations %}
@@ -371,7 +367,7 @@
                             <td>{{ operation.adresse_intervention|truncatechars:25 }}</td>
                             <td>{{ operation.client.telephone }}</td>
                             <td>
-                                <a href="#" class="btn-view">Voir</a>
+                                <a href="/operations/{{ operation.id }}/" class="btn-view">Voir</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -390,9 +386,9 @@
                 <h2 class="section-title">Actions rapides</h2>
             </div>
             <div class="actions-rapides">
-                <a href="{% url 'operations' %}" class="btn btn-primary">Nouvelle opération</a>
-                <a href="{% url 'clients' %}" class="btn btn-secondary">Nouveau client</a>
-                <a href="#" class="btn btn-secondary">Exporter rapport</a>
+                <a href="/operations/nouvelle/" class="btn btn-primary">Nouvelle opération</a>
+                <a href="/clients/" class="btn btn-secondary">Voir les clients</a>
+                <a href="/admin/" class="btn btn-secondary">Interface admin</a>
             </div>
         </div>
     </div>
