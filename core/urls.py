@@ -10,5 +10,4 @@ urlpatterns = [
     path('operations/<int:operation_id>/duplicate/', views.operation_duplicate, name='operation_duplicate'),
     path('clients/', views.clients_list, name='clients'),
     path('clients/<int:client_id>/', views.client_detail, name='client_detail'),
-    path('test-logout/', views.test_logout, name='test_logout'),  # Nouvelle ligne
 ]
