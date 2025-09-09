@@ -10,5 +10,4 @@ urlpatterns = [
     path('operations/<int:operation_id>/duplicate/', views.operation_duplicate, name='operation_duplicate'),
     path('clients/', views.clients_list, name='clients'),  # Changé
     path('clients/<int:client_id>/', views.client_detail, name='client_detail'),
-    path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
 ]
