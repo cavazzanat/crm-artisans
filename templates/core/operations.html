@@ -33,10 +33,10 @@
             align-items: center;
             gap: 0.5rem;
         }
-        
+
         .nav-menu {
             display: flex;
-            gap: 1rem;
+            gap: 1rem;  /* ← Partout pareil */
         }
         
         .nav-menu a {
@@ -316,7 +316,7 @@
             <a href="#">Clients</a>
         </nav>
         <div class="user-info">
-            Connecté : {{ user.username }} | <a href="{% url 'logout' %}" style="color: #333;">Déconnexion</a>
+            Connecté : {{ user.username }} | <a href="/logout/" style="color: #333;">Déconnexion</a>
         </div>
     </header>
 
