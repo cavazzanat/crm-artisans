@@ -9,6 +9,7 @@ from django.db.models import Q, Max
 from django.db import models
 from django.contrib import messages
 from .models import Client, Operation, Intervention, HistoriqueOperation
+from django.contrib.auth import logout
 
 @login_required
 def dashboard(request):
@@ -452,3 +453,10 @@ def operation_create(request):
     }
     
     return render(request, 'operations/create.html', context)
+
+def test_logout(request):
+    try:
+        logout(request)
+        return redirect('/login/')
+    except Exception as e:
+        return HttpResponse(f"Erreur logout: {str(e)}")
