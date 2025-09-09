@@ -39,16 +39,21 @@
             gap: 1rem;
         }
         
-        .nav-menu a {
+       .nav-menu a {
             color: white;
             text-decoration: none;
             padding: 0.5rem 1rem;
             border-radius: 4px;
             transition: background 0.3s;
         }
-        
+
         .nav-menu a:hover {
             background: rgba(255,255,255,0.2);
+        }
+
+        .nav-menu a.active {
+            background: rgba(255,255,255,0.3);
+            font-weight: 600;
         }
         
         .user-info {
@@ -283,14 +288,16 @@
 </head>
 <body>
     <header class="header">
-        <h1>🔧 CRM Artisans</h1>
+        <h1>CRM Artisans</h1>
+        
         <nav class="nav-menu">
-            <a href="{% url 'dashboard' %}">Accueil</a>
-            <a href="#">Opérations</a>
-            <a href="#">Clients</a>
+            <a href="/" class="active">Accueil</a>
+            <a href="/operations/">Opérations</a>
+            <a href="/clients/">Clients</a>
         </nav>
+        
         <div class="user-info">
-            Connecté : {{ user.username }} | <a href="{% url 'logout' %}" style="color: #333;">Déconnexion</a>
+            Connecté : {{ user.username }} | <a href="/logout/" style="color: #333;">Déconnexion</a>
         </div>
     </header>
 
