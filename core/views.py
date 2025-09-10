@@ -10,6 +10,9 @@ from django.db import models
 from django.contrib import messages
 from .models import Client, Operation, Intervention, HistoriqueOperation
 from .fix_database import fix_client_constraint
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login
+
 
 @login_required
 def dashboard(request):
@@ -455,3 +458,19 @@ def operation_create(request):
     
     return render(request, 'operations/create.html', context)
 
+def register(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            username = form.cleaned_data.get('username')
+            messages.success(request, f'Compte créé pour {username}!')
+            login(request, user)  # Connexion automatique
+            return redirect('dashboard')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/register.html', {'form': form})
+
+def simple_logout(request):
+    logout(request)
+    return redirect('/login/')

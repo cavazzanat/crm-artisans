@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Connexion - CRM Artisans</title>
+    <title>Inscription - CRM Artisans</title>
     <style>
         * {
             margin: 0;
@@ -17,31 +17,32 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 1rem;
         }
         
-        .login-container {
+        .register-container {
             background: white;
             padding: 2rem;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
         }
         
-        .login-header {
+        .register-header {
             text-align: center;
             margin-bottom: 2rem;
             color: #333;
         }
         
-        .login-header h1 {
+        .register-header h1 {
             font-size: 1.8rem;
             margin-bottom: 0.5rem;
         }
         
-        .login-header h2 {
+        .register-header h2 {
             font-size: 1.2rem;
             color: #666;
             font-weight: 400;
@@ -69,14 +70,14 @@
         
         input[type="text"]:focus, input[type="password"]:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+            border-color: #28a745;
+            box-shadow: 0 0 0 2px rgba(40, 167, 69, 0.1);
         }
         
-        .btn-login {
+        .btn-register {
             width: 100%;
             padding: 0.75rem;
-            background-color: #333;
+            background-color: #28a745;
             color: white;
             border: none;
             border-radius: 4px;
@@ -84,10 +85,11 @@
             font-size: 1rem;
             font-weight: 500;
             transition: background-color 0.3s;
+            margin-bottom: 1rem;
         }
         
-        .btn-login:hover {
-            background-color: #555;
+        .btn-register:hover {
+            background-color: #218838;
         }
         
         .error-messages {
@@ -99,58 +101,103 @@
             border: 1px solid #f5c6cb;
         }
         
-        .register-link {
+        .success-messages {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .login-link {
             text-align: center;
-            margin-top: 1.5rem;
             padding-top: 1.5rem;
             border-top: 1px solid #eee;
         }
         
-        .register-link a {
+        .login-link a {
             color: #667eea;
             text-decoration: none;
             font-weight: 500;
         }
         
-        .register-link a:hover {
+        .login-link a:hover {
             text-decoration: underline;
+        }
+        
+        .help-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 0.25rem;
+        }
+        
+        ul.errorlist {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        ul.errorlist li {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            border: 1px solid #f5c6cb;
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="login-header">
+    <div class="register-container">
+        <div class="register-header">
             <h1>CRM Artisans</h1>
-            <h2>Connexion</h2>
+            <h2>Créer un compte</h2>
         </div>
         
-        {% if form.errors %}
-            <div class="error-messages">
-                {% for field, errors in form.errors.items %}
-                    {% for error in errors %}
-                        <div>{{ error }}</div>
-                    {% endfor %}
-                {% endfor %}
-            </div>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="success-messages">
+                    {{ message }}
+                </div>
+            {% endfor %}
         {% endif %}
         
         <form method="post">
             {% csrf_token %}
+            
             <div class="form-group">
                 <label for="{{ form.username.id_for_label }}">Nom d'utilisateur</label>
                 {{ form.username }}
+                {% if form.username.help_text %}
+                    <div class="help-text">{{ form.username.help_text }}</div>
+                {% endif %}
+                {{ form.username.errors }}
             </div>
             
             <div class="form-group">
-                <label for="{{ form.password.id_for_label }}">Mot de passe</label>
-                {{ form.password }}
+                <label for="{{ form.password1.id_for_label }}">Mot de passe</label>
+                {{ form.password1 }}
+                {% if form.password1.help_text %}
+                    <div class="help-text">{{ form.password1.help_text }}</div>
+                {% endif %}
+                {{ form.password1.errors }}
             </div>
             
-            <button type="submit" class="btn-login">Se connecter</button>
+            <div class="form-group">
+                <label for="{{ form.password2.id_for_label }}">Confirmer le mot de passe</label>
+                {{ form.password2 }}
+                {% if form.password2.help_text %}
+                    <div class="help-text">{{ form.password2.help_text }}</div>
+                {% endif %}
+                {{ form.password2.errors }}
+            </div>
+            
+            <button type="submit" class="btn-register">Créer le compte</button>
         </form>
         
-        <div class="register-link">
-            <p>Pas encore de compte ? <a href="{% url 'register' %}">Créer un compte</a></p>
+        <div class="login-link">
+            <p>Vous avez déjà un compte ? <a href="{% url 'login' %}">Se connecter</a></p>
         </div>
     </div>
 </body>
