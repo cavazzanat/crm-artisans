@@ -295,15 +295,17 @@
 <body>
     <header class="header">
         <h1>CRM Artisans</h1>
-        
         <nav class="nav-menu">
-            <a href="/">Accueil</a>
-            <a href="/operations/" class="active">Opérations</a>
-            <a href="/clients/">Clients</a>
+            <a href="{% url 'dashboard' %}" class="active">Accueil</a>
+            <a href="{% url 'operations' %}">Opérations</a>
+            <a href="{% url 'clients' %}">Clients</a>
         </nav>
-        
         <div class="user-info">
-            Connecté : {{ user.username }} | <a href="{% url 'logout' %}" style="color: #333;">Déconnexion</a>
+            Connecté : {{ user.username }} | 
+            <form method="post" action="{% url 'logout' %}" style="display: inline; margin: 0;">
+                {% csrf_token %}
+                <button type="submit" style="background: none; border: none; color: #333; cursor: pointer; font-size: 0.9rem; text-decoration: underline;">Déconnexion</button>
+            </form>
         </div>
     </header>
 
