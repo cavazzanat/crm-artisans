@@ -472,5 +472,6 @@ def register(request):
     return render(request, 'registration/register.html', {'form': form})
 
 def simple_logout(request):
-    logout(request)
+    if request.user.is_authenticated:
+        logout(request)
     return redirect('/login/')
