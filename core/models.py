@@ -5,7 +5,7 @@ from django.utils import timezone
 
 class Client(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    id_client = models.CharField(max_length=10, unique=True, blank=True)
+    id_client = models.CharField(max_length=10, blank=True)  # Supprimez unique=True
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     email = models.EmailField(blank=True)
@@ -16,6 +16,7 @@ class Client(models.Model):
     
     class Meta:
         ordering = ['nom', 'prenom']
+        unique_together = [['user', 'id_client']]  # Contrainte unique par utilisateur
     
     def __str__(self):
         return f"{self.nom} {self.prenom}"
