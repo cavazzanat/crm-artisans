@@ -11,7 +11,7 @@ from django.contrib import messages
 from .models import Client, Operation, Intervention, HistoriqueOperation
 from .fix_database import fix_client_constraint
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login
+from django.contrib.auth import login, logout  # ← Ajoutez logout
 
 
 @login_required
