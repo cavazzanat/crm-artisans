@@ -33,7 +33,7 @@
         
         .nav-menu {
             display: flex;
-            gap: 1rem;  /* ← Partout pareil */
+            gap: 1rem;
         }
         
         .nav-menu a {
@@ -258,15 +258,15 @@
                     </div>
                     
                     <button type="submit" class="btn">Rechercher</button>
-                    <a href="/clients/" class="btn btn-outline">Effacer</a>
+                    <a href="{% url 'clients' %}" class="btn btn-outline">Effacer</a>
                 </div>
             </form>
         </div>
 
         <!-- Actions rapides -->
         <div style="margin-bottom: 1.5rem;">
-            <a href="/admin/core/client/add/" class="btn">Nouveau client</a>
-            <a href="/operations/" class="btn btn-outline">Voir les opérations</a>
+            <a href="{% url 'client_create' %}" class="btn">Nouveau client</a>
+            <a href="{% url 'operations' %}" class="btn btn-outline">Voir les opérations</a>
         </div>
 
         <!-- Tableau des clients -->
@@ -305,8 +305,6 @@
                                 <small>{{ client.adresse|truncatechars:30 }}</small>
                             </td>
                             <td>{{ client.ville }}</td>
-                            <!-- REMPLACEZ les colonnes "Dernière opération" et "Prochaine opération" dans votre template par ceci : -->
-
                             <td>
                                 {% if client.derniere_op %}
                                 <div class="operation-info">
@@ -334,7 +332,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="/clients/{{ client.id }}/" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Voir profil</a>
+                                <a href="{% url 'client_detail' client.id %}" class="btn" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Voir profil</a>
                             </td>
                         </tr>
                         {% endfor %}
@@ -345,7 +343,7 @@
             <div class="empty-state">
                 <h3>Aucun client trouvé</h3>
                 <p>Aucun client ne correspond à votre recherche.</p>
-                <a href="/admin/core/client/add/" class="btn" style="margin-top: 1rem;">Créer le premier client</a>
+                <a href="{% url 'client_create' %}" class="btn" style="margin-top: 1rem;">Créer le premier client</a>
             </div>
             {% endif %}
         </div>

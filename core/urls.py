@@ -10,6 +10,10 @@ urlpatterns = [
     path('operations/<int:operation_id>/duplicate/', views.operation_duplicate, name='operation_duplicate'),
     path('clients/', views.clients_list, name='clients'),
     path('clients/<int:client_id>/', views.client_detail, name='client_detail'),
+    # Ajoutez ces lignes à vos urlpatterns :
+    path('clients/nouveau/', views.client_create, name='client_create'),
+    path('clients/<int:client_id>/modifier/', views.client_edit, name='client_edit'),
+    
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
     path('register/', views.register, name='register'),  # Nouvelle ligne
 ]
