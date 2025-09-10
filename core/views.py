@@ -9,10 +9,11 @@ from django.db.models import Q, Max
 from django.db import models
 from django.contrib import messages
 from .models import Client, Operation, Intervention, HistoriqueOperation
-
+from .fix_database import fix_client_constraint
 
 @login_required
 def dashboard(request):
+    fix_client_constraint()
     try:
         # KPI
         nb_clients = Client.objects.filter(user=request.user).count()

@@ -5,7 +5,7 @@ from django.utils import timezone
 
 class Client(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    id_client = models.CharField(max_length=10, blank=True)  # Supprimez unique=True
+    id_client = models.CharField(max_length=15, blank=True)  # Agrandi pour les nouveaux IDs
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     email = models.EmailField(blank=True)
@@ -16,20 +16,17 @@ class Client(models.Model):
     
     class Meta:
         ordering = ['nom', 'prenom']
-        unique_together = [['user', 'id_client']]  # Contrainte unique par utilisateur
+        # Plus de contrainte unique pour éviter les conflits
     
     def __str__(self):
         return f"{self.nom} {self.prenom}"
     
     def save(self, *args, **kwargs):
         if not self.id_client:
-            # Génère un ID client automatique (ex: CL001)
-            last_client = Client.objects.filter(user=self.user).order_by('id').last()
-            if last_client and last_client.id_client:
-                last_id = int(last_client.id_client[2:])
-                self.id_client = f"CL{str(last_id + 1).zfill(3)}"
-            else:
-                self.id_client = "CL001"
+            import uuid
+            # Génère un ID unique : USER_ID + UUID court
+            unique_suffix = str(uuid.uuid4())[:6].upper()
+            self.id_client = f"U{self.user.id}CL{unique_suffix}"
         super().save(*args, **kwargs)
     
     @property
