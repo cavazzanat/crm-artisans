@@ -230,9 +230,9 @@
     <header class="header">
         <h1>CRM Artisans</h1>
         <nav class="nav-menu">
-            <a href="{% url 'dashboard' %}" class="active">Accueil</a>
+            <a href="{% url 'dashboard' %}">Accueil</a>
             <a href="{% url 'operations' %}">Opérations</a>
-            <a href="{% url 'clients' %}">Clients</a>
+            <a href="{% url 'clients' %}" class="active">Clients</a>
         </nav>
         <div class="user-info">
             Connecté : {{ user.username }} | 
