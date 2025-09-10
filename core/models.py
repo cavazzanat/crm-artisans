@@ -5,7 +5,7 @@ from django.utils import timezone
 
 class Client(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    id_client = models.CharField(max_length=15, blank=True)  # Agrandi pour les nouveaux IDs
+    id_client = models.CharField(max_length=15, blank=True)
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
     email = models.EmailField(blank=True)
@@ -16,7 +16,6 @@ class Client(models.Model):
     
     class Meta:
         ordering = ['nom', 'prenom']
-        # Plus de contrainte unique pour éviter les conflits
     
     def __str__(self):
         return f"{self.nom} {self.prenom}"
@@ -52,7 +51,7 @@ class Operation(models.Model):
     
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='operations')
-    id_operation = models.CharField(max_length=10, unique=True, blank=True)
+    id_operation = models.CharField(max_length=15, blank=True)
     type_prestation = models.CharField(max_length=200)
     adresse_intervention = models.TextField()
     date_prevue = models.DateTimeField(null=True, blank=True)
@@ -68,13 +67,10 @@ class Operation(models.Model):
     
     def save(self, *args, **kwargs):
         if not self.id_operation:
-            # Génère un ID opération automatique (ex: OP001)
-            last_operation = Operation.objects.filter(user=self.user).order_by('id').last()
-            if last_operation and last_operation.id_operation:
-                last_id = int(last_operation.id_operation[2:])
-                self.id_operation = f"OP{str(last_id + 1).zfill(3)}"
-            else:
-                self.id_operation = "OP001"
+            import uuid
+            # Génère un ID unique : USER_ID + UUID court
+            unique_suffix = str(uuid.uuid4())[:6].upper()
+            self.id_operation = f"U{self.user.id}OP{unique_suffix}"
         super().save(*args, **kwargs)
     
     @property

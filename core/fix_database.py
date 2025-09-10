@@ -2,27 +2,19 @@
 from django.db import connection
 
 def fix_client_constraint():
-    """Supprime la contrainte unique sur id_client pour permettre plusieurs utilisateurs"""
+    """Supprime les contraintes unique sur id_client et id_operation pour permettre plusieurs utilisateurs"""
     try:
         with connection.cursor() as cursor:
-            # Vérifier si la contrainte existe avant de la supprimer
-            cursor.execute("""
-                SELECT constraint_name 
-                FROM information_schema.table_constraints 
-                WHERE table_name = 'core_client' 
-                AND constraint_name = 'core_client_id_client_key'
-                AND table_schema = 'public'
-            """)
+            # Supprimer la contrainte unique sur les clients
+            cursor.execute("ALTER TABLE core_client DROP CONSTRAINT IF EXISTS core_client_id_client_key CASCADE;")
+            print("Contrainte unique sur id_client supprimée")
             
-            if cursor.fetchone():
-                # Supprimer la contrainte unique problématique
-                cursor.execute("ALTER TABLE core_client DROP CONSTRAINT core_client_id_client_key CASCADE;")
-                print("Contrainte unique sur id_client supprimée avec succès")
-                return True
-            else:
-                print("Contrainte déjà supprimée ou inexistante")
-                return True
+            # Supprimer la contrainte unique sur les opérations
+            cursor.execute("ALTER TABLE core_operation DROP CONSTRAINT IF EXISTS core_operation_id_operation_key CASCADE;")
+            print("Contrainte unique sur id_operation supprimée")
+            
+            return True
                 
     except Exception as e:
-        print(f"Erreur lors de la suppression de la contrainte : {e}")
+        print(f"Erreur lors de la suppression des contraintes : {e}")
         return False
