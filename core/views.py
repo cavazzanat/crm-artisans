@@ -301,58 +301,62 @@ def clients_list(request):
 @login_required
 def client_detail(request, client_id):
     """Fiche détaillée d'un client avec historique des opérations"""
-    client = get_object_or_404(Client, id=client_id, user=request.user)
-    
-    # Changement de statut d'une opération depuis la fiche client
-    if request.method == 'POST':
-        action = request.POST.get('action')
+    try:
+        client = get_object_or_404(Client, id=client_id, user=request.user)
         
-        if action == 'change_operation_status':
-            operation_id = request.POST.get('operation_id')
-            nouveau_statut = request.POST.get('statut')
+        # Changement de statut d'une opération depuis la fiche client
+        if request.method == 'POST':
+            action = request.POST.get('action')
             
-            try:
-                operation = Operation.objects.get(
-                    id=operation_id, 
-                    client=client, 
-                    user=request.user
-                )
+            if action == 'change_operation_status':
+                operation_id = request.POST.get('operation_id')
+                nouveau_statut = request.POST.get('statut')
                 
-                if nouveau_statut in dict(Operation.STATUTS):
-                    ancien_statut = operation.get_statut_display()
-                    operation.statut = nouveau_statut
-                    operation.save()
-                    
-                    # Ajouter à l'historique
-                    HistoriqueOperation.objects.create(
-                        operation=operation,
-                        action=f"Statut changé depuis fiche client : {ancien_statut} → {operation.get_statut_display()}",
-                        utilisateur=request.user
+                try:
+                    operation = Operation.objects.get(
+                        id=operation_id, 
+                        client=client, 
+                        user=request.user
                     )
                     
-                    messages.success(request, f"Statut de l'opération {operation.id_operation} mis à jour")
+                    if nouveau_statut in dict(Operation.STATUTS):
+                        ancien_statut = operation.get_statut_display()
+                        operation.statut = nouveau_statut
+                        operation.save()
+                        
+                        # Ajouter à l'historique
+                        HistoriqueOperation.objects.create(
+                            operation=operation,
+                            action=f"Statut changé depuis fiche client : {ancien_statut} → {operation.get_statut_display()}",
+                            utilisateur=request.user
+                        )
+                        
+                        messages.success(request, f"Statut de l'opération {operation.id_operation} mis à jour")
+                    
+                except Operation.DoesNotExist:
+                    messages.error(request, "Opération introuvable")
                 
-            except Operation.DoesNotExist:
-                messages.error(request, "Opération introuvable")
-            
-            return redirect('client_detail', client_id=client.id)
-    
-    # Récupérer toutes les opérations du client
-    operations = client.operations.all().order_by('-date_creation')
-    
-    # Statistiques du client
-    nb_operations = operations.count()
-    ca_total = sum(op.montant_total for op in operations if op.statut == 'paye')
-    
-    context = {
-        'client': client,
-        'operations': operations,
-        'nb_operations': nb_operations,
-        'ca_total': ca_total,
-        'statuts_choices': Operation.STATUTS,
-    }
-    
-    return render(request, 'clients/detail.html', context)
+                return redirect('client_detail', client_id=client.id)
+        
+        # Récupérer toutes les opérations du client
+        operations = client.operations.all().order_by('-date_creation')
+        
+        # Statistiques du client
+        nb_operations = operations.count()
+        ca_total = sum(op.montant_total for op in operations if op.statut == 'paye')
+        
+        context = {
+            'client': client,
+            'operations': operations,
+            'nb_operations': nb_operations,
+            'ca_total': ca_total,
+            'statuts_choices': Operation.STATUTS,
+        }
+        
+        return render(request, 'clients/detail.html', context)
+        
+    except Exception as e:
+        return HttpResponse(f"Erreur client detail: {str(e)}")
 
 @login_required
 def operation_create(request):
@@ -471,137 +475,6 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
-@login_required
-def client_create(request):
-    """Création d'un nouveau client"""
-    if request.method == 'POST':
-        nom = request.POST.get('nom', '').strip()
-        prenom = request.POST.get('prenom', '').strip()
-        telephone = request.POST.get('telephone', '').strip()
-        email = request.POST.get('email', '').strip()
-        adresse = request.POST.get('adresse', '').strip()
-        ville = request.POST.get('ville', '').strip()
-        
-        # Validation basique
-        if not nom or not telephone:
-            messages.error(request, "Le nom et le téléphone sont obligatoires")
-            return render(request, 'clients/client_form.html', {
-                'is_edit': False,
-                'nom': nom,
-                'prenom': prenom,
-                'telephone': telephone,
-                'email': email,
-                'adresse': adresse,
-                'ville': ville
-            })
-        
-        try:
-            # Créer le client
-            client = Client.objects.create(
-                user=request.user,
-                nom=nom,
-                prenom=prenom,
-                telephone=telephone,
-                email=email,
-                adresse=adresse,
-                ville=ville
-            )
-            
-            messages.success(request, f"Client {client.nom} {client.prenom} créé avec succès !")
-            return redirect('client_detail', client_id=client.id)
-            
-        except Exception as e:
-            messages.error(request, f"Erreur lors de la création : {str(e)}")
-    
-    # GET - Afficher le formulaire vide
-    return render(request, 'clients/client_form.html', {
-        'is_edit': False,
-        'nom': '',
-        'prenom': '',
-        'telephone': '',
-        'email': '',
-        'adresse': '',
-        'ville': ''
-    })
-
-@login_required 
-def client_edit(request, client_id):
-    """Modification d'un client existant"""
-    client = get_object_or_404(Client, id=client_id, user=request.user)
-    
-    if request.method == 'POST':
-        nom = request.POST.get('nom', '').strip()
-        prenom = request.POST.get('prenom', '').strip()
-        telephone = request.POST.get('telephone', '').strip()
-        email = request.POST.get('email', '').strip()
-        adresse = request.POST.get('adresse', '').strip()
-        ville = request.POST.get('ville', '').strip()
-        
-        # Validation basique
-        if not nom or not telephone:
-            messages.error(request, "Le nom et le téléphone sont obligatoires")
-            return render(request, 'clients/client_form.html', {
-                'is_edit': True,
-                'client': client,
-                'nom': nom,
-                'prenom': prenom,
-                'telephone': telephone,
-                'email': email,
-                'adresse': adresse,
-                'ville': ville
-            })
-        
-        try:
-            # Modifier le client
-            client.nom = nom
-            client.prenom = prenom
-            client.telephone = telephone
-            client.email = email
-            client.adresse = adresse
-            client.ville = ville
-            client.save()
-            
-            messages.success(request, f"Client {client.nom} {client.prenom} modifié avec succès !")
-            return redirect('client_detail', client_id=client.id)
-            
-        except Exception as e:
-            messages.error(request, f"Erreur lors de la modification : {str(e)}")
-    
-    # GET - Afficher le formulaire avec les données existantes
-    return render(request, 'clients/client_form.html', {
-        'is_edit': True,
-        'client': client,
-        'nom': client.nom,
-        'prenom': client.prenom,
-        'telephone': client.telephone,
-        'email': client.email,
-        'adresse': client.adresse,
-        'ville': client.ville
-    })
-
-@login_required
-def client_delete(request, client_id):
-    """Suppression d'un client (avec vérifications)"""
-    client = get_object_or_404(Client, id=client_id, user=request.user)
-    
-    # Vérifier s'il y a des opérations liées
-    operations = client.operations.all()
-    
-    if request.method == 'POST':
-        if operations.exists():
-            messages.error(request, f"Impossible de supprimer {client.nom} {client.prenom} : des opérations sont liées à ce client.")
-            return redirect('client_detail', client_id=client.id)
-        
-        nom_client = f"{client.nom} {client.prenom}"
-        client.delete()
-        messages.success(request, f"Client {nom_client} supprimé avec succès !")
-        return redirect('clients')
-    
-    # GET - Afficher la confirmation
-    return render(request, 'clients/client_delete.html', {
-        'client': client,
-        'operations': operations
-    })
 
 def simple_logout(request):
     if request.user.is_authenticated:
