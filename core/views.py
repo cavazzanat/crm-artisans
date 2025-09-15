@@ -475,6 +475,18 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
+@login_required
+def client_create(request):
+    return HttpResponse('''
+    <h1>Création de client</h1>
+    <form method="POST">
+        <input type="hidden" name="csrfmiddlewaretoken" value="''' + str(request.META.get('CSRF_COOKIE', '')) + '''">
+        <p>Nom: <input type="text" name="nom" required></p>
+        <p>Téléphone: <input type="text" name="telephone" required></p>
+        <button type="submit">Créer</button>
+    </form>
+    <a href="/clients/">Retour</a>
+    ''')
 
 def simple_logout(request):
     if request.user.is_authenticated:
