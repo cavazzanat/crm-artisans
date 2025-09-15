@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supprimer {{ client.nom }} {{ client.prenom }} - CRM Artisans</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        
+        .header {
+            background: #ffffff;
+            color: #333;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #e1e5e9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 { font-size: 1.5rem; }
+        
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .nav-menu a {
+            color: #333;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+        }
+        
+        .nav-menu a.active {
+            background-color: #333;
+            color: white;
+        }
+        
+        .user-info { font-size: 0.9rem; }
+        
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        
+        .delete-card {
+            background: white;
+            border-radius: 4px;
+            border: 1px solid #e1e5e9;
+            overflow: hidden;
+        }
+        
+        .delete-header {
+            padding: 1.5rem;
+            background-color: #f8d7da;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .delete-header h2 {
+            margin: 0;
+            color: #721c24;
+        }
+        
+        .delete-content {
+            padding: 2rem;
+        }
+        
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            display: inline-block;
+            border: none;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            text-decoration: none;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-outline {
+            background: white;
+            color: #333;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>CRM Artisans</h1>
+        <nav class="nav-menu">
+            <a href="{% url 'dashboard' %}">Accueil</a>
+            <a href="{% url 'operations' %}">Opérations</a>
+            <a href="{% url 'clients' %}" class="active">Clients</a>
+        </nav>
+        <div class="user-info">
+            Connecté : {{ user.username }}
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="delete-card">
+            <div class="delete-header">
+                <h2>Supprimer le client</h2>
+            </div>
+            
+            <div class="delete-content">
+                <p>Êtes-vous sûr de vouloir supprimer le client <strong>{{ client.nom }} {{ client.prenom }}</strong> ?</p>
+                
+                {% if operations %}
+                <div class="warning-box">
+                    <strong>⚠️ Attention :</strong> Ce client a {{ operations.count }} opération(s) associée(s). 
+                    La suppression est impossible.
+                </div>
+                {% else %}
+                <div class="warning-box">
+                    <strong>⚠️ Cette action est irréversible !</strong>
+                </div>
+                
+                <form method="POST" style="margin-top: 2rem;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Oui, supprimer</button>
+                    <a href="{% url 'client_detail' client.id %}" class="btn btn-outline">Annuler</a>
+                </form>
+                {% endif %}
+                
+                {% if operations %}
+                <div style="margin-top: 2rem;">
+                    <a href="{% url 'client_detail' client.id %}" class="btn btn-outline">Retour au client</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

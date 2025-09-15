@@ -471,6 +471,138 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
 
+@login_required
+def client_create(request):
+    """Création d'un nouveau client"""
+    if request.method == 'POST':
+        nom = request.POST.get('nom', '').strip()
+        prenom = request.POST.get('prenom', '').strip()
+        telephone = request.POST.get('telephone', '').strip()
+        email = request.POST.get('email', '').strip()
+        adresse = request.POST.get('adresse', '').strip()
+        ville = request.POST.get('ville', '').strip()
+        
+        # Validation basique
+        if not nom or not telephone:
+            messages.error(request, "Le nom et le téléphone sont obligatoires")
+            return render(request, 'clients/client_form.html', {
+                'is_edit': False,
+                'nom': nom,
+                'prenom': prenom,
+                'telephone': telephone,
+                'email': email,
+                'adresse': adresse,
+                'ville': ville
+            })
+        
+        try:
+            # Créer le client
+            client = Client.objects.create(
+                user=request.user,
+                nom=nom,
+                prenom=prenom,
+                telephone=telephone,
+                email=email,
+                adresse=adresse,
+                ville=ville
+            )
+            
+            messages.success(request, f"Client {client.nom} {client.prenom} créé avec succès !")
+            return redirect('client_detail', client_id=client.id)
+            
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la création : {str(e)}")
+    
+    # GET - Afficher le formulaire vide
+    return render(request, 'clients/client_form.html', {
+        'is_edit': False,
+        'nom': '',
+        'prenom': '',
+        'telephone': '',
+        'email': '',
+        'adresse': '',
+        'ville': ''
+    })
+
+@login_required 
+def client_edit(request, client_id):
+    """Modification d'un client existant"""
+    client = get_object_or_404(Client, id=client_id, user=request.user)
+    
+    if request.method == 'POST':
+        nom = request.POST.get('nom', '').strip()
+        prenom = request.POST.get('prenom', '').strip()
+        telephone = request.POST.get('telephone', '').strip()
+        email = request.POST.get('email', '').strip()
+        adresse = request.POST.get('adresse', '').strip()
+        ville = request.POST.get('ville', '').strip()
+        
+        # Validation basique
+        if not nom or not telephone:
+            messages.error(request, "Le nom et le téléphone sont obligatoires")
+            return render(request, 'clients/client_form.html', {
+                'is_edit': True,
+                'client': client,
+                'nom': nom,
+                'prenom': prenom,
+                'telephone': telephone,
+                'email': email,
+                'adresse': adresse,
+                'ville': ville
+            })
+        
+        try:
+            # Modifier le client
+            client.nom = nom
+            client.prenom = prenom
+            client.telephone = telephone
+            client.email = email
+            client.adresse = adresse
+            client.ville = ville
+            client.save()
+            
+            messages.success(request, f"Client {client.nom} {client.prenom} modifié avec succès !")
+            return redirect('client_detail', client_id=client.id)
+            
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la modification : {str(e)}")
+    
+    # GET - Afficher le formulaire avec les données existantes
+    return render(request, 'clients/client_form.html', {
+        'is_edit': True,
+        'client': client,
+        'nom': client.nom,
+        'prenom': client.prenom,
+        'telephone': client.telephone,
+        'email': client.email,
+        'adresse': client.adresse,
+        'ville': client.ville
+    })
+
+@login_required
+def client_delete(request, client_id):
+    """Suppression d'un client (avec vérifications)"""
+    client = get_object_or_404(Client, id=client_id, user=request.user)
+    
+    # Vérifier s'il y a des opérations liées
+    operations = client.operations.all()
+    
+    if request.method == 'POST':
+        if operations.exists():
+            messages.error(request, f"Impossible de supprimer {client.nom} {client.prenom} : des opérations sont liées à ce client.")
+            return redirect('client_detail', client_id=client.id)
+        
+        nom_client = f"{client.nom} {client.prenom}"
+        client.delete()
+        messages.success(request, f"Client {nom_client} supprimé avec succès !")
+        return redirect('clients')
+    
+    # GET - Afficher la confirmation
+    return render(request, 'clients/client_delete.html', {
+        'client': client,
+        'operations': operations
+    })
+
 def simple_logout(request):
     if request.user.is_authenticated:
         logout(request)
