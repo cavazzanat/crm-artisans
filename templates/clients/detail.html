@@ -339,7 +339,7 @@
 
     <div class="container">
         <div class="breadcrumb">
-            <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'clients_list' %}">Clients</a> / {{ client.nom }} {{ client.prenom }}
+            <a href="{% url 'dashboard' %}">Accueil</a> / <a href="{% url 'clients' %}">Clients</a> / {{ client.nom }} {{ client.prenom }}
         </div>
         
         <h1 class="page-title">{{ client.nom }} {{ client.prenom }} ({{ client.id_client }})</h1>
@@ -359,7 +359,7 @@
                 <div class="section">
                     <div class="section-header">
                         <span>Informations client</span>
-                        <a href="{% url 'client_edit' client.pk %}" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Éditer</a>
+                        <a href="/admin/core/client/{{ client.id }}/change/" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Éditer (Admin)</a>
                     </div>
                     <div class="section-content">
                         <div class="info-grid">
