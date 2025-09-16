@@ -552,19 +552,15 @@
                         <a href="{% url 'operation_create' %}?client={{ client.id }}" class="btn btn-success">Nouvelle opération</a>
                         <a href="{% url 'clients' %}" class="btn btn-outline">← Retour à la liste</a>
                         
-                        <!-- Bouton supprimer -->
-                        {% if not operations %}
-                            <a href="{% url 'client_delete' client.id %}" class="btn" 
-                            style="background: #dc3545; color: white;"
-                            onclick="return confirm('Supprimer définitivement {{ client.nom }} {{ client.prenom }} ?')">
-                                🗑️ Supprimer ce client
-                            </a>
-                        {% else %}
-                            <button class="btn" style="background: #6c757d; color: white; cursor: not-allowed;" 
-                                    disabled title="Impossible : ce client a {{ operations.count }} opération(s)">
-                                🗑️ Supprimer ({{ operations.count }} opérations)
+                        <!-- Bouton supprimer forcé -->
+                        <form method="POST" action="{% url 'client_delete' client.id %}" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="force_delete" value="true">
+                            <button type="submit" class="btn" style="background: #dc3545; color: white;"
+                                    onclick="return confirm('ATTENTION : Supprimer {{ client.nom }} {{ client.prenom }} ET toutes ses {{ nb_operations }} opération(s) ? Cette action est irréversible.')">
+                                🗑️ Supprimer client + opérations
                             </button>
-                        {% endif %}
+                        </form>
                     </div>
                 </div>
             </div>

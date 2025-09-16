@@ -502,18 +502,41 @@ def client_create(request):
 
 @login_required
 def client_delete(request, client_id):
-    """Suppression individuelle d'un client"""
+    """Suppression d'un client avec ou sans ses opérations"""
     client = get_object_or_404(Client, id=client_id, user=request.user)
     
-    # Vérifier les opérations liées
-    if client.operations.exists():
-        messages.error(request, f"Impossible de supprimer {client.nom} {client.prenom} : ce client a des opérations liées.")
+    if request.method == 'POST':
+        force_delete = request.POST.get('force_delete') == 'true'
+        operations = Operation.objects.filter(client=client)
+        nom_client = f"{client.nom} {client.prenom}"
+        
+        if force_delete and operations.exists():
+            # Suppression forcée : client + opérations
+            nb_operations = operations.count()
+            
+            # Supprimer les interventions et historiques
+            for operation in operations:
+                operation.interventions.all().delete()
+                operation.historique.all().delete()
+            
+            # Supprimer les opérations puis le client
+            operations.delete()
+            client.delete()
+            
+            messages.success(request, f"Client {nom_client} et ses {nb_operations} opération(s) supprimés avec succès.")
+        else:
+            # Suppression normale
+            if operations.exists():
+                messages.error(request, f"Impossible de supprimer {nom_client} : ce client a des opérations liées.")
+                return redirect('client_detail', client_id=client.id)
+            
+            client.delete()
+            messages.success(request, f"Client {nom_client} supprimé avec succès.")
+        
         return redirect('clients')
     
-    nom_client = f"{client.nom} {client.prenom}"
-    client.delete()
-    messages.success(request, f"Client {nom_client} supprimé avec succès !")
-    return redirect('clients')
+    # GET : rediriger vers la fiche client
+    return redirect('client_detail', client_id=client.id)
 
 @login_required
 def client_edit(request, client_id):
