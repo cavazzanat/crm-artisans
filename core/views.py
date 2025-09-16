@@ -462,6 +462,45 @@ def operation_create(request):
     
     return render(request, 'operations/create.html', context)
 
+@login_required
+def client_create(request):
+    if request.method == 'POST':
+        nom = request.POST.get('nom', '').strip()
+        prenom = request.POST.get('prenom', '').strip()
+        telephone = request.POST.get('telephone', '').strip()
+        email = request.POST.get('email', '').strip()
+        adresse = request.POST.get('adresse', '').strip()
+        ville = request.POST.get('ville', '').strip()
+        
+        if not nom or not telephone:
+            messages.error(request, "Le nom et le téléphone sont obligatoires")
+        else:
+            try:
+                client = Client.objects.create(
+                    user=request.user,
+                    nom=nom,
+                    prenom=prenom,
+                    telephone=telephone,
+                    email=email,
+                    adresse=adresse,
+                    ville=ville
+                )
+                messages.success(request, f"Client {client.nom} {client.prenom} créé avec succès !")
+                return redirect('client_detail', client_id=client.id)
+            except Exception as e:
+                messages.error(request, f"Erreur : {str(e)}")
+    
+    return render(request, 'clients/client_form.html', {
+        'is_edit': False,
+        'nom': '',
+        'prenom': '',
+        'telephone': '',
+        'email': '',
+        'adresse': '',
+        'ville': ''
+    })
+
+
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
