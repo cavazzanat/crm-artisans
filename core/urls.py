@@ -11,6 +11,7 @@ urlpatterns = [
     path('clients/', views.clients_list, name='clients'),
     path('clients/<int:client_id>/', views.client_detail, name='client_detail'),
     path('clients/nouveau/', views.client_create, name='client_create'),
+    path('clients/<int:client_id>/supprimer/', views.client_delete, name='client_delete'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
     path('register/', views.register, name='register'),
 ]
