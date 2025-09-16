@@ -549,9 +549,22 @@
                         <span>Actions rapides</span>
                     </div>
                     <div class="section-content">
-                        <a href="{% url 'operation_create' %}?client={{ client.client_id }}" class="btn btn-success">Nouvelle opération</a>
-                        <a href="/admin/core/client/{{ client.id }}/change/" class="btn">Éditer client</a>
+                        <a href="{% url 'operation_create' %}?client={{ client.id }}" class="btn btn-success">Nouvelle opération</a>
                         <a href="{% url 'clients' %}" class="btn btn-outline">← Retour à la liste</a>
+                        
+                        <!-- Bouton supprimer -->
+                        {% if not operations %}
+                            <a href="{% url 'client_delete' client.id %}" class="btn" 
+                            style="background: #dc3545; color: white;"
+                            onclick="return confirm('Supprimer définitivement {{ client.nom }} {{ client.prenom }} ?')">
+                                🗑️ Supprimer ce client
+                            </a>
+                        {% else %}
+                            <button class="btn" style="background: #6c757d; color: white; cursor: not-allowed;" 
+                                    disabled title="Impossible : ce client a {{ operations.count }} opération(s)">
+                                🗑️ Supprimer ({{ operations.count }} opérations)
+                            </button>
+                        {% endif %}
                     </div>
                 </div>
             </div>
