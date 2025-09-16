@@ -500,6 +500,20 @@ def client_create(request):
         'ville': ''
     })
 
+@login_required
+def client_delete(request, client_id):
+    """Suppression individuelle d'un client"""
+    client = get_object_or_404(Client, id=client_id, user=request.user)
+    
+    # Vérifier les opérations liées
+    if client.operations.exists():
+        messages.error(request, f"Impossible de supprimer {client.nom} {client.prenom} : ce client a des opérations liées.")
+        return redirect('clients')
+    
+    nom_client = f"{client.nom} {client.prenom}"
+    client.delete()
+    messages.success(request, f"Client {nom_client} supprimé avec succès !")
+    return redirect('clients')
 
 def register(request):
     if request.method == 'POST':
