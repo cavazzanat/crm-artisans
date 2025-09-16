@@ -241,6 +241,36 @@
             padding: 2rem;
             font-style: italic;
         }
+        /* Nouveau CSS pour KPI réorganisés */
+        .kpi-section {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-row-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .kpi-row-operations {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+        }
+
+        /* Responsive pour mobile */
+        @media (max-width: 768px) {
+            .kpi-row-main {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-row-operations {
+                grid-template-columns: 1fr;
+            }
+        }
         
         @media (max-width: 768px) {
             .header {
@@ -292,38 +322,42 @@
             </form>
         </div>
     </header>
-</form>
-        </div>
-    </header>
+
 
     <div class="container">
         <h1 class="page-title">Tableau de bord</h1>
 
-        <!-- Section KPI -->
+        <!-- Section KPI reorganisée -->
         <div class="kpi-section">
-            <div class="kpi-card ca">
-                <h3>CA du mois</h3>
-                <div class="kpi-value">{{ ca_mois|floatformat:0 }} €</div>
+            <!-- Première ligne : CA et Clients -->
+            <div class="kpi-row-main">
+                <div class="kpi-card ca">
+                    <h3>CA du mois</h3>
+                    <div class="kpi-value">{{ ca_mois|floatformat:0 }} €</div>
+                </div>
+                
+                <div class="kpi-card clients">
+                    <h3>Nombre de clients</h3>
+                    <div class="kpi-value">{{ nb_clients }}</div>
+                </div>
             </div>
             
-            <div class="kpi-card clients">
-                <h3>Nombre de clients</h3>
-                <div class="kpi-value">{{ nb_clients }}</div>
-            </div>
-            
-            <div class="kpi-card devis">
-                <h3>En attente devis</h3>
-                <div class="kpi-value">{{ nb_en_attente_devis }}</div>
-            </div>
-            
-            <div class="kpi-card planifier">
-                <h3>À planifier</h3>
-                <div class="kpi-value">{{ nb_a_planifier }}</div>
-            </div>
-            
-            <div class="kpi-card paiement">
-                <h3>Attente paiement</h3>
-                <div class="kpi-value">{{ nb_realise }}</div>
+            <!-- Deuxième ligne : 3 statuts opérations -->
+            <div class="kpi-row-operations">
+                <div class="kpi-card devis">
+                    <h3>En attente devis</h3>
+                    <div class="kpi-value">{{ nb_en_attente_devis }}</div>
+                </div>
+                
+                <div class="kpi-card planifier">
+                    <h3>À planifier</h3>
+                    <div class="kpi-value">{{ nb_a_planifier }}</div>
+                </div>
+                
+                <div class="kpi-card paiement">
+                    <h3>Attente paiement</h3>
+                    <div class="kpi-value">{{ nb_realise }}</div>
+                </div>
             </div>
         </div>
 
