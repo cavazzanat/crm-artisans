@@ -130,10 +130,8 @@
 
     <!-- Barre d'actions rapide -->
     <div class="top-actions">
-        <a href="{% url 'devis_create' %}?operation={{ operation.id }}" class="btn btn-outline">📄 Générer devis</a>
-        {% if operation.peut_generer_facture %}
-        <a href="{% url 'facture_create' %}?operation={{ operation.id }}" class="btn btn-outline">🧾 Générer facture</a>
-        {% endif %}
+        <a href="#" class="btn btn-outline" onclick="alert('Fonctionnalité en développement')">📄 Générer devis</a>
+        <a href="#" class="btn btn-outline" onclick="alert('Fonctionnalité en développement')">🧾 Générer facture</a>
         <a href="/admin/core/operation/{{ operation.id }}/change/" class="btn">✏️ Éditer</a>
     </div>
 
