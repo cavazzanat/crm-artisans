@@ -14,6 +14,8 @@ urlpatterns = [
     path('clients/<int:client_id>/supprimer/', views.client_delete, name='client_delete'),
     path('clients/<int:client_id>/modifier/', views.client_edit, name='client_edit'),
 
+    path('run-migration/', views.run_migration, name='run_migration'),
+
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
     path('register/', views.register, name='register'),
 ]
