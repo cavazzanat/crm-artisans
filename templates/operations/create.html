@@ -325,7 +325,7 @@
         </div>
         {% endif %}
 
-        <form method="POST">
+        <form method="POST" onsubmit="return validateForm(event)">
             {% csrf_token %}
             
             <!-- Section Client -->
@@ -509,6 +509,40 @@
                 document.getElementById('date_realisation').required = true;
                 document.getElementById('date_paiement').required = true;
             }
+        }
+
+                // Fonction de validation de la date prévue
+        function validateDatePrevue() {
+            const datePrevue = document.getElementById('date_prevue');
+            if (datePrevue && datePrevue.value) {
+                const selectedDate = new Date(datePrevue.value);
+                const now = new Date();
+                
+                if (selectedDate <= now) {
+                    alert('Erreur : La date prévue ne peut pas être dans le passé');
+                    datePrevue.value = '';
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Fonction de validation du formulaire
+        function validateForm(event) {
+            const statut = document.getElementById('statut').value;
+            const datePrevue = document.getElementById('date_prevue');
+            
+            if (statut === 'planifie' && datePrevue && datePrevue.value) {
+                const selectedDate = new Date(datePrevue.value);
+                const now = new Date();
+                
+                if (selectedDate <= now) {
+                    event.preventDefault();
+                    alert('Erreur : Impossible de planifier une opération dans le passé');
+                    return false;
+                }
+            }
+            return true;
         }
 
         let interventionCount = 0;
