@@ -124,40 +124,48 @@ def operation_detail(request, operation_id):
     if request.method == 'POST':
         action = request.POST.get('action')
         
-    if action == 'change_status':
-        nouveau_statut = request.POST.get('statut')
-        date_prevue_str = request.POST.get('date_prevue')  # Récupérer la date du formulaire
-        
-        if nouveau_statut in dict(Operation.STATUTS):
-            ancien_statut = operation.get_statut_display()
-            operation.statut = nouveau_statut
+        if action == 'change_status':
+            nouveau_statut = request.POST.get('statut')
+            date_prevue_str = request.POST.get('date_prevue')  # Récupérer la date du formulaire
             
-            # TRAITER LA DATE PREVUE du formulaire
-            if date_prevue_str:
-                from datetime import datetime
-                try:
-                    operation.date_prevue = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
-                except ValueError:
-                    pass
-            
-            # LOGIQUE AUTOMATIQUE DATE INTERVENTION
-            from django.utils import timezone
-            if nouveau_statut == 'planifie' and not operation.date_intervention:
-                operation.date_intervention = operation.date_prevue or timezone.now()
-            elif nouveau_statut in ['realise', 'paye'] and not operation.date_intervention:
-                operation.date_intervention = operation.date_prevue or timezone.now()
-            
-            operation.save()
-            
-            # Ajouter à l'historique
-            HistoriqueOperation.objects.create(
-                operation=operation,
-                action=f"Statut changé : {ancien_statut} → {operation.get_statut_display()}",
-                utilisateur=request.user
-            )
-            
-            messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
-            return redirect('operation_detail', operation_id=operation.id)
+            if nouveau_statut in dict(Operation.STATUTS):
+                ancien_statut = operation.get_statut_display()
+                operation.statut = nouveau_statut
+                
+                # TRAITER LA DATE PREVUE du formulaire
+                if date_prevue_str:
+                    from datetime import datetime
+                    try:
+                        operation.date_prevue = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
+                    except ValueError:
+                        pass
+                
+                # LOGIQUE AUTOMATIQUE DATE INTERVENTION
+                from django.utils import timezone
+                if nouveau_statut == 'planifie' and hasattr(operation, 'date_intervention') and not operation.date_intervention:
+                    operation.date_intervention = operation.date_prevue or timezone.now()
+                elif nouveau_statut in ['realise', 'paye'] and hasattr(operation, 'date_intervention') and not operation.date_intervention:
+                    operation.date_intervention = operation.date_prevue or timezone.now()
+                
+                operation.save()
+                
+                # Ajouter à l'historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Statut changé : {ancien_statut} → {operation.get_statut_display()}",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
+                return redirect('operation_detail', operation_id=operation.id)
+
+        elif action == 'add_intervention':
+            # Votre code existant pour add_intervention
+            pass
+
+        elif action == 'delete_intervention':
+            # Votre code existant pour delete_intervention  
+            pass
         
     # Récupérer les données pour l'affichage
     interventions = operation.interventions.all()
