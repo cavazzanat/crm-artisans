@@ -148,10 +148,10 @@ def operation_detail(request, operation_id):
                 
                 # LOGIQUE AUTOMATIQUE DATE INTERVENTION
                 from django.utils import timezone
-                if nouveau_statut == 'planifie' and hasattr(operation, 'date_intervention') and not operation.date_intervention:
-                    operation.date_intervention = operation.date_prevue or timezone.now()
-                elif nouveau_statut in ['realise', 'paye'] and hasattr(operation, 'date_intervention') and not operation.date_intervention:
-                    operation.date_intervention = operation.date_prevue or timezone.now()
+                #if nouveau_statut == 'planifie' and hasattr(operation, 'date_intervention') and not operation.date_intervention:
+                 #   operation.date_intervention = operation.date_prevue or timezone.now()
+                #elif nouveau_statut in ['realise', 'paye'] and hasattr(operation, 'date_intervention') and not operation.date_intervention:
+                #    operation.date_intervention = operation.date_prevue or timezone.now()
                 
                 operation.save()
                 
@@ -403,13 +403,13 @@ def operation_create(request):
                     pass
             
             # Créer l'opération
+            # Remplacez la partie création d'opération par :
             operation = Operation.objects.create(
                 user=request.user,
                 client=client,
                 type_prestation=type_prestation,
                 adresse_intervention=adresse_intervention or f"{client.adresse}, {client.ville}",
                 date_prevue=date_prevue_complete,
-                date_intervention=date_intervention_complete,  # Nouveau champ
                 statut=statut
             )
             
