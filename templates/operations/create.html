@@ -415,16 +415,22 @@
                             </select>
                         </div>
 
-                        <!-- Champ Date prévue (affiché si planifié) -->
+                        <!-- Champ Date prévue (si planifié) -->
                         <div class="form-group" id="datePrevueGroup" style="display: none;">
                             <label for="date_prevue">Date prévue *</label>
                             <input type="datetime-local" name="date_prevue" id="date_prevue">
                         </div>
 
-                        <!-- Champ Date de réalisation (affiché si réalisé/payé) -->
+                        <!-- Champ Date de réalisation (si réalisé) -->
                         <div class="form-group" id="dateRealisationGroup" style="display: none;">
                             <label for="date_realisation">Date de réalisation *</label>
                             <input type="datetime-local" name="date_realisation" id="date_realisation">
+                        </div>
+
+                        <!-- Champ Date de paiement (si payé) -->
+                        <div class="form-group" id="datePaiementGroup" style="display: none;">
+                            <label for="date_paiement">Date de paiement *</label>
+                            <input type="datetime-local" name="date_paiement" id="date_paiement">
                         </div>
                     </div>
                 </div>

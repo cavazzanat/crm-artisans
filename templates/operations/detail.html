@@ -189,6 +189,28 @@
                                 {% endif %}
                             </div>
                         </div>
+
+                        <div class="info-item">
+                            <div class="info-label">Date de réalisation</div>
+                            <div class="info-value">
+                                {% if operation.date_realisation %}
+                                    {{ operation.date_realisation|date:"d/m/Y à H:i" }}
+                                {% else %}
+                                    <em>Non réalisée</em>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">Date de paiement</div>
+                            <div class="info-value">
+                                {% if operation.date_paiement %}
+                                    {{ operation.date_paiement|date:"d/m/Y à H:i" }}
+                                {% else %}
+                                    <em>Non payée</em>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
