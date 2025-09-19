@@ -4,579 +4,370 @@
     <title>{{ operation.id_operation }} - {{ operation.type_prestation }} - CRM Artisans</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa;
-            color: #333;
+            background-color: #f8f9fa; color: #333;
         }
-        
         .header {
-            background: #ffffff;
-            color: #333;
-            padding: 1rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #e1e5e9;
+            background: #ffffff; color: #333; padding: 1rem 2rem; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid #e1e5e9;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
-        
-        .header h1 {
-            font-size: 1.5rem;
-        }
-        
-        .nav-menu {
-            display: flex;
-            gap: 1rem;  /* ← Partout pareil */
-        }
-        
-        .nav-menu a {
-            color: #333;
-            text-decoration: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-        }
-        
-        .nav-menu a.active {
-            background-color: #333;
-            color: white;
-        }
-        
-        .nav-menu a:hover {
-            background: #f8f9fa;
-            transition: background 0.3s;
-        }
-        
-        .user-info {
-            font-size: 0.9rem;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 1rem;
-        }
-        
-        .breadcrumb {
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            color: #666;
-        }
-        
-        .breadcrumb a {
-            color: #333;
-            text-decoration: none;
-        }
-        
-        .breadcrumb a:hover {
-            text-decoration: underline;
-        }
-        
+        .header h1 { font-size: 1.5rem; }
+        .nav-menu { display: flex; gap: 1rem; }
+        .nav-menu a { color: #333; text-decoration: none; padding: 0.5rem 1rem; border-radius: 4px; }
+        .nav-menu a.active { background-color: #333; color: white; }
+        .nav-menu a:hover { background: #f8f9fa; transition: background 0.3s; }
+        .user-info { font-size: 0.9rem; }
+
+        .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+        .breadcrumb { margin-bottom: 1rem; font-size: 0.9rem; color: #666; }
+        .breadcrumb a { color: #333; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+
         .page-title {
-            font-size: 1.8rem;
-            color: #333;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
+            font-size: 1.8rem; color: #333; margin-bottom: .75rem;
+            display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
         }
-        
-        .status-badge {
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-weight: 500;
+        .status-badge { padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.9rem; font-weight: 500; }
+        .status-en_attente_devis { background-color: #fff3cd; color: #856404; }
+        .status-a_planifier { background-color: #d1ecf1; color: #0c5460; }
+        .status-planifie { background-color: #d4edda; color: #155724; }
+        .status-realise { background-color: #cce5ff; color: #004085; }
+        .status-paye { background-color: #d1e7dd; color: #0f5132; }
+        .status-devis_refuse { background-color: #f8d7da; color: #721c24; }
+
+        .top-actions {
+            display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem;
         }
-        
-        .status-en_attente_devis {
-            background-color: #fff3cd;
-            color: #856404;
-        }
-        
-        .status-a_planifier {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        
-        .status-planifie {
-            background-color: #d4edda;
-            color: #155724;
-        }
-        
-        .status-realise {
-            background-color: #cce5ff;
-            color: #004085;
-        }
-        
-        .status-paye {
-            background-color: #d1e7dd;
-            color: #0f5132;
-        }
-        
-        .status-devis_refuse {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        
-        .main-grid {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 2rem;
-        }
-        
+
+        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; }
+
         .section {
-            background: white;
-            border: 1px solid #e1e5e9;
-            border-radius: 4px;
-            margin-bottom: 1.5rem;
+            background: white; border: 1px solid #e1e5e9; border-radius: 4px; margin-bottom: 1.5rem;
         }
-        
         .section-header {
-            padding: 1rem 1.5rem;
-            border-bottom: 1px solid #e1e5e9;
-            background-color: #f8f9fa;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 1rem 1.5rem; border-bottom: 1px solid #e1e5e9; background-color: #f8f9fa;
+            font-weight: 600; display: flex; justify-content: space-between; align-items: center;
         }
-        
-        .section-content {
-            padding: 1.5rem;
-        }
-        
+        .section-content { padding: 1.5rem; }
+
         .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;
         }
-        
-        .info-item {
-            margin-bottom: 1rem;
-        }
-        
-        .info-label {
-            font-weight: 500;
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-        }
-        
-        .info-value {
-            color: #333;
-        }
-        
+        .info-item { margin-bottom: 1rem; }
+        .info-label { font-weight: 500; color: #666; font-size: 0.9rem; margin-bottom: 0.25rem; }
+        .info-value { color: #333; }
+
         .btn {
-            padding: 0.6rem 1.2rem;
-            background: #333;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            display: inline-block;
-            border: none;
-            cursor: pointer;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
+            padding: 0.6rem 1.2rem; background: #333; color: white; text-decoration: none; border-radius: 4px;
+            font-size: 0.9rem; display: inline-block; border: none; cursor: pointer; margin-right: 0.5rem; margin-bottom: 0.5rem;
         }
-        
-        .btn:hover {
-            background: #555;
+        .btn:hover { background: #555; }
+        .btn-secondary { background: #6c757d; } .btn-secondary:hover { background: #5a6268; }
+        .btn-success { background: #28a745; } .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; } .btn-danger:hover { background: #c82333; }
+        .btn-outline { background: white; color: #333; border: 1px solid #ddd; }
+        .btn-outline:hover { background: #f8f9fa; }
+
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-weight: 500; margin-bottom: 0.5rem; color: #555; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 0.6rem; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem;
         }
-        
-        .btn-secondary {
-            background: #6c757d;
-        }
-        
-        .btn-secondary:hover {
-            background: #5a6268;
-        }
-        
-        .btn-success {
-            background: #28a745;
-        }
-        
-        .btn-success:hover {
-            background: #218838;
-        }
-        
-        .btn-danger {
-            background: #dc3545;
-        }
-        
-        .btn-danger:hover {
-            background: #c82333;
-        }
-        
-        .btn-outline {
-            background: white;
-            color: #333;
-            border: 1px solid #ddd;
-        }
-        
-        .btn-outline:hover {
-            background: #f8f9fa;
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-group label {
-            display: block;
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: #555;
-        }
-        
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 0.6rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-        
-        .form-inline {
-            display: flex;
-            gap: 1rem;
-            align-items: end;
-        }
-        
-        .form-inline .form-group {
-            flex: 1;
-            margin-bottom: 0;
-        }
-        
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .table th,
-        .table td {
-            padding: 0.75rem;
-            text-align: left;
-            border-bottom: 1px solid #e1e5e9;
-        }
-        
-        .table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-            color: #555;
-            font-size: 0.9rem;
-        }
-        
-        .table tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .total-row {
-            font-weight: bold;
-            font-size: 1.1rem;
-            background-color: #f8f9fa !important;
-        }
-        
-        .messages {
-            margin-bottom: 1rem;
-        }
-        
-        .alert {
-            padding: 0.75rem 1rem;
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
-        }
-        
-        .alert-success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: #666;
-        }
-        
+        .form-inline { display: flex; gap: 1rem; align-items: end; }
+        .form-inline .form-group { flex: 1; margin-bottom: 0; }
+
+        .table { width: 100%; border-collapse: collapse; }
+        .table th, .table td { padding: 0.75rem; text-align: left; border-bottom: 1px solid #e1e5e9; }
+        .table th { background-color: #f8f9fa; font-weight: 600; color: #555; font-size: 0.9rem; }
+        .table tr:hover { background-color: #f8f9fa; }
+        .total-row { font-weight: bold; font-size: 1.1rem; background-color: #f8f9fa !important; }
+
+        .messages { margin-bottom: 1rem; }
+        .alert { padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 0.5rem; }
+        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+        .empty-state { text-align: center; padding: 2rem; color: #666; }
+
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 1rem;
-            }
-            
-            .nav-menu {
-                gap: 1rem;
-            }
-            
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .form-inline {
-                flex-direction: column;
-            }
-            
-            .page-title {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 0.5rem;
-            }
+            .header { flex-direction: column; gap: 1rem; }
+            .nav-menu { gap: 1rem; }
+            .main-grid { grid-template-columns: 1fr; }
+            .form-inline { flex-direction: column; align-items: stretch; }
+            .page-title { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
         }
     </style>
 </head>
 <body>
-    <header class="header">
-        <h1>CRM Artisans</h1>
-        <nav class="nav-menu">
-            <a href="{% url 'dashboard' %}">Accueil</a>
-            <a href="{% url 'operations' %}" class="active">Opérations</a>
-            <a href="{% url 'clients' %}">Clients</a>
-        </nav>
-        <div class="user-info">
-            Connecté : {{ user.username }} | 
-            <form method="post" action="{% url 'logout' %}" style="display: inline; margin: 0;">
-                {% csrf_token %}
-                <button type="submit" style="background: none; border: none; color: #333; cursor: pointer; font-size: 0.9rem; text-decoration: underline;">Déconnexion</button>
-            </form>
-        </div>
-    </header>
+<header class="header">
+    <h1>CRM Artisans</h1>
+    <nav class="nav-menu">
+        <a href="{% url 'dashboard' %}">Accueil</a>
+        <a href="{% url 'operations' %}" class="active">Opérations</a>
+        <a href="{% url 'clients' %}">Clients</a>
+    </nav>
+    <div class="user-info">
+        Connecté : {{ user.username }} |
+        <form method="post" action="{% url 'logout' %}" style="display: inline; margin: 0;">
+            {% csrf_token %}
+            <button type="submit" style="background: none; border: none; color: #333; cursor: pointer; font-size: 0.9rem; text-decoration: underline;">Déconnexion</button>
+        </form>
+    </div>
+</header>
 
-    <div class="container">
-        <div class="breadcrumb">
-            <a href="/">Accueil</a> / <a href="/operations/">Opérations</a> / {{ operation.id_operation }}
-        </div>
-        
-        <div class="page-title">
-            <span>{{ operation.id_operation }} - {{ operation.type_prestation }}</span>
-            <span class="status-badge status-{{ operation.statut }}">
-                {{ operation.get_statut_display }}
-            </span>
-        </div>
+<div class="container">
+    <div class="breadcrumb">
+        <a href="/">Accueil</a> / <a href="/operations/">Opérations</a> / {{ operation.id_operation }}
+    </div>
 
-        <!-- Messages -->
-        {% if messages %}
-        <div class="messages">
-            {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-        </div>
+    <div class="page-title">
+        <span>{{ operation.id_operation }} - {{ operation.type_prestation }}</span>
+        <span class="status-badge status-{{ operation.statut }}">{{ operation.get_statut_display }}</span>
+    </div>
+
+    <!-- Barre d'actions rapide -->
+    <div class="top-actions">
+        <a href="{% url 'devis_create' %}?operation={{ operation.id }}" class="btn btn-outline">📄 Générer devis</a>
+        {% if operation.peut_generer_facture %}
+        <a href="{% url 'facture_create' %}?operation={{ operation.id }}" class="btn btn-outline">🧾 Générer facture</a>
         {% endif %}
+        <a href="/admin/core/operation/{{ operation.id }}/change/" class="btn">✏️ Éditer</a>
+    </div>
 
-        <div class="main-grid">
-            <div class="left-column">
-                <!-- Informations générales -->
-                <div class="section">
-                    <div class="section-header">
-                        <span>Informations générales</span>
-                        <a href="/admin/core/operation/{{ operation.id }}/change/" class="btn btn-outline" style="padding: 0.4rem 0.8rem; font-size: 0.8rem;">Éditer</a>
-                    </div>
-                    <div class="section-content">
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <div class="info-label">ID Opération</div>
-                                <div class="info-value">{{ operation.id_operation }}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Client</div>
-                                <div class="info-value">
-                                    <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
-                                    <a href="/clients/{{ operation.client.id }}/">Voir le profil client</a>
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Type de prestation</div>
-                                <div class="info-value">{{ operation.type_prestation }}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Adresse intervention</div>
-                                <div class="info-value">{{ operation.adresse_intervention }}</div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Contact</div>
-                                <div class="info-value">
-                                    {{ operation.client.telephone }}<br>
-                                    {{ operation.client.email }}
-                                </div>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Date prévue</div>
-                                <div class="info-value">
-                                    {% if operation.date_prevue %}
-                                        {{ operation.date_prevue|date:"d/m/Y à H:i" }}
-                                    {% else %}
-                                        <em>Non planifiée</em>
-                                    {% endif %}
-                                </div>
+    <!-- Messages -->
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="main-grid">
+        <div class="left-column">
+            <!-- Informations générales -->
+            <div class="section">
+                <div class="section-header">
+                    <span>Informations générales</span>
+                </div>
+                <div class="section-content">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">ID Opération</div>
+                            <div class="info-value">{{ operation.id_operation }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Client</div>
+                            <div class="info-value">
+                                <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
+                                <a href="/clients/{{ operation.client.id }}/">Voir le profil client</a>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                <!-- Changement de statut -->
-                <div class="section">
-                    <div class="section-header">
-                        <span>Statut de l'opération</span>
-                    </div>
-                    <div class="section-content">
-                        <form method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="change_status">
-                            <div class="form-inline">
-                                <div class="form-group">
-                                    <label>Nouveau statut :</label>
-                                    <select name="statut">
-                                        {% for value, label in statuts_choices %}
-                                        <option value="{{ value }}" {% if value == operation.statut %}selected{% endif %}>
-                                            {{ label }}
-                                        </option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                                <button type="submit" class="btn btn-success">Mettre à jour</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Interventions (lignes du devis) -->
-                <div class="section">
-                    <div class="section-header">
-                        <span>Interventions - Lignes du devis</span>
-                    </div>
-                    <div class="section-content">
-                        {% if interventions %}
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Description</th>
-                                    <th style="width: 120px;">Montant</th>
-                                    <th style="width: 100px;">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for intervention in interventions %}
-                                <tr>
-                                    <td>{{ intervention.description }}</td>
-                                    <td><strong>{{ intervention.montant }}€</strong></td>
-                                    <td>
-                                        <form method="POST" style="display: inline;" onsubmit="return confirm('Supprimer cette intervention ?')">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="action" value="delete_intervention">
-                                            <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
-                                            <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">×</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                                <tr class="total-row">
-                                    <td><strong>TOTAL</strong></td>
-                                    <td><strong>{{ montant_total }}€</strong></td>
-                                    <td></td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        {% else %}
-                        <div class="empty-state">
-                            <p>Aucune intervention ajoutée</p>
+                        <div class="info-item">
+                            <div class="info-label">Type de prestation</div>
+                            <div class="info-value">{{ operation.type_prestation }}</div>
                         </div>
-                        {% endif %}
-
-                        <!-- Ajouter une intervention -->
-                        <hr style="margin: 1.5rem 0;">
-                        <h4 style="margin-bottom: 1rem;">Ajouter une intervention</h4>
-                        <form method="POST">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="add_intervention">
-                            <div class="form-inline">
-                                <div class="form-group">
-                                    <label>Description :</label>
-                                    <input type="text" name="description" placeholder="Ex: Déplacement, Main d'œuvre..." required>
-                                </div>
-                                <div class="form-group" style="flex: 0 0 120px;">
-                                    <label>Montant (€) :</label>
-                                    <input type="number" name="montant" step="0.01" placeholder="0.00" required>
-                                </div>
-                                <button type="submit" class="btn btn-success">Ajouter</button>
+                        <div class="info-item">
+                            <div class="info-label">Adresse intervention</div>
+                            <div class="info-value">{{ operation.adresse_intervention }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Contact</div>
+                            <div class="info-value">
+                                {{ operation.client.telephone }}<br>
+                                {{ operation.client.email }}
                             </div>
-                        </form>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Date prévue</div>
+                            <div class="info-value">
+                                {% if operation.date_prevue %}
+                                    {{ operation.date_prevue|date:"d/m/Y à H:i" }}
+                                {% else %}
+                                    <em>Non planifiée</em>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="right-column">
-                <!-- Documents -->
-                <div class="section">
-                    <div class="section-header">
-                        <span>Documents</span>
-                    </div>
-                    <div class="section-content">
-                        <a href="#" class="btn btn-outline">📄 Générer Devis</a>
-                        {% if operation.peut_generer_facture %}
-                        <a href="#" class="btn btn-outline">🧾 Générer Facture</a>
-                        {% endif %}
-                        <a href="#" class="btn btn-outline">📁 Voir documents</a>
-                    </div>
+            <!-- Changement de statut (avec date quand "planifié") -->
+            <div class="section">
+                <div class="section-header">
+                    <span>Statut de l'opération</span>
                 </div>
+                <div class="section-content">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="change_status">
+                        <div class="form-inline">
+                            <div class="form-group">
+                                <label>Nouveau statut :</label>
+                                <select name="statut" id="statutSelect">
+                                    {% for value, label in statuts_choices %}
+                                    <option value="{{ value }}" {% if value == operation.statut %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
 
-                <!-- Actions -->
-                <div class="section">
-                    <div class="section-header">
-                        <span>Actions</span>
-                    </div>
-                    <div class="section-content">
-                        <a href="/admin/core/operation/{{ operation.id }}/change/" class="btn">Éditer</a>
-                        <a href="/operations/{{ operation.id }}/duplicate/" class="btn btn-secondary">Dupliquer</a>
-                        <a href="/operations/" class="btn btn-outline">← Retour à la liste</a>
-                    </div>
-                </div>
+                            <!-- Champ date affiché uniquement si statut = planifie -->
+                            <div class="form-group" id="datePrevueGroup" style="display:none;">
+                                <label>Date prévue :</label>
+                                <!-- datetime-local -> compatible HTML5 -->
+                                <input
+                                  type="datetime-local"
+                                  name="date_prevue"
+                                  id="datePrevueInput"
+                                  value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\\TH:i' }}{% endif %}">
+                            </div>
 
-                <!-- Historique -->
-                <div class="section">
-                    <div class="section-header">
-                        <span>Historique</span>
-                    </div>
-                    <div class="section-content">
-                        {% if historique %}
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for entry in historique %}
-                                <tr>
-                                    <td style="font-size: 0.8rem;">{{ entry.date|date:"d/m H:i" }}</td>
-                                    <td style="font-size: 0.9rem;">{{ entry.action }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        {% else %}
-                        <div class="empty-state">
-                            <p>Aucun historique</p>
+                            <button type="submit" class="btn btn-success">Mettre à jour</button>
                         </div>
-                        {% endif %}
+                    </form>
+                    <p style="margin-top:.75rem; color:#666; font-size:.9rem;">
+                        Astuce : quand un devis est <strong>accepté</strong>, passe le statut en <strong>À planifier</strong>, puis en <strong>Planifié</strong> et renseigne la <strong>Date prévue</strong>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Interventions (lignes du devis) -->
+            <div class="section">
+                <div class="section-header">
+                    <span>Interventions - Lignes du devis</span>
+                </div>
+                <div class="section-content">
+                    {% if interventions %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Description</th>
+                                <th style="width: 120px;">Montant</th>
+                                <th style="width: 100px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for intervention in interventions %}
+                            <tr>
+                                <td>{{ intervention.description }}</td>
+                                <td><strong>{{ intervention.montant }}€</strong></td>
+                                <td>
+                                    <form method="POST" style="display: inline;" onsubmit="return confirm('Supprimer cette intervention ?')">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="action" value="delete_intervention">
+                                        <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
+                                        <button type="submit" class="btn btn-danger" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">×</button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="total-row">
+                                <td><strong>TOTAL</strong></td>
+                                <td><strong>{{ montant_total }}€</strong></td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>Aucune intervention ajoutée</p>
                     </div>
+                    {% endif %}
+
+                    <!-- Ajouter une intervention -->
+                    <hr style="margin: 1.5rem 0;">
+                    <h4 style="margin-bottom: 1rem;">Ajouter une intervention</h4>
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="add_intervention">
+                        <div class="form-inline">
+                            <div class="form-group">
+                                <label>Description :</label>
+                                <input type="text" name="description" placeholder="Ex: Déplacement, Main d'œuvre..." required>
+                            </div>
+                            <div class="form-group" style="flex: 0 0 120px;">
+                                <label>Montant (€) :</label>
+                                <input type="number" name="montant" step="0.01" placeholder="0.00" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">Ajouter</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-column">
+            <!-- Historique (remonté et seul bloc à droite) -->
+            <div class="section">
+                <div class="section-header">
+                    <span>Historique</span>
+                </div>
+                <div class="section-content">
+                    {% if historique %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in historique %}
+                            <tr>
+                                <td style="font-size: 0.8rem;">{{ entry.date|date:"d/m H:i" }}</td>
+                                <td style="font-size: 0.9rem;">{{ entry.action }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <div class="empty-state">
+                        <p>Aucun historique</p>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+(function(){
+  const statutSelect = document.getElementById('statutSelect');
+  const dateGroup = document.getElementById('datePrevueGroup');
+  const dateInput = document.getElementById('datePrevueInput');
+
+  function toggleDateField(){
+    const v = statutSelect.value;
+    // Affiche et force la date quand statut = planifie
+    if (v === 'planifie') {
+      dateGroup.style.display = '';
+      dateInput.required = true;
+      // Pré-remplir avec maintenant si vide
+      if (!dateInput.value) {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const val = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
+                  + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        dateInput.value = val;
+      }
+    } else {
+      dateGroup.style.display = 'none';
+      dateInput.required = false;
+      // Option: on peut vider si non planifié
+      // dateInput.value = '';
+    }
+  }
+
+  if (statutSelect) {
+    statutSelect.addEventListener('change', toggleDateField);
+    // Init à l'ouverture selon statut actuel
+    toggleDateField();
+  }
+})();
+</script>
 </body>
 </html>
