@@ -533,6 +533,36 @@
             }
         }
 
+        function toggleDateFields() {
+            const statut = document.getElementById('statut').value;
+            const datePrevueGroup = document.getElementById('datePrevueGroup');
+            const dateRealisationGroup = document.getElementById('dateRealisationGroup');
+            const datePaiementGroup = document.getElementById('datePaiementGroup');
+            
+            // Masquer tous les champs par défaut
+            if (datePrevueGroup) datePrevueGroup.style.display = 'none';
+            if (dateRealisationGroup) dateRealisationGroup.style.display = 'none';
+            if (datePaiementGroup) datePaiementGroup.style.display = 'none';
+            
+            // Afficher selon le statut
+            if (statut === 'planifie' && datePrevueGroup) {
+                datePrevueGroup.style.display = 'block';
+                document.getElementById('date_prevue').required = true;
+            } else if (statut === 'realise' && dateRealisationGroup) {
+                dateRealisationGroup.style.display = 'block';
+                document.getElementById('date_realisation').required = true;
+            } else if (statut === 'paye' && datePaiementGroup) {  // CETTE LIGNE MANQUAIT
+                datePaiementGroup.style.display = 'block';
+                document.getElementById('date_paiement').required = true;
+            }
+            
+            // Réinitialiser les champs required
+            ['date_prevue', 'date_realisation', 'date_paiement'].forEach(id => {
+                const input = document.getElementById(id);
+                if (input) input.required = false;
+            });
+        }
+
         // Initialiser à l'ouverture de la page
         document.addEventListener('DOMContentLoaded', function() {
             toggleDateFields();
