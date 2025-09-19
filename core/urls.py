@@ -13,6 +13,10 @@ urlpatterns = [
     path('clients/nouveau/', views.client_create, name='client_create'),
     path('clients/<int:client_id>/supprimer/', views.client_delete, name='client_delete'),
     path('clients/<int:client_id>/modifier/', views.client_edit, name='client_edit'),
+
+    # Dans urls.py
+    path('force-migrate/', views.force_migrate, name='force_migrate'),
+
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
     path('register/', views.register, name='register'),
 ]
