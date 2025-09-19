@@ -55,9 +55,11 @@ class Operation(models.Model):
     type_prestation = models.CharField(max_length=200)
     adresse_intervention = models.TextField()
     date_prevue = models.DateTimeField(null=True, blank=True)
+    date_intervention = models.DateTimeField(blank=True, null=True)
     statut = models.CharField(max_length=20, choices=STATUTS, default='en_attente_devis')
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
+
     
     class Meta:
         ordering = ['-date_creation']
