@@ -124,77 +124,41 @@ def operation_detail(request, operation_id):
     if request.method == 'POST':
         action = request.POST.get('action')
         
-        if action == 'change_status':
-            nouveau_statut = request.POST.get('statut')
-            if nouveau_statut in dict(Operation.STATUTS):
-                ancien_statut = operation.get_statut_display()
-                operation.statut = nouveau_statut
-                operation.save()
-                
-                # Ajouter à l'historique
-                HistoriqueOperation.objects.create(
-                    operation=operation,
-                    action=f"Statut changé : {ancien_statut} → {operation.get_statut_display()}",
-                    utilisateur=request.user
-                )
-                
-                messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
-                return redirect('operation_detail', operation_id=operation.id)
+    if action == 'change_status':
+        nouveau_statut = request.POST.get('statut')
+        date_prevue_str = request.POST.get('date_prevue')  # Récupérer la date du formulaire
         
-        elif action == 'add_intervention':
-            description = request.POST.get('description')
-            montant = request.POST.get('montant')
+        if nouveau_statut in dict(Operation.STATUTS):
+            ancien_statut = operation.get_statut_display()
+            operation.statut = nouveau_statut
             
-            if description and montant:
+            # TRAITER LA DATE PREVUE du formulaire
+            if date_prevue_str:
+                from datetime import datetime
                 try:
-                    # Calculer l'ordre (dernier + 1)
-                    last_order = operation.interventions.aggregate(
-                        max_order=Max('ordre')
-                    )['max_order'] or 0
-                    
-                    Intervention.objects.create(
-                        operation=operation,
-                        description=description,
-                        montant=float(montant),
-                        ordre=last_order + 1
-                    )
-                    
-                    # Ajouter à l'historique
-                    HistoriqueOperation.objects.create(
-                        operation=operation,
-                        action=f"Intervention ajoutée : {description} ({montant}€)",
-                        utilisateur=request.user
-                    )
-                    
-                    messages.success(request, "Intervention ajoutée avec succès")
+                    operation.date_prevue = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
                 except ValueError:
-                    messages.error(request, "Montant invalide")
-                
-                return redirect('operation_detail', operation_id=operation.id)
-        
-        elif action == 'delete_intervention':
-            intervention_id = request.POST.get('intervention_id')
-            try:
-                intervention = Intervention.objects.get(
-                    id=intervention_id, 
-                    operation=operation
-                )
-                description = intervention.description
-                intervention.delete()
-                
-                # Ajouter à l'historique
-                HistoriqueOperation.objects.create(
-                    operation=operation,
-                    action=f"Intervention supprimée : {description}",
-                    utilisateur=request.user
-                )
-                
-                messages.success(request, "Intervention supprimée")
-            except Intervention.DoesNotExist:
-                messages.error(request, "Intervention introuvable")
+                    pass
             
+            # LOGIQUE AUTOMATIQUE DATE INTERVENTION
+            from django.utils import timezone
+            if nouveau_statut == 'planifie' and not operation.date_intervention:
+                operation.date_intervention = operation.date_prevue or timezone.now()
+            elif nouveau_statut in ['realise', 'paye'] and not operation.date_intervention:
+                operation.date_intervention = operation.date_prevue or timezone.now()
+            
+            operation.save()
+            
+            # Ajouter à l'historique
+            HistoriqueOperation.objects.create(
+                operation=operation,
+                action=f"Statut changé : {ancien_statut} → {operation.get_statut_display()}",
+                utilisateur=request.user
+            )
+            
+            messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
             return redirect('operation_detail', operation_id=operation.id)
-    
+        
     # Récupérer les données pour l'affichage
     interventions = operation.interventions.all()
     historique = operation.historique.all()[:10]  # 10 dernières actions
