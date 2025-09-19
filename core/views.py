@@ -381,26 +381,46 @@ def operation_create(request):
                     ville=nouveau_client_ville
                 )
             
-            # NOUVELLE LOGIQUE : Traitement des dates selon le statut
+            # Dans operation_create, remplacez la section "NOUVELLE LOGIQUE" par :
+
+            # LOGIQUE A 3 DATES : Traitement selon le statut
             from datetime import datetime
             date_prevue_complete = None
-            date_intervention_complete = None
-            
+            date_realisation_complete = None
+            date_paiement_complete = None
+
             if statut == 'planifie' and date_prevue_str:
                 # Statut planifié : utiliser date_prevue
                 try:
                     date_prevue_complete = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
                 except ValueError:
                     pass
-            
-            elif statut in ['realise', 'paye'] and date_realisation_str:
-                # Statut réalisé/payé : utiliser date_realisation
-                try:
-                    date_intervention_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
-                    # Pour réalisé/payé, on met aussi la date prévue = date réalisation
-                    date_prevue_complete = date_intervention_complete
-                except ValueError:
-                    pass
+
+            elif statut == 'realise':
+                # Statut réalisé : utiliser date_realisation
+                date_realisation_str = request.POST.get('date_realisation', '')
+                if date_realisation_str:
+                    try:
+                        date_realisation_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                    except ValueError:
+                        pass
+
+            elif statut == 'paye':
+                # Statut payé : récupérer les 2 dates (réalisation + paiement)
+                date_realisation_str = request.POST.get('date_realisation', '')
+                date_paiement_str = request.POST.get('date_paiement', '')
+                
+                if date_realisation_str:
+                    try:
+                        date_realisation_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                    except ValueError:
+                        pass
+                        
+                if date_paiement_str:
+                    try:
+                        date_paiement_complete = datetime.fromisoformat(date_paiement_str.replace('T', ' '))
+                    except ValueError:
+                        pass
             
             # Créer l'opération
             # Remplacez la partie création d'opération par :
@@ -410,6 +430,8 @@ def operation_create(request):
                 type_prestation=type_prestation,
                 adresse_intervention=adresse_intervention or f"{client.adresse}, {client.ville}",
                 date_prevue=date_prevue_complete,
+                # date_realisation=date_realisation_complete,  # À décommenter après migration
+                # date_paiement=date_paiement_complete,        # À décommenter après migration
                 statut=statut
             )
             
