@@ -405,21 +405,26 @@
                             <label for="adresse_intervention">Adresse d'intervention</label>
                             <textarea name="adresse_intervention" id="adresse_intervention" placeholder="Laisser vide pour utiliser l'adresse du client"></textarea>
                         </div>
-                        <div class="form-group">
-                            <label for="date_prevue">Date prévue</label>
-                            <input type="date" name="date_prevue" id="date_prevue">
-                        </div>
-                        <div class="form-group">
-                            <label for="heure_prevue">Heure prévue</label>
-                            <input type="time" name="heure_prevue" id="heure_prevue">
-                        </div>
+                        
                         <div class="form-group full-width">
                             <label for="statut">Statut initial</label>
-                            <select name="statut" id="statut">
+                            <select name="statut" id="statut" onchange="toggleDateFields()">
                                 {% for value, label in statuts_choices %}
                                 <option value="{{ value }}" {% if value == 'en_attente_devis' %}selected{% endif %}>{{ label }}</option>
                                 {% endfor %}
                             </select>
+                        </div>
+
+                        <!-- Champ Date prévue (affiché si planifié) -->
+                        <div class="form-group" id="datePrevueGroup" style="display: none;">
+                            <label for="date_prevue">Date prévue *</label>
+                            <input type="datetime-local" name="date_prevue" id="date_prevue">
+                        </div>
+
+                        <!-- Champ Date de réalisation (affiché si réalisé/payé) -->
+                        <div class="form-group" id="dateRealisationGroup" style="display: none;">
+                            <label for="date_realisation">Date de réalisation *</label>
+                            <input type="datetime-local" name="date_realisation" id="date_realisation">
                         </div>
                     </div>
                 </div>
@@ -496,6 +501,36 @@
                 row.remove();
             }
         }
+
+        function toggleDateFields() {
+            const statut = document.getElementById('statut').value;
+            const datePrevueGroup = document.getElementById('datePrevueGroup');
+            const dateRealisationGroup = document.getElementById('dateRealisationGroup');
+            
+            // Masquer tous les champs par défaut
+            datePrevueGroup.style.display = 'none';
+            dateRealisationGroup.style.display = 'none';
+            
+            // Afficher selon le statut
+            if (statut === 'planifie') {
+                datePrevueGroup.style.display = 'block';
+                document.getElementById('date_prevue').required = true;
+                document.getElementById('date_realisation').required = false;
+            } else if (statut === 'realise' || statut === 'paye') {
+                dateRealisationGroup.style.display = 'block';
+                document.getElementById('date_realisation').required = true;
+                document.getElementById('date_prevue').required = false;
+            } else {
+                // En attente devis, à planifier : pas de champ date
+                document.getElementById('date_prevue').required = false;
+                document.getElementById('date_realisation').required = false;
+            }
+        }
+
+        // Initialiser à l'ouverture de la page
+        document.addEventListener('DOMContentLoaded', function() {
+            toggleDateFields();
+        });
 
         // Ajouter une intervention par défaut
         ajouterIntervention();

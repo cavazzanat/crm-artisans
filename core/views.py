@@ -345,9 +345,11 @@ def operation_create(request):
         
         type_prestation = request.POST.get('type_prestation', '').strip()
         adresse_intervention = request.POST.get('adresse_intervention', '').strip()
-        date_prevue = request.POST.get('date_prevue', '')
-        heure_prevue = request.POST.get('heure_prevue', '')
         statut = request.POST.get('statut', 'en_attente_devis')
+        
+        # NOUVEAU : Gestion des dates selon le statut
+        date_prevue_str = request.POST.get('date_prevue', '')
+        date_realisation_str = request.POST.get('date_realisation', '')
         
         # Interventions (lignes du devis)
         descriptions = request.POST.getlist('description[]')
@@ -373,28 +375,35 @@ def operation_create(request):
                     ville=nouveau_client_ville
                 )
             
-            # Créer l'opération
+            # NOUVELLE LOGIQUE : Traitement des dates selon le statut
+            from datetime import datetime
             date_prevue_complete = None
-            if date_prevue:
-                from datetime import datetime, time
-                if heure_prevue:
-                    try:
-                        heure = datetime.strptime(heure_prevue, '%H:%M').time()
-                        date_prevue_complete = datetime.combine(
-                            datetime.strptime(date_prevue, '%Y-%m-%d').date(),
-                            heure
-                        )
-                    except ValueError:
-                        pass
-                else:
-                    date_prevue_complete = datetime.strptime(date_prevue, '%Y-%m-%d')
+            date_intervention_complete = None
             
+            if statut == 'planifie' and date_prevue_str:
+                # Statut planifié : utiliser date_prevue
+                try:
+                    date_prevue_complete = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
+                except ValueError:
+                    pass
+            
+            elif statut in ['realise', 'paye'] and date_realisation_str:
+                # Statut réalisé/payé : utiliser date_realisation
+                try:
+                    date_intervention_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                    # Pour réalisé/payé, on met aussi la date prévue = date réalisation
+                    date_prevue_complete = date_intervention_complete
+                except ValueError:
+                    pass
+            
+            # Créer l'opération
             operation = Operation.objects.create(
                 user=request.user,
                 client=client,
                 type_prestation=type_prestation,
                 adresse_intervention=adresse_intervention or f"{client.adresse}, {client.ville}",
                 date_prevue=date_prevue_complete,
+                date_intervention=date_intervention_complete,  # Nouveau champ
                 statut=statut
             )
             
