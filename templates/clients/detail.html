@@ -118,12 +118,14 @@
 
         <div class="action-row">
             <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
-            <form method="POST" action="{% url 'client_delete' client.id %}" 
+
+            <form method="POST" action="{% url 'client_delete' client.id %}"
                   onsubmit="return confirm('ATTENTION : Supprimer {{ client.nom }} {{ client.prenom }} ET toutes ses {{ nb_operations }} opération(s) ? Action irréversible.')">
                 {% csrf_token %}
                 <input type="hidden" name="force_delete" value="true">
                 <button type="submit" class="btn btn-danger">🗑️ Supprimer</button>
             </form>
+
             <a href="{% url 'operation_create' %}?client={{ client.id }}" class="btn btn-primary">➕ Nouvelle opération</a>
 
             <button id="saveBtn" class="btn btn-success" style="display:none;" onclick="saveClient()">✔️ Enregistrer</button>
@@ -134,25 +136,75 @@
     <!-- Infos client -->
     <section class="section">
         <header class="section-h">Informations client</header>
+
         <div class="info-grid" id="displayMode">
-            <div><div class="info-label">Nom complet</div><div class="info-value">{{ client.nom }} {{ client.prenom }}</div></div>
-            <div><div class="info-label">Téléphone</div><div class="info-value"><a href="tel:{{ client.telephone }}">{{ client.telephone }}</a></div></div>
-            <div><div class="info-label">Email</div><div class="info-value">
-                {% if client.email %}<a href="mailto:{{ client.email }}">{{ client.email }}</a>{% else %}<em>Non renseigné</em>{% endif %}
-            </div></div>
-            <div style="grid-column:1/-1;"><div class="info-label">Adresse</div><div class="info-value">{{ client.adresse }}, {{ client.ville }}</div></div>
-            <div><div class="info-label">Client depuis</div><div class="info-value">{{ client.date_creation|date:"d/m/Y" }}</div></div>
+            <div>
+                <div class="info-label">Nom complet</div>
+                <div class="info-value">{{ client.nom }} {{ client.prenom }}</div>
+            </div>
+
+            <div>
+                <div class="info-label">Téléphone</div>
+                <div class="info-value">
+                    <a href="tel:{{ client.telephone }}">{{ client.telephone }}</a>
+                </div>
+            </div>
+
+            <div>
+                <div class="info-label">Email</div>
+                <div class="info-value">
+                    {% if client.email %}
+                        <a href="mailto:{{ client.email }}">{{ client.email }}</a>
+                    {% else %}
+                        <em>Non renseigné</em>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="grid-column:1/-1;">
+                <div class="info-label">Adresse</div>
+                <div class="info-value">{{ client.adresse }}, {{ client.ville }}</div>
+            </div>
+
+            <div>
+                <div class="info-label">Client depuis</div>
+                <div class="info-value">{{ client.date_creation|date:"d/m/Y" }}</div>
+            </div>
         </div>
+
         <!-- Formulaire édition -->
         <form method="POST" action="{% url 'client_edit' client.id %}" id="editForm" style="display:none;">
             {% csrf_token %}
             <div class="info-grid">
-                <div><div class="info-label">Nom *</div><input type="text" id="edit-nom" name="nom" value="{{ client.nom }}" required></div>
-                <div><div class="info-label">Prénom</div><input type="text" id="edit-prenom" name="prenom" value="{{ client.prenom }}"></div>
-                <div><div class="info-label">Téléphone *</div><input type="tel" id="edit-telephone" name="telephone" value="{{ client.telephone }}" required></div>
-                <div><div class="info-label">Email</div><input type="email" id="edit-email" name="email" value="{{ client.email }}"></div>
-                <div><div class="info-label">Adresse</div><input type="text" id="edit-adresse" name="adresse" value="{{ client.adresse }}"></div>
-                <div><div class="info-label">Ville</div><input type="text" id="edit-ville" name="ville" value="{{ client.ville }}"></div>
+                <div>
+                    <div class="info-label">Nom *</div>
+                    <input type="text" id="edit-nom" name="nom" value="{{ client.nom }}" required>
+                </div>
+
+                <div>
+                    <div class="info-label">Prénom</div>
+                    <input type="text" id="edit-prenom" name="prenom" value="{{ client.prenom }}">
+                </div>
+
+                <div>
+                    <div class="info-label">Téléphone *</div>
+                    <input type="tel" id="edit-telephone" name="telephone" value="{{ client.telephone }}" required>
+                </div>
+
+                <div>
+                    <div class="info-label">Email</div>
+                    <input type="email" id="edit-email" name="email" value="{{ client.email }}">
+                </div>
+
+                <div>
+                    <div class="info-label">Adresse</div>
+                    <input type="text" id="edit-adresse" name="adresse" value="{{ client.adresse }}">
+                </div>
+
+                <div>
+                    <div class="info-label">Ville</div>
+                    <input type="text" id="edit-ville" name="ville" value="{{ client.ville }}">
+                </div>
             </div>
         </form>
     </section>
@@ -161,45 +213,62 @@
     <section class="section">
         <header class="section-h">Statistiques</header>
         <div class="stats-line">
-            <div class="stat-chip"><div class="stat-val">{{ nb_operations }}</div><div class="stat-lab">Opérations</div></div>
-            <div class="stat-chip"><div class="stat-val">{{ ca_total }}€</div><div class="stat-lab">CA Total</div></div>
+            <div class="stat-chip">
+                <div class="stat-val">{{ nb_operations }}</div>
+                <div class="stat-lab">Opérations</div>
+            </div>
+            <div class="stat-chip">
+                <div class="stat-val">{{ ca_total }}€</div>
+                <div class="stat-lab">CA Total</div>
+            </div>
         </div>
     </section>
 
     <!-- Historique -->
     <section class="section">
         <header class="section-h">Historique des opérations ({{ nb_operations }})</header>
+
         {% if operations %}
-        <table class="table">
-            <thead><tr><th>Date</th><th>Type</th><th>Montant</th><th>Statut</th><th></th></tr></thead>
-            <tbody>
-                {% for operation in operations %}
-                <tr>
-                    <td>
-                        {% if operation.date_prevue %}
-                            {{ operation.date_prevue|date:"d/m H:i" }}
-                        {% else %}
-                            {{ operation.date_creation|date:"d/m/Y" }}
-                        {% endif %}
-                    </td>
-                    <td>{{ operation.type_prestation }}</td>
-                    <td><strong>{{ operation.montant_total }}€</strong></td>
-                    <td>
-                        <span class="badge badge--{{ operation.statut }}">
-                            {{ operation.get_statut_display }}
-                        </span>
-                    </td>
-                    <td><a href="{% url 'operation_detail' operation.pk %}" class="btn btn-outline">Voir</a></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Type</th>
+                        <th>Montant</th>
+                        <th>Statut</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for operation in operations %}
+                        <tr>
+                            <td>
+                                {% if operation.date_prevue %}
+                                    {{ operation.date_prevue|date:"d/m H:i" }}
+                                {% else %}
+                                    {{ operation.date_creation|date:"d/m/Y" }}
+                                {% endif %}
+                            </td>
+                            <td>{{ operation.type_prestation }}</td>
+                            <td><strong>{{ operation.montant_total }}€</strong></td>
+                            <td>
+                                <span class="badge badge--{{ operation.statut }}">
+                                    {{ operation.get_statut_display }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'operation_detail' operation.pk %}" class="btn btn-outline">Voir</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         {% else %}
-        <div style="text-align:center;padding:2rem;color:var(--muted);">
-            <h4>Aucune opération</h4>
-            <p>Ce client n'a pas encore d'opération enregistrée.</p>
-            <a href="{% url 'operation_create' %}?client={{ client.id }}" class="btn btn-primary" style="margin-top:1rem;">Créer la première opération</a>
-        </div>
+            <div style="text-align:center;padding:2rem;color:var(--muted);">
+                <h4>Aucune opération</h4>
+                <p>Ce client n'a pas encore d'opération enregistrée.</p>
+                <a href="{% url 'operation_create' %}?client={{ client.id }}" class="btn btn-primary" style="margin-top:1rem;">Créer la première opération</a>
+            </div>
         {% endif %}
     </section>
 
@@ -210,13 +279,14 @@
 
 <!-- Barre mobile -->
 <nav class="bottom-bar">
-  <button class="bbtn" onclick="toggleEdit()">✏️ Éditer</button>
-  <a class="bbtn" href="{% url 'operation_create' %}?client={{ client.id }}">➕ Opération</a>
-  <a class="bbtn" href="tel:{{ client.telephone }}">📞 Appeler</a>
+    <button class="bbtn" onclick="toggleEdit()">✏️ Éditer</button>
+    <a class="bbtn" href="{% url 'operation_create' %}?client={{ client.id }}">➕ Opération</a>
+    <a class="bbtn" href="tel:{{ client.telephone }}">📞 Appeler</a>
 </nav>
 
 <script>
 let originalValues={};
+
 function toggleEdit(){
   originalValues={
     nom:document.getElementById('edit-nom').value,
@@ -232,6 +302,7 @@ function toggleEdit(){
   document.getElementById('saveBtn').style.display='inline-block';
   document.getElementById('cancelBtn').style.display='inline-block';
 }
+
 function cancelEdit(){
   document.getElementById('edit-nom').value=originalValues.nom;
   document.getElementById('edit-prenom').value=originalValues.prenom;
@@ -245,6 +316,7 @@ function cancelEdit(){
   document.getElementById('saveBtn').style.display='none';
   document.getElementById('cancelBtn').style.display='none';
 }
+
 function saveClient(){
   const nom=document.getElementById('edit-nom').value.trim();
   const telephone=document.getElementById('edit-telephone').value.trim();
