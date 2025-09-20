@@ -462,6 +462,29 @@
     </div>
 
     <script>
+
+        // Fonction pour récupérer les paramètres GET de l'URL
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Fonction pour présélectionner un client
+        function preselectClient() {
+            const clientId = getUrlParameter('client');
+            if (clientId) {
+                // Sélectionner "Client existant"
+                document.getElementById('client_existant').checked = true;
+                
+                // Sélectionner le client dans la liste
+                const clientSelect = document.getElementById('client_id');
+                clientSelect.value = clientId;
+                
+                // Appeler toggleClientFields pour s'assurer que l'affichage est correct
+                toggleClientFields();
+            }
+        }
+
         function toggleClientFields() {
             const clientExistant = document.getElementById('client_existant').checked;
             const fieldsExistant = document.getElementById('client-existant-fields');
