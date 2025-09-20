@@ -145,86 +145,114 @@
     {% endif %}
 
     <div class="main-grid">
-    <div class="left-column">
-    <!-- Informations générales -->
-    <div class="section">
-        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
-            <span>Informations générales</span>
-            <div>
-                <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
-                <button id="saveBtn" class="btn btn-success" style="display:none;" onclick="saveOperation()">✔️ Enregistrer</button>
-                <button id="cancelBtn" class="btn btn-outline" style="display:none;" onclick="cancelEdit()">↩️ Annuler</button>
-            </div>
-        </div>
-        <div class="section-content">
-            <!-- Mode affichage -->
-            <div class="info-grid" id="displayMode">
-                <div class="info-item">
-                    <div class="info-label">ID Opération</div>
-                    <div class="info-value">{{ operation.id_operation }}</div>
+        <div class="left-column">
+            <!-- Informations générales -->
+            <div class="section">
+                <div class="section-header">
+                    <span>Informations générales</span>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Client</div>
-                    <div class="info-value">
-                        <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
-                        <a href="/clients/{{ operation.client.id }}/">Voir le profil client</a>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Type de prestation</div>
-                    <div class="info-value">{{ operation.type_prestation }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Adresse intervention</div>
-                    <div class="info-value">{{ operation.adresse_intervention }}</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Statut</div>
-                    <div class="info-value">
-                        <span class="status-badge status-{{ operation.statut }}">{{ operation.get_statut_display }}</span>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-label">Date prévue</div>
-                    <div class="info-value">
-                        {% if operation.date_prevue %}
-                            {{ operation.date_prevue|date:"d/m/Y à H:i" }}
-                        {% else %}
-                            <em>Non planifiée</em>
-                        {% endif %}
+                <div class="section-content">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">ID Opération</div>
+                            <div class="info-value">{{ operation.id_operation }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Client</div>
+                            <div class="info-value">
+                                <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
+                                <a href="/clients/{{ operation.client.id }}/">Voir le profil client</a>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Type de prestation</div>
+                            <div class="info-value">{{ operation.type_prestation }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Adresse intervention</div>
+                            <div class="info-value">{{ operation.adresse_intervention }}</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Contact</div>
+                            <div class="info-value">
+                                {{ operation.client.telephone }}<br>
+                                {{ operation.client.email }}
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Date prévue</div>
+                            <div class="info-value">
+                                {% if operation.date_prevue %}
+                                    {{ operation.date_prevue|date:"d/m/Y à H:i" }}
+                                {% else %}
+                                    <em>Non planifiée</em>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">Date de réalisation</div>
+                            <div class="info-value">
+                                {% if operation.date_realisation %}
+                                    {{ operation.date_realisation|date:"d/m/Y à H:i" }}
+                                {% else %}
+                                    <em>Non réalisée</em>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="info-item">
+                            <div class="info-label">Date de paiement</div>
+                            <div class="info-value">
+                                {% if operation.date_paiement %}
+                                    {{ operation.date_paiement|date:"d/m/Y à H:i" }}
+                                {% else %}
+                                    <em>Non payée</em>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Mode édition -->
-            <form method="POST" action="{% url 'operation_edit' operation.id %}" id="editForm" style="display:none;">
-                {% csrf_token %}
-                <div class="info-grid">
-                    <div>
-                        <div class="info-label">Type de prestation *</div>
-                        <input type="text" id="edit-type" name="type_prestation" value="{{ operation.type_prestation }}" required>
-                    </div>
-                    <div>
-                        <div class="info-label">Adresse intervention</div>
-                        <input type="text" id="edit-adresse" name="adresse_intervention" value="{{ operation.adresse_intervention }}">
-                    </div>
-                    <div>
-                        <div class="info-label">Statut</div>
-                        <select id="edit-statut" name="statut" onchange="toggleEditDateFields()">
-                            {% for value, label in statuts_choices %}
-                            <option value="{{ value }}" {% if value == operation.statut %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div id="editDatePrevueGroup" style="display: none;">
-                        <div class="info-label">Date prévue</div>
-                        <input type="datetime-local" id="edit-date-prevue" name="date_prevue" 
-                            value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\\TH:i' }}{% endif %}">
-                    </div>
+            <!-- Changement de statut (avec date quand "planifié") -->
+            <div class="section">
+                <div class="section-header">
+                    <span>Statut de l'opération</span>
                 </div>
-            </form>
-        </div>
-    </div>
+                <div class="section-content">
+                    <form method="POST">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="change_status">
+                        <div class="form-inline">
+                            <div class="form-group">
+                                <label>Nouveau statut :</label>
+                                <select name="statut" id="statutSelect">
+                                    {% for value, label in statuts_choices %}
+                                    <option value="{{ value }}" {% if value == operation.statut %}selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <!-- Champ date affiché uniquement si statut = planifie -->
+                            <div class="form-group" id="datePrevueGroup" style="display:none;">
+                                <label>Date prévue :</label>
+                                <!-- datetime-local -> compatible HTML5 -->
+                                <input
+                                  type="datetime-local"
+                                  name="date_prevue"
+                                  id="datePrevueInput"
+                                  value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\\TH:i' }}{% endif %}">
+                            </div>
+
+                            <button type="submit" class="btn btn-success">Mettre à jour</button>
+                        </div>
+                    </form>
+                    <p style="margin-top:.75rem; color:#666; font-size:.9rem;">
+                        Astuce : quand un devis est <strong>accepté</strong>, passe le statut en <strong>À planifier</strong>, puis en <strong>Planifié</strong> et renseigne la <strong>Date prévue</strong>.
+                    </p>
+                </div>
+            </div>
 
             <!-- Interventions (lignes du devis) -->
             <div class="section">
@@ -327,67 +355,39 @@
 </div>
 
 <script>
+(function(){
+  const statutSelect = document.getElementById('statutSelect');
+  const dateGroup = document.getElementById('datePrevueGroup');
+  const dateInput = document.getElementById('datePrevueInput');
 
-
-let originalValues = {};
-
-function toggleEdit() {
-    // Sauvegarder les valeurs originales
-    originalValues = {
-        type_prestation: document.getElementById('edit-type').value,
-        adresse_intervention: document.getElementById('edit-adresse').value,
-        statut: document.getElementById('edit-statut').value,
-        date_prevue: document.getElementById('edit-date-prevue').value
-    };
-
-    // Basculer l'affichage
-    document.getElementById('displayMode').style.display = 'none';
-    document.getElementById('editForm').style.display = 'block';
-    document.getElementById('editBtn').style.display = 'none';
-    document.getElementById('saveBtn').style.display = 'inline-block';
-    document.getElementById('cancelBtn').style.display = 'inline-block';
-
-    // Gérer l'affichage des dates
-    toggleEditDateFields();
-
-    // Focus sur le premier champ
-    document.getElementById('edit-type').focus();
-}
-
-function cancelEdit() {
-    // Restaurer les valeurs originales
-    document.getElementById('edit-type').value = originalValues.type_prestation;
-    document.getElementById('edit-adresse').value = originalValues.adresse_intervention;
-    document.getElementById('edit-statut').value = originalValues.statut;
-    document.getElementById('edit-date-prevue').value = originalValues.date_prevue;
-
-    // Basculer l'affichage
-    document.getElementById('displayMode').style.display = 'grid';
-    document.getElementById('editForm').style.display = 'none';
-    document.getElementById('editBtn').style.display = 'inline-block';
-    document.getElementById('saveBtn').style.display = 'none';
-    document.getElementById('cancelBtn').style.display = 'none';
-}
-
-function saveOperation() {
-    const type = document.getElementById('edit-type').value.trim();
-    if (!type) {
-        alert('Le type de prestation est obligatoire');
-        return;
-    }
-    document.getElementById('editForm').submit();
-}
-
-function toggleEditDateFields() {
-    const statut = document.getElementById('edit-statut').value;
-    const dateGroup = document.getElementById('editDatePrevueGroup');
-    
-    if (statut === 'planifie') {
-        dateGroup.style.display = 'block';
+  function toggleDateField(){
+    const v = statutSelect.value;
+    // Affiche et force la date quand statut = planifie
+    if (v === 'planifie') {
+      dateGroup.style.display = '';
+      dateInput.required = true;
+      // Pré-remplir avec maintenant si vide
+      if (!dateInput.value) {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        const val = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
+                  + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+        dateInput.value = val;
+      }
     } else {
-        dateGroup.style.display = 'none';
+      dateGroup.style.display = 'none';
+      dateInput.required = false;
+      // Option: on peut vider si non planifié
+      // dateInput.value = '';
     }
-}
+  }
+
+  if (statutSelect) {
+    statutSelect.addEventListener('change', toggleDateField);
+    // Init à l'ouverture selon statut actuel
+    toggleDateField();
+  }
+})();
 </script>
 </body>
 </html>
