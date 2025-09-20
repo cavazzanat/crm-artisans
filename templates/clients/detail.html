@@ -88,18 +88,6 @@
             box-shadow:0 -2px 8px rgba(16,24,40,.06);padding:.5rem;display:none;gap:.5rem;justify-content:space-around;}
         .bbtn{flex:1;height:48px;border-radius:var(--radius);border:1px solid var(--border);background:#fff;font-weight:700;}
 
-        .section-h--with-actions{
-        display:flex; align-items:center; justify-content:space-between;
-        }
-        .section-actions{
-        display:flex; gap:.5rem; flex-wrap:wrap;
-        }
-        @media(max-width:768px){
-        .section-actions{ width:100%; justify-content:flex-end; margin-top:.5rem; }
-        .section-h--with-actions{ flex-wrap:wrap; gap:.5rem; }
-        }
-
-
         @media(max-width:768px){
           .info-grid{grid-template-columns:1fr;}
           .stats-line{grid-template-columns:1fr;}
@@ -129,6 +117,7 @@
         <h1 class="page-title">{{ client.nom }} {{ client.prenom }} <span class="id">({{ client.id_client }})</span></h1>
 
         <div class="action-row">
+            <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
             <form method="POST" action="{% url 'client_delete' client.id %}" 
                   onsubmit="return confirm('ATTENTION : Supprimer {{ client.nom }} {{ client.prenom }} ET toutes ses {{ nb_operations }} opération(s) ? Action irréversible.')">
                 {% csrf_token %}
@@ -144,16 +133,7 @@
 
     <!-- Infos client -->
     <section class="section">
-        <header class="section-h section-h--with-actions">
-        <span>Informations client</span>
-
-        <div class="section-actions">
-            <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
-            <button id="saveBtn" class="btn btn-success" style="display:none;" onclick="saveClient()">✔️ Enregistrer</button>
-            <button id="cancelBtn" class="btn btn-outline" style="display:none;" onclick="cancelEdit()">↩️ Annuler</button>
-        </div>
-        </header>
-
+        <header class="section-h">Informations client</header>
         <div class="info-grid" id="displayMode">
             <div><div class="info-label">Nom complet</div><div class="info-value">{{ client.nom }} {{ client.prenom }}</div></div>
             <div><div class="info-label">Téléphone</div><div class="info-value"><a href="tel:{{ client.telephone }}">{{ client.telephone }}</a></div></div>
