@@ -61,6 +61,10 @@
         .section-h{padding:1rem 1.25rem; border-bottom:1px solid var(--border); background:#F9FAFB; font-weight:700;}
         .section> *:not(.section-h){padding:1rem 1.25rem;}
 
+        /* Alignement actions dans l'entête de section */
+        .section-h--with-actions{display:flex; align-items:center; justify-content:space-between;}
+        .section-actions{display:flex; gap:.5rem; flex-wrap:wrap;}
+
         .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
         .info-label{font-weight:600;font-size:.9rem;color:var(--muted);}
         .info-value a{color:var(--primary);text-decoration:none;}
@@ -92,6 +96,8 @@
           .info-grid{grid-template-columns:1fr;}
           .stats-line{grid-template-columns:1fr;}
           .bottom-bar{display:flex;}
+          .section-actions{width:100%; justify-content:flex-end; margin-top:.5rem;}
+          .section-h--with-actions{flex-wrap:wrap; gap:.5rem;}
         }
     </style>
 </head>
@@ -117,8 +123,7 @@
         <h1 class="page-title">{{ client.nom }} {{ client.prenom }} <span class="id">({{ client.id_client }})</span></h1>
 
         <div class="action-row">
-            <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
-
+            <!-- Bouton Éditer retiré d'ici -->
             <form method="POST" action="{% url 'client_delete' client.id %}"
                   onsubmit="return confirm('ATTENTION : Supprimer {{ client.nom }} {{ client.prenom }} ET toutes ses {{ nb_operations }} opération(s) ? Action irréversible.')">
                 {% csrf_token %}
@@ -128,14 +133,20 @@
 
             <a href="{% url 'operation_create' %}?client={{ client.id }}" class="btn btn-primary">➕ Nouvelle opération</a>
 
-            <button id="saveBtn" class="btn btn-success" style="display:none;" onclick="saveClient()">✔️ Enregistrer</button>
-            <button id="cancelBtn" class="btn btn-outline" style="display:none;" onclick="cancelEdit()">↩️ Annuler</button>
+            <!-- Save / Cancel restent gérés dans la box Informations client -->
         </div>
     </div>
 
     <!-- Infos client -->
     <section class="section">
-        <header class="section-h">Informations client</header>
+        <header class="section-h section-h--with-actions">
+            <span>Informations client</span>
+            <div class="section-actions">
+                <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
+                <button id="saveBtn" class="btn btn-success" style="display:none;" onclick="saveClient()">✔️ Enregistrer</button>
+                <button id="cancelBtn" class="btn btn-outline" style="display:none;" onclick="cancelEdit()">↩️ Annuler</button>
+            </div>
+        </header>
 
         <div class="info-grid" id="displayMode">
             <div>
@@ -301,6 +312,9 @@ function toggleEdit(){
   document.getElementById('editBtn').style.display='none';
   document.getElementById('saveBtn').style.display='inline-block';
   document.getElementById('cancelBtn').style.display='inline-block';
+
+  const first=document.getElementById('edit-nom');
+  if(first){ first.focus(); first.scrollIntoView({behavior:'smooth', block:'center'}); }
 }
 
 function cancelEdit(){
