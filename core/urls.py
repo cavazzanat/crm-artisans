@@ -8,6 +8,9 @@ urlpatterns = [
     path('operations/nouvelle/', views.operation_create, name='operation_create'),
     path('operations/<int:operation_id>/', views.operation_detail, name='operation_detail'),
     path('operations/<int:operation_id>/duplicate/', views.operation_duplicate, name='operation_duplicate'),
+    
+    path('operations/<int:operation_id>/modifier/', views.operation_edit, name='operation_edit'),
+    
     path('clients/', views.clients_list, name='clients'),
     path('clients/<int:client_id>/', views.client_detail, name='client_detail'),
     path('clients/nouveau/', views.client_create, name='client_create'),
