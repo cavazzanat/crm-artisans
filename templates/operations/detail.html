@@ -363,8 +363,6 @@
         </div>
     </div>
 </div>
-
-<script>
 <script>
 (function(){
   const statutSelect = document.getElementById('statutSelect');
@@ -377,6 +375,11 @@
   const datePaiementInput = document.getElementById('datePaiementInput');
 
   function toggleDateFields(){
+    if (!statutSelect || !datePrevueGroup || !dateRealisationGroup || !datePaiementGroup) {
+      console.log('Elements manquants');
+      return;
+    }
+    
     const v = statutSelect.value;
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
@@ -389,33 +392,41 @@
     datePaiementGroup.style.display = 'none';
     
     // Réinitialiser required
-    datePrevueInput.required = false;
-    dateRealisationInput.required = false;
-    datePaiementInput.required = false;
+    if (datePrevueInput) datePrevueInput.required = false;
+    if (dateRealisationInput) dateRealisationInput.required = false;
+    if (datePaiementInput) datePaiementInput.required = false;
     
     // Afficher selon le statut
     if (v === 'planifie') {
       datePrevueGroup.style.display = '';
-      datePrevueInput.required = true;
-      if (!datePrevueInput.value) {
-        datePrevueInput.value = nowFormatted;
+      if (datePrevueInput) {
+        datePrevueInput.required = true;
+        if (!datePrevueInput.value) {
+          datePrevueInput.value = nowFormatted;
+        }
       }
     } else if (v === 'realise') {
       dateRealisationGroup.style.display = '';
-      dateRealisationInput.required = true;
-      if (!dateRealisationInput.value) {
-        dateRealisationInput.value = nowFormatted;
+      if (dateRealisationInput) {
+        dateRealisationInput.required = true;
+        if (!dateRealisationInput.value) {
+          dateRealisationInput.value = nowFormatted;
+        }
       }
     } else if (v === 'paye') {
       dateRealisationGroup.style.display = '';
       datePaiementGroup.style.display = '';
-      dateRealisationInput.required = true;
-      datePaiementInput.required = true;
-      if (!dateRealisationInput.value) {
-        dateRealisationInput.value = nowFormatted;
+      if (dateRealisationInput) {
+        dateRealisationInput.required = true;
+        if (!dateRealisationInput.value) {
+          dateRealisationInput.value = nowFormatted;
+        }
       }
-      if (!datePaiementInput.value) {
-        datePaiementInput.value = nowFormatted;
+      if (datePaiementInput) {
+        datePaiementInput.required = true;
+        if (!datePaiementInput.value) {
+          datePaiementInput.value = nowFormatted;
+        }
       }
     }
   }
