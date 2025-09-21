@@ -430,8 +430,8 @@ def operation_create(request):
                 type_prestation=type_prestation,
                 adresse_intervention=adresse_intervention or f"{client.adresse}, {client.ville}",
                 date_prevue=date_prevue_complete,
-                # date_realisation=date_realisation_complete,  # À décommenter après migration
-                # date_paiement=date_paiement_complete,        # À décommenter après migration
+                date_realisation=date_realisation_complete,  # À décommenter après migration
+                date_paiement=date_paiement_complete,        # À décommenter après migration
                 statut=statut
             )
             
