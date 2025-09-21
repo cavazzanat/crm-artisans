@@ -92,6 +92,37 @@
 
         .empty-state { text-align: center; padding: 2rem; color: #666; }
 
+/* Ajouter aux styles existants */
+.section-h--with-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.section-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+#editForm input {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .section-actions {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 0.5rem;
+    }
+}
+
         @media (max-width: 768px) {
             .header { flex-direction: column; gap: 1rem; }
             .nav-menu { gap: 1rem; }
@@ -148,11 +179,18 @@
         <div class="left-column">
             <!-- Informations générales -->
             <div class="section">
-                <div class="section-header">
+                <div class="section-header section-h--with-actions">
                     <span>Informations générales</span>
+                    <div class="section-actions">
+                        <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
+                        <button id="saveBtn" class="btn btn-success" style="display:none;" onclick="saveOperation()">✔️ Enregistrer</button>
+                        <button id="cancelBtn" class="btn btn-outline" style="display:none;" onclick="cancelEdit()">↩️ Annuler</button>
+                    </div>
                 </div>
+                
                 <div class="section-content">
-                    <div class="info-grid">
+                    <!-- Mode affichage -->
+                    <div class="info-grid" id="displayMode">
                         <div class="info-item">
                             <div class="info-label">ID Opération</div>
                             <div class="info-value">{{ operation.id_operation }}</div>
@@ -172,46 +210,22 @@
                             <div class="info-label">Adresse intervention</div>
                             <div class="info-value">{{ operation.adresse_intervention }}</div>
                         </div>
-                        <div class="info-item">
-                            <div class="info-label">Contact</div>
-                            <div class="info-value">
-                                {{ operation.client.telephone }}<br>
-                                {{ operation.client.email }}
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Date prévue</div>
-                            <div class="info-value">
-                                {% if operation.date_prevue %}
-                                    {{ operation.date_prevue|date:"d/m/Y à H:i" }}
-                                {% else %}
-                                    <em>Non planifiée</em>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">Date de réalisation</div>
-                            <div class="info-value">
-                                {% if operation.date_realisation %}
-                                    {{ operation.date_realisation|date:"d/m/Y à H:i" }}
-                                {% else %}
-                                    <em>Non réalisée</em>
-                                {% endif %}
-                            </div>
-                        </div>
-
-                        <div class="info-item">
-                            <div class="info-label">Date de paiement</div>
-                            <div class="info-value">
-                                {% if operation.date_paiement %}
-                                    {{ operation.date_paiement|date:"d/m/Y à H:i" }}
-                                {% else %}
-                                    <em>Non payée</em>
-                                {% endif %}
-                            </div>
-                        </div>
                     </div>
+
+                    <!-- Mode édition -->
+                    <form method="POST" action="{% url 'operation_edit' operation.id %}" id="editForm" style="display:none;">
+                        {% csrf_token %}
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <div class="info-label">Type de prestation *</div>
+                                <input type="text" id="edit-type" name="type_prestation" value="{{ operation.type_prestation }}" required>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">Adresse intervention *</div>
+                                <input type="text" id="edit-adresse" name="adresse_intervention" value="{{ operation.adresse_intervention }}" required>
+                            </div>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -364,6 +378,62 @@
     </div>
 </div>
 <script>
+
+let originalValues = {};
+
+function toggleEdit() {
+    // Sauvegarder les valeurs originales
+    originalValues = {
+        type_prestation: document.getElementById('edit-type').value,
+        adresse_intervention: document.getElementById('edit-adresse').value
+    };
+    
+    // Basculer l'affichage
+    document.getElementById('displayMode').style.display = 'none';
+    document.getElementById('editForm').style.display = 'block';
+    
+    // Changer les boutons
+    document.getElementById('editBtn').style.display = 'none';
+    document.getElementById('saveBtn').style.display = 'inline-block';
+    document.getElementById('cancelBtn').style.display = 'inline-block';
+
+    // Focus sur le premier champ
+    const first = document.getElementById('edit-type');
+    if (first) {
+        first.focus();
+        first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function cancelEdit() {
+    // Restaurer les valeurs originales
+    document.getElementById('edit-type').value = originalValues.type_prestation;
+    document.getElementById('edit-adresse').value = originalValues.adresse_intervention;
+    
+    // Revenir au mode affichage
+    document.getElementById('displayMode').style.display = 'grid';
+    document.getElementById('editForm').style.display = 'none';
+    
+    // Remettre les boutons d'origine
+    document.getElementById('editBtn').style.display = 'inline-block';
+    document.getElementById('saveBtn').style.display = 'none';
+    document.getElementById('cancelBtn').style.display = 'none';
+}
+
+function saveOperation() {
+    // Validation côté client
+    const type = document.getElementById('edit-type').value.trim();
+    const adresse = document.getElementById('edit-adresse').value.trim();
+    
+    if (!type || !adresse) {
+        alert('Le type de prestation et l\'adresse sont obligatoires');
+        return;
+    }
+    
+    // Soumission du formulaire
+    document.getElementById('editForm').submit();
+}
+
 (function(){
   const statutSelect = document.getElementById('statutSelect');
   const datePrevueGroup = document.getElementById('datePrevueGroup');

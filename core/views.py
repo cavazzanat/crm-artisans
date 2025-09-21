@@ -640,6 +640,37 @@ def client_edit(request, client_id):
         
         # Rediriger vers la même page pour rafraîchir
         return redirect('client_detail', client_id=client.id)
+    
+    # Dans views.py
+@login_required
+def operation_edit(request, operation_id):
+    """Modification des informations générales d'une opération"""
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    
+    if request.method == 'POST':
+        type_prestation = request.POST.get('type_prestation', '').strip()
+        adresse_intervention = request.POST.get('adresse_intervention', '').strip()
+        
+        if not type_prestation or not adresse_intervention:
+            messages.error(request, "Le type de prestation et l'adresse sont obligatoires")
+        else:
+            try:
+                operation.type_prestation = type_prestation
+                operation.adresse_intervention = adresse_intervention
+                operation.save()
+                
+                # Ajouter à l'historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Informations mises à jour : {type_prestation}",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, "Opération modifiée avec succès !")
+            except Exception as e:
+                messages.error(request, f"Erreur : {str(e)}")
+        
+        return redirect('operation_detail', operation_id=operation.id)
 
 def register(request):
     if request.method == 'POST':
