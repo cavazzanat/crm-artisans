@@ -215,7 +215,7 @@
                 </div>
             </div>
 
-            <!-- Changement de statut (avec date quand "planifié") -->
+            <!-- Changement de statut (avec dates selon le statut) -->
             <div class="section">
                 <div class="section-header">
                     <span>Statut de l'opération</span>
@@ -234,22 +234,32 @@
                                 </select>
                             </div>
 
-                            <!-- Champ date affiché uniquement si statut = planifie -->
+                            <!-- Date prévue (si planifié) -->
                             <div class="form-group" id="datePrevueGroup" style="display:none;">
                                 <label>Date prévue :</label>
-                                <!-- datetime-local -> compatible HTML5 -->
-                                <input
-                                  type="datetime-local"
-                                  name="date_prevue"
-                                  id="datePrevueInput"
-                                  value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\\TH:i' }}{% endif %}">
+                                <input type="datetime-local" name="date_prevue" id="datePrevueInput"
+                                    value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\\TH:i' }}{% endif %}">
+                            </div>
+
+                            <!-- Date de réalisation (si réalisé) -->
+                            <div class="form-group" id="dateRealisationGroup" style="display:none;">
+                                <label>Date de réalisation :</label>
+                                <input type="datetime-local" name="date_realisation" id="dateRealisationInput"
+                                    value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\\TH:i' }}{% endif %}">
+                            </div>
+
+                            <!-- Date de paiement (si payé) -->
+                            <div class="form-group" id="datePaiementGroup" style="display:none;">
+                                <label>Date de paiement :</label>
+                                <input type="datetime-local" name="date_paiement" id="datePaiementInput"
+                                    value="{% if operation.date_paiement %}{{ operation.date_paiement|date:'Y-m-d\\TH:i' }}{% endif %}">
                             </div>
 
                             <button type="submit" class="btn btn-success">Mettre à jour</button>
                         </div>
                     </form>
                     <p style="margin-top:.75rem; color:#666; font-size:.9rem;">
-                        Astuce : quand un devis est <strong>accepté</strong>, passe le statut en <strong>À planifier</strong>, puis en <strong>Planifié</strong> et renseigne la <strong>Date prévue</strong>.
+                        <strong>Workflow :</strong> En attente → À planifier → <strong>Planifié</strong> (+ date prévue) → <strong>Réalisé</strong> (+ date réalisation) → <strong>Payé</strong> (+ date paiement)
                     </p>
                 </div>
             </div>
@@ -355,37 +365,64 @@
 </div>
 
 <script>
+<script>
 (function(){
   const statutSelect = document.getElementById('statutSelect');
-  const dateGroup = document.getElementById('datePrevueGroup');
-  const dateInput = document.getElementById('datePrevueInput');
+  const datePrevueGroup = document.getElementById('datePrevueGroup');
+  const dateRealisationGroup = document.getElementById('dateRealisationGroup');
+  const datePaiementGroup = document.getElementById('datePaiementGroup');
+  
+  const datePrevueInput = document.getElementById('datePrevueInput');
+  const dateRealisationInput = document.getElementById('dateRealisationInput');
+  const datePaiementInput = document.getElementById('datePaiementInput');
 
-  function toggleDateField(){
+  function toggleDateFields(){
     const v = statutSelect.value;
-    // Affiche et force la date quand statut = planifie
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    const nowFormatted = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
+                        + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    
+    // Masquer tous les champs
+    datePrevueGroup.style.display = 'none';
+    dateRealisationGroup.style.display = 'none';
+    datePaiementGroup.style.display = 'none';
+    
+    // Réinitialiser required
+    datePrevueInput.required = false;
+    dateRealisationInput.required = false;
+    datePaiementInput.required = false;
+    
+    // Afficher selon le statut
     if (v === 'planifie') {
-      dateGroup.style.display = '';
-      dateInput.required = true;
-      // Pré-remplir avec maintenant si vide
-      if (!dateInput.value) {
-        const now = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        const val = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
-                  + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-        dateInput.value = val;
+      datePrevueGroup.style.display = '';
+      datePrevueInput.required = true;
+      if (!datePrevueInput.value) {
+        datePrevueInput.value = nowFormatted;
       }
-    } else {
-      dateGroup.style.display = 'none';
-      dateInput.required = false;
-      // Option: on peut vider si non planifié
-      // dateInput.value = '';
+    } else if (v === 'realise') {
+      dateRealisationGroup.style.display = '';
+      dateRealisationInput.required = true;
+      if (!dateRealisationInput.value) {
+        dateRealisationInput.value = nowFormatted;
+      }
+    } else if (v === 'paye') {
+      dateRealisationGroup.style.display = '';
+      datePaiementGroup.style.display = '';
+      dateRealisationInput.required = true;
+      datePaiementInput.required = true;
+      if (!dateRealisationInput.value) {
+        dateRealisationInput.value = nowFormatted;
+      }
+      if (!datePaiementInput.value) {
+        datePaiementInput.value = nowFormatted;
+      }
     }
   }
 
   if (statutSelect) {
-    statutSelect.addEventListener('change', toggleDateField);
-    // Init à l'ouverture selon statut actuel
-    toggleDateField();
+    statutSelect.addEventListener('change', toggleDateFields);
+    toggleDateFields(); // Init
   }
 })();
 </script>

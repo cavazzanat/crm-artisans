@@ -126,32 +126,43 @@ def operation_detail(request, operation_id):
     """Fiche détaillée d'une opération avec gestion complète"""
     operation = get_object_or_404(Operation, id=operation_id, user=request.user)
     
-    # Changement de statut via POST
     if request.method == 'POST':
         action = request.POST.get('action')
         
         if action == 'change_status':
             nouveau_statut = request.POST.get('statut')
-            date_prevue_str = request.POST.get('date_prevue')  # Récupérer la date du formulaire
+            date_prevue_str = request.POST.get('date_prevue', '')
+            date_realisation_str = request.POST.get('date_realisation', '')
+            date_paiement_str = request.POST.get('date_paiement', '')
             
             if nouveau_statut in dict(Operation.STATUTS):
                 ancien_statut = operation.get_statut_display()
                 operation.statut = nouveau_statut
                 
-                # TRAITER LA DATE PREVUE du formulaire
-                if date_prevue_str:
-                    from datetime import datetime
+                # Gérer les dates selon le statut
+                from datetime import datetime
+                
+                if nouveau_statut == 'planifie' and date_prevue_str:
                     try:
                         operation.date_prevue = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
                     except ValueError:
                         pass
-                
-                # LOGIQUE AUTOMATIQUE DATE INTERVENTION
-                from django.utils import timezone
-                #if nouveau_statut == 'planifie' and hasattr(operation, 'date_intervention') and not operation.date_intervention:
-                 #   operation.date_intervention = operation.date_prevue or timezone.now()
-                #elif nouveau_statut in ['realise', 'paye'] and hasattr(operation, 'date_intervention') and not operation.date_intervention:
-                #    operation.date_intervention = operation.date_prevue or timezone.now()
+                elif nouveau_statut == 'realise' and date_realisation_str:
+                    try:
+                        operation.date_realisation = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                    except ValueError:
+                        pass
+                elif nouveau_statut == 'paye':
+                    if date_realisation_str:
+                        try:
+                            operation.date_realisation = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                        except ValueError:
+                            pass
+                    if date_paiement_str:
+                        try:
+                            operation.date_paiement = datetime.fromisoformat(date_paiement_str.replace('T', ' '))
+                        except ValueError:
+                            pass
                 
                 operation.save()
                 
@@ -166,12 +177,62 @@ def operation_detail(request, operation_id):
                 return redirect('operation_detail', operation_id=operation.id)
 
         elif action == 'add_intervention':
-            # Votre code existant pour add_intervention
-            pass
+            description = request.POST.get('description', '').strip()
+            montant_str = request.POST.get('montant', '').strip()
+            
+            if description and montant_str:
+                try:
+                    montant = float(montant_str)
+                    
+                    # Déterminer l'ordre
+                    dernier_ordre = operation.interventions.aggregate(
+                        max_ordre=Max('ordre')
+                    )['max_ordre'] or 0
+                    
+                    Intervention.objects.create(
+                        operation=operation,
+                        description=description,
+                        montant=montant,
+                        ordre=dernier_ordre + 1
+                    )
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"Intervention ajoutée : {description} ({montant}€)",
+                        utilisateur=request.user
+                    )
+                    
+                    messages.success(request, "Intervention ajoutée avec succès")
+                    
+                except ValueError:
+                    messages.error(request, "Montant invalide")
+            else:
+                messages.error(request, "Description et montant obligatoires")
+            
+            return redirect('operation_detail', operation_id=operation.id)
 
         elif action == 'delete_intervention':
-            # Votre code existant pour delete_intervention  
-            pass
+            intervention_id = request.POST.get('intervention_id')
+            try:
+                intervention = Intervention.objects.get(
+                    id=intervention_id, 
+                    operation=operation
+                )
+                description = intervention.description
+                intervention.delete()
+                
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Intervention supprimée : {description}",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, "Intervention supprimée")
+                
+            except Intervention.DoesNotExist:
+                messages.error(request, "Intervention introuvable")
+            
+            return redirect('operation_detail', operation_id=operation.id)
         
     # Récupérer les données pour l'affichage
     interventions = operation.interventions.all()
@@ -186,6 +247,7 @@ def operation_detail(request, operation_id):
     }
     
     return render(request, 'operations/detail.html', context)
+
 
 @login_required
 def operation_duplicate(request, operation_id):
