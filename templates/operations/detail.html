@@ -177,57 +177,109 @@
 
     <div class="main-grid">
         <div class="left-column">
-            <!-- Informations générales -->
-            <div class="section">
-                <div class="section-header section-h--with-actions">
-                    <span>Informations générales</span>
-                    <div class="section-actions">
-                        <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
-                        <button id="saveBtn" class="btn btn-success" style="display:none;" onclick="saveOperation()">✔️ Enregistrer</button>
-                        <button id="cancelBtn" class="btn btn-outline" style="display:none;" onclick="cancelEdit()">↩️ Annuler</button>
-                    </div>
-                </div>
-                
-                <div class="section-content">
-                    <!-- Mode affichage -->
-                    <div class="info-grid" id="displayMode">
-                        <div class="info-item">
-                            <div class="info-label">ID Opération</div>
-                            <div class="info-value">{{ operation.id_operation }}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Client</div>
-                            <div class="info-value">
-                                <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
-                                <a href="/clients/{{ operation.client.id }}/">Voir le profil client</a>
-                            </div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Type de prestation</div>
-                            <div class="info-value">{{ operation.type_prestation }}</div>
-                        </div>
-                        <div class="info-item">
-                            <div class="info-label">Adresse intervention</div>
-                            <div class="info-value">{{ operation.adresse_intervention }}</div>
-                        </div>
-                    </div>
-
-                    <!-- Mode édition -->
-                    <form method="POST" action="{% url 'operation_edit' operation.id %}" id="editForm" style="display:none;">
-                        {% csrf_token %}
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <div class="info-label">Type de prestation *</div>
-                                <input type="text" id="edit-type" name="type_prestation" value="{{ operation.type_prestation }}" required>
-                            </div>
-                            <div class="info-item">
-                                <div class="info-label">Adresse intervention *</div>
-                                <input type="text" id="edit-adresse" name="adresse_intervention" value="{{ operation.adresse_intervention }}" required>
-                            </div>
-                        </div>
-                    </form>
+        <!-- 1. Informations générales (éditables) -->
+        <div class="section">
+            <div class="section-header section-h--with-actions">
+                <span>Informations générales</span>
+                <div class="section-actions">
+                    <button id="editBtn" class="btn btn-outline" onclick="toggleEdit()">✏️ Éditer</button>
+                    <button id="saveBtn" class="btn btn-success" style="display:none;" onclick="saveOperation()">✔️ Enregistrer</button>
+                    <button id="cancelBtn" class="btn btn-outline" style="display:none;" onclick="cancelEdit()">↩️ Annuler</button>
                 </div>
             </div>
+            
+            <div class="section-content">
+                <!-- Mode affichage -->
+                <div class="info-grid" id="displayMode">
+                    <div class="info-item">
+                        <div class="info-label">ID Opération</div>
+                        <div class="info-value">{{ operation.id_operation }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Client</div>
+                        <div class="info-value">
+                            <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
+                            <a href="/clients/{{ operation.client.id }}/">Voir le profil client</a>
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Type de prestation</div>
+                        <div class="info-value">{{ operation.type_prestation }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Adresse intervention</div>
+                        <div class="info-value">{{ operation.adresse_intervention }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Contact</div>
+                        <div class="info-value">
+                            {{ operation.client.telephone }}<br>
+                            {{ operation.client.email }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mode édition -->
+                <form method="POST" action="{% url 'operation_edit' operation.id %}" id="editForm" style="display:none;">
+                    {% csrf_token %}
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-label">Type de prestation *</div>
+                            <input type="text" id="edit-type" name="type_prestation" value="{{ operation.type_prestation }}" required>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">Adresse intervention *</div>
+                            <input type="text" id="edit-adresse" name="adresse_intervention" value="{{ operation.adresse_intervention }}" required>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 2. NOUVEAU BLOC : Informations dates -->
+        <div class="section">
+            <div class="section-header">
+                <span>Informations dates</span>
+            </div>
+            <div class="section-content">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Date de création</div>
+                        <div class="info-value">{{ operation.date_creation|date:"d/m/Y à H:i" }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Date prévue</div>
+                        <div class="info-value">
+                            {% if operation.date_prevue %}
+                                <strong>{{ operation.date_prevue|date:"d/m/Y à H:i" }}</strong>
+                            {% else %}
+                                <em>Non planifiée</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Date de réalisation</div>
+                        <div class="info-value">
+                            {% if operation.date_realisation %}
+                                <strong>{{ operation.date_realisation|date:"d/m/Y à H:i" }}</strong>
+                            {% else %}
+                                <em>Non réalisée</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Date de paiement</div>
+                        <div class="info-value">
+                            {% if operation.date_paiement %}
+                                <strong>{{ operation.date_paiement|date:"d/m/Y à H:i" }}</strong>
+                            {% else %}
+                                <em>Non payée</em>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
             <!-- Changement de statut (avec dates selon le statut) -->
             <div class="section">
