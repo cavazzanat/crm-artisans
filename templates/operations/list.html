@@ -371,7 +371,6 @@
           {% if statut_filtre or ville_filtre or search %}
             <a href="{% url 'operations' %}" class="btn">Effacer filtres</a>
           {% endif %}
-          <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
         </div>
       </div>
       
@@ -412,6 +411,7 @@
         <div class="toolbar" aria-label="Actions rapides">
           {% if statut_filtre %}<span class="chip status">Statut: {{ statut_filtre }}</span>{% endif %}
           {% if ville_filtre %}<span class="chip status">Ville: {{ ville_filtre }}</span>{% endif %}
+          <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
         </div>
       </div>
 
