@@ -371,6 +371,7 @@
           {% if statut_filtre or ville_filtre or search %}
             <a href="{% url 'operations' %}" class="btn">Effacer filtres</a>
           {% endif %}
+          <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
         </div>
       </div>
       
@@ -399,20 +400,6 @@
           <a href="{% url 'operations' %}" class="btn">Effacer</a>
         </div>
       </form>
-    </section>
-
-    <!-- Actions rapides -->
-    <section class="section" aria-labelledby="quick-title">
-      <div class="section-header">
-        <h2 class="section-title" id="quick-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h10M4 12h7M4 17h13" stroke="currentColor" stroke-width="1.6"/></svg>
-          Actions rapides
-        </h2>
-      </div>
-      <div class="toolbar">
-        <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
-        <a href="{% url 'clients' %}" class="btn">Voir les clients</a>
-      </div>
     </section>
 
     <!-- Liste des opérations -->
