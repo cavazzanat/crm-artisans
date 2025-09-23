@@ -159,6 +159,13 @@
       background: rgba(192,132,252,.08) 
     }
 
+    .btn-view{ 
+      display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .7rem; 
+      border-radius:8px; border:1px solid rgba(99,102,241,.35); 
+      background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem 
+    }
+    .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
+
     /* Responsive: table -> cartes */
     @media (max-width: 780px){
       .search-compact{ flex-direction: column; align-items: stretch }
@@ -264,6 +271,12 @@
         color: #7c3aed; 
         border-color: rgba(124,58,237,.25); 
         background: rgba(124,58,237,.06);
+      }
+      
+      .btn-view{ 
+        background: rgba(99,102,241,.1); 
+        border-color: rgba(99,102,241,.2);
+        color: var(--primary);
       }
       
       tbody tr{ background: transparent }
@@ -401,10 +414,10 @@
                 {% endif %}
               </td>
               <td data-label="Actions">
-                <div class="toolbar">
-                  <a href="{% url 'client_detail' client.id %}" class="btn">Voir profil</a>
-                  <a href="{% url 'client_delete' client.id %}" class="btn danger sm" onclick="return confirm('Supprimer {{ client.nom }} {{ client.prenom }} ?')">Supprimer</a>
-                </div>
+                <a href="{% url 'client_detail' client.id %}" class="btn-view" title="Voir le profil client">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 3.73 8.11 2 12c1.73 3.89 5 7 10 7s8.27-3.11 10-7c-1.73-3.89-5-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" stroke="currentColor" stroke-width="1.6"/></svg>
+                  Voir
+                </a>
               </td>
             </tr>
             {% endfor %}
