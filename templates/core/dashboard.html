@@ -18,7 +18,7 @@
       --ring: rgba(99,102,241,.35);
       --border: rgba(148,163,184,.15);
       --shadow: 0 10px 25px rgba(2,6,23,.3), 0 1px 0 rgba(255,255,255,.03) inset;
-      
+
       --bg-light: #f8fafc;
       --card-light: #ffffff;
       --text-light: #1e293b;
@@ -103,14 +103,14 @@
     .view-btn:hover{ background:rgba(148,163,184,.12) }
     .view-btn.active{ background:var(--primary); color:white; border-color:var(--primary) }
 
-    /* Vue Semaine (par défaut) */
+    /* Vue Semaine + Mois */
     .calendar-view{ margin-top:1rem }
     .week-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:.5rem }
-    .day-card{ 
-      background:rgba(2,6,23,.4); 
-      border:1px solid var(--border); 
-      border-radius:12px; 
-      padding:.75rem; 
+    .day-card{
+      background:rgba(2,6,23,.4);
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:.75rem;
       min-height:120px;
       cursor: pointer;
     }
@@ -119,18 +119,72 @@
     .day-header{ font-weight:600; margin-bottom:.5rem; font-size:.9rem }
     .day-number{ color:var(--muted); font-size:.8rem; margin-bottom:.5rem }
 
-    .event-item{ 
-      background:rgba(99,102,241,.2); 
-      border:1px solid rgba(99,102,241,.3); 
-      border-radius:6px; 
-      padding:.3rem; 
-      margin:.2rem 0; 
-      font-size:.75rem; 
+    .event-item{
+      background:rgba(99,102,241,.2);
+      border:1px solid rgba(99,102,241,.3);
+      border-radius:6px;
+      padding:.3rem;
+      margin:.2rem 0;
+      font-size:.75rem;
       cursor:pointer;
       line-height:1.2;
       transition: all 0.2s ease;
     }
     .event-item:hover{ background:rgba(99,102,241,.3); transform: translateY(-1px) }
+
+    /* Vue Mois */
+    .month-grid{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:.25rem;
+      margin-top:1rem;
+    }
+    .month-header-row{ display: contents; }
+    .month-day-header{
+      background: rgba(148,163,184,.1);
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 600;
+      text-align: center;
+      padding: .5rem;
+      border-radius: 6px 6px 0 0;
+      text-transform: uppercase;
+      letter-spacing: .05rem;
+    }
+    .month-day-cell{
+      background: rgba(2,6,23,.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .4rem;
+      min-height: 80px;
+      cursor: pointer;
+      position: relative;
+    }
+    .month-day-cell:hover{ background: rgba(2,6,23,.5); }
+    .month-day-cell.today{ border-color: var(--primary); background: rgba(99,102,241,.1); }
+    .month-day-cell.other-month{ opacity: 0.4; }
+    .month-day-cell.selected{ border-color: var(--warning); box-shadow: 0 0 0 2px rgba(245,158,11,.3); }
+    .month-day-number{ font-weight: 600; font-size: .8rem; margin-bottom: .25rem; }
+    .month-events{ display: flex; flex-direction: column; gap: .15rem; }
+    .month-event-item{
+      background: rgba(99,102,241,.3);
+      border: 1px solid rgba(99,102,241,.4);
+      border-radius: 4px;
+      padding: .15rem .25rem;
+      font-size: .65rem;
+      line-height: 1.1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .month-event-item:hover{ background: rgba(99,102,241,.4); transform: translateY(-1px); }
+    .month-event-more{
+      color: var(--muted);
+      font-size: .6rem;
+      font-style: italic;
+      cursor: pointer;
+      padding: .1rem .25rem;
+    }
+    .month-event-more:hover{ color: var(--text); }
 
     /* Panneau latéral */
     .side-panel{
@@ -148,143 +202,55 @@
       backdrop-filter: blur(10px);
     }
     .side-panel.open{ right: 0 }
-
     .panel-header{
       padding: 1.5rem 1.5rem 1rem;
       border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
+      position: sticky; top: 0;
       background: rgba(2,6,23,.9);
       backdrop-filter: blur(10px);
     }
-    .panel-title{
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: .5rem;
-      color: var(--text);
-    }
-    .panel-subtitle{
-      color: var(--muted);
-      font-size: .9rem;
-    }
-
+    .panel-title{ font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem; color: var(--text); }
+    .panel-subtitle{ color: var(--muted); font-size: .9rem; }
     .close-panel{
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: none;
-      border: none;
-      color: var(--muted);
-      cursor: pointer;
-      padding: .5rem;
-      border-radius: 6px;
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; color: var(--muted);
+      cursor: pointer; padding: .5rem; border-radius: 6px;
     }
     .close-panel:hover{ background: rgba(148,163,184,.1); color: var(--text) }
+    .panel-content{ padding: 1.5rem; }
 
-    .panel-content{
-      padding: 1.5rem;
-    }
+    .operation-tabs{ display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .operation-tab{ padding: .4rem .8rem; background: rgba(148,163,184,.07); border: 1px solid var(--border); border-radius: 6px; font-size: .8rem; cursor: pointer; color: var(--muted); transition: all 0.2s ease; }
+    .operation-tab.active{ background: var(--primary); border-color: var(--primary); color: white; }
 
-    .operation-tabs{
-      display: flex;
-      gap: .5rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-    }
-    .operation-tab{
-      padding: .4rem .8rem;
-      background: rgba(148,163,184,.07);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      font-size: .8rem;
-      cursor: pointer;
-      color: var(--muted);
-      transition: all 0.2s ease;
-    }
-    .operation-tab.active{
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
+    .detail-section{ margin-bottom: 1.5rem; }
+    .detail-section h4{ color: var(--text); font-size: .9rem; margin-bottom: .75rem; text-transform: uppercase; letter-spacing: .05rem; font-weight: 600; }
+    .detail-item{ margin-bottom: .5rem; padding: .5rem 0; }
+    .detail-label{ color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+    .detail-value{ color: var(--text); font-size: .9rem; }
 
-    .detail-section{
-      margin-bottom: 1.5rem;
-    }
-    .detail-section h4{
-      color: var(--text);
-      font-size: .9rem;
-      margin-bottom: .75rem;
-      text-transform: uppercase;
-      letter-spacing: .05rem;
-      font-weight: 600;
-    }
-    .detail-item{
-      margin-bottom: .5rem;
-      padding: .5rem 0;
-    }
-    .detail-label{
-      color: var(--muted);
-      font-size: .8rem;
-      margin-bottom: .25rem;
-    }
-    .detail-value{
-      color: var(--text);
-      font-size: .9rem;
-    }
-
-    .client-actions{
-      display: flex;
-      gap: .75rem;
-      margin-top: 1.5rem;
-      flex-wrap: wrap;
-    }
+    .client-actions{ display: flex; gap: .75rem; margin-top: 1.5rem; flex-wrap: wrap; }
     .action-btn{
-      flex: 1;
-      padding: .75rem 1rem;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      background: rgba(148,163,184,.07);
-      color: var(--text);
-      text-decoration: none;
-      text-align: center;
-      font-size: .85rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: .5rem;
+      flex: 1; padding: .75rem 1rem; border: 1px solid var(--border); border-radius: 8px;
+      background: rgba(148,163,184,.07); color: var(--text); text-decoration: none; text-align: center;
+      font-size: .85rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: .5rem;
     }
-    .action-btn:hover{
-      background: rgba(148,163,184,.12);
-      transform: translateY(-1px);
-    }
-    .action-btn.success{
-      background: var(--success);
-      border-color: var(--success);
-      color: white;
-    }
-    .action-btn.primary{
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
+    .action-btn:hover{ background: rgba(148,163,184,.12); transform: translateY(-1px); }
+    .action-btn.success{ background: var(--success); border-color: var(--success); color: white; }
+    .action-btn.primary{ background: var(--primary); border-color: var(--primary); color: white; }
 
     /* Table */
     .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border) }
     table{ width:100%; border-collapse: collapse; min-width: 980px }
-    thead th{ 
-      position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px); 
-      color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; 
-      font-size:.75rem; text-align:left; padding:.9rem .85rem; 
-      border-bottom:1px solid var(--border) 
+    thead th{
+      position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px);
+      color:var(--muted); text-transform:uppercase; letter-spacing:.08rem;
+      font-size:.75rem; text-align:left; padding:.9rem .85rem;
+      border-bottom:1px solid var(--border)
     }
     tbody td{ padding:.9rem .85rem; border-bottom:1px dashed var(--border); vertical-align: top }
     tbody tr:hover{ background: rgba(148,163,184,.05) }
     .chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; border:1px solid var(--border); color: var(--muted) }
-
-    
-
     .btn-view{ display:inline-flex; align-items:center; gap:.45rem; padding:.45rem .7rem; border-radius:8px; border:1px solid rgba(99,102,241,.35); background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem }
     .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
 
@@ -292,6 +258,9 @@
     @media (max-width: 768px){
       .kpi.ca, .kpi.clients, .kpi.devis, .kpi.planifier, .kpi.paiement{ grid-column: 1 / -1 }
       .week-grid{ grid-template-columns: 1fr; gap:.3rem }
+      .month-grid{ grid-template-columns: repeat(7, 1fr); gap:.15rem }
+      .month-day-cell{ min-height: 60px; padding: .25rem }
+      .month-event-item{ font-size: .6rem; padding: .1rem .2rem }
       .calendar-nav{ flex-direction:column; align-items:flex-start }
       .side-panel{ width: 100%; right: -100% }
       .table-wrap{ border:none }
@@ -304,47 +273,40 @@
 
     /* Light mode */
     @media (prefers-color-scheme: light){
-      :root{ 
-        --bg: var(--bg-light); 
+      :root{
+        --bg: var(--bg-light);
         --card: var(--card-light);
-        --text: var(--text-light); 
-        --muted: var(--muted-light); 
+        --text: var(--text-light);
+        --muted: var(--muted-light);
         --border: var(--border-light);
         --shadow: var(--shadow-light);
       }
-      
       body{
         background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.05), transparent 40%),
                     radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.05), transparent 40%),
                     var(--bg);
       }
-      
-      .header{ 
+      .header{
         background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.8));
         backdrop-filter: saturate(180%) blur(8px);
       }
-      
-      .kpi, .section{ 
-        background: var(--card);
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-      }
-      
-      .day-card{ background: var(--card) }
-      .day-card.today{ border-color:var(--primary); background:rgba(99,102,241,.05) }
+      .kpi, .section{ background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow); }
+      .day-card, .month-day-cell{ background: var(--card) }
+      .day-card.today, .month-day-cell.today{ border-color:var(--primary); background:rgba(99,102,241,.05) }
       .side-panel{ background: rgba(255,255,255,.98) }
-      
-      .nav a.active, .view-btn.active{ 
-        color: var(--primary); 
+      .nav a.active, .view-btn.active{
+        color: var(--primary);
         background: rgba(99,102,241,.08);
         border-color: rgba(99,102,241,.2);
       }
-      
-      .btn.primary{ 
-        background: rgba(99,102,241,.1); 
+      .btn.primary{
+        background: rgba(99,102,241,.1);
         border-color: rgba(99,102,241,.2);
         color: var(--primary);
       }
+      .month-day-header{ background: rgba(148,163,184,.05); }
+      .month-day-cell{ background: var(--card); }
+      .month-event-item{ background: rgba(99,102,241,.1); border-color: rgba(99,102,241,.2); }
     }
   </style>
 </head>
@@ -360,14 +322,14 @@
         <span>CRM Artisans</span>
       </div>
       <nav class="nav">
-        <a href="/" class="active">Accueil</a>
-        <a href="/operations/">Opérations</a>
-        <a href="/clients/">Clients</a>
+        <a href="{% url 'dashboard' %}" class="active">Accueil</a>
+        <a href="{% url 'operations' %}">Opérations</a>
+        <a href="{% url 'clients' %}">Clients</a>
       </nav>
       <div class="user">
-        <span>Connecté : admin</span>
-        <form method="post" action="/logout/">
-          <input type="hidden" name="csrfmiddlewaretoken" value="HDDlZnHsbi3BnQaiytieg5blZu3YnhSvKCSoNCnnryawUYe8HLYBTRs0SGNb1zAG">
+        <span>Connecté : {{ user.username }}</span>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
           <button type="submit">Déconnexion</button>
         </form>
       </div>
@@ -378,27 +340,27 @@
     <h1 class="page-title">Tableau de bord</h1>
     <p class="subtitle">Vue d'ensemble des performances et du planning.</p>
 
-    <!-- KPI -->
+    <!-- KPI dynamiques -->
     <section class="kpi-grid">
       <article class="kpi ca accent-success">
         <h3>CA du mois</h3>
-        <div class="value">580 €</div>
+        <div class="value">{{ ca_mois|floatformat:0 }} €</div>
       </article>
       <article class="kpi clients accent-info">
         <h3>Clients</h3>
-        <div class="value">1</div>
+        <div class="value">{{ nb_clients }}</div>
       </article>
       <article class="kpi devis accent-warn">
         <h3>En attente devis</h3>
-        <div class="value">3</div>
+        <div class="value">{{ nb_en_attente_devis }}</div>
       </article>
       <article class="kpi planifier accent-info">
         <h3>À planifier</h3>
-        <div class="value">1</div>
+        <div class="value">{{ nb_a_planifier }}</div>
       </article>
       <article class="kpi paiement accent-warn">
         <h3>Attente paiement</h3>
-        <div class="value">2</div>
+        <div class="value">{{ nb_realise }}</div>
       </article>
     </section>
 
@@ -413,7 +375,7 @@
           <span class="badge" id="events-count">0</span>
         </h2>
         <div class="toolbar">
-          <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
+          <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
         </div>
       </div>
 
@@ -434,13 +396,11 @@
       </div>
 
       <div class="calendar-view">
-        <div class="week-grid" id="calendar-grid">
-          <!-- Généré par JavaScript -->
-        </div>
+        <div class="week-grid" id="calendar-grid"><!-- JS --></div>
       </div>
     </section>
 
-    <!-- Prochaines opérations -->
+    <!-- Prochaines opérations (dynamiques) -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
@@ -448,11 +408,11 @@
             <path d="M7 10h10M7 14h7M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="1.6"/>
           </svg>
           Prochaines opérations
-          <span class="badge">5</span>
+          <span class="badge">{{ prochaines_operations|length }}</span>
         </h2>
       </div>
 
-      
+      {% if prochaines_operations %}
       <div class="table-wrap">
         <table>
           <thead>
@@ -465,94 +425,32 @@
             </tr>
           </thead>
           <tbody>
-            
+            {% for operation in prochaines_operations %}
             <tr>
               <td>
-                
-                  03/09 16h58
-                
+                {% if operation.date_prevue %}
+                  {{ operation.date_prevue|date:"d/m H\\hi" }}
+                {% else %}
+                  <span class="chip">Non planifiée</span>
+                {% endif %}
               </td>
-              <td>rachid zimmed</td>
-              <td>accord</td>
-              <td>
-                <a href="tel:01" class="chip">01</a>
-              </td>
-              <td>
-                <a href="/operations/20/" class="btn-view">Voir</a>
-              </td>
+              <td>{{ operation.client.nom }} {{ operation.client.prenom }}</td>
+              <td>{{ operation.type_prestation|truncatechars:40 }}</td>
+              <td><a href="tel:{{ operation.client.telephone }}" class="chip">{{ operation.client.telephone }}</a></td>
+              <td><a href="{% url 'operation_detail' operation.id %}" class="btn-view">Voir</a></td>
             </tr>
-            
-            <tr>
-              <td>
-                
-                  10/09 16h40
-                
-              </td>
-              <td>rachid zimmed</td>
-              <td>accord</td>
-              <td>
-                <a href="tel:01" class="chip">01</a>
-              </td>
-              <td>
-                <a href="/operations/19/" class="btn-view">Voir</a>
-              </td>
-            </tr>
-            
-            <tr>
-              <td>
-                
-                  25/09 14h20
-                
-              </td>
-              <td>rachid zimmed</td>
-              <td>Vente piano + accord</td>
-              <td>
-                <a href="tel:01" class="chip">01</a>
-              </td>
-              <td>
-                <a href="/operations/23/" class="btn-view">Voir</a>
-              </td>
-            </tr>
-            
-            <tr>
-              <td>
-                
-                  25/09 16h39
-                
-              </td>
-              <td>rachid zimmed</td>
-              <td>accord</td>
-              <td>
-                <a href="tel:01" class="chip">01</a>
-              </td>
-              <td>
-                <a href="/operations/16/" class="btn-view">Voir</a>
-              </td>
-            </tr>
-            
-            <tr>
-              <td>
-                
-                  28/09 16h14
-                
-              </td>
-              <td>rachid zimmed</td>
-              <td>accord</td>
-              <td>
-                <a href="tel:01" class="chip">01</a>
-              </td>
-              <td>
-                <a href="/operations/12/" class="btn-view">Voir</a>
-              </td>
-            </tr>
-            
+            {% endfor %}
           </tbody>
         </table>
       </div>
-      
+      {% else %}
+      <div style="text-align:center; padding:2rem; color:var(--muted)">
+        <p>Aucune opération planifiée.</p>
+      </div>
+      {% endif %}
     </section>
 
-    <!-- Actions rapides -->
+    <!-- Actions rapides (liens Django) -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
@@ -563,9 +461,9 @@
         </h2>
       </div>
       <div class="toolbar">
-        <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
-        <a href="/clients/" class="btn">Voir les clients</a>
-        <a href="/clients/nouveau/" class="btn">Nouveau client</a>
+        <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
+        <a href="{% url 'clients' %}" class="btn">Voir les clients</a>
+        <a href="{% url 'client_create' %}" class="btn">Nouveau client</a>
       </div>
     </section>
   </main>
@@ -583,9 +481,7 @@
     </div>
 
     <div class="panel-content">
-      <div class="operation-tabs" id="operation-tabs">
-        <!-- Onglets générés par JS -->
-      </div>
+      <div class="operation-tabs" id="operation-tabs"></div>
 
       <div class="operation-details">
         <div class="detail-section">
@@ -646,50 +542,33 @@
     let selectedDayEvents = [];
     let currentOperationIndex = 0;
 
-    const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
-                       'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-    const monthsShort = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 
-                        'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin','Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const monthsShort = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun','Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-    // Initialisation des données
+    // Données: parse JSON venant du backend (fallback léger si besoin)
     function initCalendarEvents() {
       try {
-        const jsonData = '[{\u0022id\u0022: 23, \u0022client_nom\u0022: \u0022rachid zimmed\u0022, \u0022service\u0022: \u0022Vente piano + accord\u0022, \u0022date\u0022: \u00222025\u002D09\u002D25\u0022, \u0022time\u0022: \u002212:20\u0022, \u0022address\u0022: \u002212 rue de la tourte, Metz\u0022, \u0022phone\u0022: \u002201\u0022, \u0022url\u0022: \u0022/operations/23/\u0022}, {\u0022id\u0022: 16, \u0022client_nom\u0022: \u0022rachid zimmed\u0022, \u0022service\u0022: \u0022accord\u0022, \u0022date\u0022: \u00222025\u002D09\u002D25\u0022, \u0022time\u0022: \u002214:39\u0022, \u0022address\u0022: \u002212 rue de la tourte, Metz\u0022, \u0022phone\u0022: \u002201\u0022, \u0022url\u0022: \u0022/operations/16/\u0022}, {\u0022id\u0022: 12, \u0022client_nom\u0022: \u0022rachid zimmed\u0022, \u0022service\u0022: \u0022accord\u0022, \u0022date\u0022: \u00222025\u002D09\u002D28\u0022, \u0022time\u0022: \u002214:14\u0022, \u0022address\u0022: \u002212 rue de la tourte, Metz\u0022, \u0022phone\u0022: \u002201\u0022, \u0022url\u0022: \u0022/operations/12/\u0022}]';
-        console.log('Raw JSON data:', jsonData);
-        calendarEvents = JSON.parse(jsonData);
-        console.log('Parsed events:', calendarEvents);
+        const jsonData = '{{ calendar_events_json|escapejs }}';
+        if (jsonData && jsonData !== 'null' && jsonData !== 'undefined') {
+          calendarEvents = JSON.parse(jsonData);
+        } else {
+          calendarEvents = [];
+        }
       } catch (e) {
-        console.error('Erreur parsing calendar_events:', e);
-        // Données de test en cas d'erreur
-        calendarEvents = [
-          {
-            'id': 1,
-            'client_nom': 'Test Client',
-            'service': 'Test Service',
-            'date': new Date().toISOString().split('T')[0], // Aujourd'hui
-            'time': '09:00',
-            'address': 'Test Address',
-            'phone': '0123456789',
-            'url': '#'
-          }
-        ];
-        console.log('Using test data:', calendarEvents);
+        console.error('Erreur parsing calendar_events_json:', e);
+        calendarEvents = [];
       }
     }
 
-    // Utilitaires
+    // Utils
     function formatDate(date) {
-      return date.getFullYear() + '-' + 
-        String(date.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(date.getDate()).padStart(2, '0');
+      return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
     }
-
     function getWeekDates(offset = 0) {
       const today = new Date();
       const monday = new Date(today);
       monday.setDate(today.getDate() - today.getDay() + 1 + (offset * 7));
-      
       const dates = [];
       for (let i = 0; i < 7; i++) {
         const date = new Date(monday);
@@ -699,38 +578,25 @@
       return dates;
     }
 
-    // Gestion des vues
+    // Vues
     function setView(view) {
       currentView = view;
-      
-      // Update buttons
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById(view + '-btn').classList.add('active');
-
       renderCalendar();
     }
-
     function navigateCalendar(direction) {
-      if (direction === 0) {
-        currentOffset = 0;
-      } else {
-        currentOffset += direction;
-      }
+      if (direction === 0) currentOffset = 0;
+      else currentOffset += direction;
       renderCalendar();
     }
 
-    // Rendu du calendrier
+    // Rendu
     function renderCalendar() {
       closeSidePanel();
-      
-      if (currentView === 'week') {
-        renderWeekView();
-      } else if (currentView === 'day') {
-        renderDayView();
-      } else if (currentView === 'month') {
-        renderMonthView();
-      }
-      
+      if (currentView === 'week') renderWeekView();
+      else if (currentView === 'day') renderDayView();
+      else if (currentView === 'month') renderMonthView();
       updateEventCount();
     }
 
@@ -738,49 +604,39 @@
       const weekDates = getWeekDates(currentOffset);
       const today = new Date();
       const grid = document.getElementById('calendar-grid');
-      
-      // Update title
+
       const startDate = weekDates[0];
       const endDate = weekDates[6];
-      document.getElementById('calendar-title').textContent = 
+      document.getElementById('calendar-title').textContent =
         `${startDate.getDate()} ${monthsShort[startDate.getMonth()]} - ${endDate.getDate()} ${monthsShort[endDate.getMonth()]} ${endDate.getFullYear()}`;
-      
-      // Clear grid
+
       grid.innerHTML = '';
       grid.className = 'week-grid';
-      
+
       weekDates.forEach((date, index) => {
         const dayCard = document.createElement('div');
         dayCard.className = 'day-card';
-        
-        if (formatDate(date) === formatDate(today)) {
-          dayCard.classList.add('today');
-        }
-        
+        if (formatDate(date) === formatDate(today)) dayCard.classList.add('today');
+
         dayCard.innerHTML = `
           <div class="day-header">${dayNames[index]}</div>
           <div class="day-number">${date.getDate()}</div>
         `;
-        
+
         const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
         dayEvents.forEach((event, eventIndex) => {
           const eventEl = document.createElement('div');
           eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom}`;
-          eventEl.onclick = (e) => {
-            e.stopPropagation();
-            handleEventClick(formatDate(date), dayEvents, eventIndex);
-          };
+          eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
+          eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(date), dayEvents, eventIndex); };
           dayCard.appendChild(eventEl);
         });
-        
-        // Click handler for empty day area
+
         dayCard.onclick = (e) => {
           if (dayEvents.length > 0 && (e.target === dayCard || e.target.classList.contains('day-header') || e.target.classList.contains('day-number'))) {
             handleEventClick(formatDate(date), dayEvents, 0);
           }
         };
-        
         grid.appendChild(dayCard);
       });
     }
@@ -788,181 +644,206 @@
     function renderDayView() {
       const date = new Date();
       date.setDate(date.getDate() + currentOffset);
-      
-      document.getElementById('calendar-title').textContent = 
+
+      document.getElementById('calendar-title').textContent =
         date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      
+
       const grid = document.getElementById('calendar-grid');
       grid.innerHTML = '';
       grid.className = 'day-timeline';
-      
-      // Simplified day view - just show events for the day
+
       const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
-      
       const dayCard = document.createElement('div');
       dayCard.className = 'day-card';
       dayCard.style.minHeight = '200px';
-      
-      dayCard.innerHTML = `
-        <div class="day-header">Interventions du ${date.getDate()} ${monthsShort[date.getMonth()]}</div>
-      `;
-      
+      dayCard.innerHTML = `<div class="day-header">Interventions du ${date.getDate()} ${monthsShort[date.getMonth()]}</div>`;
+
       dayEvents.forEach((event, index) => {
         const eventEl = document.createElement('div');
         eventEl.className = 'event-item';
-        eventEl.innerHTML = `${event.time} - ${event.client_nom}<br><small>${event.service}</small>`;
+        eventEl.innerHTML = `${event.time || ''} - ${event.client_nom || ''}<br><small>${event.service || ''}</small>`;
         eventEl.onclick = () => handleEventClick(formatDate(date), dayEvents, index);
         dayCard.appendChild(eventEl);
       });
-      
+
       if (dayEvents.length === 0) {
         dayCard.innerHTML += '<p style="color:var(--muted); font-style:italic; margin-top:1rem">Aucune intervention prévue</p>';
       }
-      
       grid.appendChild(dayCard);
     }
 
     function renderMonthView() {
-      // Simplified month view for now
-      document.getElementById('calendar-title').textContent = 'Vue mois (bientôt disponible)';
-      
+      const today = new Date();
+      const currentMonth = new Date(today.getFullYear(), today.getMonth() + currentOffset, 1);
+
+      document.getElementById('calendar-title').textContent = `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
+
       const grid = document.getElementById('calendar-grid');
-      grid.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--muted)">Vue mois en cours de développement</p>';
+      grid.innerHTML = '';
+      grid.className = 'month-grid';
+
+      const firstDay = new Date(currentMonth);
+      const startOfWeek = new Date(firstDay);
+      const dayOfWeek = (firstDay.getDay() + 6) % 7; // Lundi=0
+      startOfWeek.setDate(firstDay.getDate() - dayOfWeek);
+
+      const headerRow = document.createElement('div');
+      headerRow.className = 'month-header-row';
+      dayNames.forEach(day => {
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'month-day-header';
+        dayHeader.textContent = day;
+        headerRow.appendChild(dayHeader);
+      });
+      grid.appendChild(headerRow);
+
+      for (let week = 0; week < 6; week++) {
+        for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+          const cellDate = new Date(startOfWeek);
+          cellDate.setDate(startOfWeek.getDate() + (week * 7) + dayIndex);
+
+          const dayCell = document.createElement('div');
+          dayCell.className = 'month-day-cell';
+          const isCurrentMonth = cellDate.getMonth() === currentMonth.getMonth();
+          const isToday = formatDate(cellDate) === formatDate(today);
+          if (!isCurrentMonth) dayCell.classList.add('other-month');
+          if (isToday) dayCell.classList.add('today');
+
+          const dayNumber = document.createElement('div');
+          dayNumber.className = 'month-day-number';
+          dayNumber.textContent = cellDate.getDate();
+          dayCell.appendChild(dayNumber);
+
+          const dayEvents = calendarEvents.filter(event => event.date === formatDate(cellDate));
+          if (dayEvents.length > 0) {
+            const eventContainer = document.createElement('div');
+            eventContainer.className = 'month-events';
+
+            dayEvents.slice(0, 3).forEach((event, index) => {
+              const eventEl = document.createElement('div');
+              eventEl.className = 'month-event-item';
+              eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
+              eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(cellDate), dayEvents, index); };
+              eventContainer.appendChild(eventEl);
+            });
+
+            if (dayEvents.length > 3) {
+              const moreEl = document.createElement('div');
+              moreEl.className = 'month-event-more';
+              moreEl.textContent = `+${dayEvents.length - 3} autres`;
+              moreEl.onclick = () => handleEventClick(formatDate(cellDate), dayEvents, 0);
+              eventContainer.appendChild(moreEl);
+            }
+            dayCell.appendChild(eventContainer);
+          }
+
+          dayCell.onclick = () => { if (dayEvents.length > 0) handleEventClick(formatDate(cellDate), dayEvents, 0); };
+          grid.appendChild(dayCell);
+        }
+      }
     }
 
-    // Gestion des événements
+    // Sélection & panneau latéral
     function handleEventClick(dateStr, dayEvents, operationIndex) {
       selectedDate = dateStr;
       selectedDayEvents = dayEvents;
       currentOperationIndex = operationIndex;
-      
-      // Highlight selected day
-      document.querySelectorAll('.day-card').forEach(card => {
-        card.classList.remove('selected');
-      });
-      
-      // Find and highlight the clicked day
-      const dayElements = document.querySelectorAll('.day-card');
+
+      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
+      const dayElements = document.querySelectorAll('.day-card, .month-day-cell');
       dayElements.forEach(el => {
-        const dayNumber = el.querySelector('.day-number');
+        const dayNumber = el.querySelector('.day-number, .month-day-number');
         if (dayNumber) {
           const eventDate = new Date(dateStr);
-          if (parseInt(dayNumber.textContent) === eventDate.getDate()) {
-            el.classList.add('selected');
-          }
+          if (parseInt(dayNumber.textContent) === eventDate.getDate()) el.classList.add('selected');
         }
       });
-      
       openSidePanel();
     }
 
-    // Gestion du panneau latéral
     function openSidePanel() {
       document.getElementById('side-panel').classList.add('open');
       document.getElementById('overlay').style.display = 'block';
       updatePanelContent();
     }
-
     function closeSidePanel() {
       document.getElementById('side-panel').classList.remove('open');
       document.getElementById('overlay').style.display = 'none';
-      
-      document.querySelectorAll('.day-card').forEach(card => {
-        card.classList.remove('selected');
-      });
-      
-      selectedDate = null;
-      selectedDayEvents = [];
+      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
+      selectedDate = null; selectedDayEvents = [];
     }
 
     function updatePanelContent() {
       if (!selectedDate || selectedDayEvents.length === 0) return;
-      
+
       const date = new Date(selectedDate);
-      const dateStr = date.toLocaleDateString('fr-FR', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      
+      const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
       document.getElementById('panel-date').textContent = dateStr;
-      document.getElementById('panel-title').textContent = 
-        `${selectedDayEvents.length} intervention${selectedDayEvents.length > 1 ? 's' : ''}`;
-      
-      // Update tabs if multiple operations
+      document.getElementById('panel-title').textContent = `${selectedDayEvents.length} intervention${selectedDayEvents.length > 1 ? 's' : ''}`;
+
       const tabsContainer = document.getElementById('operation-tabs');
       tabsContainer.innerHTML = '';
-      
       if (selectedDayEvents.length > 1) {
         selectedDayEvents.forEach((event, index) => {
           const tab = document.createElement('div');
           tab.className = `operation-tab ${index === currentOperationIndex ? 'active' : ''}`;
-          tab.textContent = event.time;
+          tab.textContent = event.time || '--:--';
           tab.onclick = () => switchOperation(index);
           tabsContainer.appendChild(tab);
         });
       }
-      
       updateOperationDetails();
     }
 
     function switchOperation(index) {
       currentOperationIndex = index;
       updateOperationDetails();
-      
-      document.querySelectorAll('.operation-tab').forEach((tab, i) => {
-        tab.classList.toggle('active', i === index);
-      });
+      document.querySelectorAll('.operation-tab').forEach((tab, i) => tab.classList.toggle('active', i === index));
     }
 
     function updateOperationDetails() {
       const operation = selectedDayEvents[currentOperationIndex];
       if (!operation) return;
-      
-      document.getElementById('detail-service').textContent = operation.service;
-      document.getElementById('detail-time').textContent = operation.time;
-      document.getElementById('detail-address').textContent = operation.address;
-      document.getElementById('detail-client').textContent = operation.client_nom;
-      document.getElementById('detail-phone').textContent = operation.phone;
-      
-      document.getElementById('call-btn').href = `tel:${operation.phone}`;
-      document.getElementById('detail-btn').href = operation.url;
+      document.getElementById('detail-service').textContent = operation.service || '-';
+      document.getElementById('detail-time').textContent = operation.time || '-';
+      document.getElementById('detail-address').textContent = operation.address || '-';
+      document.getElementById('detail-client').textContent = operation.client_nom || '-';
+      document.getElementById('detail-phone').textContent = operation.phone || '-';
+      document.getElementById('call-btn').href = operation.phone ? `tel:${operation.phone}` : '#';
+      document.getElementById('detail-btn').href = operation.url || '#';
     }
 
     function updateEventCount() {
       let count = 0;
-      
       if (currentView === 'day') {
-        const date = new Date();
-        date.setDate(date.getDate() + currentOffset);
+        const date = new Date(); date.setDate(date.getDate() + currentOffset);
         count = calendarEvents.filter(event => event.date === formatDate(date)).length;
       } else if (currentView === 'week') {
         const weekDates = getWeekDates(currentOffset);
-        weekDates.forEach(date => {
-          count += calendarEvents.filter(event => event.date === formatDate(date)).length;
-        });
-      } else {
-        count = calendarEvents.length;
+        weekDates.forEach(date => { count += calendarEvents.filter(event => event.date === formatDate(date)).length; });
+      } else if (currentView === 'month') {
+        const today = new Date();
+        const currentMonth = new Date(today.getFullYear(), today.getMonth() + currentOffset, 1);
+        const nextMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+        count = calendarEvents.filter(event => {
+          const d = new Date(event.date);
+          return d >= currentMonth && d < nextMonth;
+        }).length;
       }
-      
       document.getElementById('events-count').textContent = count;
     }
 
-    // Initialisation
+    // Init
     document.addEventListener('DOMContentLoaded', function() {
-      console.log('Initializing calendar...');
       initCalendarEvents();
       renderCalendar();
-      console.log('Calendar initialized with', calendarEvents.length, 'events');
     });
 
-    // Close panel when clicking outside
+    // Fermer panneau si clic extérieur
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card')) {
-        if (document.getElementById('side-panel').classList.contains('open')) {
-          closeSidePanel();
-        }
+      if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card') && !e.target.closest('.month-event-item')) {
+        if (document.getElementById('side-panel').classList.contains('open')) closeSidePanel();
       }
     });
   </script>
