@@ -92,66 +92,32 @@
     .btn:hover{ background:rgba(148,163,184,.12) }
     .btn.primary{ background:linear-gradient(180deg, rgba(99,102,241,.18), rgba(99,102,241,.12)); border-color: rgba(99,102,241,.35); color:white }
 
-    /* Calendar multi-vues */
-    .calendar-simple{ padding:1rem 0 }
+    /* Calendar */
     .calendar-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem }
     .calendar-title{ font-size:1.1rem; font-weight:600 }
     .nav-btn{ padding:.5rem; border:1px solid var(--border); background:rgba(148,163,184,.07); color:var(--text); cursor:pointer; border-radius:8px }
     .nav-btn:hover{ background:rgba(148,163,184,.12) }
-    
+
     .view-buttons{ display:flex; gap:.25rem }
     .view-btn{ padding:.4rem .7rem; border:1px solid var(--border); background:rgba(148,163,184,.07); color:var(--text); cursor:pointer; border-radius:6px; font-size:.85rem }
     .view-btn:hover{ background:rgba(148,163,184,.12) }
     .view-btn.active{ background:var(--primary); color:white; border-color:var(--primary) }
 
-    /* Vue Jour */
-    .day-view{ display:none }
-    .day-timeline{ display:grid; grid-template-columns: 80px 1fr; gap:1px; background:var(--border); border-radius:12px; overflow:hidden }
-    .time-slot{ background:rgba(15,23,42,.8); padding:.5rem; font-size:.75rem; color:var(--muted); text-align:center }
-    .hour-events{ background:rgba(2,6,23,.4); min-height:60px; padding:.25rem; position:relative }
-
-    /* Vue Semaine */
-    .week-view{ display:grid; grid-template-columns: repeat(7, 1fr); gap:.5rem; margin-top:1rem }
+    /* Vue Semaine (par défaut) */
+    .calendar-view{ margin-top:1rem }
+    .week-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:.5rem }
     .day-card{ 
       background:rgba(2,6,23,.4); 
       border:1px solid var(--border); 
       border-radius:12px; 
       padding:.75rem; 
       min-height:120px;
-      position:relative;
+      cursor: pointer;
     }
     .day-card.today{ border-color:var(--primary); background:rgba(99,102,241,.1) }
+    .day-card.selected{ border-color:var(--warning); box-shadow: 0 0 0 2px rgba(245,158,11,.3) }
     .day-header{ font-weight:600; margin-bottom:.5rem; font-size:.9rem }
-    .day-number{ color:var(--muted); font-size:.8rem }
-
-    /* Vue Mois */
-    .month-view{ display:none }
-    .month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:1px; background:var(--border); border-radius:12px; overflow:hidden }
-    .month-day{ background:rgba(2,6,23,.4); min-height:80px; padding:.4rem; position:relative; border-bottom:1px solid var(--border) }
-    .month-day.other-month{ opacity:.4 }
-    .month-day.today{ background:rgba(99,102,241,.1); border:1px solid var(--primary) }
-    .month-day-number{ font-size:.8rem; font-weight:600; margin-bottom:.2rem }
-    .month-header{ background:rgba(15,23,42,.8); padding:.5rem; text-align:center; font-size:.8rem; color:var(--muted); font-weight:600 }
-
-    /* Vue Année */
-    .year-view{ display:none }
-    .year-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap:1rem }
-    .month-mini{ 
-      background:rgba(2,6,23,.4); 
-      border:1px solid var(--border); 
-      border-radius:8px; 
-      padding:.75rem; 
-    }
-    .month-mini-header{ text-align:center; font-weight:600; margin-bottom:.5rem; font-size:.9rem }
-    .month-mini-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:1px }
-    .month-mini-day{ 
-      width:24px; height:20px; 
-      font-size:.7rem; 
-      display:flex; align-items:center; justify-content:center;
-      position:relative;
-    }
-    .month-mini-day.has-event{ background:rgba(99,102,241,.3); border-radius:3px }
-    .month-mini-day.today{ background:var(--primary); color:white; border-radius:3px }
+    .day-number{ color:var(--muted); font-size:.8rem; margin-bottom:.5rem }
 
     .event-item{ 
       background:rgba(99,102,241,.2); 
@@ -165,10 +131,6 @@
       transition: all 0.2s ease;
     }
     .event-item:hover{ background:rgba(99,102,241,.3); transform: translateY(-1px) }
-
-    /* Jour sélectionné */
-    .day-card.selected{ border-color:var(--warning); box-shadow: 0 0 0 2px rgba(245,158,11,.3) }
-    .month-day.selected{ border-color:var(--warning); box-shadow: 0 0 0 2px rgba(245,158,11,.3) }
 
     /* Panneau latéral */
     .side-panel{
@@ -244,14 +206,7 @@
       border-color: var(--primary);
       color: white;
     }
-    .operation-tab:hover:not(.active){
-      background: rgba(148,163,184,.12);
-      color: var(--text);
-    }
 
-    .operation-details{
-      margin-bottom: 2rem;
-    }
     .detail-section{
       margin-bottom: 1.5rem;
     }
@@ -304,23 +259,15 @@
       background: rgba(148,163,184,.12);
       transform: translateY(-1px);
     }
-    .action-btn.primary{
-      background: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
     .action-btn.success{
       background: var(--success);
       border-color: var(--success);
       color: white;
     }
-
-    /* Responsive */
-    @media (max-width: 768px){
-      .side-panel{
-        width: 100%;
-        right: -100%;
-      }
+    .action-btn.primary{
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
     }
 
     /* Table */
@@ -337,8 +284,9 @@
     /* Responsive */
     @media (max-width: 768px){
       .kpi.ca, .kpi.clients, .kpi.devis, .kpi.planifier, .kpi.paiement{ grid-column: 1 / -1 }
-      .week-calendar{ grid-template-columns: 1fr; gap:.3rem }
+      .week-grid{ grid-template-columns: 1fr; gap:.3rem }
       .calendar-nav{ flex-direction:column; align-items:flex-start }
+      .side-panel{ width: 100%; right: -100% }
       .table-wrap{ border:none }
       table{ display:block }
       thead{ display:none }
@@ -377,8 +325,9 @@
       
       .day-card{ background: var(--card) }
       .day-card.today{ border-color:var(--primary); background:rgba(99,102,241,.05) }
+      .side-panel{ background: rgba(255,255,255,.98) }
       
-      .nav a.active{ 
+      .nav a.active, .view-btn.active{ 
         color: var(--primary); 
         background: rgba(99,102,241,.08);
         border-color: rgba(99,102,241,.2);
@@ -446,14 +395,21 @@
       </article>
     </section>
 
-    <!-- Planning simplifié -->
+    <!-- DEBUG - à supprimer après test -->
+    <div style="background:#333; color:#fff; padding:1rem; margin:1rem 0; border-radius:8px; font-family:monospace; font-size:0.8rem;">
+      <strong>🔍 DEBUG Calendar Events:</strong><br>
+      {{ calendar_events_json }}<br><br>
+      <strong>Nombre d'événements:</strong> {{ calendar_events|length }}
+    </div>
+
+    <!-- Planning -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/>
           </svg>
-          Planning de la semaine
+          Planning des interventions
           <span class="badge" id="events-count">0</span>
         </h2>
         <div class="toolbar">
@@ -461,75 +417,25 @@
         </div>
       </div>
 
-      <div class="calendar-simple">
-        <div class="calendar-nav">
-          <div class="calendar-title" id="calendar-title">Semaine courante</div>
-          <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap">
-            <div>
-              <button class="nav-btn" onclick="navigateCalendar(-1)">← Précédent</button>
-              <button class="nav-btn" onclick="navigateCalendar(0)" style="margin:0 .5rem">Aujourd'hui</button>
-              <button class="nav-btn" onclick="navigateCalendar(1)">Suivant →</button>
-            </div>
-            <div class="view-buttons">
-              <button class="view-btn" onclick="setView('day')" id="day-btn">Jour</button>
-              <button class="view-btn active" onclick="setView('week')" id="week-btn">Semaine</button>
-              <button class="view-btn" onclick="setView('month')" id="month-btn">Mois</button>
-              <button class="view-btn" onclick="setView('year')" id="year-btn">Année</button>
-            </div>
+      <div class="calendar-nav">
+        <div class="calendar-title" id="calendar-title">Semaine courante</div>
+        <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap">
+          <div>
+            <button class="nav-btn" onclick="navigateCalendar(-1)">← Précédent</button>
+            <button class="nav-btn" onclick="navigateCalendar(0)" style="margin:0 .5rem">Aujourd'hui</button>
+            <button class="nav-btn" onclick="navigateCalendar(1)">Suivant →</button>
+          </div>
+          <div class="view-buttons">
+            <button class="view-btn" onclick="setView('day')" id="day-btn">Jour</button>
+            <button class="view-btn active" onclick="setView('week')" id="week-btn">Semaine</button>
+            <button class="view-btn" onclick="setView('month')" id="month-btn">Mois</button>
           </div>
         </div>
+      </div>
 
-        <!-- Vue Jour -->
-        <div class="day-view" id="day-view">
-          <div class="day-timeline">
-            <div class="time-column">
-              <div class="time-slot">08:00</div>
-              <div class="time-slot">09:00</div>
-              <div class="time-slot">10:00</div>
-              <div class="time-slot">11:00</div>
-              <div class="time-slot">14:00</div>
-              <div class="time-slot">15:00</div>
-              <div class="time-slot">16:00</div>
-              <div class="time-slot">17:00</div>
-            </div>
-            <div class="events-column">
-              <div class="hour-events" data-hour="8"></div>
-              <div class="hour-events" data-hour="9"></div>
-              <div class="hour-events" data-hour="10"></div>
-              <div class="hour-events" data-hour="11"></div>
-              <div class="hour-events" data-hour="14"></div>
-              <div class="hour-events" data-hour="15"></div>
-              <div class="hour-events" data-hour="16"></div>
-              <div class="hour-events" data-hour="17"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Vue Semaine -->
-        <div class="week-view" id="week-view">
+      <div class="calendar-view">
+        <div class="week-grid" id="calendar-grid">
           <!-- Généré par JavaScript -->
-        </div>
-
-        <!-- Vue Mois -->
-        <div class="month-view" id="month-view">
-          <div class="month-grid">
-            <!-- Headers des jours -->
-            <div class="month-header">Lun</div>
-            <div class="month-header">Mar</div>
-            <div class="month-header">Mer</div>
-            <div class="month-header">Jeu</div>
-            <div class="month-header">Ven</div>
-            <div class="month-header">Sam</div>
-            <div class="month-header">Dim</div>
-            <!-- Jours générés par JavaScript -->
-          </div>
-        </div>
-
-        <!-- Vue Année -->
-        <div class="year-view" id="year-view">
-          <div class="year-grid" id="year-grid">
-            <!-- Mois générés par JavaScript -->
-          </div>
         </div>
       </div>
     </section>
@@ -544,9 +450,6 @@
           Prochaines opérations
           <span class="badge">{{ prochaines_operations|length }}</span>
         </h2>
-        <div class="toolbar">
-          <a href="{% url 'operations' %}?statut=planifie" class="btn">Voir plus</a>
-        </div>
       </div>
 
       {% if prochaines_operations %}
@@ -626,7 +529,7 @@
         <!-- Onglets générés par JS -->
       </div>
 
-      <div class="operation-details" id="operation-details">
+      <div class="operation-details">
         <div class="detail-section">
           <h4>Intervention</h4>
           <div class="detail-item">
@@ -674,53 +577,12 @@
   </div>
 
   <!-- Overlay -->
-  <div class="overlay" id="overlay" onclick="closeSidePanel()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.3); z-index:999"></div>
+  <div id="overlay" onclick="closeSidePanel()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.3); z-index:999"></div>
 
   <script>
-    // Données Django - version corrigée
+    // Variables globales
     let calendarEvents = [];
-    try {
-      calendarEvents = JSON.parse('{{ calendar_events_json|escapejs }}');
-    } catch (e) {
-      console.error('Erreur parsing calendar_events:', e);
-      // Données de test en cas d'erreur
-      calendarEvents = [
-        {
-          'id': 1,
-          'client_nom': 'Test Client',
-          'service': 'Test Service',
-          'date': '2025-09-25',
-          'time': '09:00',
-          'address': 'Test Address',
-          'phone': '0123456789',
-          'url': '#'
-        }
-      ];
-    }
-  <script>
-    // Données Django - version corrigée
-    let calendarEvents = [];
-    try {
-      calendarEvents = JSON.parse('{{ calendar_events_json|escapejs }}');
-    } catch (e) {
-      console.error('Erreur parsing calendar_events:', e);
-      // Données de test en cas d'erreur
-      calendarEvents = [
-        {
-          'id': 1,
-          'client_nom': 'Test Client',
-          'service': 'Test Service',
-          'date': '2025-09-25',
-          'time': '09:00',
-          'address': 'Test Address',
-          'phone': '0123456789',
-          'url': '#'
-        }
-      ];
-    }
-    
     let currentView = 'week';
-    let currentDate = new Date();
     let currentOffset = 0;
     let selectedDate = null;
     let selectedDayEvents = [];
@@ -732,287 +594,202 @@
                         'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
+    // Initialisation des données
+    function initCalendarEvents() {
+      try {
+        const jsonData = '{{ calendar_events_json|escapejs }}';
+        console.log('Raw JSON data:', jsonData);
+        calendarEvents = JSON.parse(jsonData);
+        console.log('Parsed events:', calendarEvents);
+      } catch (e) {
+        console.error('Erreur parsing calendar_events:', e);
+        // Données de test en cas d'erreur
+        calendarEvents = [
+          {
+            'id': 1,
+            'client_nom': 'Test Client',
+            'service': 'Test Service',
+            'date': new Date().toISOString().split('T')[0], // Aujourd'hui
+            'time': '09:00',
+            'address': 'Test Address',
+            'phone': '0123456789',
+            'url': '#'
+          }
+        ];
+        console.log('Using test data:', calendarEvents);
+      }
+    }
+
+    // Utilitaires
     function formatDate(date) {
       return date.getFullYear() + '-' + 
         String(date.getMonth() + 1).padStart(2, '0') + '-' + 
         String(date.getDate()).padStart(2, '0');
     }
 
+    function getWeekDates(offset = 0) {
+      const today = new Date();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - today.getDay() + 1 + (offset * 7));
+      
+      const dates = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        dates.push(date);
+      }
+      return dates;
+    }
+
+    // Gestion des vues
     function setView(view) {
       currentView = view;
-      currentOffset = 0;
-      closeSidePanel();
       
       // Update buttons
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById(view + '-btn').classList.add('active');
 
-      // Show/hide views
-      document.getElementById('day-view').style.display = view === 'day' ? 'block' : 'none';
-      document.getElementById('week-view').style.display = view === 'week' ? 'grid' : 'none';
-      document.getElementById('month-view').style.display = view === 'month' ? 'block' : 'none';
-      document.getElementById('year-view').style.display = view === 'year' ? 'block' : 'none';
-
-      updateCalendarView();
+      renderCalendar();
     }
 
     function navigateCalendar(direction) {
       if (direction === 0) {
         currentOffset = 0;
-        currentDate = new Date();
       } else {
         currentOffset += direction;
       }
-      closeSidePanel();
-      updateCalendarView();
+      renderCalendar();
     }
 
-    function updateCalendarView() {
-      // Clear previous selections
-      document.querySelectorAll('.day-card.selected, .month-day.selected').forEach(el => {
-        el.classList.remove('selected');
-      });
-
-      switch(currentView) {
-        case 'day':
-          updateDayView();
-          break;
-        case 'week':
-          updateWeekView();
-          break;
-        case 'month':
-          updateMonthView();
-          break;
-        case 'year':
-          updateYearView();
-          break;
+    // Rendu du calendrier
+    function renderCalendar() {
+      closeSidePanel();
+      
+      if (currentView === 'week') {
+        renderWeekView();
+      } else if (currentView === 'day') {
+        renderDayView();
+      } else if (currentView === 'month') {
+        renderMonthView();
       }
+      
       updateEventCount();
     }
 
-    function updateDayView() {
+    function renderWeekView() {
+      const weekDates = getWeekDates(currentOffset);
+      const today = new Date();
+      const grid = document.getElementById('calendar-grid');
+      
+      // Update title
+      const startDate = weekDates[0];
+      const endDate = weekDates[6];
+      document.getElementById('calendar-title').textContent = 
+        `${startDate.getDate()} ${monthsShort[startDate.getMonth()]} - ${endDate.getDate()} ${monthsShort[endDate.getMonth()]} ${endDate.getFullYear()}`;
+      
+      // Clear grid
+      grid.innerHTML = '';
+      grid.className = 'week-grid';
+      
+      weekDates.forEach((date, index) => {
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+        
+        if (formatDate(date) === formatDate(today)) {
+          dayCard.classList.add('today');
+        }
+        
+        dayCard.innerHTML = `
+          <div class="day-header">${dayNames[index]}</div>
+          <div class="day-number">${date.getDate()}</div>
+        `;
+        
+        const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
+        dayEvents.forEach((event, eventIndex) => {
+          const eventEl = document.createElement('div');
+          eventEl.className = 'event-item';
+          eventEl.innerHTML = `${event.time} ${event.client_nom}`;
+          eventEl.onclick = (e) => {
+            e.stopPropagation();
+            handleEventClick(formatDate(date), dayEvents, eventIndex);
+          };
+          dayCard.appendChild(eventEl);
+        });
+        
+        // Click handler for empty day area
+        dayCard.onclick = (e) => {
+          if (dayEvents.length > 0 && (e.target === dayCard || e.target.classList.contains('day-header') || e.target.classList.contains('day-number'))) {
+            handleEventClick(formatDate(date), dayEvents, 0);
+          }
+        };
+        
+        grid.appendChild(dayCard);
+      });
+    }
+
+    function renderDayView() {
       const date = new Date();
       date.setDate(date.getDate() + currentOffset);
       
       document.getElementById('calendar-title').textContent = 
         date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-      // Clear existing events
-      document.querySelectorAll('.hour-events').forEach(slot => {
-        slot.innerHTML = '';
-      });
-
-      // Add events for the day
+      
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+      grid.className = 'day-timeline';
+      
+      // Simplified day view - just show events for the day
       const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
+      
+      const dayCard = document.createElement('div');
+      dayCard.className = 'day-card';
+      dayCard.style.minHeight = '200px';
+      
+      dayCard.innerHTML = `
+        <div class="day-header">Interventions du ${date.getDate()} ${monthsShort[date.getMonth()]}</div>
+      `;
+      
       dayEvents.forEach((event, index) => {
-        const hour = parseInt(event.time.split(':')[0]);
-        const slot = document.querySelector(`[data-hour="${hour}"]`);
-        if (slot) {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom}<br><small>${event.service}</small>`;
-          eventEl.onclick = (e) => {
-            e.stopPropagation();
-            handleEventClick(formatDate(date), dayEvents, index);
-          };
-          slot.appendChild(eventEl);
-        }
+        const eventEl = document.createElement('div');
+        eventEl.className = 'event-item';
+        eventEl.innerHTML = `${event.time} - ${event.client_nom}<br><small>${event.service}</small>`;
+        eventEl.onclick = () => handleEventClick(formatDate(date), dayEvents, index);
+        dayCard.appendChild(eventEl);
       });
-    }
-
-    function updateWeekView() {
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1 + (currentOffset * 7));
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 6);
       
-      document.getElementById('calendar-title').textContent = 
-        `${startOfWeek.getDate()} ${monthsShort[startOfWeek.getMonth()]} - ${endOfWeek.getDate()} ${monthsShort[endOfWeek.getMonth()]} ${endOfWeek.getFullYear()}`;
-      
-      const weekView = document.getElementById('week-view');
-      weekView.innerHTML = '';
-      
-      const today = new Date();
-      
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
-        
-        const dayCard = document.createElement('div');
-        dayCard.className = 'day-card';
-        
-        if (formatDate(date) === formatDate(today)) {
-          dayCard.classList.add('today');
-        }
-        
-        dayCard.innerHTML = `
-          <div class="day-header">${dayNames[i]}</div>
-          <div class="day-number">${date.getDate()}</div>
-        `;
-        
-        const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
-        dayEvents.forEach((event, index) => {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom}`;
-          eventEl.onclick = (e) => {
-            e.stopPropagation();
-            handleEventClick(formatDate(date), dayEvents, index);
-          };
-          dayCard.appendChild(eventEl);
-        });
-        
-        // Click on empty area of day
-        dayCard.onclick = (e) => {
-          if (e.target === dayCard || e.target.classList.contains('day-header') || e.target.classList.contains('day-number')) {
-            if (dayEvents.length > 0) {
-              handleEventClick(formatDate(date), dayEvents, 0);
-            }
-          }
-        };
-        
-        weekView.appendChild(dayCard);
+      if (dayEvents.length === 0) {
+        dayCard.innerHTML += '<p style="color:var(--muted); font-style:italic; margin-top:1rem">Aucune intervention prévue</p>';
       }
+      
+      grid.appendChild(dayCard);
     }
 
-    function updateMonthView() {
-      const date = new Date();
-      date.setMonth(date.getMonth() + currentOffset);
-      date.setDate(1);
+    function renderMonthView() {
+      // Simplified month view for now
+      document.getElementById('calendar-title').textContent = 'Vue mois (bientôt disponible)';
       
-      document.getElementById('calendar-title').textContent = 
-        `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-      
-      const monthGrid = document.querySelector('.month-grid');
-      const existingDays = monthGrid.querySelectorAll('.month-day');
-      existingDays.forEach(day => day.remove());
-      
-      const firstDay = new Date(date);
-      const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      const startDate = new Date(firstDay);
-      startDate.setDate(startDate.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1));
-      
-      const today = new Date();
-      
-      for (let i = 0; i < 42; i++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i);
-        
-        const dayEl = document.createElement('div');
-        dayEl.className = 'month-day';
-        
-        if (currentDate.getMonth() !== date.getMonth()) {
-          dayEl.classList.add('other-month');
-        }
-        
-        if (formatDate(currentDate) === formatDate(today)) {
-          dayEl.classList.add('today');
-        }
-        
-        dayEl.innerHTML = `<div class="month-day-number">${currentDate.getDate()}</div>`;
-        
-        const dayEvents = calendarEvents.filter(event => event.date === formatDate(currentDate));
-        dayEvents.forEach((event, index) => {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom.split(' ')[0]}`;
-          eventEl.onclick = (e) => {
-            e.stopPropagation();
-            handleEventClick(formatDate(currentDate), dayEvents, index);
-          };
-          dayEl.appendChild(eventEl);
-        });
-
-        // Click on day
-        dayEl.onclick = (e) => {
-          if (dayEvents.length > 0 && (e.target === dayEl || e.target.classList.contains('month-day-number'))) {
-            handleEventClick(formatDate(currentDate), dayEvents, 0);
-          }
-        };
-        
-        monthGrid.appendChild(dayEl);
-      }
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--muted)">Vue mois en cours de développement</p>';
     }
 
-    function updateYearView() {
-      const year = new Date().getFullYear() + currentOffset;
-      document.getElementById('calendar-title').textContent = year;
-      
-      const yearGrid = document.getElementById('year-grid');
-      yearGrid.innerHTML = '';
-      
-      const today = new Date();
-      
-      for (let month = 0; month < 12; month++) {
-        const monthEl = document.createElement('div');
-        monthEl.className = 'month-mini';
-        
-        const headerEl = document.createElement('div');
-        headerEl.className = 'month-mini-header';
-        headerEl.textContent = monthsShort[month];
-        monthEl.appendChild(headerEl);
-        
-        const gridEl = document.createElement('div');
-        gridEl.className = 'month-mini-grid';
-        
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1));
-        
-        for (let i = 0; i < 35; i++) {
-          const currentDate = new Date(startDate);
-          currentDate.setDate(startDate.getDate() + i);
-          
-          const dayEl = document.createElement('div');
-          dayEl.className = 'month-mini-day';
-          
-          if (currentDate.getMonth() === month) {
-            dayEl.textContent = currentDate.getDate();
-            
-            if (formatDate(currentDate) === formatDate(today)) {
-              dayEl.classList.add('today');
-            }
-            
-            const hasEvent = calendarEvents.some(event => event.date === formatDate(currentDate));
-            if (hasEvent) {
-              dayEl.classList.add('has-event');
-              
-              // Click handler for year view
-              dayEl.onclick = () => {
-                const dayEvents = calendarEvents.filter(event => event.date === formatDate(currentDate));
-                if (dayEvents.length > 0) {
-                  handleEventClick(formatDate(currentDate), dayEvents, 0);
-                }
-              };
-            }
-          }
-          
-          gridEl.appendChild(dayEl);
-        }
-        
-        monthEl.appendChild(gridEl);
-        yearGrid.appendChild(monthEl);
-      }
-    }
-
+    // Gestion des événements
     function handleEventClick(dateStr, dayEvents, operationIndex) {
       selectedDate = dateStr;
       selectedDayEvents = dayEvents;
       currentOperationIndex = operationIndex;
       
       // Highlight selected day
-      document.querySelectorAll('.day-card.selected, .month-day.selected').forEach(el => {
-        el.classList.remove('selected');
+      document.querySelectorAll('.day-card').forEach(card => {
+        card.classList.remove('selected');
       });
       
-      // Add selection to corresponding day
-      const dayElements = document.querySelectorAll('.day-card, .month-day');
+      // Find and highlight the clicked day
+      const dayElements = document.querySelectorAll('.day-card');
       dayElements.forEach(el => {
-        const dayDate = el.querySelector('.day-number, .month-day-number');
-        if (dayDate && dayEvents.length > 0) {
+        const dayNumber = el.querySelector('.day-number');
+        if (dayNumber) {
           const eventDate = new Date(dateStr);
-          if (dayDate.textContent == eventDate.getDate()) {
+          if (parseInt(dayNumber.textContent) === eventDate.getDate()) {
             el.classList.add('selected');
           }
         }
@@ -1021,10 +798,10 @@
       openSidePanel();
     }
 
+    // Gestion du panneau latéral
     function openSidePanel() {
       document.getElementById('side-panel').classList.add('open');
       document.getElementById('overlay').style.display = 'block';
-      
       updatePanelContent();
     }
 
@@ -1032,9 +809,8 @@
       document.getElementById('side-panel').classList.remove('open');
       document.getElementById('overlay').style.display = 'none';
       
-      // Remove selections
-      document.querySelectorAll('.day-card.selected, .month-day.selected').forEach(el => {
-        el.classList.remove('selected');
+      document.querySelectorAll('.day-card').forEach(card => {
+        card.classList.remove('selected');
       });
       
       selectedDate = null;
@@ -1056,7 +832,7 @@
       document.getElementById('panel-title').textContent = 
         `${selectedDayEvents.length} intervention${selectedDayEvents.length > 1 ? 's' : ''}`;
       
-      // Update tabs
+      // Update tabs if multiple operations
       const tabsContainer = document.getElementById('operation-tabs');
       tabsContainer.innerHTML = '';
       
@@ -1070,7 +846,6 @@
         });
       }
       
-      // Update operation details
       updateOperationDetails();
     }
 
@@ -1078,7 +853,6 @@
       currentOperationIndex = index;
       updateOperationDetails();
       
-      // Update tabs
       document.querySelectorAll('.operation-tab').forEach((tab, i) => {
         tab.classList.toggle('active', i === index);
       });
@@ -1094,562 +868,45 @@
       document.getElementById('detail-client').textContent = operation.client_nom;
       document.getElementById('detail-phone').textContent = operation.phone;
       
-      // Update action buttons
       document.getElementById('call-btn').href = `tel:${operation.phone}`;
       document.getElementById('detail-btn').href = operation.url;
     }
 
     function updateEventCount() {
-      let eventCount = 0;
+      let count = 0;
       
       if (currentView === 'day') {
         const date = new Date();
         date.setDate(date.getDate() + currentOffset);
-        eventCount = calendarEvents.filter(event => event.date === formatDate(date)).length;
+        count = calendarEvents.filter(event => event.date === formatDate(date)).length;
       } else if (currentView === 'week') {
-        const startOfWeek = new Date();
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1 + (currentOffset * 7));
-        for (let i = 0; i < 7; i++) {
-          const date = new Date(startOfWeek);
-          date.setDate(startOfWeek.getDate() + i);
-          eventCount += calendarEvents.filter(event => event.date === formatDate(date)).length;
-        }
+        const weekDates = getWeekDates(currentOffset);
+        weekDates.forEach(date => {
+          count += calendarEvents.filter(event => event.date === formatDate(date)).length;
+        });
       } else {
-        eventCount = calendarEvents.length;
+        count = calendarEvents.length;
       }
       
-      document.getElementById('events-count').textContent = eventCount;
+      document.getElementById('events-count').textContent = count;
     }
+
+    // Initialisation
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('Initializing calendar...');
+      initCalendarEvents();
+      renderCalendar();
+      console.log('Calendar initialized with', calendarEvents.length, 'events');
+    });
 
     // Close panel when clicking outside
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card') && !e.target.closest('.month-day')) {
+      if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card')) {
         if (document.getElementById('side-panel').classList.contains('open')) {
           closeSidePanel();
         }
       }
     });
-
-    // Initialize calendar
-    document.addEventListener('DOMContentLoaded', function() {
-      setView('week');
-    });.date === formatDate(date));
-      dayEvents.forEach((event, index) => {
-        const hour = parseInt(event.time.split(':')[0]);
-        const slot = document.querySelector(`[data-hour="${hour}"]`);
-        if (slot) {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom}<br><small>${event.service}</small>`;
-          eventEl.onclick = (e) => {
-            e.stopPropagation();
-            handleEventClick(formatDate(date), dayEvents, index);
-          };
-          slot.appendChild(eventEl);
-        }
-      });
-    }
-
-    function updateWeekView() {
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1 + (currentOffset * 7));
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 6);
-      
-      document.getElementById('calendar-title').textContent = 
-        `${startOfWeek.getDate()} ${monthsShort[startOfWeek.getMonth()]} - ${endOfWeek.getDate()} ${monthsShort[endOfWeek.getMonth()]} ${endOfWeek.getFullYear()}`;
-      
-      const weekView = document.getElementById('week-view');
-      weekView.innerHTML = '';
-      
-      const today = new Date();
-      
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
-        
-        const dayCard = document.createElement('div');
-        dayCard.className = 'day-card';
-        
-        if (formatDate(date) === formatDate(today)) {
-          dayCard.classList.add('today');
-        }
-        
-        dayCard.innerHTML = `
-          <div class="day-header">${dayNames[i]}</div>
-          <div class="day-number">${date.getDate()}</div>
-        `;
-        
-        const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
-        dayEvents.forEach((event, index) => {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom}`;
-          eventEl.onclick = (e) => {
-            e.stopPropagation();
-            handleEventClick(formatDate(date), dayEvents, index);
-          };
-          dayCard.appendChild(eventEl);
-        });
-        
-        // Click on empty area of day
-        dayCard.onclick = (e) => {
-          if (e.target === dayCard || e.target.classList.contains('day-header') || e.target.classList.contains('day-number')) {
-            if (dayEvents.length > 0) {
-              handleEventClick(formatDate(date), dayEvents, 0);
-            }
-          }
-        };
-        
-        weekView.appendChild(dayCard);
-      }
-    }
-
-    function updateMonthView() {
-      const date = new Date();
-      date.setMonth(date.getMonth() + currentOffset);
-      date.setDate(1);
-      
-      document.getElementById('calendar-title').textContent = 
-        `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-      
-      const monthGrid = document.querySelector('.month-grid');
-      const existingDays = monthGrid.querySelectorAll('.month-day');
-      existingDays.forEach(day => day.remove());
-      
-      const firstDay = new Date(date);
-      const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      const startDate = new Date(firstDay);
-      startDate.setDate(startDate.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1));
-      
-      const today = new Date();
-      
-      for (let i = 0; i < 42; i++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i);
-        
-        const dayEl = document.createElement('div');
-        dayEl.className = 'month-day';
-        
-        if (currentDate.getMonth() !== date.getMonth()) {
-          dayEl.classList.add('other-month');
-        }
-        
-        if (formatDate(currentDate) === formatDate(today)) {
-          dayEl.classList.add('today');
-        }
-        
-        dayEl.innerHTML = `<div class="month-day-number">${currentDate.getDate()}</div>`;
-        
-        const dayEvents = calendarEvents.filter(event => event.date === formatDate(currentDate));
-        dayEvents.forEach((event, index) => {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom.split(' ')[0]}`;
-          eventEl.onclick = (e) => {
-            e.stopPropagation();
-            handleEventClick(formatDate(currentDate), dayEvents, index);
-          };
-          dayEl.appendChild(eventEl);
-        });
-
-        // Click on day
-        dayEl.onclick = (e) => {
-          if (dayEvents.length > 0 && (e.target === dayEl || e.target.classList.contains('month-day-number'))) {
-            handleEventClick(formatDate(currentDate), dayEvents, 0);
-          }
-        };
-        
-        monthGrid.appendChild(dayEl);
-      }
-    }
-
-    function updateYearView() {
-      const year = new Date().getFullYear() + currentOffset;
-      document.getElementById('calendar-title').textContent = year;
-      
-      const yearGrid = document.getElementById('year-grid');
-      yearGrid.innerHTML = '';
-      
-      const today = new Date();
-      
-      for (let month = 0; month < 12; month++) {
-        const monthEl = document.createElement('div');
-        monthEl.className = 'month-mini';
-        
-        const headerEl = document.createElement('div');
-        headerEl.className = 'month-mini-header';
-        headerEl.textContent = monthsShort[month];
-        monthEl.appendChild(headerEl);
-        
-        const gridEl = document.createElement('div');
-        gridEl.className = 'month-mini-grid';
-        
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1));
-        
-        for (let i = 0; i < 35; i++) {
-          const currentDate = new Date(startDate);
-          currentDate.setDate(startDate.getDate() + i);
-          
-          const dayEl = document.createElement('div');
-          dayEl.className = 'month-mini-day';
-          
-          if (currentDate.getMonth() === month) {
-            dayEl.textContent = currentDate.getDate();
-            
-            if (formatDate(currentDate) === formatDate(today)) {
-              dayEl.classList.add('today');
-            }
-            
-            const hasEvent = calendarEvents.some(event => event.date === formatDate(currentDate));
-            if (hasEvent) {
-              dayEl.classList.add('has-event');
-              
-              // Click handler for year view
-              dayEl.onclick = () => {
-                const dayEvents = calendarEvents.filter(event => event.date === formatDate(currentDate));
-                if (dayEvents.length > 0) {
-                  handleEventClick(formatDate(currentDate), dayEvents, 0);
-                }
-              };
-            }
-          }
-          
-          gridEl.appendChild(dayEl);
-        }
-        
-        monthEl.appendChild(gridEl);
-        yearGrid.appendChild(monthEl);
-      }
-    }
-
-    function handleEventClick(dateStr, dayEvents, operationIndex) {
-      selectedDate = dateStr;
-      selectedDayEvents = dayEvents;
-      currentOperationIndex = operationIndex;
-      
-      // Highlight selected day
-      document.querySelectorAll('.day-card.selected, .month-day.selected').forEach(el => {
-        el.classList.remove('selected');
-      });
-      
-      // Add selection to corresponding day
-      const dayElements = document.querySelectorAll('.day-card, .month-day');
-      dayElements.forEach(el => {
-        const dayDate = el.querySelector('.day-number, .month-day-number');
-        if (dayDate && dayEvents.length > 0) {
-          const eventDate = new Date(dateStr);
-          if (dayDate.textContent == eventDate.getDate()) {
-            el.classList.add('selected');
-          }
-        }
-      });
-      
-      openSidePanel();
-    }
-
-    function openSidePanel() {
-      document.getElementById('side-panel').classList.add('open');
-      document.getElementById('overlay').style.display = 'block';
-      
-      updatePanelContent();
-    }
-
-    function closeSidePanel() {
-      document.getElementById('side-panel').classList.remove('open');
-      document.getElementById('overlay').style.display = 'none';
-      
-      // Remove selections
-      document.querySelectorAll('.day-card.selected, .month-day.selected').forEach(el => {
-        el.classList.remove('selected');
-      });
-      
-      selectedDate = null;
-      selectedDayEvents = [];
-    }
-
-    function updatePanelContent() {
-      if (!selectedDate || selectedDayEvents.length === 0) return;
-      
-      const date = new Date(selectedDate);
-      const dateStr = date.toLocaleDateString('fr-FR', { 
-        weekday: 'long', 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
-      });
-      
-      document.getElementById('panel-date').textContent = dateStr;
-      document.getElementById('panel-title').textContent = 
-        `${selectedDayEvents.length} intervention${selectedDayEvents.length > 1 ? 's' : ''}`;
-      
-      // Update tabs
-      const tabsContainer = document.getElementById('operation-tabs');
-      tabsContainer.innerHTML = '';
-      
-      if (selectedDayEvents.length > 1) {
-        selectedDayEvents.forEach((event, index) => {
-          const tab = document.createElement('div');
-          tab.className = `operation-tab ${index === currentOperationIndex ? 'active' : ''}`;
-          tab.textContent = event.time;
-          tab.onclick = () => switchOperation(index);
-          tabsContainer.appendChild(tab);
-        });
-      }
-      
-      // Update operation details
-      updateOperationDetails();
-    }
-
-    function switchOperation(index) {
-      currentOperationIndex = index;
-      updateOperationDetails();
-      
-      // Update tabs
-      document.querySelectorAll('.operation-tab').forEach((tab, i) => {
-        tab.classList.toggle('active', i === index);
-      });
-    }
-
-    function updateOperationDetails() {
-      const operation = selectedDayEvents[currentOperationIndex];
-      if (!operation) return;
-      
-      document.getElementById('detail-service').textContent = operation.service;
-      document.getElementById('detail-time').textContent = operation.time;
-      document.getElementById('detail-address').textContent = operation.address;
-      document.getElementById('detail-client').textContent = operation.client_nom;
-      document.getElementById('detail-phone').textContent = operation.phone;
-      
-      // Update action buttons
-      document.getElementById('call-btn').href = `tel:${operation.phone}`;
-      document.getElementById('detail-btn').href = operation.url;
-    }
-
-    function updateEventCount() {
-      let eventCount = 0;
-      
-      if (currentView === 'day') {
-        const date = new Date();
-        date.setDate(date.getDate() + currentOffset);
-        eventCount = calendarEvents.filter(event => event.date === formatDate(date)).length;
-      } else if (currentView === 'week') {
-        const startOfWeek = new Date();
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1 + (currentOffset * 7));
-        for (let i = 0; i < 7; i++) {
-          const date = new Date(startOfWeek);
-          date.setDate(startOfWeek.getDate() + i);
-          eventCount += calendarEvents.filter(event => event.date === formatDate(date)).length;
-        }
-      } else {
-        eventCount = calendarEvents.length;
-      }
-      
-      document.getElementById('events-count').textContent = eventCount;
-    }
-
-    // Close panel when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card') && !e.target.closest('.month-day')) {
-        if (document.getElementById('side-panel').classList.contains('open')) {
-          closeSidePanel();
-        }
-      }
-    });
-
-    // Initialize calendar
-    document.addEventListener('DOMContentLoaded', function() {
-      setView('week');
-    });.date === formatDate(date));
-      dayEvents.forEach(event => {
-        const hour = parseInt(event.time.split(':')[0]);
-        const slot = document.querySelector(`[data-hour="${hour}"]`);
-        if (slot) {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom}<br><small>${event.service}</small>`;
-          eventEl.onclick = () => { if (event.url) window.location.href = event.url; };
-          slot.appendChild(eventEl);
-        }
-      });
-    }
-
-    function updateWeekView() {
-      const startOfWeek = new Date();
-      startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1 + (currentOffset * 7));
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(endOfWeek.getDate() + 6);
-      
-      document.getElementById('calendar-title').textContent = 
-        `${startOfWeek.getDate()} ${monthsShort[startOfWeek.getMonth()]} - ${endOfWeek.getDate()} ${monthsShort[endOfWeek.getMonth()]} ${endOfWeek.getFullYear()}`;
-      
-      const weekView = document.getElementById('week-view');
-      weekView.innerHTML = '';
-      
-      const today = new Date();
-      
-      for (let i = 0; i < 7; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
-        
-        const dayCard = document.createElement('div');
-        dayCard.className = 'day-card';
-        
-        if (formatDate(date) === formatDate(today)) {
-          dayCard.classList.add('today');
-        }
-        
-        dayCard.innerHTML = `
-          <div class="day-header">${dayNames[i]}</div>
-          <div class="day-number">${date.getDate()}</div>
-        `;
-        
-        const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
-        dayEvents.forEach(event => {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom}`;
-          eventEl.onclick = () => { if (event.url) window.location.href = event.url; };
-          dayCard.appendChild(eventEl);
-        });
-        
-        weekView.appendChild(dayCard);
-      }
-    }
-
-    function updateMonthView() {
-      const date = new Date();
-      date.setMonth(date.getMonth() + currentOffset);
-      date.setDate(1);
-      
-      document.getElementById('calendar-title').textContent = 
-        `${monthNames[date.getMonth()]} ${date.getFullYear()}`;
-      
-      const monthGrid = document.querySelector('.month-grid');
-      const existingDays = monthGrid.querySelectorAll('.month-day');
-      existingDays.forEach(day => day.remove());
-      
-      const firstDay = new Date(date);
-      const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-      const startDate = new Date(firstDay);
-      startDate.setDate(startDate.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1));
-      
-      const today = new Date();
-      
-      for (let i = 0; i < 42; i++) {
-        const currentDate = new Date(startDate);
-        currentDate.setDate(startDate.getDate() + i);
-        
-        const dayEl = document.createElement('div');
-        dayEl.className = 'month-day';
-        
-        if (currentDate.getMonth() !== date.getMonth()) {
-          dayEl.classList.add('other-month');
-        }
-        
-        if (formatDate(currentDate) === formatDate(today)) {
-          dayEl.classList.add('today');
-        }
-        
-        dayEl.innerHTML = `<div class="month-day-number">${currentDate.getDate()}</div>`;
-        
-        const dayEvents = calendarEvents.filter(event => event.date === formatDate(currentDate));
-        dayEvents.forEach(event => {
-          const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
-          eventEl.innerHTML = `${event.time} ${event.client_nom.split(' ')[0]}`;
-          eventEl.onclick = () => { if (event.url) window.location.href = event.url; };
-          dayEl.appendChild(eventEl);
-        });
-        
-        monthGrid.appendChild(dayEl);
-      }
-    }
-
-    function updateYearView() {
-      const year = new Date().getFullYear() + currentOffset;
-      document.getElementById('calendar-title').textContent = year;
-      
-      const yearGrid = document.getElementById('year-grid');
-      yearGrid.innerHTML = '';
-      
-      const today = new Date();
-      
-      for (let month = 0; month < 12; month++) {
-        const monthEl = document.createElement('div');
-        monthEl.className = 'month-mini';
-        
-        const headerEl = document.createElement('div');
-        headerEl.className = 'month-mini-header';
-        headerEl.textContent = monthsShort[month];
-        monthEl.appendChild(headerEl);
-        
-        const gridEl = document.createElement('div');
-        gridEl.className = 'month-mini-grid';
-        
-        const firstDay = new Date(year, month, 1);
-        const lastDay = new Date(year, month + 1, 0);
-        const startDate = new Date(firstDay);
-        startDate.setDate(startDate.getDate() - (firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1));
-        
-        for (let i = 0; i < 35; i++) {
-          const currentDate = new Date(startDate);
-          currentDate.setDate(startDate.getDate() + i);
-          
-          const dayEl = document.createElement('div');
-          dayEl.className = 'month-mini-day';
-          
-          if (currentDate.getMonth() === month) {
-            dayEl.textContent = currentDate.getDate();
-            
-            if (formatDate(currentDate) === formatDate(today)) {
-              dayEl.classList.add('today');
-            }
-            
-            const hasEvent = calendarEvents.some(event => event.date === formatDate(currentDate));
-            if (hasEvent) {
-              dayEl.classList.add('has-event');
-            }
-          }
-          
-          gridEl.appendChild(dayEl);
-        }
-        
-        monthEl.appendChild(gridEl);
-        yearGrid.appendChild(monthEl);
-      }
-    }
-
-    function updateEventCount() {
-      let eventCount = 0;
-      
-      if (currentView === 'day') {
-        const date = new Date();
-        date.setDate(date.getDate() + currentOffset);
-        eventCount = calendarEvents.filter(event => event.date === formatDate(date)).length;
-      } else if (currentView === 'week') {
-        const startOfWeek = new Date();
-        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay() + 1 + (currentOffset * 7));
-        for (let i = 0; i < 7; i++) {
-          const date = new Date(startOfWeek);
-          date.setDate(startOfWeek.getDate() + i);
-          eventCount += calendarEvents.filter(event => event.date === formatDate(date)).length;
-        }
-      } else {
-        eventCount = calendarEvents.length;
-      }
-      
-      document.getElementById('events-count').textContent = eventCount;
-    }
-
-    // Initialize calendar
-    document.addEventListener('DOMContentLoaded', function() {
-      setView('week');
-    });
-  </script>
   </script>
 </body>
 </html>
