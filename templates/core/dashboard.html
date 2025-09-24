@@ -132,6 +132,190 @@
     }
     .event-item:hover{ background:rgba(99,102,241,.3); transform: translateY(-1px) }
 
+    /* Vue Mois */
+    .month-grid{ 
+      display:grid; 
+      grid-template-columns: repeat(7, 1fr); 
+      gap:.25rem;
+      margin-top:1rem;
+    }
+
+    .month-header-row{
+      display: contents;
+    }
+
+    .month-day-header{
+      background: rgba(148,163,184,.1);
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 600;
+      text-align: center;
+      padding: .5rem;
+      border-radius: 6px 6px 0 0;
+      text-transform: uppercase;
+      letter-spacing: .05rem;
+    }
+
+    .month-day-cell{
+      background: rgba(2,6,23,.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .4rem;
+      min-height: 80px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .month-day-cell:hover{
+      background: rgba(2,6,23,.5);
+    }
+
+    .month-day-cell.today{
+      border-color: var(--primary);
+      background: rgba(99,102,241,.1);
+    }
+
+    .month-day-cell.other-month{
+      opacity: 0.4;
+    }
+
+    .month-day-cell.selected{
+      border-color: var(--warning);
+      box-shadow: 0 0 0 2px rgba(245,158,11,.3);
+    }
+
+    .month-day-number{
+      font-weight: 600;
+      font-size: .8rem;
+      margin-bottom: .25rem;
+    }
+
+    .month-events{
+      display: flex;
+      flex-direction: column;
+      gap: .15rem;
+    }
+
+    .month-event-item{
+      background: rgba(99,102,241,.3);
+      border: 1px solid rgba(99,102,241,.4);
+      border-radius: 4px;
+      padding: .15rem .25rem;
+      font-size: .65rem;
+      line-height: 1.1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .month-event-item:hover{
+      background: rgba(99,102,241,.4);
+      transform: translateY(-1px);
+    }
+
+    .month-event-more{
+      color: var(--muted);
+      font-size: .6rem;
+      font-style: italic;
+      cursor: pointer;
+      padding: .1rem .25rem;
+    }
+
+    .month-event-more:hover{
+      color: var(--text);
+    }
+
+    /* Vue Mois */
+    .month-grid{ 
+      display:grid; 
+      grid-template-columns: repeat(7, 1fr); 
+      gap:.25rem;
+      margin-top:1rem;
+    }
+
+    .month-header-row{
+      display: contents;
+    }
+
+    .month-day-header{
+      background: rgba(148,163,184,.1);
+      color: var(--muted);
+      font-size: .75rem;
+      font-weight: 600;
+      text-align: center;
+      padding: .5rem;
+      border-radius: 6px 6px 0 0;
+      text-transform: uppercase;
+      letter-spacing: .05rem;
+    }
+
+    .month-day-cell{
+      background: rgba(2,6,23,.3);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .4rem;
+      min-height: 80px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .month-day-cell:hover{
+      background: rgba(2,6,23,.5);
+    }
+
+    .month-day-cell.today{
+      border-color: var(--primary);
+      background: rgba(99,102,241,.1);
+    }
+
+    .month-day-cell.other-month{
+      opacity: 0.4;
+    }
+
+    .month-day-cell.selected{
+      border-color: var(--warning);
+      box-shadow: 0 0 0 2px rgba(245,158,11,.3);
+    }
+
+    .month-day-number{
+      font-weight: 600;
+      font-size: .8rem;
+      margin-bottom: .25rem;
+    }
+
+    .month-events{
+      display: flex;
+      flex-direction: column;
+      gap: .15rem;
+    }
+
+    .month-event-item{
+      background: rgba(99,102,241,.3);
+      border: 1px solid rgba(99,102,241,.4);
+      border-radius: 4px;
+      padding: .15rem .25rem;
+      font-size: .65rem;
+      line-height: 1.1;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .month-event-item:hover{
+      background: rgba(99,102,241,.4);
+      transform: translateY(-1px);
+    }
+
+    .month-event-more{
+      color: var(--muted);
+      font-size: .6rem;
+      font-style: italic;
+      cursor: pointer;
+      padding: .1rem .25rem;
+    }
+
+    .month-event-more:hover{
+      color: var(--text);
+    }
+
     /* Panneau latéral */
     .side-panel{
       position: fixed;
@@ -283,8 +467,6 @@
     tbody tr:hover{ background: rgba(148,163,184,.05) }
     .chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; border:1px solid var(--border); color: var(--muted) }
 
-    
-
     .btn-view{ display:inline-flex; align-items:center; gap:.45rem; padding:.45rem .7rem; border-radius:8px; border:1px solid rgba(99,102,241,.35); background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem }
     .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
 
@@ -292,6 +474,9 @@
     @media (max-width: 768px){
       .kpi.ca, .kpi.clients, .kpi.devis, .kpi.planifier, .kpi.paiement{ grid-column: 1 / -1 }
       .week-grid{ grid-template-columns: 1fr; gap:.3rem }
+      .month-grid{ grid-template-columns: repeat(7, 1fr); gap:.15rem }
+      .month-day-cell{ min-height: 60px; padding: .25rem }
+      .month-event-item{ font-size: .6rem; padding: .1rem .2rem }
       .calendar-nav{ flex-direction:column; align-items:flex-start }
       .side-panel{ width: 100%; right: -100% }
       .table-wrap{ border:none }
@@ -330,8 +515,8 @@
         box-shadow: var(--shadow);
       }
       
-      .day-card{ background: var(--card) }
-      .day-card.today{ border-color:var(--primary); background:rgba(99,102,241,.05) }
+      .day-card, .month-day-cell{ background: var(--card) }
+      .day-card.today, .month-day-cell.today{ border-color:var(--primary); background:rgba(99,102,241,.05) }
       .side-panel{ background: rgba(255,255,255,.98) }
       
       .nav a.active, .view-btn.active{ 
@@ -344,6 +529,19 @@
         background: rgba(99,102,241,.1); 
         border-color: rgba(99,102,241,.2);
         color: var(--primary);
+      }
+
+      .month-day-header{
+        background: rgba(148,163,184,.05);
+      }
+
+      .month-day-cell{
+        background: var(--card);
+      }
+
+      .month-event-item{
+        background: rgba(99,102,241,.1);
+        border-color: rgba(99,102,241,.2);
       }
     }
   </style>
@@ -360,14 +558,13 @@
         <span>CRM Artisans</span>
       </div>
       <nav class="nav">
-        <a href="{% url 'dashboard' %}" class="active">Accueil</a>
-        <a href="{% url 'operations' %}">Opérations</a>
-        <a href="{% url 'clients' %}">Clients</a>
+        <a href="#" class="active">Accueil</a>
+        <a href="#">Opérations</a>
+        <a href="#">Clients</a>
       </nav>
       <div class="user">
-        <span>Connecté : {{ user.username }}</span>
-        <form method="post" action="{% url 'logout' %}">
-          {% csrf_token %}
+        <span>Connecté : demo</span>
+        <form method="post">
           <button type="submit">Déconnexion</button>
         </form>
       </div>
@@ -382,23 +579,23 @@
     <section class="kpi-grid">
       <article class="kpi ca accent-success">
         <h3>CA du mois</h3>
-        <div class="value">{{ ca_mois|floatformat:0 }} €</div>
+        <div class="value">12 450 €</div>
       </article>
       <article class="kpi clients accent-info">
         <h3>Clients</h3>
-        <div class="value">{{ nb_clients }}</div>
+        <div class="value">87</div>
       </article>
       <article class="kpi devis accent-warn">
         <h3>En attente devis</h3>
-        <div class="value">{{ nb_en_attente_devis }}</div>
+        <div class="value">5</div>
       </article>
       <article class="kpi planifier accent-info">
         <h3>À planifier</h3>
-        <div class="value">{{ nb_a_planifier }}</div>
+        <div class="value">12</div>
       </article>
       <article class="kpi paiement accent-warn">
         <h3>Attente paiement</h3>
-        <div class="value">{{ nb_realise }}</div>
+        <div class="value">3</div>
       </article>
     </section>
 
@@ -413,7 +610,7 @@
           <span class="badge" id="events-count">0</span>
         </h2>
         <div class="toolbar">
-          <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
+          <a href="#" class="btn primary">Nouvelle opération</a>
         </div>
       </div>
 
@@ -448,11 +645,10 @@
             <path d="M7 10h10M7 14h7M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="1.6"/>
           </svg>
           Prochaines opérations
-          <span class="badge">{{ prochaines_operations|length }}</span>
+          <span class="badge">3</span>
         </h2>
       </div>
 
-      {% if prochaines_operations %}
       <div class="table-wrap">
         <table>
           <thead>
@@ -465,33 +661,30 @@
             </tr>
           </thead>
           <tbody>
-            {% for operation in prochaines_operations %}
             <tr>
-              <td>
-                {% if operation.date_prevue %}
-                  {{ operation.date_prevue|date:"d/m H\hi" }}
-                {% else %}
-                  <span class="chip">Non planifiée</span>
-                {% endif %}
-              </td>
-              <td>{{ operation.client.nom }} {{ operation.client.prenom }}</td>
-              <td>{{ operation.type_prestation|truncatechars:40 }}</td>
-              <td>
-                <a href="tel:{{ operation.client.telephone }}" class="chip">{{ operation.client.telephone }}</a>
-              </td>
-              <td>
-                <a href="{% url 'operation_detail' operation.id %}" class="btn-view">Voir</a>
-              </td>
+              <td>25/09 14:30</td>
+              <td>Martin Dupuis</td>
+              <td>Réparation plomberie</td>
+              <td><a href="tel:0123456789" class="chip">01 23 45 67 89</a></td>
+              <td><a href="#" class="btn-view">Voir</a></td>
             </tr>
-            {% endfor %}
+            <tr>
+              <td>26/09 09:00</td>
+              <td>Sophie Laurent</td>
+              <td>Installation électrique</td>
+              <td><a href="tel:0987654321" class="chip">09 87 65 43 21</a></td>
+              <td><a href="#" class="btn-view">Voir</a></td>
+            </tr>
+            <tr>
+              <td>27/09 16:00</td>
+              <td>Jean Bernard</td>
+              <td>Maintenance chauffage</td>
+              <td><a href="tel:0456789123" class="chip">04 56 78 91 23</a></td>
+              <td><a href="#" class="btn-view">Voir</a></td>
+            </tr>
           </tbody>
         </table>
       </div>
-      {% else %}
-      <div style="text-align:center; padding:2rem; color:var(--muted)">
-        <p>Aucune opération planifiée.</p>
-      </div>
-      {% endif %}
     </section>
 
     <!-- Actions rapides -->
@@ -505,9 +698,9 @@
         </h2>
       </div>
       <div class="toolbar">
-        <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
-        <a href="{% url 'clients' %}" class="btn">Voir les clients</a>
-        <a href="{% url 'client_create' %}" class="btn">Nouveau client</a>
+        <a href="#" class="btn primary">Nouvelle opération</a>
+        <a href="#" class="btn">Voir les clients</a>
+        <a href="#" class="btn">Nouveau client</a>
       </div>
     </section>
   </main>
@@ -594,30 +787,46 @@
                         'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-    // Initialisation des données
+    // Données de test
     function initCalendarEvents() {
-      try {
-        const jsonData = '{{ calendar_events_json|escapejs }}';
-        console.log('Raw JSON data:', jsonData);
-        calendarEvents = JSON.parse(jsonData);
-        console.log('Parsed events:', calendarEvents);
-      } catch (e) {
-        console.error('Erreur parsing calendar_events:', e);
-        // Données de test en cas d'erreur
-        calendarEvents = [
-          {
-            'id': 1,
-            'client_nom': 'Test Client',
-            'service': 'Test Service',
-            'date': new Date().toISOString().split('T')[0], // Aujourd'hui
-            'time': '09:00',
-            'address': 'Test Address',
-            'phone': '0123456789',
-            'url': '#'
-          }
-        ];
-        console.log('Using test data:', calendarEvents);
-      }
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(today.getDate() + 1);
+      const dayAfter = new Date(today);
+      dayAfter.setDate(today.getDate() + 2);
+
+      calendarEvents = [
+        {
+          id: 1,
+          client_nom: 'Martin Dupuis',
+          service: 'Réparation plomberie',
+          date: formatDate(tomorrow),
+          time: '14:30',
+          address: '123 rue de la Paix, Paris',
+          phone: '0123456789',
+          url: '#'
+        },
+        {
+          id: 2,
+          client_nom: 'Sophie Laurent',
+          service: 'Installation électrique',
+          date: formatDate(dayAfter),
+          time: '09:00',
+          address: '456 avenue Victor Hugo, Lyon',
+          phone: '0987654321',
+          url: '#'
+        },
+        {
+          id: 3,
+          client_nom: 'Jean Bernard',
+          service: 'Maintenance chauffage',
+          date: formatDate(today),
+          time: '16:00',
+          address: '789 boulevard Saint-Germain, Marseille',
+          phone: '0456789123',
+          url: '#'
+        }
+      ];
     }
 
     // Utilitaires
@@ -765,11 +974,104 @@
     }
 
     function renderMonthView() {
-      // Simplified month view for now
-      document.getElementById('calendar-title').textContent = 'Vue mois (bientôt disponible)';
+      const today = new Date();
+      const currentMonth = new Date(today.getFullYear(), today.getMonth() + currentOffset, 1);
+      
+      // Title
+      document.getElementById('calendar-title').textContent = 
+        `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
       
       const grid = document.getElementById('calendar-grid');
-      grid.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--muted)">Vue mois en cours de développement</p>';
+      grid.innerHTML = '';
+      grid.className = 'month-grid';
+      
+      // Get first day of month and number of days
+      const firstDay = new Date(currentMonth);
+      const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+      const daysInMonth = lastDay.getDate();
+      
+      // Get first Monday (start of week)
+      const startOfWeek = new Date(firstDay);
+      const dayOfWeek = (firstDay.getDay() + 6) % 7; // Convert Sunday=0 to Monday=0
+      startOfWeek.setDate(firstDay.getDate() - dayOfWeek);
+      
+      // Create header row
+      const headerRow = document.createElement('div');
+      headerRow.className = 'month-header-row';
+      dayNames.forEach(day => {
+        const dayHeader = document.createElement('div');
+        dayHeader.className = 'month-day-header';
+        dayHeader.textContent = day;
+        headerRow.appendChild(dayHeader);
+      });
+      grid.appendChild(headerRow);
+      
+      // Create calendar cells (6 weeks = 42 days)
+      for (let week = 0; week < 6; week++) {
+        for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+          const cellDate = new Date(startOfWeek);
+          cellDate.setDate(startOfWeek.getDate() + (week * 7) + dayIndex);
+          
+          const dayCell = document.createElement('div');
+          dayCell.className = 'month-day-cell';
+          
+          // Check if date is in current month
+          const isCurrentMonth = cellDate.getMonth() === currentMonth.getMonth();
+          const isToday = formatDate(cellDate) === formatDate(today);
+          
+          if (!isCurrentMonth) {
+            dayCell.classList.add('other-month');
+          }
+          if (isToday) {
+            dayCell.classList.add('today');
+          }
+          
+          // Day number
+          const dayNumber = document.createElement('div');
+          dayNumber.className = 'month-day-number';
+          dayNumber.textContent = cellDate.getDate();
+          dayCell.appendChild(dayNumber);
+          
+          // Events for this day
+          const dayEvents = calendarEvents.filter(event => event.date === formatDate(cellDate));
+          
+          if (dayEvents.length > 0) {
+            const eventContainer = document.createElement('div');
+            eventContainer.className = 'month-events';
+            
+            dayEvents.slice(0, 3).forEach((event, index) => {
+              const eventEl = document.createElement('div');
+              eventEl.className = 'month-event-item';
+              eventEl.innerHTML = `${event.time} ${event.client_nom}`;
+              eventEl.onclick = (e) => {
+                e.stopPropagation();
+                handleEventClick(formatDate(cellDate), dayEvents, index);
+              };
+              eventContainer.appendChild(eventEl);
+            });
+            
+            // Show "+X more" if more than 3 events
+            if (dayEvents.length > 3) {
+              const moreEl = document.createElement('div');
+              moreEl.className = 'month-event-more';
+              moreEl.textContent = `+${dayEvents.length - 3} autres`;
+              moreEl.onclick = () => handleEventClick(formatDate(cellDate), dayEvents, 0);
+              eventContainer.appendChild(moreEl);
+            }
+            
+            dayCell.appendChild(eventContainer);
+          }
+          
+          // Click handler for day
+          dayCell.onclick = () => {
+            if (dayEvents.length > 0) {
+              handleEventClick(formatDate(cellDate), dayEvents, 0);
+            }
+          };
+          
+          grid.appendChild(dayCell);
+        }
+      }
     }
 
     // Gestion des événements
@@ -779,14 +1081,14 @@
       currentOperationIndex = operationIndex;
       
       // Highlight selected day
-      document.querySelectorAll('.day-card').forEach(card => {
+      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => {
         card.classList.remove('selected');
       });
       
       // Find and highlight the clicked day
-      const dayElements = document.querySelectorAll('.day-card');
+      const dayElements = document.querySelectorAll('.day-card, .month-day-cell');
       dayElements.forEach(el => {
-        const dayNumber = el.querySelector('.day-number');
+        const dayNumber = el.querySelector('.day-number, .month-day-number');
         if (dayNumber) {
           const eventDate = new Date(dateStr);
           if (parseInt(dayNumber.textContent) === eventDate.getDate()) {
@@ -809,7 +1111,7 @@
       document.getElementById('side-panel').classList.remove('open');
       document.getElementById('overlay').style.display = 'none';
       
-      document.querySelectorAll('.day-card').forEach(card => {
+      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => {
         card.classList.remove('selected');
       });
       
@@ -884,8 +1186,15 @@
         weekDates.forEach(date => {
           count += calendarEvents.filter(event => event.date === formatDate(date)).length;
         });
-      } else {
-        count = calendarEvents.length;
+      } else if (currentView === 'month') {
+        const today = new Date();
+        const currentMonth = new Date(today.getFullYear(), today.getMonth() + currentOffset, 1);
+        const nextMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+        
+        count = calendarEvents.filter(event => {
+          const eventDate = new Date(event.date);
+          return eventDate >= currentMonth && eventDate < nextMonth;
+        }).length;
       }
       
       document.getElementById('events-count').textContent = count;
@@ -901,7 +1210,7 @@
 
     // Close panel when clicking outside
     document.addEventListener('click', (e) => {
-      if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card')) {
+      if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card') && !e.target.closest('.month-event-item')) {
         if (document.getElementById('side-panel').classList.contains('open')) {
           closeSidePanel();
         }
