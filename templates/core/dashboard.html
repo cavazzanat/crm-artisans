@@ -354,8 +354,26 @@
   </main>
 
   <script>
-    // Données Django
-    const calendarEvents = {{ calendar_events|safe }};
+    // Données Django - version corrigée
+    let calendarEvents = [];
+    try {
+      calendarEvents = JSON.parse('{{ calendar_events_json|escapejs }}');
+    } catch (e) {
+      console.error('Erreur parsing calendar_events:', e);
+      // Données de test en cas d'erreur
+      calendarEvents = [
+        {
+          'id': 1,
+          'client_nom': 'Test Client',
+          'service': 'Test Service',
+          'date': '2025-09-25',
+          'time': '09:00',
+          'address': 'Test Address',
+          'phone': '0123456789',
+          'url': '#'
+        }
+      ];
+    }
     
     let currentWeekOffset = 0;
 

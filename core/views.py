@@ -17,6 +17,7 @@ from django.core.management import call_command
 from django.http import HttpResponse
 import io
 import sys
+import json
 
 
 
@@ -57,6 +58,42 @@ def dashboard(request):
             'ca_mois': ca_mois,
             'prochaines_operations': prochaines_operations,
         }
+        
+        # Récupérer les opérations planifiées avec dates
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # Date de début et fin pour la vue (par exemple, 2 semaines)
+        today = timezone.now().date()
+        start_date = today - timedelta(days=7)
+        end_date = today + timedelta(days=14)
+        
+        operations_calendrier = Operation.objects.filter(
+            user=request.user,
+            statut='planifie',
+            date_prevue__isnull=False,
+            date_prevue__date__gte=start_date,
+            date_prevue__date__lte=end_date
+        ).select_related('client').order_by('date_prevue')
+        
+        # Formater pour le JavaScript
+        calendar_events = []
+        for op in operations_calendrier:
+            calendar_events.append({
+                'id': op.id,
+                'client_nom': f"{op.client.nom} {op.client.prenom}",
+                'service': op.type_prestation,
+                'date': op.date_prevue.strftime('%Y-%m-%d'),
+                'time': op.date_prevue.strftime('%H:%M'),
+                'address': op.adresse_intervention,
+                'phone': op.client.telephone,
+                'url': f'/operations/{op.id}/'
+            })
+        
+        context.update({
+            'calendar_events_json': json.dumps(calendar_events),
+            'calendar_events': calendar_events,
+        })
         
         return render(request, 'core/dashboard.html', context)
         
