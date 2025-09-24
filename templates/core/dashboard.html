@@ -271,12 +271,19 @@
     }
 
     /* Table */
-    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border); margin-top:1rem }
-    table{ width:100%; border-collapse: collapse; min-width: 800px; }
-    thead th{ background: rgba(15,23,42,.9); color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; font-size:.75rem; text-align:left; padding:.9rem .85rem; border-bottom:1px solid var(--border) }
-    tbody td{ padding: .85rem .85rem; border-bottom:1px dashed var(--border) }
+    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border) }
+    table{ width:100%; border-collapse: collapse; min-width: 980px }
+    thead th{ 
+      position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px); 
+      color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; 
+      font-size:.75rem; text-align:left; padding:.9rem .85rem; 
+      border-bottom:1px solid var(--border) 
+    }
+    tbody td{ padding:.9rem .85rem; border-bottom:1px dashed var(--border); vertical-align: top }
     tbody tr:hover{ background: rgba(148,163,184,.05) }
     .chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; border:1px solid var(--border); color: var(--muted) }
+
+    
 
     .btn-view{ display:inline-flex; align-items:center; gap:.45rem; padding:.45rem .7rem; border-radius:8px; border:1px solid rgba(99,102,241,.35); background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem }
     .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
@@ -353,14 +360,14 @@
         <span>CRM Artisans</span>
       </div>
       <nav class="nav">
-        <a href="{% url 'dashboard' %}" class="active">Accueil</a>
-        <a href="{% url 'operations' %}">Opérations</a>
-        <a href="{% url 'clients' %}">Clients</a>
+        <a href="/" class="active">Accueil</a>
+        <a href="/operations/">Opérations</a>
+        <a href="/clients/">Clients</a>
       </nav>
       <div class="user">
-        <span>Connecté : {{ user.username }}</span>
-        <form method="post" action="{% url 'logout' %}">
-          {% csrf_token %}
+        <span>Connecté : admin</span>
+        <form method="post" action="/logout/">
+          <input type="hidden" name="csrfmiddlewaretoken" value="HDDlZnHsbi3BnQaiytieg5blZu3YnhSvKCSoNCnnryawUYe8HLYBTRs0SGNb1zAG">
           <button type="submit">Déconnexion</button>
         </form>
       </div>
@@ -375,32 +382,25 @@
     <section class="kpi-grid">
       <article class="kpi ca accent-success">
         <h3>CA du mois</h3>
-        <div class="value">{{ ca_mois|floatformat:0 }} €</div>
+        <div class="value">580 €</div>
       </article>
       <article class="kpi clients accent-info">
         <h3>Clients</h3>
-        <div class="value">{{ nb_clients }}</div>
+        <div class="value">1</div>
       </article>
       <article class="kpi devis accent-warn">
         <h3>En attente devis</h3>
-        <div class="value">{{ nb_en_attente_devis }}</div>
+        <div class="value">3</div>
       </article>
       <article class="kpi planifier accent-info">
         <h3>À planifier</h3>
-        <div class="value">{{ nb_a_planifier }}</div>
+        <div class="value">1</div>
       </article>
       <article class="kpi paiement accent-warn">
         <h3>Attente paiement</h3>
-        <div class="value">{{ nb_realise }}</div>
+        <div class="value">2</div>
       </article>
     </section>
-
-    <!-- DEBUG - à supprimer après test -->
-    <div style="background:#333; color:#fff; padding:1rem; margin:1rem 0; border-radius:8px; font-family:monospace; font-size:0.8rem;">
-      <strong>🔍 DEBUG Calendar Events:</strong><br>
-      {{ calendar_events_json }}<br><br>
-      <strong>Nombre d'événements:</strong> {{ calendar_events|length }}
-    </div>
 
     <!-- Planning -->
     <section class="section">
@@ -413,7 +413,7 @@
           <span class="badge" id="events-count">0</span>
         </h2>
         <div class="toolbar">
-          <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
+          <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
         </div>
       </div>
 
@@ -448,11 +448,11 @@
             <path d="M7 10h10M7 14h7M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="1.6"/>
           </svg>
           Prochaines opérations
-          <span class="badge">{{ prochaines_operations|length }}</span>
+          <span class="badge">5</span>
         </h2>
       </div>
 
-      {% if prochaines_operations %}
+      
       <div class="table-wrap">
         <table>
           <thead>
@@ -465,33 +465,91 @@
             </tr>
           </thead>
           <tbody>
-            {% for operation in prochaines_operations %}
+            
             <tr>
               <td>
-                {% if operation.date_prevue %}
-                  {{ operation.date_prevue|date:"d/m H\hi" }}
-                {% else %}
-                  <span class="chip">Non planifiée</span>
-                {% endif %}
+                
+                  03/09 16h58
+                
               </td>
-              <td>{{ operation.client.nom }} {{ operation.client.prenom }}</td>
-              <td>{{ operation.type_prestation|truncatechars:40 }}</td>
+              <td>rachid zimmed</td>
+              <td>accord</td>
               <td>
-                <a href="tel:{{ operation.client.telephone }}" class="chip">{{ operation.client.telephone }}</a>
+                <a href="tel:01" class="chip">01</a>
               </td>
               <td>
-                <a href="{% url 'operation_detail' operation.id %}" class="btn-view">Voir</a>
+                <a href="/operations/20/" class="btn-view">Voir</a>
               </td>
             </tr>
-            {% endfor %}
+            
+            <tr>
+              <td>
+                
+                  10/09 16h40
+                
+              </td>
+              <td>rachid zimmed</td>
+              <td>accord</td>
+              <td>
+                <a href="tel:01" class="chip">01</a>
+              </td>
+              <td>
+                <a href="/operations/19/" class="btn-view">Voir</a>
+              </td>
+            </tr>
+            
+            <tr>
+              <td>
+                
+                  25/09 14h20
+                
+              </td>
+              <td>rachid zimmed</td>
+              <td>Vente piano + accord</td>
+              <td>
+                <a href="tel:01" class="chip">01</a>
+              </td>
+              <td>
+                <a href="/operations/23/" class="btn-view">Voir</a>
+              </td>
+            </tr>
+            
+            <tr>
+              <td>
+                
+                  25/09 16h39
+                
+              </td>
+              <td>rachid zimmed</td>
+              <td>accord</td>
+              <td>
+                <a href="tel:01" class="chip">01</a>
+              </td>
+              <td>
+                <a href="/operations/16/" class="btn-view">Voir</a>
+              </td>
+            </tr>
+            
+            <tr>
+              <td>
+                
+                  28/09 16h14
+                
+              </td>
+              <td>rachid zimmed</td>
+              <td>accord</td>
+              <td>
+                <a href="tel:01" class="chip">01</a>
+              </td>
+              <td>
+                <a href="/operations/12/" class="btn-view">Voir</a>
+              </td>
+            </tr>
+            
           </tbody>
         </table>
       </div>
-      {% else %}
-      <div style="text-align:center; padding:2rem; color:var(--muted)">
-        <p>Aucune opération planifiée.</p>
-      </div>
-      {% endif %}
+      
     </section>
 
     <!-- Actions rapides -->
@@ -505,9 +563,9 @@
         </h2>
       </div>
       <div class="toolbar">
-        <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
-        <a href="{% url 'clients' %}" class="btn">Voir les clients</a>
-        <a href="{% url 'client_create' %}" class="btn">Nouveau client</a>
+        <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
+        <a href="/clients/" class="btn">Voir les clients</a>
+        <a href="/clients/nouveau/" class="btn">Nouveau client</a>
       </div>
     </section>
   </main>
@@ -597,7 +655,7 @@
     // Initialisation des données
     function initCalendarEvents() {
       try {
-        const jsonData = '{{ calendar_events_json|escapejs }}';
+        const jsonData = '[{\u0022id\u0022: 23, \u0022client_nom\u0022: \u0022rachid zimmed\u0022, \u0022service\u0022: \u0022Vente piano + accord\u0022, \u0022date\u0022: \u00222025\u002D09\u002D25\u0022, \u0022time\u0022: \u002212:20\u0022, \u0022address\u0022: \u002212 rue de la tourte, Metz\u0022, \u0022phone\u0022: \u002201\u0022, \u0022url\u0022: \u0022/operations/23/\u0022}, {\u0022id\u0022: 16, \u0022client_nom\u0022: \u0022rachid zimmed\u0022, \u0022service\u0022: \u0022accord\u0022, \u0022date\u0022: \u00222025\u002D09\u002D25\u0022, \u0022time\u0022: \u002214:39\u0022, \u0022address\u0022: \u002212 rue de la tourte, Metz\u0022, \u0022phone\u0022: \u002201\u0022, \u0022url\u0022: \u0022/operations/16/\u0022}, {\u0022id\u0022: 12, \u0022client_nom\u0022: \u0022rachid zimmed\u0022, \u0022service\u0022: \u0022accord\u0022, \u0022date\u0022: \u00222025\u002D09\u002D28\u0022, \u0022time\u0022: \u002214:14\u0022, \u0022address\u0022: \u002212 rue de la tourte, Metz\u0022, \u0022phone\u0022: \u002201\u0022, \u0022url\u0022: \u0022/operations/12/\u0022}]';
         console.log('Raw JSON data:', jsonData);
         calendarEvents = JSON.parse(jsonData);
         console.log('Parsed events:', calendarEvents);
