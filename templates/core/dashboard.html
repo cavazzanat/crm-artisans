@@ -271,19 +271,12 @@
     }
 
     /* Table */
-    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border) }
-    table{ width:100%; border-collapse: collapse; min-width: 980px }
-    thead th{ 
-      position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px); 
-      color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; 
-      font-size:.75rem; text-align:left; padding:.9rem .85rem; 
-      border-bottom:1px solid var(--border) 
-    }
-    tbody td{ padding:.9rem .85rem; border-bottom:1px dashed var(--border); vertical-align: top }
+    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border); margin-top:1rem }
+    table{ width:100%; border-collapse: collapse; min-width: 800px; }
+    thead th{ background: rgba(15,23,42,.9); color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; font-size:.75rem; text-align:left; padding:.9rem .85rem; border-bottom:1px solid var(--border) }
+    tbody td{ padding: .85rem .85rem; border-bottom:1px dashed var(--border) }
     tbody tr:hover{ background: rgba(148,163,184,.05) }
     .chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; border:1px solid var(--border); color: var(--muted) }
-
-    
 
     .btn-view{ display:inline-flex; align-items:center; gap:.45rem; padding:.45rem .7rem; border-radius:8px; border:1px solid rgba(99,102,241,.35); background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem }
     .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
@@ -401,6 +394,13 @@
         <div class="value">{{ nb_realise }}</div>
       </article>
     </section>
+
+    <!-- DEBUG - à supprimer après test -->
+    <div style="background:#333; color:#fff; padding:1rem; margin:1rem 0; border-radius:8px; font-family:monospace; font-size:0.8rem;">
+      <strong>🔍 DEBUG Calendar Events:</strong><br>
+      {{ calendar_events_json }}<br><br>
+      <strong>Nombre d'événements:</strong> {{ calendar_events|length }}
+    </div>
 
     <!-- Planning -->
     <section class="section">
