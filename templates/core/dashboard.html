@@ -80,7 +80,6 @@
     .accent-success{ box-shadow: inset 0 0 0 1px rgba(34,197,94,.25) }
     .accent-info{ box-shadow: inset 0 0 0 1px rgba(99,102,241,.25) }
     .accent-warn{ box-shadow: inset 0 0 0 1px rgba(245,158,11,.25) }
-    .accent-danger{ box-shadow: inset 0 0 0 1px rgba(239,68,68,.25) }
 
     /* Sections */
     .section{ background: linear-gradient(180deg, rgba(2,6,23,.6), rgba(2,6,23,.4)); border:1px solid var(--border); border-radius:16px; padding:1rem; box-shadow: var(--shadow); margin-top:1.25rem }
@@ -92,96 +91,55 @@
     .btn{ display:inline-flex; align-items:center; gap:.5rem; padding:.55rem .8rem; border-radius:10px; border:1px solid var(--border); background:rgba(148,163,184,.07); color:var(--text); text-decoration:none; cursor:pointer; font-size:.9rem }
     .btn:hover{ background:rgba(148,163,184,.12) }
     .btn.primary{ background:linear-gradient(180deg, rgba(99,102,241,.18), rgba(99,102,241,.12)); border-color: rgba(99,102,241,.35); color:white }
-    .btn.active{ background:linear-gradient(180deg, rgba(99,102,241,.25), rgba(99,102,241,.15)); border-color: rgba(99,102,241,.4); color:white }
 
-    /* Calendar */
-    .calendar-container{ margin-top:1rem }
-    .calendar-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:1rem }
-    .calendar-nav-left{ display:flex; align-items:center; gap:.5rem }
-    .calendar-nav-right{ display:flex; align-items:center; gap:.25rem }
-
-    .calendar-title{ font-size:1.1rem; font-weight:600; margin:0 1rem }
-    .nav-btn{ display:flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:8px; border:1px solid var(--border); background:rgba(148,163,184,.07); color:var(--text); cursor:pointer }
+    /* Calendar simple */
+    .calendar-simple{ padding:1rem 0 }
+    .calendar-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem }
+    .calendar-title{ font-size:1.1rem; font-weight:600 }
+    .nav-btn{ padding:.5rem; border:1px solid var(--border); background:rgba(148,163,184,.07); color:var(--text); cursor:pointer; border-radius:8px }
     .nav-btn:hover{ background:rgba(148,163,184,.12) }
 
-    /* Vue semaine */
-    .week-view{ display:grid; grid-template-columns: 80px repeat(7, 1fr); gap:1px; background:var(--border); border-radius:12px; overflow:hidden }
-    .week-header{ background:rgba(15,23,42,.8); padding:.75rem .5rem; text-align:center; font-size:.8rem; color:var(--muted) }
-    .time-slot{ background:rgba(2,6,23,.4); padding:.5rem; font-size:.75rem; color:var(--muted); border-right:1px solid var(--border) }
-    .day-column{ background:rgba(2,6,23,.4); min-height:60px; position:relative; padding:.25rem }
-
-    .event{ 
-      background:linear-gradient(135deg, rgba(99,102,241,.2), rgba(99,102,241,.1)); 
-      border:1px solid rgba(99,102,241,.3); 
-      border-radius:6px; 
-      padding:.25rem .5rem; 
-      font-size:.75rem; 
-      cursor:pointer; 
-      margin-bottom:.25rem;
-      color:var(--text);
+    .week-calendar{ display:grid; grid-template-columns: repeat(7, 1fr); gap:.5rem; margin-top:1rem }
+    .day-card{ 
+      background:rgba(2,6,23,.4); 
+      border:1px solid var(--border); 
+      border-radius:12px; 
+      padding:.75rem; 
+      min-height:120px;
+      position:relative;
     }
-    .event:hover{ background:linear-gradient(135deg, rgba(99,102,241,.3), rgba(99,102,241,.15)) }
+    .day-card.today{ border-color:var(--primary); background:rgba(99,102,241,.1) }
+    .day-header{ font-weight:600; margin-bottom:.5rem; font-size:.9rem }
+    .day-number{ color:var(--muted); font-size:.8rem }
 
-    /* Vue jour */
-    .day-view{ display:none }
-    .day-timeline{ display:grid; grid-template-columns: 80px 1fr; gap:1px; background:var(--border); border-radius:12px; overflow:hidden }
-    .time-column{ background:rgba(15,23,42,.8) }
-    .events-column{ background:rgba(2,6,23,.4) }
-    .hour-slot{ height:60px; display:flex; align-items:flex-start; padding:.5rem; font-size:.75rem; color:var(--muted); border-bottom:1px solid var(--border) }
-    .event-container{ height:60px; position:relative; border-bottom:1px solid var(--border); padding:.25rem }
-
-    /* Vue mois */
-    .month-view{ display:none }
-    .month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:1px; background:var(--border); border-radius:12px; overflow:hidden }
-    .month-day{ background:rgba(2,6,23,.4); min-height:100px; padding:.5rem; position:relative }
-    .month-day.other-month{ opacity:.3 }
-    .month-day.today{ background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.3) }
-    .day-number{ font-size:.9rem; font-weight:600; margin-bottom:.25rem }
-    .month-event{ 
+    .event-item{ 
       background:rgba(99,102,241,.2); 
       border:1px solid rgba(99,102,241,.3); 
-      border-radius:4px; 
-      padding:.1rem .3rem; 
-      font-size:.7rem; 
-      margin-bottom:.2rem; 
-      cursor:pointer 
+      border-radius:6px; 
+      padding:.3rem; 
+      margin:.2rem 0; 
+      font-size:.75rem; 
+      cursor:pointer;
+      line-height:1.2;
     }
+    .event-item:hover{ background:rgba(99,102,241,.3) }
 
     /* Table */
-    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border) }
-    table{ width:100%; border-collapse: collapse; min-width: 860px; }
-    thead th{ position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px); color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; font-size:.75rem; text-align:left; padding:.9rem .85rem; border-bottom:1px solid var(--border) }
+    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border); margin-top:1rem }
+    table{ width:100%; border-collapse: collapse; min-width: 800px; }
+    thead th{ background: rgba(15,23,42,.9); color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; font-size:.75rem; text-align:left; padding:.9rem .85rem; border-bottom:1px solid var(--border) }
     tbody td{ padding: .85rem .85rem; border-bottom:1px dashed var(--border) }
     tbody tr:hover{ background: rgba(148,163,184,.05) }
-    .op-id{ font-weight:700; color: var(--primary) }
     .chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; border:1px solid var(--border); color: var(--muted) }
-    .chip.planifie{ color:#60a5fa; border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.08) }
 
-    .btn-view{ display:inline-flex; align-items:center; gap:.45rem; padding:.45rem .7rem; border-radius:8px; border:1px solid rgba(99,102,241,.35); background: rgba(99,102,241,.15); color:white; text-decoration:none }
+    .btn-view{ display:inline-flex; align-items:center; gap:.45rem; padding:.45rem .7rem; border-radius:8px; border:1px solid rgba(99,102,241,.35); background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem }
     .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
 
-    /* Tooltip */
-    .tooltip{ 
-      position:absolute; 
-      background:rgba(15,23,42,.95); 
-      border:1px solid var(--border); 
-      border-radius:8px; 
-      padding:.75rem; 
-      font-size:.8rem; 
-      z-index:100; 
-      box-shadow:var(--shadow); 
-      max-width:250px;
-      display:none;
-    }
-
     /* Responsive */
-    @media (max-width: 720px){
+    @media (max-width: 768px){
       .kpi.ca, .kpi.clients, .kpi.devis, .kpi.planifier, .kpi.paiement{ grid-column: 1 / -1 }
+      .week-calendar{ grid-template-columns: 1fr; gap:.3rem }
       .calendar-nav{ flex-direction:column; align-items:flex-start }
-      .week-view{ grid-template-columns: 60px repeat(7, 1fr) }
-      .day-view{ display:block }
-      .week-view{ display:none }
-      .month-view{ display:none }
       .table-wrap{ border:none }
       table{ display:block }
       thead{ display:none }
@@ -218,11 +176,10 @@
         box-shadow: var(--shadow);
       }
       
-      .week-header, .time-column{ background: rgba(248,250,252,.9) }
-      .day-column, .time-slot, .month-day{ background: var(--card) }
-      .tooltip{ background: rgba(255,255,255,.98) }
+      .day-card{ background: var(--card) }
+      .day-card.today{ border-color:var(--primary); background:rgba(99,102,241,.05) }
       
-      .nav a.active, .btn.active{ 
+      .nav a.active{ 
         color: var(--primary); 
         background: rgba(99,102,241,.08);
         border-color: rgba(99,102,241,.2);
@@ -231,12 +188,6 @@
       .btn.primary{ 
         background: rgba(99,102,241,.1); 
         border-color: rgba(99,102,241,.2);
-        color: var(--primary);
-      }
-      
-      .btn-view{ 
-        background: rgba(99,102,241,.1); 
-        border: 1px solid rgba(99,102,241,.2);
         color: var(--primary);
       }
     }
@@ -259,7 +210,7 @@
         <a href="{% url 'clients' %}">Clients</a>
       </nav>
       <div class="user">
-        <span>Connecté·e : {{ user.username }}</span>
+        <span>Connecté : {{ user.username }}</span>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
           <button type="submit">Déconnexion</button>
@@ -296,96 +247,33 @@
       </article>
     </section>
 
-    <!-- Planning Calendar -->
+    <!-- Planning simplifié -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/>
           </svg>
-          Planning des interventions
-          <span class="badge">{{ calendar_events|length }}</span>
+          Planning de la semaine
+          <span class="badge" id="events-count">0</span>
         </h2>
         <div class="toolbar">
           <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
         </div>
       </div>
 
-      <div class="calendar-container">
+      <div class="calendar-simple">
         <div class="calendar-nav">
-          <div class="calendar-nav-left">
-            <button class="nav-btn" onclick="changeWeek(-1)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
-              </svg>
-            </button>
-            <div class="calendar-title" id="calendar-title">Semaine courante</div>
-            <button class="nav-btn" onclick="changeWeek(1)">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2"/>
-              </svg>
-            </button>
-            <button class="btn" onclick="goToToday()">Aujourd'hui</button>
-          </div>
-          <div class="calendar-nav-right">
-            <button class="btn" onclick="setView('day')" id="day-btn">Jour</button>
-            <button class="btn active" onclick="setView('week')" id="week-btn">Semaine</button>
-            <button class="btn" onclick="setView('month')" id="month-btn">Mois</button>
+          <div class="calendar-title" id="week-title">Semaine courante</div>
+          <div>
+            <button class="nav-btn" onclick="changeWeek(-1)">← Précédent</button>
+            <button class="nav-btn" onclick="changeWeek(0)" style="margin:0 .5rem">Aujourd'hui</button>
+            <button class="nav-btn" onclick="changeWeek(1)">Suivant →</button>
           </div>
         </div>
 
-        <!-- Vue Semaine -->
-        <div class="week-view" id="week-view">
-          <div class="week-header">Horaires</div>
-          <div class="week-header" id="day-0">Lun</div>
-          <div class="week-header" id="day-1">Mar</div>
-          <div class="week-header" id="day-2">Mer</div>
-          <div class="week-header" id="day-3">Jeu</div>
-          <div class="week-header" id="day-4">Ven</div>
-          <div class="week-header" id="day-5">Sam</div>
-          <div class="week-header" id="day-6">Dim</div>
-          
-          <div class="time-slot">08:00</div>
-          <div class="day-column" data-day="0"></div>
-          <div class="day-column" data-day="1"></div>
-          <div class="day-column" data-day="2"></div>
-          <div class="day-column" data-day="3"></div>
-          <div class="day-column" data-day="4"></div>
-          <div class="day-column" data-day="5"></div>
-          <div class="day-column" data-day="6"></div>
-
-          <div class="time-slot">14:00</div>
-          <div class="day-column" data-day="0"></div>
-          <div class="day-column" data-day="1"></div>
-          <div class="day-column" data-day="2"></div>
-          <div class="day-column" data-day="3"></div>
-          <div class="day-column" data-day="4"></div>
-          <div class="day-column" data-day="5"></div>
-          <div class="day-column" data-day="6"></div>
-        </div>
-
-        <!-- Vue Jour -->
-        <div class="day-view" id="day-view">
-          <div class="day-timeline">
-            <div class="time-column">
-              <div class="hour-slot">08:00</div>
-              <div class="hour-slot">09:00</div>
-              <div class="hour-slot">10:00</div>
-              <div class="hour-slot">14:00</div>
-              <div class="hour-slot">15:00</div>
-              <div class="hour-slot">16:00</div>
-            </div>
-            <div class="events-column" id="day-events">
-              <!-- Events will be populated by JavaScript -->
-            </div>
-          </div>
-        </div>
-
-        <!-- Vue Mois -->
-        <div class="month-view" id="month-view">
-          <div class="month-grid" id="month-grid">
-            <!-- Month will be populated by JavaScript -->
-          </div>
+        <div class="week-calendar" id="week-calendar">
+          <!-- Généré par JavaScript -->
         </div>
       </div>
     </section>
@@ -398,11 +286,10 @@
             <path d="M7 10h10M7 14h7M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="1.6"/>
           </svg>
           Prochaines opérations
-          <span class="badge">{{ prochaines_operations|length|default:0 }}</span>
+          <span class="badge">{{ prochaines_operations|length }}</span>
         </h2>
         <div class="toolbar">
           <a href="{% url 'operations' %}?statut=planifie" class="btn">Voir plus</a>
-          <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
         </div>
       </div>
 
@@ -414,7 +301,6 @@
               <th>Date</th>
               <th>Client</th>
               <th>Opération</th>
-              <th>Adresse</th>
               <th>Téléphone</th>
               <th>Action</th>
             </tr>
@@ -422,26 +308,20 @@
           <tbody>
             {% for operation in prochaines_operations %}
             <tr>
-              <td data-label="Date">
+              <td>
                 {% if operation.date_prevue %}
                   {{ operation.date_prevue|date:"d/m H\hi" }}
                 {% else %}
                   <span class="chip">Non planifiée</span>
                 {% endif %}
               </td>
-              <td data-label="Client">{{ operation.client.nom }} {{ operation.client.prenom }}</td>
-              <td data-label="Opération">{{ operation.type_prestation|truncatechars:40 }}</td>
-              <td data-label="Adresse">{{ operation.adresse_intervention|truncatechars:40 }}</td>
-              <td data-label="Téléphone">
+              <td>{{ operation.client.nom }} {{ operation.client.prenom }}</td>
+              <td>{{ operation.type_prestation|truncatechars:40 }}</td>
+              <td>
                 <a href="tel:{{ operation.client.telephone }}" class="chip">{{ operation.client.telephone }}</a>
               </td>
               <td>
-                <a href="{% url 'operation_detail' operation.id %}" class="btn-view">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M12 5C7 5 3.73 8.11 2 12c1.73 3.89 5 7 10 7s8.27-3.11 10-7c-1.73-3.89-5-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" stroke="currentColor" stroke-width="1.6"/>
-                  </svg>
-                  Voir
-                </a>
+                <a href="{% url 'operation_detail' operation.id %}" class="btn-view">Voir</a>
               </td>
             </tr>
             {% endfor %}
@@ -449,9 +329,9 @@
         </table>
       </div>
       {% else %}
-        <div style="text-align:center; padding:2rem; color:var(--muted)">
-          <p>Aucune opération planifiée pour le moment.</p>
-        </div>
+      <div style="text-align:center; padding:2rem; color:var(--muted)">
+        <p>Aucune opération planifiée.</p>
+      </div>
       {% endif %}
     </section>
 
@@ -473,169 +353,101 @@
     </section>
   </main>
 
-  <!-- Tooltip -->
-  <div class="tooltip" id="tooltip">
-    <div id="tooltip-content"></div>
-  </div>
-
   <script>
-    // Injection des données Django
+    // Données Django
     const calendarEvents = {{ calendar_events|safe }};
     
-    let currentView = 'week';
-    let currentDate = new Date();
     let currentWeekOffset = 0;
 
-    function setView(view) {
-      // Update buttons
-      document.querySelectorAll('.calendar-nav-right .btn').forEach(btn => 
-        btn.classList.remove('active'));
-      document.getElementById(view + '-btn').classList.add('active');
-
-      // Update views
-      document.getElementById('week-view').style.display = view === 'week' ? 'grid' : 'none';
-      document.getElementById('day-view').style.display = view === 'day' ? 'block' : 'none';
-      document.getElementById('month-view').style.display = view === 'month' ? 'block' : 'none';
-
-      currentView = view;
-      updateCalendar();
-    }
-
-    function changeWeek(direction) {
-      currentWeekOffset += direction;
-      updateCalendar();
-    }
-
-    function goToToday() {
-      currentWeekOffset = 0;
-      updateCalendar();
-    }
-
-    function getWeekDates() {
+    function getWeekDates(weekOffset = 0) {
       const today = new Date();
-      const startOfWeek = new Date(today);
-      startOfWeek.setDate(today.getDate() - today.getDay() + 1 + (currentWeekOffset * 7)); // Lundi
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - today.getDay() + 1 + (weekOffset * 7));
       
       const dates = [];
       for (let i = 0; i < 7; i++) {
-        const date = new Date(startOfWeek);
-        date.setDate(startOfWeek.getDate() + i);
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
         dates.push(date);
       }
       return dates;
     }
 
-    function updateCalendar() {
-      if (currentView === 'week') {
-        updateWeekView();
-      } else if (currentView === 'day') {
-        updateDayView();
-      } else if (currentView === 'month') {
-        updateMonthView();
-      }
+    function formatDate(date) {
+      return date.getFullYear() + '-' + 
+        String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(date.getDate()).padStart(2, '0');
     }
 
-    function updateWeekView() {
-      const weekDates = getWeekDates();
+    function renderWeekCalendar() {
+      const weekDates = getWeekDates(currentWeekOffset);
+      const today = new Date();
+      const calendar = document.getElementById('week-calendar');
       
-      // Update week title
+      // Update title
       const startDate = weekDates[0];
       const endDate = weekDates[6];
-      const monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-      document.getElementById('calendar-title').textContent = 
-        `Semaine du ${startDate.getDate()} ${monthNames[startDate.getMonth()]} au ${endDate.getDate()} ${monthNames[endDate.getMonth()]}`;
+      const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+      document.getElementById('week-title').textContent = 
+        `${startDate.getDate()} ${months[startDate.getMonth()]} - ${endDate.getDate()} ${months[endDate.getMonth()]} ${endDate.getFullYear()}`;
       
-      // Update day headers
+      // Clear calendar
+      calendar.innerHTML = '';
+      
+      // Count events
+      let eventCount = 0;
+      
       const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
-      weekDates.forEach((date, index) => {
-        const header = document.getElementById(`day-${index}`);
-        if (header) {
-          header.innerHTML = `${dayNames[index]}<br>${date.getDate()}`;
-        }
-      });
-
-      // Clear existing events
-      document.querySelectorAll('.day-column').forEach(col => {
-        col.innerHTML = '';
-      });
-
-      // Add events from Django data
-      calendarEvents.forEach(event => {
-        const eventDate = new Date(event.date);
-        const dayIndex = weekDates.findIndex(date => 
-          date.toDateString() === eventDate.toDateString()
-        );
-        
-        if (dayIndex !== -1) {
-          const dayColumn = document.querySelector(`.day-column[data-day="${dayIndex}"]`);
-          if (dayColumn) {
-            const eventEl = document.createElement('div');
-            eventEl.className = 'event';
-            eventEl.innerHTML = `
-              ${event.time} - ${event.service}<br>
-              <small>📍 ${event.client_nom}</small>
-            `;
-            eventEl.onclick = (e) => showTooltip(e, event);
-            dayColumn.appendChild(eventEl);
-          }
-        }
-      });
-    }
-
-    function updateDayView() {
-      // Implementation pour la vue jour
-      const today = new Date();
-      document.getElementById('calendar-title').textContent = 
-        today.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-    }
-
-    function updateMonthView() {
-      // Implementation pour la vue mois
-      const today = new Date();
-      document.getElementById('calendar-title').textContent = 
-        today.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
-    }
-
-    function showTooltip(event, eventData) {
-      event.stopPropagation();
-      const tooltip = document.getElementById('tooltip');
-      const content = document.getElementById('tooltip-content');
       
-      content.innerHTML = `
-        <div style="font-weight:600; margin-bottom:.5rem">${eventData.client_nom}</div>
-        <div style="color:var(--muted); margin-bottom:.25rem">${eventData.service}</div>
-        <div style="color:var(--muted); margin-bottom:.25rem">⏰ ${eventData.time}</div>
-        <div style="color:var(--muted); margin-bottom:.25rem">📍 ${eventData.address}</div>
-        <div style="color:var(--muted); margin-bottom:.5rem">📞 ${eventData.phone}</div>
-        <a href="${eventData.url}" style="color:var(--primary); text-decoration:none; font-size:.8rem">→ Voir la fiche</a>
-      `;
-
-      tooltip.style.display = 'block';
-      tooltip.style.left = event.pageX + 10 + 'px';
-      tooltip.style.top = event.pageY + 10 + 'px';
+      weekDates.forEach((date, index) => {
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+        
+        // Check if today
+        if (formatDate(date) === formatDate(today)) {
+          dayCard.classList.add('today');
+        }
+        
+        // Day header
+        dayCard.innerHTML = `
+          <div class="day-header">${dayNames[index]}</div>
+          <div class="day-number">${date.getDate()}</div>
+        `;
+        
+        // Add events for this day
+        const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
+        dayEvents.forEach(event => {
+          eventCount++;
+          const eventEl = document.createElement('div');
+          eventEl.className = 'event-item';
+          eventEl.innerHTML = `${event.time} ${event.client_nom}`;
+          eventEl.onclick = () => {
+            if (event.url) {
+              window.location.href = event.url;
+            }
+          };
+          dayCard.appendChild(eventEl);
+        });
+        
+        calendar.appendChild(dayCard);
+      });
+      
+      // Update event count
+      document.getElementById('events-count').textContent = eventCount;
     }
 
-    // Close tooltip when clicking elsewhere
-    document.addEventListener('click', () => {
-      document.getElementById('tooltip').style.display = 'none';
-    });
+    function changeWeek(direction) {
+      if (direction === 0) {
+        currentWeekOffset = 0; // Aujourd'hui
+      } else {
+        currentWeekOffset += direction;
+      }
+      renderWeekCalendar();
+    }
 
     // Initialize calendar
-    function initCalendar() {
-      updateCalendar();
-      
-      // Responsive: switch to day view on mobile
-      if (window.innerWidth <= 720) {
-        setView('day');
-      }
-    }
-
-    // Initialize when page loads
-    document.addEventListener('DOMContentLoaded', initCalendar);
-    window.addEventListener('resize', () => {
-      if (window.innerWidth <= 720 && currentView === 'week') {
-        setView('day');
-      }
+    document.addEventListener('DOMContentLoaded', function() {
+      renderWeekCalendar();
     });
   </script>
 </body>
