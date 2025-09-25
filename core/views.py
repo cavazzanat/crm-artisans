@@ -14,7 +14,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, logout  # ← Ajoutez logout
 
 from django.core.management import call_command
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 import io
 import sys
 import json
@@ -229,8 +229,16 @@ def operation_detail(request, operation_id):
                     utilisateur=request.user
                 )
                 
-                messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
-                return redirect('operation_detail', operation_id=operation.id)
+                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+                    return JsonResponse({
+                        'success': True,
+                        'message': f"Statut mis à jour : {operation.get_statut_display()}",
+                        'new_status': operation.statut,
+                        'new_status_display': operation.get_statut_display()
+                    })
+                else:
+                    messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
+                    return redirect('operation_detail', operation_id=operation.id)
 
         elif action == 'add_intervention':
             description = request.POST.get('description', '').strip()
