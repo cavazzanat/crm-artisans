@@ -20,6 +20,7 @@ import sys
 import json
 
 
+# Dans core/views.py, remplacez la section du dashboard par :
 
 @login_required
 def dashboard(request):
@@ -42,24 +43,7 @@ def dashboard(request):
             date_creation__gte=debut_mois
         ).aggregate(total=Sum('interventions__montant'))['total'] or 0
         
-        # Prochaines opérations planifiées
-        prochaines_operations = Operation.objects.filter(
-            user=request.user,
-            statut='planifie',
-            date_prevue__isnull=False
-        ).select_related('client').order_by('date_prevue')[:5]
-        
-        context = {
-            'nb_clients': nb_clients,
-            'nb_operations': nb_operations,
-            'nb_en_attente_devis': nb_en_attente_devis,
-            'nb_a_planifier': nb_a_planifier,
-            'nb_realise': nb_realise,
-            'ca_mois': ca_mois,
-            'prochaines_operations': prochaines_operations,
-        }
-        
-        # Récupérer les opérations planifiées avec dates
+        # ✅ CORRECTION : Requête unifiée pour les opérations planifiées
         from django.utils import timezone
         from datetime import timedelta
         
@@ -68,13 +52,23 @@ def dashboard(request):
         start_date = today - timedelta(days=7)
         end_date = today + timedelta(days=14)
         
-        operations_calendrier = Operation.objects.filter(
+        # ✅ Requête principale pour toutes les opérations avec date_prevue
+        operations_avec_date = Operation.objects.filter(
             user=request.user,
-            statut='planifie',
             date_prevue__isnull=False,
-            date_prevue__date__gte=start_date,
-            date_prevue__date__lte=end_date
+            statut='planifie'  # ← AJOUT : seulement les opérations planifiées
         ).select_related('client').order_by('date_prevue')
+        
+        # ✅ Pour le tableau : prochaines opérations (5 prochaines)
+        prochaines_operations = operations_avec_date.filter(
+            date_prevue__gte=timezone.now()  # ← Seulement les futures
+        )[:5]
+        
+        # ✅ Pour le calendrier : opérations dans la période
+        operations_calendrier = operations_avec_date.filter(
+            date_prevue__gte=start_date,
+            date_prevue__lte=end_date
+        )
         
         # Formater pour le JavaScript
         calendar_events = []
@@ -90,16 +84,23 @@ def dashboard(request):
                 'url': f'/operations/{op.id}/'
             })
         
-        context.update({
+        context = {
+            'nb_clients': nb_clients,
+            'nb_operations': nb_operations,
+            'nb_en_attente_devis': nb_en_attente_devis,
+            'nb_a_planifier': nb_a_planifier,
+            'nb_realise': nb_realise,
+            'ca_mois': ca_mois,
+            'prochaines_operations': prochaines_operations,
             'calendar_events_json': json.dumps(calendar_events),
             'calendar_events': calendar_events,
-        })
+        }
         
         return render(request, 'core/dashboard.html', context)
         
     except Exception as e:
         return HttpResponse(f"<h1>CRM Artisans</h1><p>Erreur : {str(e)}</p><p><a href='/admin/'>Admin</a></p>")
-
+    
 @login_required
 def operations_list(request):
     """Page de gestion des opérations avec filtres"""
@@ -352,10 +353,11 @@ def clients_list(request):
             
             # Prochaine opération (statut planifié + date future)
             from django.utils import timezone
-            prochaine_operation = operations.filter(
-                statut='planifie',
-                date_prevue__gte=timezone.now()
-            ).order_by('date_prevue').first()
+            prochaines_operations = Operation.objects.filter(
+                user=request.user,
+                date_prevue__isnull=False,
+                date_prevue__gte=timezone.now()  # ← Seulement les futures
+            ).exclude(statut__in=['paye', 'annule']).select_related('client').order_by('date_prevue')[:5]
             
             client.derniere_op = derniere_operation
             client.prochaine_op = prochaine_operation
