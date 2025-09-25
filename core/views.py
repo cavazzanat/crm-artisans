@@ -21,6 +21,7 @@ import json
 
 
 # Dans core/views.py, remplacez la section du dashboard par :
+# Dans core/views.py, remplacez la section du dashboard par :
 
 @login_required
 def dashboard(request):
