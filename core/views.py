@@ -22,6 +22,7 @@ import json
 
 # Dans core/views.py, remplacez la section du dashboard par :
 # Dans core/views.py, remplacez la section du dashboard par :
+# Dans core/views.py, remplacez la section du dashboard par :
 
 @login_required
 def dashboard(request):
@@ -34,7 +35,7 @@ def dashboard(request):
         nb_a_planifier = Operation.objects.filter(user=request.user, statut='a_planifier').count()
         nb_realise = Operation.objects.filter(user=request.user, statut='realise').count()
         
-        # CA du mois (exemple)
+        # CA du mois
         from django.utils import timezone
         from django.db.models import Sum
         debut_mois = timezone.now().replace(day=1)
@@ -44,36 +45,48 @@ def dashboard(request):
             date_creation__gte=debut_mois
         ).aggregate(total=Sum('interventions__montant'))['total'] or 0
         
-        # ✅ CORRECTION : Requête unifiée pour les opérations planifiées
-        from django.utils import timezone
+        # ✅ CALENDRIER : Logique simplifiée pour les opérations qui nécessitent attention
         from datetime import timedelta
         
-        # Date de début et fin pour la vue (par exemple, 2 semaines)
         today = timezone.now().date()
-        start_date = today - timedelta(days=7)
-        end_date = today + timedelta(days=14)
+        start_date = today - timedelta(days=30)  # 30 jours passés
+        end_date = today + timedelta(days=14)    # 14 jours futurs
         
-        # ✅ Requête principale pour toutes les opérations avec date_prevue
-        operations_avec_date = Operation.objects.filter(
+        operations_calendrier = Operation.objects.filter(
             user=request.user,
             date_prevue__isnull=False,
-            statut='planifie'  # ← AJOUT : seulement les opérations planifiées
-        ).select_related('client').order_by('date_prevue')
-        
-        # ✅ Pour le tableau : prochaines opérations (5 prochaines)
-        prochaines_operations = operations_avec_date.filter(
-            date_prevue__gte=timezone.now()  # ← Seulement les futures
-        )[:5]
-        
-        # ✅ Pour le calendrier : opérations dans la période
-        operations_calendrier = operations_avec_date.filter(
             date_prevue__gte=start_date,
             date_prevue__lte=end_date
-        )
+        ).filter(
+            # Seulement les statuts qui nécessitent attention
+            statut__in=['planifie', 'a_planifier']
+        ).select_related('client').order_by('date_prevue')
         
-        # Formater pour le JavaScript
+        # ✅ TABLEAU : opérations à planifier (remplace prochaines_operations)
+        operations_a_planifier = Operation.objects.filter(
+            user=request.user,
+            statut__in=['en_attente_devis', 'a_planifier']
+        ).select_related('client').order_by('-date_creation')[:5]
+        
+        # ✅ FORMATER avec logique d'alerte pour le calendrier
         calendar_events = []
         for op in operations_calendrier:
+            is_past = op.date_prevue < timezone.now()
+            
+            if op.statut == 'planifie':
+                if is_past:
+                    color_class = 'event-attention'  # Rouge clignotant
+                    status_text = "À valider"
+                else:
+                    color_class = 'event-planifie'   # Vert
+                    status_text = op.get_statut_display()
+            elif op.statut == 'a_planifier':
+                color_class = 'event-pending'        # Gris
+                status_text = "À replanifier"
+            else:
+                color_class = 'event-default'
+                status_text = op.get_statut_display()
+            
             calendar_events.append({
                 'id': op.id,
                 'client_nom': f"{op.client.nom} {op.client.prenom}",
@@ -82,7 +95,11 @@ def dashboard(request):
                 'time': op.date_prevue.strftime('%H:%M'),
                 'address': op.adresse_intervention,
                 'phone': op.client.telephone,
-                'url': f'/operations/{op.id}/'
+                'url': f'/operations/{op.id}/',
+                'statut': op.statut,
+                'statut_display': status_text,
+                'color_class': color_class,
+                'is_past': is_past
             })
         
         context = {
@@ -92,7 +109,7 @@ def dashboard(request):
             'nb_a_planifier': nb_a_planifier,
             'nb_realise': nb_realise,
             'ca_mois': ca_mois,
-            'prochaines_operations': prochaines_operations,
+            'operations_a_planifier': operations_a_planifier,  # ← Changé
             'calendar_events_json': json.dumps(calendar_events),
             'calendar_events': calendar_events,
         }
@@ -361,7 +378,7 @@ def clients_list(request):
             ).exclude(statut__in=['paye', 'annule']).select_related('client').order_by('date_prevue')[:5]
             
             client.derniere_op = derniere_operation
-            client.prochaine_op = prochaine_operation
+            client.prochaine_op = None
             clients_enrichis.append(client)
         
         # Statistiques

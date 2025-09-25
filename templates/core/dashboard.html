@@ -120,8 +120,6 @@
     .day-number{ color:var(--muted); font-size:.8rem; margin-bottom:.5rem }
 
     .event-item{
-      background:rgba(99,102,241,.2);
-      border:1px solid rgba(99,102,241,.3);
       border-radius:6px;
       padding:.3rem;
       margin:.2rem 0;
@@ -129,9 +127,40 @@
       cursor:pointer;
       line-height:1.2;
       transition: all 0.2s ease;
+      border:1px solid;
     }
-    .event-item:hover{ background:rgba(99,102,241,.3); transform: translateY(-1px) }
+    .event-item:hover{ transform: translateY(-1px) }
 
+    /* Couleurs par statut - Logique simplifiée */
+    .event-item.event-planifie{
+      /* Vert : opération planifiée future */
+      background:rgba(34,197,94,.2);
+      border-color:rgba(34,197,94,.3);
+    }
+    .event-item.event-planifie:hover{ background:rgba(34,197,94,.3) }
+
+    .event-item.event-attention{
+      /* Rouge : opération passée à valider */
+      background:rgba(239,68,68,.2);
+      border-color:rgba(239,68,68,.3);
+      animation: pulse 2s infinite;
+    }
+    .event-item.event-attention:hover{ background:rgba(239,68,68,.3) }
+
+    .event-item.event-pending{
+      /* Gris : opération à replanifier/traiter */
+      background:rgba(148,163,184,.15);
+      border-color:rgba(148,163,184,.3);
+      border-style: dashed;
+    }
+    .event-item.event-pending:hover{ background:rgba(148,163,184,.25) }
+
+    /* Animation pulse pour les opérations qui nécessitent attention */
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
     /* Vue Mois */
     .month-grid{
       display:grid;
@@ -400,44 +429,54 @@
       </div>
     </section>
 
-    <!-- Prochaines opérations (dynamiques) -->
+    <!-- Opérations à planifier -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M7 10h10M7 14h7M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M12 7v6l4 4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/>
           </svg>
-          Prochaines opérations
-          <span class="badge">{{ prochaines_operations|length }}</span>
+          Opérations à planifier
+          <span class="badge">{{ operations_a_planifier|length }}</span>
         </h2>
+        <div class="toolbar">
+          <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
+        </div>
       </div>
 
-      {% if prochaines_operations %}
+      {% if operations_a_planifier %}
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Date</th>
+              <th>Créée le</th>
               <th>Client</th>
               <th>Opération</th>
               <th>Téléphone</th>
+              <th>Statut</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {% for operation in prochaines_operations %}
+            {% for operation in operations_a_planifier %}
             <tr>
-              <td>
-                {% if operation.date_prevue %}
-                  {{ operation.date_prevue|date:"d/m H\\hi" }}
-                {% else %}
-                  <span class="chip">Non planifiée</span>
-                {% endif %}
-              </td>
+              <td>{{ operation.date_creation|date:"d/m/Y" }}</td>
               <td>{{ operation.client.nom }} {{ operation.client.prenom }}</td>
               <td>{{ operation.type_prestation|truncatechars:40 }}</td>
               <td><a href="tel:{{ operation.client.telephone }}" class="chip">{{ operation.client.telephone }}</a></td>
-              <td><a href="{% url 'operation_detail' operation.id %}" class="btn-view">Voir</a></td>
+              <td>
+                <span class="chip" style="background: rgba(245,158,11,.1); color: var(--warning); border-color: rgba(245,158,11,.3)">
+                  {{ operation.get_statut_display }}
+                </span>
+              </td>
+              <td>
+                <a href="{% url 'operation_detail' operation.id %}" class="btn-view">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 7v6l4 4M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/>
+                  </svg>
+                  Planifier
+                </a>
+              </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -445,7 +484,11 @@
       </div>
       {% else %}
       <div style="text-align:center; padding:2rem; color:var(--muted)">
-        <p>Aucune opération planifiée.</p>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin-bottom: 1rem; opacity: .5">
+          <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        <p>Toutes les opérations sont planifiées !</p>
+        <p style="font-size: .9rem; margin-top: .5rem">Créez une nouvelle opération pour commencer.</p>
       </div>
       {% endif %}
     </section>
@@ -626,7 +669,7 @@
         const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
         dayEvents.forEach((event, eventIndex) => {
           const eventEl = document.createElement('div');
-          eventEl.className = 'event-item';
+          eventEl.className = `event-item ${event.color_class || 'event-default'}`;
           eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
           eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(date), dayEvents, eventIndex); };
           dayCard.appendChild(eventEl);
@@ -658,11 +701,11 @@
       dayCard.style.minHeight = '200px';
       dayCard.innerHTML = `<div class="day-header">Interventions du ${date.getDate()} ${monthsShort[date.getMonth()]}</div>`;
 
-      dayEvents.forEach((event, index) => {
+      dayEvents.forEach((event, eventIndex) => {
         const eventEl = document.createElement('div');
-        eventEl.className = 'event-item';
-        eventEl.innerHTML = `${event.time || ''} - ${event.client_nom || ''}<br><small>${event.service || ''}</small>`;
-        eventEl.onclick = () => handleEventClick(formatDate(date), dayEvents, index);
+        eventEl.className = `event-item ${event.color_class || 'event-default'}`;
+        eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
+        eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(date), dayEvents, eventIndex); };
         dayCard.appendChild(eventEl);
       });
 
