@@ -31,10 +31,9 @@
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background:
-        radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.12), transparent 40%),
-        radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.12), transparent 40%),
-        var(--bg);
+      background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.12), transparent 40%),
+                  radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.12), transparent 40%),
+                  var(--bg);
       color: var(--text);
       line-height: 1.5;
     }
@@ -134,12 +133,14 @@
 
     /* Couleurs par statut - Logique simplifiée */
     .event-item.event-planifie{
+      /* Vert : opération planifiée future */
       background:rgba(34,197,94,.2);
       border-color:rgba(34,197,94,.3);
     }
     .event-item.event-planifie:hover{ background:rgba(34,197,94,.3) }
 
     .event-item.event-attention{
+      /* Rouge : opération passée à valider */
       background:rgba(239,68,68,.2);
       border-color:rgba(239,68,68,.3);
       animation: pulse 2s infinite;
@@ -147,14 +148,19 @@
     .event-item.event-attention:hover{ background:rgba(239,68,68,.3) }
 
     .event-item.event-pending{
+      /* Gris : opération à replanifier/traiter */
       background:rgba(148,163,184,.15);
       border-color:rgba(148,163,184,.3);
       border-style: dashed;
     }
     .event-item.event-pending:hover{ background:rgba(148,163,184,.25) }
 
-    @keyframes pulse { 0% {opacity:1} 50% {opacity:.7} 100% {opacity:1} }
-
+    /* Animation pulse pour les opérations qui nécessitent attention */
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.7; }
+      100% { opacity: 1; }
+    }
     /* Vue Mois */
     .month-grid{
       display:grid;
@@ -209,14 +215,14 @@
     }
     .month-event-more:hover{ color: var(--text); }
 
-    /* -------- Panneau latéral (harmonisé) -------- */
+    /* Panneau latéral */
     .side-panel{
       position: fixed;
       top: 0;
-      right: -420px;
-      width: 420px;
+      right: -400px;
+      width: 400px;
       height: 100vh;
-      background: linear-gradient(180deg, rgba(2,6,23,.96), rgba(2,6,23,.9));
+      background: linear-gradient(180deg, rgba(2,6,23,.95), rgba(2,6,23,.9));
       border-left: 1px solid var(--border);
       box-shadow: -10px 0 25px rgba(0,0,0,.2);
       z-index: 1000;
@@ -224,95 +230,160 @@
       overflow-y: auto;
       backdrop-filter: blur(10px);
     }
-    .side-panel.open{ right:0 }
+    .side-panel.open{ right: 0 }
     .panel-header{
       padding: 1.5rem 1.5rem 1rem;
       border-bottom: 1px solid var(--border);
       position: sticky; top: 0;
-      background: rgba(2,6,23,.92);
+      background: rgba(2,6,23,.9);
       backdrop-filter: blur(10px);
-      display:flex; align-items:flex-start; gap:1rem;
     }
-    .panel-header-left{ display:flex; flex-direction:column; gap:.4rem; }
-    .panel-kicker{ font-size:.7rem; letter-spacing:.1rem; text-transform:uppercase; color:var(--muted); }
-    .panel-title{ font-size:1.1rem; font-weight:800; margin:0; color:var(--text); }
-    .panel-meta{ display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; color:var(--muted); }
-    .meta-item{ display:inline-flex; gap:.35rem; align-items:center; padding:.2rem .5rem; border:1px dashed var(--border); border-radius:999px; font-size:.78rem; }
+    .panel-title{ font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem; color: var(--text); }
+    .panel-subtitle{ color: var(--muted); font-size: .9rem; }
     .close-panel{
-      margin-left:auto;
+      position: absolute; top: 1rem; right: 1rem;
       background: none; border: none; color: var(--muted);
       cursor: pointer; padding: .5rem; border-radius: 6px;
     }
     .close-panel:hover{ background: rgba(148,163,184,.1); color: var(--text) }
     .panel-content{ padding: 1.5rem; }
 
-    .operation-tabs{ display:none } /* remplacé par timeline */
-
-    /* Timeline */
-    .op-timeline{ display:flex; gap:.5rem; align-items:center; padding:.5rem; border:1px solid var(--border); border-radius:10px; background:rgba(148,163,184,.07); margin-bottom:1rem; overflow:auto; }
-    .op-slot{
-      display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .6rem; border:1px solid var(--border);
-      border-radius:999px; font-size:.8rem; cursor:pointer; white-space:nowrap; transition:.2s;
-    }
-    .op-slot.active{ background:rgba(99,102,241,.15); border-color:rgba(99,102,241,.35); color:white; box-shadow:0 0 0 2px var(--ring); }
-    .op-slot:hover{ background:rgba(148,163,184,.12); }
+    .operation-tabs{ display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .operation-tab{ padding: .4rem .8rem; background: rgba(148,163,184,.07); border: 1px solid var(--border); border-radius: 6px; font-size: .8rem; cursor: pointer; color: var(--muted); transition: all 0.2s ease; }
+    .operation-tab.active{ background: var(--primary); border-color: var(--primary); color: white; }
 
     .detail-section{ margin-bottom: 1.5rem; }
-    .detail-section.compact{ padding-bottom:.5rem; }
     .detail-section h4{ color: var(--text); font-size: .9rem; margin-bottom: .75rem; text-transform: uppercase; letter-spacing: .05rem; font-weight: 600; }
-    .detail-grid{ display:grid; gap:.6rem; }
-    .detail-grid.two{ grid-template-columns: repeat(2, minmax(0,1fr)); }
-    .detail-grid .span-2{ grid-column:1 / -1; }
-    .detail-label{ color: var(--muted); font-size: .78rem; margin-bottom: .15rem; }
-    .detail-value{ color: var(--text); font-size: .92rem; font-weight: 600; }
+    .detail-item{ margin-bottom: .5rem; padding: .5rem 0; }
+    .detail-label{ color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
+    .detail-value{ color: var(--text); font-size: .9rem; }
 
-    .quick-actions{ display:flex; gap:.5rem; margin-top:.6rem; flex-wrap:wrap; }
-    .qa-btn{
-      display:inline-flex; align-items:center; justify-content:center;
-      padding:.45rem .7rem; border:1px solid var(--border); border-radius:8px;
-      background:rgba(148,163,184,.07); font-size:.82rem; color:var(--text); text-decoration:none;
+    .client-actions{ display: flex; gap: .75rem; margin-top: 1.5rem; flex-wrap: wrap; }
+    .action-btn{
+      flex: 1; padding: .75rem 1rem; border: 1px solid var(--border); border-radius: 8px;
+      background: rgba(148,163,184,.07); color: var(--text); text-decoration: none; text-align: center;
+      font-size: .85rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: .5rem;
     }
-    .qa-btn:hover{ background:rgba(148,163,184,.12); }
+    .action-btn:hover{ background: rgba(148,163,184,.12); transform: translateY(-1px); }
+    .action-btn.success{ background: var(--success); border-color: var(--success); color: white; }
+    .action-btn.primary{ background: var(--primary); border-color: var(--primary); color: white; }
 
-    /* Stepper statut */
-    .status-stepper{ display:flex; gap:.4rem; flex-wrap:wrap; }
-    .status-stepper .step{
-      padding:.4rem .7rem; border:1px solid var(--border); border-radius:999px;
-      font-size:.8rem; color:var(--muted); background:rgba(148,163,184,.05); cursor:pointer;
+    /* Contrôles de changement de statut */
+    .status-change-controls{ display: flex; flex-direction: column; gap: .75rem; }
+    .status-select{ 
+      width: 100%; padding: .5rem .7rem; border-radius: 8px; 
+      border: 1px solid var(--border); background: rgba(2,6,23,.35); 
+      color: var(--text); font-size: .9rem;
     }
-    .status-stepper .step.active{
-      color:white; background:rgba(99,102,241,.2);
-      border-color:rgba(99,102,241,.35); box-shadow:0 0 0 2px var(--ring);
+    .status-select:focus{ 
+      outline: none; box-shadow: 0 0 0 2px var(--ring); 
+      border-color: rgba(99,102,241,.35);
     }
-    .status-form{ margin-top:.75rem; border:1px dashed var(--border); border-radius:10px; padding:.75rem; background:rgba(2,6,23,.35); }
-    .date-row{ display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
-    .date-field{ display:flex; flex-direction:column; gap:.25rem; }
-    .date-field span{ font-size:.78rem; color:var(--muted); }
-    .date-input{
-      width:100%; padding:.5rem .7rem; border-radius:8px;
-      border:1px solid var(--border); background:rgba(2,6,23,.35);
-      color:var(--text); font-size:.85rem;
+    .date-inputs{ display: flex; flex-direction: column; gap: .5rem; }
+    .date-input{ 
+      width: 100%; padding: .5rem .7rem; border-radius: 8px; 
+      border: 1px solid var(--border); background: rgba(2,6,23,.35); 
+      color: var(--text); font-size: .85rem;
     }
-    .date-input:focus{ outline:none; box-shadow:0 0 0 2px var(--ring); border-color:rgba(99,102,241,.35); }
+    .date-input:focus{ 
+      outline: none; box-shadow: 0 0 0 2px var(--ring); 
+      border-color: rgba(99,102,241,.35);
+    }
+    .status-actions{ display: flex; gap: .5rem; justify-content: flex-end; }
+    .status-actions .action-btn{ flex: 0 0 auto; padding: .5rem .75rem; font-size: .85rem; }
 
-    /* Footer sticky */
-    .panel-footer{
-      position:sticky; bottom:0; display:flex; gap:.5rem; padding:.8rem 1rem;
-      border-top:1px solid var(--border);
-      background:linear-gradient(180deg, rgba(2,6,23,.92), rgba(2,6,23,.96));
-      backdrop-filter: blur(8px);
+    /* Table */
+    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border) }
+    table{ width:100%; border-collapse: collapse; min-width: 980px }
+    thead th{
+      position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px);
+      color:var(--muted); text-transform:uppercase; letter-spacing:.08rem;
+      font-size:.75rem; text-align:left; padding:.9rem .85rem;
+      border-bottom:1px solid var(--border)
     }
-    .panel-footer .btn{ flex:1; }
+    tbody td{ padding:.9rem .85rem; border-bottom:1px dashed var(--border); vertical-align: top }
+    tbody tr:hover{ background: rgba(148,163,184,.05) }
+    .chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; border:1px solid var(--border); color: var(--muted) }
+    .btn-view{ display:inline-flex; align-items:center; gap:.45rem; padding:.45rem .7rem; border-radius:8px; border:1px solid rgba(99,102,241,.35); background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem }
+    .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
 
-    /* Badges de statut harmonisés */
-    .status-badge{
-      display:inline-flex; align-items:center; gap:.45rem; padding:.28rem .6rem; border-radius:999px; font-size:.8rem; font-weight:700; border:1px solid;
-    }
-    .status-badge.en_attente_devis{ color:#f59e0b; background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.25); }
-    .status-badge.a_planifier{ color:#3b82f6; background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.25); }
-    .status-badge.planifie{ color:#8b5cf6; background:rgba(139,92,246,.12); border-color:rgba(139,92,246,.25); }
-    .status-badge.realise{ color:#22c55e; background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.25); }
-    .status-badge.paye{ color:#10b981; background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.25); }
+    /* Panneau: harmonisation & densité */
+.side-panel{
+  right:-420px; width:420px; border-left:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(2,6,23,.96), rgba(2,6,23,.9));
+}
+.panel-header{ display:flex; align-items:flex-start; gap:1rem; }
+.panel-header-left{ display:flex; flex-direction:column; gap:.4rem; }
+.panel-kicker{ font-size:.7rem; letter-spacing:.1rem; text-transform:uppercase; color:var(--muted); }
+.panel-title{ font-size:1.1rem; font-weight:800; margin:0; color:var(--text); }
+.panel-meta{ display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; color:var(--muted); }
+.meta-item{ display:inline-flex; gap:.35rem; align-items:center; padding:.2rem .5rem; border:1px dashed var(--border); border-radius:999px; font-size:.78rem; }
+
+/* Timeline des créneaux */
+.op-timeline{ display:flex; gap:.5rem; align-items:center; padding:.5rem; border:1px solid var(--border); border-radius:10px; background:rgba(148,163,184,.07); margin-bottom:1rem; overflow:auto; }
+.op-slot{
+  display:inline-flex; align-items:center; gap:.4rem; padding:.35rem .6rem; border:1px solid var(--border);
+  border-radius:999px; font-size:.8rem; cursor:pointer; white-space:nowrap; transition:.2s;
+}
+.op-slot.active{ background:rgba(99,102,241,.15); border-color:rgba(99,102,241,.35); color:white; box-shadow:0 0 0 2px var(--ring); }
+.op-slot:hover{ background:rgba(148,163,184,.12); }
+
+/* Grille d’infos compacte */
+.detail-section.compact{ padding-bottom:.5rem; }
+.detail-grid{ display:grid; gap:.6rem; }
+.detail-grid.two{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+.detail-grid .span-2{ grid-column:1 / -1; }
+.detail-label{ color:var(--muted); font-size:.78rem; margin-bottom:.15rem; }
+.detail-value{ color:var(--text); font-size:.92rem; font-weight:600; }
+
+/* Quick actions (tel / wa / maps) */
+.quick-actions{ display:flex; gap:.5rem; margin-top:.6rem; flex-wrap:wrap; }
+.qa-btn{
+  display:inline-flex; align-items:center; justify-content:center;
+  padding:.45rem .7rem; border:1px solid var(--border); border-radius:8px;
+  background:rgba(148,163,184,.07); font-size:.82rem; color:var(--text); text-decoration:none;
+}
+.qa-btn:hover{ background:rgba(148,163,184,.12); }
+
+/* Stepper de statut */
+.status-stepper{ display:flex; gap:.4rem; flex-wrap:wrap; }
+.status-stepper .step{
+  padding:.4rem .7rem; border:1px solid var(--border); border-radius:999px;
+  font-size:.8rem; color:var(--muted); background:rgba(148,163,184,.05); cursor:pointer;
+}
+.status-stepper .step.active{ color:white; background:rgba(99,102,241,.2); border-color:rgba(99,102,241,.35); box-shadow:0 0 0 2px var(--ring); }
+.status-form{ margin-top:.75rem; border:1px dashed var(--border); border-radius:10px; padding:.75rem; background:rgba(2,6,23,.35); }
+.date-row{ display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+.date-field{ display:flex; flex-direction:column; gap:.25rem; }
+.date-field span{ font-size:.78rem; color:var(--muted); }
+.date-input{ width:100%; padding:.5rem .7rem; border-radius:8px; border:1px solid var(--border); background:rgba(2,6,23,.35); color:var(--text); font-size:.85rem; }
+.date-input:focus{ outline:none; box-shadow:0 0 0 2px var(--ring); border-color:rgba(99,102,241,.35); }
+
+/* Footer sticky */
+.panel-footer{
+  position:sticky; bottom:0; display:flex; gap:.5rem; padding:.8rem 1rem;
+  border-top:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(2,6,23,.92), rgba(2,6,23,.96));
+  backdrop-filter: blur(8px);
+}
+.panel-footer .btn{ flex:1; }
+
+/* Badges de statut harmonisés */
+.status-badge{
+  display:inline-flex; align-items:center; gap:.45rem; padding:.28rem .6rem; border-radius:999px; font-size:.8rem; font-weight:700; border:1px solid;
+}
+.status-badge.en_attente_devis{ color:#f59e0b; background:rgba(245,158,11,.1); border-color:rgba(245,158,11,.25); }
+.status-badge.a_planifier{ color:#3b82f6; background:rgba(59,130,246,.12); border-color:rgba(59,130,246,.25); }
+.status-badge.planifie{ color:#8b5cf6; background:rgba(139,92,246,.12); border-color:rgba(139,92,246,.25); }
+.status-badge.realise{ color:#22c55e; background:rgba(34,197,94,.12); border-color:rgba(34,197,94,.25); }
+.status-badge.paye{ color:#10b981; background:rgba(16,185,129,.12); border-color:rgba(16,185,129,.25); }
+
+/* Light mode: conserve ton thème */
+@media (prefers-color-scheme: light){
+  .op-slot.active{ color:var(--primary); }
+  .status-stepper .step.active{ color:var(--primary); background:rgba(99,102,241,.1); }
+}
+
 
     /* Responsive */
     @media (max-width: 768px){
@@ -323,7 +394,6 @@
       .month-event-item{ font-size: .6rem; padding: .1rem .2rem }
       .calendar-nav{ flex-direction:column; align-items:flex-start }
       .side-panel{ width: 100%; right: -100% }
-      .panel-footer{ position: sticky; }
       .table-wrap{ border:none }
       table{ display:block }
       thead{ display:none }
@@ -343,10 +413,9 @@
         --shadow: var(--shadow-light);
       }
       body{
-        background:
-          radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.05), transparent 40%),
-          radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.05), transparent 40%),
-          var(--bg);
+        background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.05), transparent 40%),
+                    radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.05), transparent 40%),
+                    var(--bg);
       }
       .header{
         background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.8));
@@ -366,12 +435,14 @@
         border-color: rgba(99,102,241,.2);
         color: var(--primary);
       }
-      .date-input{ background:#fff; border-color:var(--border); color:var(--text) }
+      .status-select, .date-input{ 
+        background: #fff; 
+        border-color: var(--border); 
+        color: var(--text) 
+      }
       .month-day-header{ background: rgba(148,163,184,.05); }
       .month-day-cell{ background: var(--card); }
       .month-event-item{ background: rgba(99,102,241,.1); border-color: rgba(99,102,241,.2); }
-      .op-slot.active{ color:var(--primary); }
-      .status-stepper .step.active{ color:var(--primary); background:rgba(99,102,241,.1); }
     }
   </style>
 </head>
@@ -530,7 +601,7 @@
       {% endif %}
     </section>
 
-    <!-- Actions rapides -->
+    <!-- Actions rapides (liens Django) -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
@@ -547,127 +618,123 @@
       </div>
     </section>
   </main>
+  <div class="panel-header">
+    <div class="panel-header-left">
+      <div class="panel-kicker">Intervention</div>
+      <h3 class="panel-title" id="panel-title">—</h3>
+      <div class="panel-meta">
+        <span id="panel-date" class="meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2Z" stroke="currentColor" stroke-width="1.5"/></svg>
+          —
+        </span>
+        <span id="panel-time" class="meta-item">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.5"/></svg>
+          —
+        </span>
+        <span id="detail-status-badge" class="status-badge">—</span>
+      </div>
+    </div>
+    <button class="close-panel" onclick="closeSidePanel()" aria-label="Fermer">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
+    </button>
+  </div>
 
-  <!-- ========= Panneau latéral ========= -->
-  <div class="side-panel" id="side-panel" aria-hidden="true">
-    <div class="panel-header">
-      <div class="panel-header-left">
-        <div class="panel-kicker">Intervention</div>
-        <h3 class="panel-title" id="panel-title">—</h3>
-        <div class="panel-meta">
-          <span id="panel-date" class="meta-item" aria-live="polite">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2Z" stroke="currentColor" stroke-width="1.5"/></svg>
-            —
-          </span>
-          <span id="panel-time" class="meta-item">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.5"/></svg>
-            —
-          </span>
-          <span id="detail-status-badge" class="status-badge">—</span>
+  <div class="panel-content">
+    <!-- Timeline des créneaux si plusieurs opérations dans la journée -->
+    <div id="operation-timeline" class="op-timeline" hidden><!-- JS injectera --></div>
+
+    <!-- Bloc client + actions rapides -->
+    <section class="detail-section compact">
+      <h4>Client</h4>
+      <div class="detail-grid two">
+        <div>
+          <div class="detail-label">Nom</div>
+          <div class="detail-value" id="detail-client">—</div>
+        </div>
+        <div>
+          <div class="detail-label">Contact</div>
+          <div class="detail-value" id="detail-phone">—</div>
         </div>
       </div>
-      <button class="close-panel" onclick="closeSidePanel()" aria-label="Fermer">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
-      </button>
-    </div>
+      <div class="quick-actions">
+        <a id="qa-call" class="qa-btn" target="_blank" rel="noopener">Appeler</a>
+        <a id="qa-whatsapp" class="qa-btn" target="_blank" rel="noopener">WhatsApp</a>
+        <a id="qa-maps" class="qa-btn" target="_blank" rel="noopener">Itinéraire</a>
+      </div>
+    </section>
 
-    <div class="panel-content">
-      <!-- Timeline -->
-      <div id="operation-timeline" class="op-timeline" hidden></div>
-
-      <!-- Client -->
-      <section class="detail-section compact">
-        <h4>Client</h4>
-        <div class="detail-grid two">
-          <div>
-            <div class="detail-label">Nom</div>
-            <div class="detail-value" id="detail-client">—</div>
-          </div>
-          <div>
-            <div class="detail-label">Contact</div>
-            <div class="detail-value" id="detail-phone">—</div>
-          </div>
+    <!-- Bloc intervention -->
+    <section class="detail-section compact">
+      <h4>Intervention</h4>
+      <div class="detail-grid two">
+        <div>
+          <div class="detail-label">Intitulé</div>
+          <div class="detail-value" id="detail-service">—</div>
         </div>
-        <div class="quick-actions">
-          <a id="qa-call" class="qa-btn" target="_blank" rel="noopener">Appeler</a>
-          <a id="qa-whatsapp" class="qa-btn" target="_blank" rel="noopener">WhatsApp</a>
-          <a id="qa-maps" class="qa-btn" target="_blank" rel="noopener">Itinéraire</a>
+        <div>
+          <div class="detail-label">Heure</div>
+          <div class="detail-value" id="detail-time">—</div>
         </div>
-      </section>
-
-      <!-- Intervention -->
-      <section class="detail-section compact">
-        <h4>Intervention</h4>
-        <div class="detail-grid two">
-          <div>
-            <div class="detail-label">Intitulé</div>
-            <div class="detail-value" id="detail-service">—</div>
-          </div>
-          <div>
-            <div class="detail-label">Heure</div>
-            <div class="detail-value" id="detail-time">—</div>
-          </div>
-          <div class="span-2">
-            <div class="detail-label">Adresse</div>
-            <div class="detail-value" id="detail-address">—</div>
-          </div>
+        <div class="span-2">
+          <div class="detail-label">Adresse</div>
+          <div class="detail-value" id="detail-address">—</div>
         </div>
-        <div class="tags" id="detail-tags"></div>
-      </section>
+      </div>
+      <div class="tags" id="detail-tags"><!-- facultatif: JS peut ajouter des tags: Urgent, VIP, etc. --></div>
+    </section>
 
-      <!-- Statut -->
-      <section class="detail-section">
-        <h4>Statut</h4>
-        <div class="status-stepper" id="status-stepper">
-          <button class="step" data-value="en_attente_devis">Demande</button>
-          <button class="step" data-value="a_planifier">À planifier</button>
-          <button class="step" data-value="planifie">Planifié</button>
-          <button class="step" data-value="realise">Réalisé</button>
-          <button class="step" data-value="paye">Payé</button>
+    <!-- Stepper statut -->
+    <section class="detail-section">
+      <h4>Statut</h4>
+      <div class="status-stepper" id="status-stepper">
+        <button class="step" data-value="en_attente_devis">Demande</button>
+        <button class="step" data-value="a_planifier">À planifier</button>
+        <button class="step" data-value="planifie">Planifié</button>
+        <button class="step" data-value="realise">Réalisé</button>
+        <button class="step" data-value="paye">Payé</button>
+      </div>
+      <form id="quick-status-form" class="status-form" hidden>
+        <div class="date-row">
+          <label class="date-field" id="field-prevue" hidden>
+            <span>Date prévue</span>
+            <input type="datetime-local" id="quick-date-prevue" class="date-input">
+          </label>
+          <label class="date-field" id="field-realisation" hidden>
+            <span>Date de réalisation</span>
+            <input type="datetime-local" id="quick-date-realisation" class="date-input">
+          </label>
+          <label class="date-field" id="field-paiement" hidden>
+            <span>Date de paiement</span>
+            <input type="datetime-local" id="quick-date-paiement" class="date-input">
+          </label>
         </div>
-        <form id="quick-status-form" class="status-form" hidden>
-          <div class="date-row">
-            <label class="date-field" id="field-prevue" hidden>
-              <span>Date prévue</span>
-              <input type="datetime-local" id="quick-date-prevue" class="date-input">
-            </label>
-            <label class="date-field" id="field-realisation" hidden>
-              <span>Date de réalisation</span>
-              <input type="datetime-local" id="quick-date-realisation" class="date-input">
-            </label>
-            <label class="date-field" id="field-paiement" hidden>
-              <span>Date de paiement</span>
-              <input type="datetime-local" id="quick-date-paiement" class="date-input">
-            </label>
-          </div>
-          <div class="status-actions" style="display:flex; gap:.5rem; justify-content:flex-end;">
-            <button type="button" class="action-btn success" onclick="saveQuickStatus()">Valider</button>
-            <button type="button" class="action-btn" onclick="cancelQuickStatus()">Annuler</button>
-          </div>
-        </form>
-      </section>
-
-      <!-- Lien fiche -->
-      <section class="detail-section">
-        <div class="client-actions">
-          <a href="#" class="action-btn primary" id="detail-btn">Voir la fiche complète</a>
+        <div class="status-actions">
+          <button type="button" class="action-btn success" onclick="saveQuickStatus()">Valider</button>
+          <button type="button" class="action-btn" onclick="cancelQuickStatus()">Annuler</button>
         </div>
-      </section>
-    </div>
+      </form>
+    </section>
 
-    <!-- Footer sticky -->
-    <div class="panel-footer">
-      <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
-      <button id="change-status-btn" class="btn" onclick="startQuickStatusChange()">Changer le statut</button>
-    </div>
+    <!-- Lien fiche -->
+    <section class="detail-section">
+      <div class="client-actions">
+        <a href="#" class="action-btn primary" id="detail-btn">Voir la fiche complète</a>
+      </div>
+    </section>
   </div>
-  <!-- ========= Fin panneau ========= -->
+
+  <!-- Footer sticky -->
+  <div class="panel-footer">
+    <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
+    <button id="change-status-btn" class="btn" onclick="startQuickStatusChange()">Changer le statut</button>
+  </div>
+
 
   <!-- Overlay -->
   <div id="overlay" onclick="closeSidePanel()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.3); z-index:999"></div>
 
   <script>
-    // ===== Variables globales =====
+    // Variables globales
     let calendarEvents = [];
     let currentView = 'week';
     let currentOffset = 0;
@@ -679,37 +746,39 @@
     const monthsShort = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun','Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-    // ===== Données =====
+    // Données: parse JSON venant du backend (fallback léger si besoin)
     function initCalendarEvents() {
       try {
         const jsonData = '{{ calendar_events_json|escapejs }}';
-        calendarEvents = (jsonData && jsonData !== 'null' && jsonData !== 'undefined') ? JSON.parse(jsonData) : [];
+        if (jsonData && jsonData !== 'null' && jsonData !== 'undefined') {
+          calendarEvents = JSON.parse(jsonData);
+        } else {
+          calendarEvents = [];
+        }
       } catch (e) {
         console.error('Erreur parsing calendar_events_json:', e);
         calendarEvents = [];
       }
     }
 
-    // ===== Utils =====
+    // Utils
     function formatDate(date) {
       return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
     }
-    // Lundi = 0
     function getWeekDates(offset = 0) {
       const today = new Date();
-      const dow = (today.getDay() + 6) % 7; // Lundi=0
       const monday = new Date(today);
-      monday.setDate(today.getDate() - dow + (offset * 7));
+      monday.setDate(today.getDate() - today.getDay() + 1 + (offset * 7));
       const dates = [];
       for (let i = 0; i < 7; i++) {
-        const d = new Date(monday);
-        d.setDate(monday.getDate() + i);
-        dates.push(d);
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + i);
+        dates.push(date);
       }
       return dates;
     }
 
-    // ===== Vues =====
+    // Vues
     function setView(view) {
       currentView = view;
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
@@ -722,7 +791,7 @@
       renderCalendar();
     }
 
-    // ===== Rendu calendrier =====
+    // Rendu
     function renderCalendar() {
       closeSidePanel();
       if (currentView === 'week') renderWeekView();
@@ -747,10 +816,6 @@
       weekDates.forEach((date, index) => {
         const dayCard = document.createElement('div');
         dayCard.className = 'day-card';
-        dayCard.dataset.date = formatDate(date);
-        dayCard.setAttribute('role','button');
-        dayCard.setAttribute('tabindex','0');
-
         if (formatDate(date) === formatDate(today)) dayCard.classList.add('today');
 
         dayCard.innerHTML = `
@@ -762,18 +827,16 @@
         dayEvents.forEach((event, eventIndex) => {
           const eventEl = document.createElement('div');
           eventEl.className = `event-item ${event.color_class || 'event-default'}`;
-          eventEl.textContent = `${event.time || ''} ${event.client_nom || ''}`.trim();
+          eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
           eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(date), dayEvents, eventIndex); };
           dayCard.appendChild(eventEl);
         });
 
-        dayCard.onclick = () => {
-          handleEventClick(formatDate(date), dayEvents, 0);
+        dayCard.onclick = (e) => {
+          if (dayEvents.length > 0 && (e.target === dayCard || e.target.classList.contains('day-header') || e.target.classList.contains('day-number'))) {
+            handleEventClick(formatDate(date), dayEvents, 0);
+          }
         };
-        dayCard.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleEventClick(formatDate(date), dayEvents, 0); }
-        });
-
         grid.appendChild(dayCard);
       });
     }
@@ -792,23 +855,19 @@
       const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
       const dayCard = document.createElement('div');
       dayCard.className = 'day-card';
-      dayCard.dataset.date = formatDate(date);
       dayCard.style.minHeight = '200px';
       dayCard.innerHTML = `<div class="day-header">Interventions du ${date.getDate()} ${monthsShort[date.getMonth()]}</div>`;
 
       dayEvents.forEach((event, eventIndex) => {
         const eventEl = document.createElement('div');
         eventEl.className = `event-item ${event.color_class || 'event-default'}`;
-        eventEl.textContent = `${event.time || ''} ${event.client_nom || ''}`.trim();
+        eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
         eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(date), dayEvents, eventIndex); };
         dayCard.appendChild(eventEl);
       });
 
       if (dayEvents.length === 0) {
-        const p = document.createElement('p');
-        p.style.cssText = 'color:var(--muted); font-style:italic; margin-top:1rem';
-        p.textContent = 'Aucune intervention prévue';
-        dayCard.appendChild(p);
+        dayCard.innerHTML += '<p style="color:var(--muted); font-style:italic; margin-top:1rem">Aucune intervention prévue</p>';
       }
       grid.appendChild(dayCard);
     }
@@ -845,17 +904,15 @@
 
           const dayCell = document.createElement('div');
           dayCell.className = 'month-day-cell';
-          dayCell.dataset.date = formatDate(cellDate);
-
           const isCurrentMonth = cellDate.getMonth() === currentMonth.getMonth();
           const isToday = formatDate(cellDate) === formatDate(today);
           if (!isCurrentMonth) dayCell.classList.add('other-month');
           if (isToday) dayCell.classList.add('today');
 
-          const number = document.createElement('div');
-          number.className = 'month-day-number';
-          number.textContent = cellDate.getDate();
-          dayCell.appendChild(number);
+          const dayNumber = document.createElement('div');
+          dayNumber.className = 'month-day-number';
+          dayNumber.textContent = cellDate.getDate();
+          dayCell.appendChild(dayNumber);
 
           const dayEvents = calendarEvents.filter(event => event.date === formatDate(cellDate));
           if (dayEvents.length > 0) {
@@ -865,7 +922,7 @@
             dayEvents.slice(0, 3).forEach((event, index) => {
               const eventEl = document.createElement('div');
               eventEl.className = 'month-event-item';
-              eventEl.textContent = `${event.time || ''} ${event.client_nom || ''}`.trim();
+              eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
               eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(cellDate), dayEvents, index); };
               eventContainer.appendChild(eventEl);
             });
@@ -880,186 +937,260 @@
             dayCell.appendChild(eventContainer);
           }
 
-          dayCell.onclick = () => { handleEventClick(formatDate(cellDate), dayEvents, 0); };
+          dayCell.onclick = () => { if (dayEvents.length > 0) handleEventClick(formatDate(cellDate), dayEvents, 0); };
           grid.appendChild(dayCell);
         }
       }
     }
 
-    // ===== Sélection & panneau =====
+    // Sélection & panneau latéral
     function handleEventClick(dateStr, dayEvents, operationIndex) {
       selectedDate = dateStr;
-      selectedDayEvents = dayEvents || [];
-      currentOperationIndex = operationIndex || 0;
+      selectedDayEvents = dayEvents;
+      currentOperationIndex = operationIndex;
 
-      document.querySelectorAll('.day-card, .month-day-cell')
-        .forEach(el => el.classList.toggle('selected', el.dataset.date === dateStr));
-
+      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
+      const dayElements = document.querySelectorAll('.day-card, .month-day-cell');
+      dayElements.forEach(el => {
+        const dayNumber = el.querySelector('.day-number, .month-day-number');
+        if (dayNumber) {
+          const eventDate = new Date(dateStr);
+          if (parseInt(dayNumber.textContent) === eventDate.getDate()) el.classList.add('selected');
+        }
+      });
       openSidePanel();
     }
 
     function openSidePanel() {
-      const panel = document.getElementById('side-panel');
-      panel.classList.add('open');
-      panel.setAttribute('aria-hidden','false');
+      document.getElementById('side-panel').classList.add('open');
       document.getElementById('overlay').style.display = 'block';
       updatePanelContent();
     }
     function closeSidePanel() {
-      const panel = document.getElementById('side-panel');
-      panel.classList.remove('open');
-      panel.setAttribute('aria-hidden','true');
+      document.getElementById('side-panel').classList.remove('open');
       document.getElementById('overlay').style.display = 'none';
       document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
       selectedDate = null; selectedDayEvents = [];
     }
 
-    function updatePanelContent() {
-      if (!selectedDate) return;
+function updatePanelContent() {
+  if (!selectedDate) return;
 
-      const date = new Date(selectedDate);
-      const dateStr = date.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
-      document.getElementById('panel-date').childNodes[1].nodeValue = ' ' + dateStr;
+  const date = new Date(selectedDate);
+  const dateStr = date.toLocaleDateString('fr-FR', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  document.getElementById('panel-date').textContent = dateStr;
 
-      // Timeline
-      const tl = document.getElementById('operation-timeline');
-      tl.innerHTML = '';
-      if (selectedDayEvents.length > 1) {
-        tl.hidden = false;
-        selectedDayEvents.forEach((ev, i) => {
-          const btn = document.createElement('button');
-          btn.className = 'op-slot' + (i === currentOperationIndex ? ' active' : '');
-          btn.textContent = ev.time || '--:--';
-          btn.onclick = () => switchOperation(i);
-          tl.appendChild(btn);
-        });
-      } else {
-        tl.hidden = true;
-      }
+  // Timeline
+  const tl = document.getElementById('operation-timeline');
+  tl.innerHTML = '';
+  if (selectedDayEvents.length > 1) {
+    tl.hidden = false;
+    selectedDayEvents.forEach((ev, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'op-slot' + (i === currentOperationIndex ? ' active' : '');
+      btn.textContent = ev.time || '--:--';
+      btn.onclick = () => switchOperation(i);
+      tl.appendChild(btn);
+    });
+  } else {
+    tl.hidden = true;
+  }
 
-      document.getElementById('panel-title').textContent =
-        `${selectedDayEvents.length || 0} intervention${selectedDayEvents.length > 1 ? 's' : ''}`;
+  document.getElementById('panel-title').textContent =
+    `${selectedDayEvents.length || 0} intervention${selectedDayEvents.length > 1 ? 's' : ''}`;
 
-      updateOperationDetails();
-    }
+  updateOperationDetails();
+}
+
 
     function switchOperation(index) {
       currentOperationIndex = index;
       updateOperationDetails();
-      // activer le bon slot
-      document.querySelectorAll('.op-slot').forEach((el, i) => el.classList.toggle('active', i === index));
+      document.querySelectorAll('.operation-tab').forEach((tab, i) => tab.classList.toggle('active', i === index));
     }
 
-    function updateOperationDetails() {
-      const op = selectedDayEvents[currentOperationIndex];
-      if (!op) return;
+function updateOperationDetails() {
+  const op = selectedDayEvents[currentOperationIndex];
+  if (!op) return;
 
-      const set = (id, val) => document.getElementById(id).textContent = val || '—';
-      set('detail-service', op.service);
-      set('detail-time', op.time);
-      set('detail-address', op.address);
-      set('detail-client', op.client_nom);
-      set('detail-phone', op.phone);
+  const set = (id, val) => document.getElementById(id).textContent = val || '—';
+  set('detail-service', op.service);
+  set('detail-time', op.time);
+  set('detail-address', op.address);
+  set('detail-client', op.client_nom);
+  set('detail-phone', op.phone);
 
-      // meta time
-      document.getElementById('panel-time').childNodes[1].nodeValue = ' ' + (op.time || '—');
-      document.getElementById('detail-btn').href = op.url || '#';
+  document.getElementById('panel-time').childNodes[1].nodeValue = ' ' + (op.time || '—'); // après l’icône
+  document.getElementById('detail-btn').href = op.url || '#';
 
-      // Badge statut
-      const badge = document.getElementById('detail-status-badge');
-      badge.textContent = op.statut_display || '—';
-      badge.className = 'status-badge';
-      if (op.statut) badge.classList.add(op.statut.replaceAll(' ', '_'));
+  // Badge statut
+  const badge = document.getElementById('detail-status-badge');
+  badge.textContent = op.statut_display || '—';
+  badge.className = 'status-badge';
+  if (op.statut) badge.classList.add(op.statut.replaceAll(' ', '_'));
 
-      // Quick actions
-      const tel = (op.phone || '').replace(/\s+/g,'');
-      const adr = encodeURIComponent(op.address || '');
-      document.getElementById('qa-call').href = tel ? `tel:${tel}` : '#';
-      document.getElementById('qa-whatsapp').href = tel ? `https://wa.me/${tel}` : '#';
-      document.getElementById('qa-maps').href = adr ? `https://www.google.com/maps/dir/?api=1&destination=${adr}` : '#';
+  // Quick actions
+  const tel = (op.phone || '').replace(/\s+/g,'');
+  const adr = encodeURIComponent(op.address || '');
+  document.getElementById('qa-call').href = tel ? `tel:${tel}` : '#';
+  document.getElementById('qa-whatsapp').href = tel ? `https://wa.me/${tel}` : '#';
+  document.getElementById('qa-maps').href = adr ? `https://www.google.com/maps/dir/?api=1&destination=${adr}` : '#';
 
-      // Stepper statut
-      document.querySelectorAll('#status-stepper .step').forEach(b => {
-        b.classList.toggle('active', b.dataset.value === op.statut);
-        b.onclick = () => {
-          document.querySelectorAll('#status-stepper .step').forEach(x => x.classList.remove('active'));
-          b.classList.add('active');
-          document.getElementById('quick-status-form').hidden = false;
-          document.getElementById('change-status-btn').style.display = 'none';
-          toggleDateFields(b.dataset.value);
-        };
-      });
-    }
-
-    // ===== Changement de statut =====
-    function toggleDateFields(statusValue){
-      const show = (id, on) => document.getElementById(id).hidden = !on;
-      show('field-prevue', statusValue === 'planifie');
-      show('field-realisation', statusValue === 'realise' || statusValue === 'paye');
-      show('field-paiement', statusValue === 'paye');
-
-      // Pré-remplissage
-      const now = new Date();
-      const fmt = n => String(n).padStart(2,'0');
-      const nowStr = `${now.getFullYear()}-${fmt(now.getMonth()+1)}-${fmt(now.getDate())}T${fmt(now.getHours())}:${fmt(now.getMinutes())}`;
-
-      if (statusValue === 'planifie' && !document.getElementById('quick-date-prevue').value)
-        document.getElementById('quick-date-prevue').value = nowStr;
-      if ((statusValue === 'realise' || statusValue === 'paye') && !document.getElementById('quick-date-realisation').value)
-        document.getElementById('quick-date-realisation').value = nowStr;
-      if (statusValue === 'paye' && !document.getElementById('quick-date-paiement').value)
-        document.getElementById('quick-date-paiement').value = nowStr;
-    }
-
-    function startQuickStatusChange(){
+  // Stepper statut
+  document.querySelectorAll('#status-stepper .step').forEach(b => {
+    b.classList.toggle('active', b.dataset.value === op.statut);
+    b.onclick = () => {
       document.getElementById('quick-status-form').hidden = false;
       document.getElementById('change-status-btn').style.display = 'none';
-      const op = selectedDayEvents[currentOperationIndex];
-      toggleDateFields(op?.statut || 'a_planifier');
-      // activer visuellement le step courant
-      document.querySelectorAll('#status-stepper .step').forEach(b => {
-        b.classList.toggle('active', b.dataset.value === (op?.statut || 'a_planifier'));
-      });
+      document.getElementById('quick-status-select').value = b.dataset.value; // garde ta source de vérité si tu veux
+      // toggle des champs date
+      toggleDateFields(b.dataset.value);
+    };
+  });
+}
+
+function toggleDateFields(statusValue){
+  const show = (id, on) => document.getElementById(id).hidden = !on;
+  show('field-prevue', statusValue === 'planifie');
+  show('field-realisation', statusValue === 'realise' || statusValue === 'paye');
+  show('field-paiement', statusValue === 'paye');
+
+  // Pré-remplissage
+  const now = new Date();
+  const fmt = n => String(n).padStart(2,'0');
+  const nowStr = `${now.getFullYear()}-${fmt(now.getMonth()+1)}-${fmt(now.getDate())}T${fmt(now.getHours())}:${fmt(now.getMinutes())}`;
+
+  if (statusValue === 'planifie' && !document.getElementById('quick-date-prevue').value)
+    document.getElementById('quick-date-prevue').value = nowStr;
+  if ((statusValue === 'realise' || statusValue === 'paye') && !document.getElementById('quick-date-realisation').value)
+    document.getElementById('quick-date-realisation').value = nowStr;
+  if (statusValue === 'paye' && !document.getElementById('quick-date-paiement').value)
+    document.getElementById('quick-date-paiement').value = nowStr;
+}
+
+function startQuickStatusChange(){
+  document.getElementById('quick-status-form').hidden = false;
+  document.getElementById('change-status-btn').style.display = 'none';
+  const op = selectedDayEvents[currentOperationIndex];
+  toggleDateFields(op?.statut || 'a_planifier');
+}
+function cancelQuickStatus(){
+  document.getElementById('quick-status-form').hidden = true;
+  document.getElementById('change-status-btn').style.display = '';
+}
+
+
+
+    // Fonctions pour le changement rapide de statut
+    function startQuickStatusChange() {
+      document.getElementById('change-status-btn').style.display = 'none';
+      document.getElementById('quick-status-form').style.display = 'block';
+      updateDateFieldsQuick();
     }
-    function cancelQuickStatus(){
-      document.getElementById('quick-status-form').hidden = true;
-      document.getElementById('change-status-btn').style.display = '';
+
+    function cancelQuickStatus() {
+      document.getElementById('change-status-btn').style.display = 'flex';
+      document.getElementById('quick-status-form').style.display = 'none';
+    }
+
+    function updateDateFieldsQuick() {
+      const statusValue = document.getElementById('quick-status-select').value;
+      const datePrevueInput = document.getElementById('quick-date-prevue');
+      const dateRealisationInput = document.getElementById('quick-date-realisation');
+      const datePaiementInput = document.getElementById('quick-date-paiement');
+      
+      // Masquer tous les champs
+      datePrevueInput.style.display = 'none';
+      dateRealisationInput.style.display = 'none';
+      datePaiementInput.style.display = 'none';
+      
+      // Réinitialiser required
+      datePrevueInput.required = false;
+      dateRealisationInput.required = false;
+      datePaiementInput.required = false;
+      
+      // Date/heure actuelle formatée pour les inputs
+      const now = new Date();
+      const nowFormatted = now.getFullYear() + '-' + 
+        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(now.getDate()).padStart(2, '0') + 'T' + 
+        String(now.getHours()).padStart(2, '0') + ':' + 
+        String(now.getMinutes()).padStart(2, '0');
+      
+      // Afficher selon le statut
+      if (statusValue === 'planifie') {
+        datePrevueInput.style.display = 'block';
+        datePrevueInput.required = true;
+        if (!datePrevueInput.value) datePrevueInput.value = nowFormatted;
+        datePrevueInput.placeholder = 'Date prévue';
+      } else if (statusValue === 'realise') {
+        dateRealisationInput.style.display = 'block';
+        dateRealisationInput.required = true;
+        if (!dateRealisationInput.value) dateRealisationInput.value = nowFormatted;
+        dateRealisationInput.placeholder = 'Date de réalisation';
+      } else if (statusValue === 'paye') {
+        dateRealisationInput.style.display = 'block';
+        datePaiementInput.style.display = 'block';
+        dateRealisationInput.required = true;
+        datePaiementInput.required = true;
+        if (!dateRealisationInput.value) dateRealisationInput.value = nowFormatted;
+        if (!datePaiementInput.value) datePaiementInput.value = nowFormatted;
+        dateRealisationInput.placeholder = 'Date de réalisation';
+        datePaiementInput.placeholder = 'Date de paiement';
+      }
     }
 
     function saveQuickStatus() {
       const operation = selectedDayEvents[currentOperationIndex];
       if (!operation) return;
-
-      const activeStep = document.querySelector('#status-stepper .step.active');
-      const newStatus = activeStep ? activeStep.dataset.value : operation.statut;
-
+      
+      const newStatus = document.getElementById('quick-status-select').value;
       const datePrevue = document.getElementById('quick-date-prevue').value;
       const dateRealisation = document.getElementById('quick-date-realisation').value;
       const datePaiement = document.getElementById('quick-date-paiement').value;
-
-      // Validation
-      if (newStatus === 'planifie' && !datePrevue) return alert('La date prévue est obligatoire pour "Planifié"');
-      if (newStatus === 'realise' && !dateRealisation) return alert('La date de réalisation est obligatoire pour "Réalisé"');
-      if (newStatus === 'paye' && (!dateRealisation || !datePaiement)) return alert('Dates réalisation et paiement obligatoires pour "Payé"');
-
-      if (newStatus === 'planifie' && datePrevue) {
-        const selected = new Date(datePrevue);
-        const now = new Date();
-        if (selected <= now) return alert('La date prévue ne peut pas être dans le passé');
+      
+      // Validation des dates obligatoires
+      if (newStatus === 'planifie' && !datePrevue) {
+        alert('La date prévue est obligatoire pour le statut "Planifié"');
+        return;
       }
-
-      // CSRF
+      if (newStatus === 'realise' && !dateRealisation) {
+        alert('La date de réalisation est obligatoire pour le statut "Réalisé"');
+        return;
+      }
+      if (newStatus === 'paye' && (!dateRealisation || !datePaiement)) {
+        alert('Les dates de réalisation et de paiement sont obligatoires pour le statut "Payé"');
+        return;
+      }
+      
+      // Validation date future pour planifié
+      if (newStatus === 'planifie' && datePrevue) {
+        const selectedDate = new Date(datePrevue);
+        const now = new Date();
+        if (selectedDate <= now) {
+          alert('La date prévue ne peut pas être dans le passé');
+          return;
+        }
+      }
+      
+      // Obtenir le token CSRF
       let csrfToken = '';
       const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-      if (csrfInput) csrfToken = csrfInput.value;
-      else {
+      if (csrfInput) {
+        csrfToken = csrfInput.value;
+      } else {
+        // Fallback : essayer de récupérer depuis les cookies
         const cookies = document.cookie.split(';');
         for (let cookie of cookies) {
           const [name, value] = cookie.trim().split('=');
-          if (name === 'csrftoken') { csrfToken = value; break; }
+          if (name === 'csrftoken') {
+            csrfToken = value;
+            break;
+          }
         }
       }
-
+      
+      // Préparer les données
       const formData = new FormData();
       formData.append('csrfmiddlewaretoken', csrfToken);
       formData.append('action', 'change_status');
@@ -1067,22 +1198,26 @@
       if (datePrevue) formData.append('date_prevue', datePrevue);
       if (dateRealisation) formData.append('date_realisation', dateRealisation);
       if (datePaiement) formData.append('date_paiement', datePaiement);
-
+      
+      // Envoyer la requête
       fetch(operation.url, {
         method: 'POST',
         body: formData,
         headers: {
           'X-Requested-With': 'XMLHttpRequest',
-          'X-CSRFToken': csrfToken
         }
       })
       .then(response => {
-        if (response.ok) return response.json();
-        throw new Error('Erreur HTTP');
+        if (response.ok) {
+          return response.json();
+        } else {
+          throw new Error('Erreur HTTP');
+        }
       })
       .then(data => {
         if (data.success) {
           alert('Statut mis à jour avec succès !');
+          // Rafraîchir la page pour voir les changements
           location.reload();
         } else {
           alert('Erreur lors de la mise à jour : ' + (data.message || 'Erreur inconnue'));
@@ -1094,7 +1229,6 @@
       });
     }
 
-    // ===== Compteur =====
     function updateEventCount() {
       let count = 0;
       if (currentView === 'day') {
@@ -1115,17 +1249,22 @@
       document.getElementById('events-count').textContent = count;
     }
 
-    // ===== Init =====
+    // Init
     document.addEventListener('DOMContentLoaded', function() {
       initCalendarEvents();
       renderCalendar();
+      
+      // Ajouter l'événement pour le changement de statut
+      const statusSelect = document.getElementById('quick-status-select');
+      if (statusSelect) {
+        statusSelect.addEventListener('change', updateDateFieldsQuick);
+      }
     });
 
     // Fermer panneau si clic extérieur
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card') && !e.target.closest('.month-event-item')) {
-        const panel = document.getElementById('side-panel');
-        if (panel.classList.contains('open')) closeSidePanel();
+        if (document.getElementById('side-panel').classList.contains('open')) closeSidePanel();
       }
     });
   </script>
