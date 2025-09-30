@@ -4,21 +4,20 @@
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponse
-from django.db.models import Q, Max
+from django.http import HttpResponse, JsonResponse
+from django.db.models import Q, Max, Sum
 from django.db import models
 from django.contrib import messages
-from .models import Client, Operation, Intervention, HistoriqueOperation
-from .fix_database import fix_client_constraint
 from django.contrib.auth.forms import UserCreationForm
-from django.contrib.auth import login, logout  # ← Ajoutez logout
-
+from django.contrib.auth import login, logout
 from django.core.management import call_command
-from django.http import HttpResponse, JsonResponse
 from decimal import Decimal
 import io
 import sys
 import json
+
+from .models import Client, Operation, Intervention, HistoriqueOperation, Echeance
+from .fix_database import fix_client_constraint
 
 
 # Dans core/views.py, remplacez la section du dashboard par :
