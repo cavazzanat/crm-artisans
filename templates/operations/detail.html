@@ -4,577 +4,253 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ operation.id_operation }} - {{ operation.type_prestation }} – CRM Artisans</title>
-  <style>
-    :root{
-      --bg: #0b1220;
-      --card: #0f172a;
-      --muted: #94a3b8;
-      --text: #e2e8f0;
-      --primary: #6366f1;
-      --success: #22c55e;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --accent: #8b5cf6;
-      --ring: rgba(99,102,241,.35);
-      --border: rgba(148,163,184,.15);
-      --shadow: 0 10px 25px rgba(2,6,23,.3), 0 1px 0 rgba(255,255,255,.03) inset;
-
-      --bg-light: #f8fafc;
-      --card-light: #ffffff;
-      --text-light: #1e293b;
-      --muted-light: #64748b;
-      --border-light: rgba(30,41,59,.12);
-      --shadow-light: 0 10px 25px rgba(30,41,59,.08), 0 1px 0 rgba(255,255,255,.8) inset;
-    }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
-      background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.12), transparent 40%),
-                  radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.12), transparent 40%),
-                  var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-
-    .header{ 
-      position: sticky; top: 0; z-index: 40; 
-      backdrop-filter: saturate(180%) blur(8px); 
-      background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(15,23,42,.65)); 
-      border-bottom: 1px solid var(--border) 
-    }
-    .header-inner{ 
-      max-width:1280px; margin:0 auto; padding:.85rem 1rem; 
-      display:flex; align-items:center; gap:1rem; justify-content:space-between 
-    }
-    .brand{ display:flex; align-items:center; gap:.75rem; font-weight:700; letter-spacing:.2px }
-    .logo{ 
-      width:34px; height:34px; border-radius:10px; 
-      background:linear-gradient(145deg, var(--primary), var(--accent)); 
-      box-shadow: var(--shadow); display:grid; place-items:center 
-    }
-    .logo svg{ width:18px; height:18px; color:white }
-    .nav{ display:flex; gap:.25rem; align-items:center }
-    .nav a{ 
-      text-decoration:none; color:var(--muted); padding:.55rem .8rem; 
-      border-radius:10px; border:1px solid transparent 
-    }
-    .nav a:hover{ color:var(--text); background:rgba(148,163,184,.08); border-color:var(--border) }
-    .nav a.active{ 
-      color:white; background:rgba(99,102,241,.18); 
-      border-color: rgba(99,102,241,.35); box-shadow: 0 0 0 2px var(--ring) 
-    }
-    .user{ display:flex; align-items:center; gap:.75rem; color:var(--muted); font-size:.95rem }
-    .user form button{ 
-      background:none; border:none; color:var(--muted); cursor:pointer; 
-      text-decoration:underline; font:inherit 
-    }
-
-    .container{ max-width:1280px; margin: 2rem auto; padding: 0 1rem }
-    .breadcrumb{ color:var(--muted); font-size:.9rem; margin-bottom: 1rem }
-    .breadcrumb a{ color:var(--muted); text-decoration:none }
-    .breadcrumb a:hover{ color:var(--text) }
-
-    .operation-header{ 
-      display:flex; align-items:center; justify-content:space-between; gap:1rem; 
-      margin-bottom: 1.5rem; flex-wrap:wrap 
-    }
-    .operation-info{ display:flex; align-items:center; gap:1rem; flex-wrap:wrap }
-    .operation-details h1{ 
-      font-size: clamp(1.4rem, 2.4vw, 2rem); font-weight:800; 
-      letter-spacing:.2px; margin:0 0 .5rem 
-    }
-
-    .status-badge{ 
-      display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .75rem; 
-      border-radius:20px; font-size:.85rem; font-weight:600; border:1px solid;
-    }
-    .status-badge::before{
-      content: '';
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: currentColor;
-    }
-    .status-badge.en_attente_devis{ color:#f59e0b; background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.2); }
-    .status-badge.a_planifier{ color:#3b82f6; background: rgba(59,130,246,.1); border-color: rgba(59,130,246,.2); }
-    .status-badge.planifie{ color:#8b5cf6; background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.2); }
-    .status-badge.realise{ color:#22c55e; background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.2); }
-    .status-badge.paye{ color:#10b981; background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.2); }
-    .status-badge.devis_refuse{ color:#ef4444; background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.2); }
-
-    .actions{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom: 1.5rem }
-
-    .section{ 
-      background: linear-gradient(180deg, rgba(2,6,23,.6), rgba(2,6,23,.4)); 
-      border:1px solid var(--border); border-radius:16px; padding:1rem; 
-      box-shadow: var(--shadow); margin-bottom:1.5rem 
-    }
-    .section-header{ 
-      display:flex; align-items:center; justify-content:space-between; gap:1rem; 
-      padding:.4rem .35rem .9rem; border-bottom:1px dashed var(--border) 
-    }
-    .section-title{ display:flex; gap:.6rem; align-items:center; font-size:1.05rem; font-weight:700 }
-
-    .main-content{
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 2rem;
-      align-items: start;
-    }
-
-    .toolbar{ display:flex; gap:.5rem; flex-wrap:wrap }
-    .btn{ 
-      display:inline-flex; align-items:center; gap:.5rem; padding:.55rem .8rem; 
-      border-radius:10px; border:1px solid var(--border); 
-      background:rgba(148,163,184,.07); color:var(--text); 
-      text-decoration:none; cursor:pointer; font:inherit 
-    }
-    .btn:hover{ background:rgba(148,163,184,.12) }
-    .btn.primary{ 
-      background:linear-gradient(180deg, rgba(99,102,241,.18), rgba(99,102,241,.12)); 
-      border-color: rgba(99,102,241,.35); color: white 
-    }
-    .btn.success{ 
-      background:linear-gradient(180deg, rgba(34,197,94,.18), rgba(34,197,94,.12)); 
-      border-color: rgba(34,197,94,.35); color: white 
-    }
-    .btn.danger{ 
-      background: linear-gradient(180deg, rgba(239,68,68,.15), rgba(239,68,68,.1)); 
-      border-color: rgba(239,68,68,.35); color: white 
-    }
-    .btn.sm{ padding:.4rem .6rem; border-radius:8px; font-size:.9rem }
-
-    .info-grid{ 
-      display:grid; 
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); 
-      gap:1rem; 
-    }
-    
-    .info-card{
-      background: rgba(148,163,184,.03);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-      transition: all 0.2s ease;
-    }
-    
-    .info-card:hover{
-      background: rgba(148,163,184,.05);
-      border-color: rgba(148,163,184,.2);
-    }
-    
-    .info-card .label{
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      color: var(--muted);
-      font-size: .85rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: .05rem;
-      margin-bottom: .75rem;
-    }
-    
-    .info-card .value{
-      color: var(--text);
-      font-weight: 600;
-      font-size: 1rem;
-      line-height: 1.4;
-    }
-    
-    .info-card .value.empty{
-      color: var(--muted);
-      font-style: italic;
-      font-weight: 400;
-    }
-    
-    .info-card .value a{
-      color: var(--primary);
-      text-decoration: none;
-    }
-    
-    .info-card .value a:hover{
-      text-decoration: underline;
-    }
-
-    .form-group{ display:flex; flex-direction:column; gap:.4rem; margin-bottom: 1rem }
-    .form-group label{ color:var(--muted); font-size:.9rem; font-weight:600 }
-    .form-inline{ display:flex; gap:1rem; align-items:end; flex-wrap:wrap }
-    .form-inline .form-group{ flex:1; margin-bottom:0; min-width:200px }
-    
-    .input, .select{ 
-      width:100%; padding:.65rem .8rem; border-radius:10px; 
-      border:1px solid var(--border); background: rgba(2,6,23,.35); 
-      color: var(--text); font:inherit 
-    }
-    .input::placeholder{ color: rgba(226,232,240,.55) }
-    .input:focus, .select:focus{ 
-      outline:none; box-shadow: 0 0 0 2px var(--ring); 
-      border-color: rgba(99,102,241,.35) 
-    }
-
-    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border) }
-    table{ width:100%; border-collapse: collapse }
-    thead th{ 
-      position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px); 
-      color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; 
-      font-size:.75rem; text-align:left; padding:.9rem .85rem; 
-      border-bottom:1px solid var(--border) 
-    }
-    tbody td{ padding:.9rem .85rem; border-bottom:1px dashed var(--border); vertical-align: top }
-    tbody tr:hover{ background: rgba(148,163,184,.05) }
-    .total-row{ background: rgba(99,102,241,.1); font-weight: 700; }
-    .total-row:hover{ background: rgba(99,102,241,.15) }
-
-    .alert{ 
-      padding: .75rem 1rem; border-radius: 10px; margin-bottom: 1rem; 
-      border: 1px solid; display: flex; align-items: center; gap: .5rem;
-    }
-    .alert.success{ 
-      color: var(--success); background: rgba(34,197,94,.1); 
-      border-color: rgba(34,197,94,.2); 
-    }
-    .alert.error{ 
-      color: var(--danger); background: rgba(239,68,68,.1); 
-      border-color: rgba(239,68,68,.2); 
-    }
-    .alert.warning{ 
-      color: var(--warning); background: rgba(245,158,11,.1); 
-      border-color: rgba(245,158,11,.2); 
-    }
-    .alert.info{ 
-      color: #60a5fa; background: rgba(59,130,246,.1); 
-      border-color: rgba(59,130,246,.2); 
-    }
-
-    .empty-state{ text-align:center; color:var(--muted); padding: 2rem; font-style:italic }
-
-    @media (max-width: 1024px){
-      .main-content{ grid-template-columns: 1fr }
-      .form-inline{ flex-direction: column; align-items: stretch }
-      .form-inline .form-group{ min-width: auto }
-    }
-    
-    @media (max-width: 780px){
-      .operation-header{ flex-direction: column; align-items: stretch }
-      .actions{ justify-content: center }
-      .info-grid{ grid-template-columns: 1fr }
-    }
-
-    @media (prefers-color-scheme: light){
-      :root{ 
-        --bg: var(--bg-light); 
-        --card: var(--card-light); 
-        --text: var(--text-light); 
-        --muted: var(--muted-light); 
-        --border: var(--border-light); 
-        --shadow: var(--shadow-light);
-      }
-      
-      body{ 
-        background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.05), transparent 40%), 
-                    radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.05), transparent 40%), 
-                    var(--bg) 
-      }
-      
-      .header{ 
-        background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.8));
-        backdrop-filter: saturate(180%) blur(8px);
-      }
-      
-      .section, .table-wrap{ 
-        background: var(--card); 
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-      }
-      
-      .info-card{ 
-        background: rgba(248,250,252,.6); 
-        border: 1px solid var(--border)
-      }
-      .info-card:hover{ background: rgba(248,250,252,.9) }
-      
-      thead th{ 
-        background: rgba(248,250,252,.95); 
-        color: var(--muted) 
-      }
-      
-      .input, .select{ 
-        background: #fff; 
-        border-color: var(--border); 
-        color: var(--text) 
-      }
-      .input::placeholder{ color: rgba(100,116,139,.6) }
-      
-      .nav a{ color: var(--muted) }
-      .nav a:hover{ color: var(--text) }
-      .nav a.active{ 
-        color: var(--primary); 
-        background: rgba(99,102,241,.08); 
-        border-color: rgba(99,102,241,.2) 
-      }
-      
-      .user{ color: var(--muted) }
-      .user form button{ color: var(--muted) }
-      
-      .btn{ 
-        background: rgba(148,163,184,.06); 
-        color: var(--text);
-      }
-      .btn:hover{ background: rgba(148,163,184,.1) }
-      
-      .btn.primary{ 
-        background: rgba(99,102,241,.1); 
-        border-color: rgba(99,102,241,.2);
-        color: var(--primary);
-      }
-      
-      .btn.success{ 
-        background: rgba(34,197,94,.1); 
-        border-color: rgba(34,197,94,.2);
-        color: #16a34a;
-      }
-      
-      .btn.danger{ 
-        background: rgba(239,68,68,.1); 
-        border-color: rgba(239,68,68,.2);
-        color: #dc2626;
-      }
-      
-      .status-badge.en_attente_devis{ color:#d97706; background: rgba(217,119,6,.1); border-color: rgba(217,119,6,.2); }
-      .status-badge.a_planifier{ color:#2563eb; background: rgba(37,99,235,.1); border-color: rgba(37,99,235,.2); }
-      .status-badge.planifie{ color:#7c3aed; background: rgba(124,58,237,.1); border-color: rgba(124,58,237,.2); }
-      .status-badge.realise{ color:#16a34a; background: rgba(22,163,74,.1); border-color: rgba(22,163,74,.2); }
-      .status-badge.paye{ color:#059669; background: rgba(5,150,105,.1); border-color: rgba(5,150,105,.2); }
-      .status-badge.devis_refuse{ color:#dc2626; background: rgba(220,38,38,.1); border-color: rgba(220,38,38,.2); }
-      
-      .total-row{ background: rgba(99,102,241,.08) }
-      .total-row:hover{ background: rgba(99,102,241,.12) }
-      
-      tbody tr{ background: transparent }
-      tbody tr:hover{ background: rgba(148,163,184,.03) }
-    }
-  </style>
+  <!-- Gardez tout le CSS existant -->
 </head>
 <body>
   <header class="header">
     <div class="header-inner">
       <div class="brand">
-        <div class="logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M4 14.5 12 4l8 10.5-8 5.5-8-5.5Z" stroke="currentColor" stroke-width="1.6"/>
-          </svg>
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 14.5 12 4l8 10.5-8 5.5-8-5.5Z" stroke="currentColor" stroke-width="1.6"/></svg>
         </div>
         <span>CRM Artisans</span>
       </div>
-      <nav class="nav" aria-label="Navigation principale">
-        <a href="{% url 'dashboard' %}">Accueil</a>
-        <a href="{% url 'operations' %}" class="active">Opérations</a>
-        <a href="{% url 'clients' %}">Clients</a>
+      <nav style="display:flex; gap:1rem">
+        <a href="{% url 'dashboard' %}" style="color:var(--muted); text-decoration:none">Accueil</a>
+        <a href="{% url 'operations' %}" style="color:var(--muted); text-decoration:none">Opérations</a>
+        <a href="{% url 'clients' %}" style="color:var(--muted); text-decoration:none">Clients</a>
       </nav>
-      <div class="user">
-        <span>Connecté·e : {{ user.username }}</span>
-        <form method="post" action="{% url 'logout' %}">
-          {% csrf_token %}
-          <button type="submit" title="Se déconnecter">Déconnexion</button>
-        </form>
-      </div>
+      <div style="color:var(--muted); font-size:.9rem">{{ user.username }}</div>
     </div>
   </header>
 
-  <main class="container">
+  <div class="container">
     <div class="breadcrumb">
       <a href="{% url 'dashboard' %}">Accueil</a> / 
       <a href="{% url 'operations' %}">Opérations</a> / 
       {{ operation.id_operation }}
     </div>
 
-    <div class="operation-header">
-      <div class="operation-info">
-        <div class="operation-details">
-          <h1>{{ operation.id_operation }} - {{ operation.type_prestation }}</h1>
-          <span class="status-badge {{ operation.statut }}">{{ operation.get_statut_display }}</span>
-        </div>
-      </div>
-      <div class="actions">
-        <a href="#" class="btn" onclick="alert('Fonctionnalité en développement')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5"/></svg>
-          Générer devis
-        </a>
-        <a href="#" class="btn" onclick="alert('Fonctionnalité en développement')">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.5"/></svg>
-          Générer facture
-        </a>
-      </div>
-    </div>
+    <h1>{{ operation.id_operation }} - {{ operation.type_prestation }}</h1>
+    <span class="status-badge {{ operation.statut }}">{{ operation.get_statut_display }}</span>
 
+    <!-- Messages Django -->
     {% if messages %}
-    <div class="messages">
-      {% for message in messages %}
-      <div class="alert {{ message.tags }}">
-        {% if message.tags == 'success' %}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        {% else %}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-        {% endif %}
-        {{ message }}
-      </div>
-      {% endfor %}
+    {% for message in messages %}
+    <div class="alert {{ message.tags }}" style="margin-top:1rem">
+      {{ message }}
     </div>
+    {% endfor %}
     {% endif %}
+
+    <div class="workflow-steps">
+      <div class="workflow-step {% if operation.statut == 'en_attente_devis' %}active{% endif %}">Devis</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step {% if operation.statut == 'a_planifier' %}active{% endif %}">À planifier</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step {% if operation.statut == 'planifie' %}active{% endif %}">Planifié</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step {% if operation.statut == 'realise' %}active{% endif %}">Réalisé</div>
+      <div class="workflow-arrow">→</div>
+      <div class="workflow-step {% if operation.statut == 'paye' %}active{% endif %}">Payé</div>
+    </div>
 
     <div class="main-content">
       <div class="left-column">
-        <!-- Informations générales -->
-        <section class="section" aria-labelledby="info-title">
+        <!-- Section Informations générales -->
+        <section class="section">
           <div class="section-header">
-            <h2 class="section-title" id="info-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="1.6"/></svg>
-              Informations générales
-            </h2>
-            <div class="toolbar">
-              <button id="editBtn" class="btn" onclick="toggleEdit()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m4 20 4.8-1.2L20 7.6 16.4 4 5.6 14.8 4 20Z" stroke="currentColor" stroke-width="1.4"/></svg>
-                Éditer
-              </button>
-              <button id="saveBtn" class="btn success" style="display:none" onclick="saveOperation()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-                Enregistrer
-              </button>
-              <button id="cancelBtn" class="btn" style="display:none" onclick="cancelEdit()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 18 18 6M6 6l12 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
-                Annuler
-              </button>
+            <h2 class="section-title">Informations générales</h2>
+          </div>
+          <div class="info-grid">
+            <div class="info-card">
+              <div class="label">Client</div>
+              <div class="value">
+                <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
+                <a href="{% url 'client_detail' client_id=operation.client.id %}" style="color:var(--primary); text-decoration:none">Voir le profil</a>
+              </div>
+            </div>
+            <div class="info-card">
+              <div class="label">Type de prestation</div>
+              <div class="value">{{ operation.type_prestation }}</div>
+            </div>
+            <div class="info-card">
+              <div class="label">Adresse</div>
+              <div class="value">{{ operation.adresse_intervention }}</div>
+            </div>
+            <div class="info-card">
+              <div class="label">Contact</div>
+              <div class="value">
+                <a href="tel:{{ operation.client.telephone }}" style="color:var(--primary); text-decoration:none">
+                  {{ operation.client.telephone }}
+                </a>
+                {% if operation.client.email %}
+                <br><a href="mailto:{{ operation.client.email }}" style="color:var(--primary); text-decoration:none">
+                  {{ operation.client.email }}
+                </a>
+                {% endif %}
+              </div>
             </div>
           </div>
-          <div class="section-body">
-            <div class="info-grid" id="displayMode">
-              <div class="info-card">
-                <div class="label">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M10 2v20M14 2v20M4 7h16M4 17h16" stroke="currentColor" stroke-width="1.5"/></svg>
-                  ID Opération
-                </div>
-                <div class="value">{{ operation.id_operation }}</div>
-              </div>
-              
-              <div class="info-card">
-                <div class="label">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 7a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.5"/></svg>
-                  Client
-                </div>
-                <div class="value">
-                  <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
-                  <a href="{% url 'client_detail' operation.client.id %}">Voir le profil client</a>
-                </div>
-              </div>
-              
-              <div class="info-card">
-                <div class="label">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="1.5"/></svg>
-                  Type de prestation
-                </div>
-                <div class="value">{{ operation.type_prestation }}</div>
-              </div>
-              
-              <div class="info-card">
-                <div class="label">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/></svg>
-                  Adresse intervention
-                </div>
-                <div class="value">{{ operation.adresse_intervention }}</div>
-              </div>
-              
-              <div class="info-card">
-                <div class="label">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92Z" stroke="currentColor" stroke-width="1.5"/></svg>
-                  Contact
-                </div>
-                <div class="value">
-                  <a href="tel:{{ operation.client.telephone }}">{{ operation.client.telephone }}</a><br>
-                  {% if operation.client.email %}
-                    <a href="mailto:{{ operation.client.email }}">{{ operation.client.email }}</a>
-                  {% endif %}
-                </div>
+        </section>
+
+        <!-- Section Statut du devis -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="1.6"/></svg>
+              Statut du devis
+            </h2>
+          </div>
+          
+          <form method="POST" id="devis-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_devis_status">
+            
+            <div class="info-card">
+              <div class="label">Avez-vous créé un devis ?</div>
+              <div class="value">
+                <select id="devis-cree" name="devis_cree" class="select" style="max-width:200px">
+                  <option value="non">Non</option>
+                  <option value="oui">Oui</option>
+                </select>
               </div>
             </div>
 
-            <form method="POST" action="{% url 'operation_edit' operation.id %}" id="editForm" style="display:none">
-              {% csrf_token %}
+            <div id="devis-details" style="margin-top:1rem; display:none">
               <div class="info-grid">
-                <div class="form-group">
-                  <label for="edit-type">Type de prestation *</label>
-                  <input class="input" type="text" id="edit-type" name="type_prestation" value="{{ operation.type_prestation }}" required>
+                <div class="info-card">
+                  <div class="label">Date d'envoi au client</div>
+                  <div class="value">
+                    <input type="date" id="devis-date-envoi" name="devis_date_envoi" class="input">
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label for="edit-adresse">Adresse intervention *</label>
-                  <input class="input" type="text" id="edit-adresse" name="adresse_intervention" value="{{ operation.adresse_intervention }}" required>
+                
+                <div class="info-card">
+                  <div class="label">Réponse du client</div>
+                  <div class="value">
+                    <select id="devis-statut" name="devis_statut" class="select">
+                      <option value="en_attente">En attente de réponse</option>
+                      <option value="accepte">Devis accepté</option>
+                      <option value="refuse">Devis refusé</option>
+                      <option value="relance">À relancer</option>
+                    </select>
+                  </div>
                 </div>
+              </div>
+
+              <div id="devis-accepte-alert" class="alert success" style="display:none">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                <div><strong>Devis accepté !</strong> Vous pouvez maintenant planifier l'intervention.</div>
+              </div>
+
+              <div id="devis-refuse-alert" class="alert danger" style="display:none">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="2"/></svg>
+                <div><strong>Devis refusé</strong> - L'opération ne peut pas progresser.</div>
+              </div>
+
+              <div id="devis-attente-alert" class="alert info" style="display:none">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.6"/></svg>
+                <div><strong>En attente de réponse</strong> - Le client n'a pas encore répondu.</div>
+              </div>
+
+              <div id="devis-relance-alert" class="alert warning" style="display:none">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="1.6"/></svg>
+                <div><strong>À relancer</strong> - Pensez à relancer le client.</div>
+              </div>
+
+              <button type="submit" class="btn success" style="margin-top:1rem">Enregistrer le statut du devis</button>
+            </div>
+
+            <div id="no-devis-alert" class="alert info">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="1.6"/></svg>
+              <div><strong>Aucun devis créé</strong> - Créez les lignes ci-dessous puis générez le PDF.</div>
+            </div>
+          </form>
+        </section>
+
+        <!-- Section Lignes du devis -->
+        <section class="section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.6"/></svg>
+              Devis / Opération - Lignes
+            </h2>
+            <button class="btn primary" onclick="alert('Fonctionnalité PDF en développement')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>
+              Générer PDF
+            </button>
+          </div>
+          
+          {% if interventions %}
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th style="width:120px">Montant (€)</th>
+                  <th style="width:100px">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="lignes-devis">
+                {% for intervention in interventions %}
+                <tr data-id="{{ intervention.id }}">
+                  <td>{{ intervention.description }}</td>
+                  <td><strong>{{ intervention.montant }}</strong></td>
+                  <td>
+                    <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette ligne ?')">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="delete_intervention">
+                      <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
+                      <button type="submit" class="btn danger sm">Supprimer</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr class="total-row">
+                  <td><strong>TOTAL</strong></td>
+                  <td><strong id="total-devis">{{ montant_total }} €</strong></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+          {% else %}
+          <div class="alert info">Aucune ligne ajoutée au devis</div>
+          {% endif %}
+
+          <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border)">
+            <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Ajouter une ligne</h4>
+            <form method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="add_intervention">
+              <div style="display:flex; gap:1rem; align-items:end; flex-wrap:wrap">
+                <div style="flex:1; min-width:250px">
+                  <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Description</label>
+                  <input type="text" name="description" class="input" placeholder="Ex: Main d'œuvre, Fournitures..." required>
+                </div>
+                <div style="flex:0 0 150px">
+                  <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Montant (€)</label>
+                  <input type="number" name="montant" class="input" placeholder="0.00" step="0.01" required>
+                </div>
+                <button type="submit" class="btn success">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+                  Ajouter
+                </button>
               </div>
             </form>
           </div>
         </section>
 
-        <!-- Dates importantes -->
-        <section class="section" aria-labelledby="dates-title">
-          <div class="section-header">
-            <h2 class="section-title" id="dates-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/></svg>
-              Dates importantes
-            </h2>
-          </div>
-          <div class="section-body">
-            <div class="info-grid">
-              <div class="info-card">
-                <div class="label">Date de création</div>
-                <div class="value">{{ operation.date_creation|date:"d/m/Y à H:i" }}</div>
-              </div>
-              
-              <div class="info-card">
-                <div class="label">Date prévue</div>
-                <div class="value">
-                  {% if operation.date_prevue %}
-                    {{ operation.date_prevue|date:"d/m/Y à H:i" }}
-                  {% else %}
-                    <span class="empty">Non planifiée</span>
-                  {% endif %}
-                </div>
-              </div>
-              
-              <div class="info-card">
-                <div class="label">Date de réalisation</div>
-                <div class="value">
-                  {% if operation.date_realisation %}
-                    {{ operation.date_realisation|date:"d/m/Y à H:i" }}
-                  {% else %}
-                    <span class="empty">Non réalisée</span>
-                  {% endif %}
-                </div>
-              </div>
-              
-              <div class="info-card">
-                <div class="label">Date de paiement</div>
-                <div class="value">
-                  {% if operation.date_paiement %}
-                    {{ operation.date_paiement|date:"d/m/Y à H:i" }}
-                  {% else %}
-                    <span class="empty">Non payée</span>
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- Planification -->
+        <!-- Section Planification -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">Planification</h2>
           </div>
           
-          <form method="POST" id="planningForm">
+          <form method="POST" id="planning-form">
             {% csrf_token %}
             <input type="hidden" name="action" value="update_planning">
             
@@ -598,7 +274,8 @@
                 <div class="info-card">
                   <div class="label">Date prévue d'intervention</div>
                   <div class="value">
-                    <input type="datetime-local" id="planning-date" name="date_prevue" class="input">
+                    <input type="datetime-local" id="planning-date" name="date_prevue" class="input" 
+                           value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
                   </div>
                 </div>
                 
@@ -607,11 +284,7 @@
                   <div class="value">
                     <button type="submit" class="btn success" style="width:100%; margin-bottom:.5rem">
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                      Confirmer réalisation
-                    </button>
-                    <button type="button" class="btn" style="width:100%" onclick="replanifier()">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/></svg>
-                      Replanifier
+                      Enregistrer la planification
                     </button>
                   </div>
                 </div>
@@ -623,7 +296,8 @@
                 <div class="info-card">
                   <div class="label">Date de réalisation</div>
                   <div class="value">
-                    <input type="datetime-local" id="realisation-date" name="date_realisation" class="input">
+                    <input type="datetime-local" id="realisation-date" name="date_realisation" class="input"
+                           value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}">
                   </div>
                 </div>
                 
@@ -644,340 +318,378 @@
           </form>
         </section>
 
-        <!-- Changement de statut -->
-        <section class="section" aria-labelledby="status-title">
+        <!-- Section Paiement (placeholder pour future extension) -->
+        <section class="section">
           <div class="section-header">
-            <h2 class="section-title" id="status-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6"/></svg>
-              Gestion du statut
-            </h2>
+            <h2 class="section-title">Paiement</h2>
           </div>
-          <div class="section-body">
-            <form method="POST">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="change_status">
-              <div class="form-inline">
-                <div class="form-group">
-                  <label for="statutSelect">Nouveau statut</label>
-                  <select name="statut" id="statutSelect" class="select">
-                    {% for value, label in statuts_choices %}
-                    <option value="{{ value }}" {% if value == operation.statut %}selected{% endif %}>{{ label }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-
-                <div class="form-group" id="datePrevueGroup" style="display:none;">
-                  <label for="datePrevueInput">Date prévue</label>
-                  <input type="datetime-local" name="date_prevue" id="datePrevueInput" class="input"
-                         value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\\TH:i' }}{% endif %}">
-                </div>
-
-                <div class="form-group" id="dateRealisationGroup" style="display:none;">
-                  <label for="dateRealisationInput">Date de réalisation</label>
-                  <input type="datetime-local" name="date_realisation" id="dateRealisationInput" class="input"
-                         value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\\TH:i' }}{% endif %}">
-                </div>
-
-                <div class="form-group" id="datePaiementGroup" style="display:none;">
-                  <label for="datePaiementInput">Date de paiement</label>
-                  <input type="datetime-local" name="date_paiement" id="datePaiementInput" class="input"
-                         value="{% if operation.date_paiement %}{{ operation.date_paiement|date:'Y-m-d\\TH:i' }}{% endif %}">
-                </div>
-
-                <button type="submit" class="btn success">Mettre à jour</button>
-              </div>
-            </form>
-            <p style="margin-top: 1rem; color: var(--muted); font-size: .9rem;">
-              <strong>Astuce :</strong> Vous pouvez sauter des étapes. Passez directement à "Réalisé" si l'intervention est déjà terminée.
-            </p>
-          </div>
-        </section>
-
-        <!-- Interventions -->
-        <section class="section" aria-labelledby="interventions-title">
-          <div class="section-header">
-            <h2 class="section-title" id="interventions-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.6"/></svg>
-              Interventions - Lignes du devis
-            </h2>
-            <button class="btn primary" onclick="alert('Fonctionnalité en développement')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>
-              Générer facture
-            </button>
-          </div>
-          <div class="section-body">
-            {% if interventions %}
-              <div class="table-wrap">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Description</th>
-                      <th style="width: 120px;">Montant</th>
-                      <th style="width: 100px;">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for intervention in interventions %}
-                    <tr>
-                      <td>{{ intervention.description }}</td>
-                      <td><strong>{{ intervention.montant }}€</strong></td>
-                      <td>
-                        <form method="POST" style="display: inline;" onsubmit="return confirm('Supprimer cette intervention ?')">
-                          {% csrf_token %}
-                          <input type="hidden" name="action" value="delete_intervention">
-                          <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
-                          <button type="submit" class="btn danger sm">Supprimer</button>
-                        </form>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                    <tr class="total-row">
-                      <td><strong>TOTAL</strong></td>
-                      <td><strong>{{ montant_total }}€</strong></td>
-                      <td></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            {% else %}
-              <div class="empty-state">
-                <p>Aucune intervention ajoutée</p>
-              </div>
-            {% endif %}
-
-            <hr style="margin: 1.5rem 0; border: none; border-top: 1px dashed var(--border);">
-            <h4 style="margin-bottom: 1rem; color: var(--text);">Ajouter une intervention</h4>
-            <form method="POST">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="add_intervention">
-              <div class="form-inline">
-                <div class="form-group">
-                  <label>Description</label>
-                  <input type="text" name="description" class="input" placeholder="Ex: Déplacement, Main d'œuvre..." required>
-                </div>
-                <div class="form-group" style="flex: 0 0 150px;">
-                  <label>Montant (€)</label>
-                  <input type="number" name="montant" class="input" step="0.01" placeholder="0.00" required>
-                </div>
-                <button type="submit" class="btn success">Ajouter</button>
-              </div>
-            </form>
+          <div class="alert info">
+            <div>Module de gestion des paiements à venir (comptant / échelonné)</div>
           </div>
         </section>
       </div>
 
       <div class="right-column">
-        <!-- Historique -->
-        <section class="section" aria-labelledby="history-title">
+        <!-- Section Historique -->
+        <section class="section">
           <div class="section-header">
-            <h2 class="section-title" id="history-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6"/></svg>
-              Historique
-            </h2>
+            <h2 class="section-title">Historique</h2>
           </div>
-          <div class="section-body">
-            {% if historique %}
-              <div class="table-wrap">
-                <table class="table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for entry in historique %}
-                    <tr>
-                      <td style="font-size: 0.85rem;">{{ entry.date|date:"d/m H:i" }}</td>
-                      <td style="font-size: 0.9rem;">{{ entry.action }}</td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            {% else %}
-              <div class="empty-state">
-                <p>Aucun historique</p>
-              </div>
-            {% endif %}
+          {% if historique %}
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Date</th><th>Action</th></tr></thead>
+              <tbody>
+                {% for entry in historique %}
+                <tr>
+                  <td style="font-size:.85rem">{{ entry.date|date:"d/m H:i" }}</td>
+                  <td style="font-size:.9rem">{{ entry.action }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
+          {% else %}
+          <div class="alert info">Aucun historique</div>
+          {% endif %}
         </section>
       </div>
     </div>
 
-    <div class="actions" style="margin-top:1.5rem; justify-content:flex-start">
+    <div style="margin-top:1.5rem">
       <a href="{% url 'operations' %}" class="btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.5"/></svg>
         Retour aux opérations
       </a>
     </div>
-  </main>
+  </div>
 
-  <script>
-    let originalValues = {};
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // ============================================
+  // VARIABLES GLOBALES
+  // ============================================
+  let MONTANT_TOTAL = {{ montant_total|default:0 }};
+  const LIGNES_INITIALES = {{ lignes_json|safe }};
+  
+  // ============================================
+  // FONCTIONS UTILITAIRES
+  // ============================================
+  
+  function getNowFormatted() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  }
 
-    function toggleEdit() {
-      originalValues = {
-        type_prestation: document.getElementById('edit-type').value,
-        adresse_intervention: document.getElementById('edit-adresse').value
-      };
-      
-      document.getElementById('displayMode').style.display = 'none';
-      document.getElementById('editForm').style.display = 'block';
-      
-      document.getElementById('editBtn').style.display = 'none';
-      document.getElementById('saveBtn').style.display = 'inline-flex';
-      document.getElementById('cancelBtn').style.display = 'inline-flex';
+  function getTodayDate() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  }
 
-      document.getElementById('edit-type').focus();
+  function formatMontant(montant) {
+    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(montant) + ' €';
+  }
+
+  // ============================================
+  // GESTION DU STATUT DU DEVIS
+  // ============================================
+  
+  const devisCreeSelect = document.getElementById('devis-cree');
+  const devisDetails = document.getElementById('devis-details');
+  const noDevisAlert = document.getElementById('no-devis-alert');
+  const devisStatutSelect = document.getElementById('devis-statut');
+
+  function updateDevisDisplay() {
+    const isCreated = devisCreeSelect.value === 'oui';
+    devisDetails.style.display = isCreated ? 'block' : 'none';
+    noDevisAlert.style.display = isCreated ? 'none' : 'flex';
+    if (isCreated) {
+      updateDevisAlerts();
     }
+  }
 
-    function cancelEdit() {
-      document.getElementById('edit-type').value = originalValues.type_prestation;
-      document.getElementById('edit-adresse').value = originalValues.adresse_intervention;
-      
-      document.getElementById('displayMode').style.display = 'grid';
-      document.getElementById('editForm').style.display = 'none';
-      
-      document.getElementById('editBtn').style.display = 'inline-flex';
-      document.getElementById('saveBtn').style.display = 'none';
-      document.getElementById('cancelBtn').style.display = 'none';
+  function updateDevisAlerts() {
+    const statut = devisStatutSelect.value;
+    
+    // Cacher toutes les alertes
+    document.getElementById('devis-accepte-alert').style.display = 'none';
+    document.getElementById('devis-refuse-alert').style.display = 'none';
+    document.getElementById('devis-attente-alert').style.display = 'none';
+    document.getElementById('devis-relance-alert').style.display = 'none';
+    
+    // Afficher l'alerte correspondante
+    if (statut === 'accepte') {
+      document.getElementById('devis-accepte-alert').style.display = 'flex';
+    } else if (statut === 'refuse') {
+      document.getElementById('devis-refuse-alert').style.display = 'flex';
+    } else if (statut === 'en_attente') {
+      document.getElementById('devis-attente-alert').style.display = 'flex';
+    } else if (statut === 'relance') {
+      document.getElementById('devis-relance-alert').style.display = 'flex';
     }
+  }
 
-    function saveOperation() {
-      const type = document.getElementById('edit-type').value.trim();
-      const adresse = document.getElementById('edit-adresse').value.trim();
+  if (devisCreeSelect && devisStatutSelect) {
+    devisCreeSelect.addEventListener('change', updateDevisDisplay);
+    devisStatutSelect.addEventListener('change', updateDevisAlerts);
+    updateDevisDisplay();
+  }
+
+  // ============================================
+  // GESTION DE LA PLANIFICATION
+  // ============================================
+  
+  const planificationType = document.getElementById('planification-type');
+  const planningSection = document.getElementById('planning-section');
+  const dejaRealiseSection = document.getElementById('deja-realise-section');
+  const planningDate = document.getElementById('planning-date');
+  const realisationDate = document.getElementById('realisation-date');
+  const datePasseeAlert = document.getElementById('date-passee-alert');
+
+  function updatePlanningDisplay() {
+    const type = planificationType.value;
+    
+    if (type === 'a_planifier') {
+      planningSection.style.display = 'block';
+      dejaRealiseSection.style.display = 'none';
+      checkDatePassee();
+    } else {
+      planningSection.style.display = 'none';
+      dejaRealiseSection.style.display = 'block';
       
-      if (!type || !adresse) {
-        alert('Le type de prestation et l\'adresse sont obligatoires');
-        return;
+      // Pré-remplir avec la date actuelle si vide
+      if (!realisationDate.value) {
+        realisationDate.value = getNowFormatted();
       }
+    }
+  }
+
+  function checkDatePassee() {
+    if (planningDate.value) {
+      const dateSelectionnee = new Date(planningDate.value);
+      const maintenant = new Date();
       
-      document.getElementById('editForm').submit();
-    }
-
-    // Gestion planification
-    const planificationType = document.getElementById('planification-type');
-    const planningSection = document.getElementById('planning-section');
-    const dejaRealiseSection = document.getElementById('deja-realise-section');
-    const planningDate = document.getElementById('planning-date');
-    const realisationDate = document.getElementById('realisation-date');
-    const datePasseeAlert = document.getElementById('date-passee-alert');
-
-    function getNowFormatted() {
-      const now = new Date();
-      const pad = n => String(n).padStart(2,'0');
-      return now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+'T'+pad(now.getHours())+':'+pad(now.getMinutes());
-    }
-
-    function updatePlanningDisplay() {
-      const type = planificationType.value;
-      if (type === 'a_planifier') {
-        planningSection.style.display = 'block';
-        dejaRealiseSection.style.display = 'none';
-        checkDatePassee();
+      if (dateSelectionnee < maintenant) {
+        datePasseeAlert.style.display = 'flex';
       } else {
-        planningSection.style.display = 'none';
-        dejaRealiseSection.style.display = 'block';
-        if (!realisationDate.value) {
-          realisationDate.value = getNowFormatted();
-        }
+        datePasseeAlert.style.display = 'none';
       }
     }
+  }
 
-    function checkDatePassee() {
-      if (planningDate.value) {
-        const dateSelectionnee = new Date(planningDate.value);
-        const maintenant = new Date();
-        if (dateSelectionnee < maintenant) {
-          datePasseeAlert.style.display = 'flex';
-        } else {
-          datePasseeAlert.style.display = 'none';
-        }
-      }
-    }
-
-    window.replanifier = function() {
-      const nouvelleDate = prompt('Nouvelle date et heure (format: YYYY-MM-DDTHH:MM):', planningDate.value || getNowFormatted());
-      if (nouvelleDate) {
-        planningDate.value = nouvelleDate;
-        checkDatePassee();
-      }
-    };
-
+  if (planificationType) {
     planificationType.addEventListener('change', updatePlanningDisplay);
-    planningDate.addEventListener('change', checkDatePassee);
     updatePlanningDisplay();
+  }
 
-    // Gestion des dates selon le statut
-    (function(){
-      const statutSelect = document.getElementById('statutSelect');
-      const datePrevueGroup = document.getElementById('datePrevueGroup');
-      const dateRealisationGroup = document.getElementById('dateRealisationGroup');
-      const datePaiementGroup = document.getElementById('datePaiementGroup');
+  if (planningDate) {
+    planningDate.addEventListener('change', checkDatePassee);
+    checkDatePassee();
+  }
+
+  // ============================================
+  // CALCUL AUTOMATIQUE DU TOTAL (côté client)
+  // ============================================
+  
+  function calculerTotalDevis() {
+    const tbody = document.getElementById('lignes-devis');
+    if (!tbody) return;
+    
+    const rows = tbody.querySelectorAll('tr');
+    let total = 0;
+    
+    rows.forEach(row => {
+      const montantCell = row.querySelector('td:nth-child(2) strong');
+      if (montantCell) {
+        const montantText = montantCell.textContent.trim();
+        const montant = parseFloat(montantText.replace(',', '.')) || 0;
+        total += montant;
+      }
+    });
+    
+    MONTANT_TOTAL = total;
+    
+    const totalElement = document.getElementById('total-devis');
+    if (totalElement) {
+      totalElement.textContent = formatMontant(total);
+    }
+  }
+
+  // Calculer le total au chargement si des lignes existent
+  if (document.getElementById('lignes-devis')) {
+    calculerTotalDevis();
+  }
+
+  // ============================================
+  // GESTION DES PAIEMENTS ÉCHELONNÉS (FUTUR)
+  // ============================================
+  
+  const optComptant = document.getElementById('option-comptant');
+  const optEchelonne = document.getElementById('option-echelonne');
+  const radioComptant = document.getElementById('radio-comptant');
+  const radioEchelonne = document.getElementById('radio-echelonne');
+
+  function toggleModePaiement() {
+    if (!radioComptant || !radioEchelonne) return;
+    
+    const isComptant = radioComptant.checked;
+    
+    if (optComptant) optComptant.classList.toggle('selected', isComptant);
+    if (optEchelonne) optEchelonne.classList.toggle('selected', !isComptant);
+    
+    const comptantFields = document.getElementById('comptant-fields');
+    const echelonneFields = document.getElementById('echelonne-fields');
+    
+    if (comptantFields) comptantFields.style.display = isComptant ? 'block' : 'none';
+    if (echelonneFields) echelonneFields.style.display = isComptant ? 'none' : 'block';
+  }
+
+  if (optComptant && optEchelonne && radioComptant && radioEchelonne) {
+    optComptant.addEventListener('click', () => {
+      radioComptant.checked = true;
+      toggleModePaiement();
+    });
+    
+    optEchelonne.addEventListener('click', () => {
+      radioEchelonne.checked = true;
+      toggleModePaiement();
+    });
+    
+    radioComptant.addEventListener('change', toggleModePaiement);
+    radioEchelonne.addEventListener('change', toggleModePaiement);
+    
+    toggleModePaiement();
+  }
+
+  // ============================================
+  // GESTION DES ÉCHÉANCES (MODULE AVANCÉ - FUTUR)
+  // ============================================
+  
+  let echeances = [];
+  let echeanceCounter = 0;
+
+  window.ajouterEcheance = function() {
+    echeanceCounter++;
+    const id = 'ech-' + echeanceCounter;
+    echeances.push({
+      id: id,
+      montant: 0,
+      date: getTodayDate()
+    });
+    renderEcheances();
+  };
+
+  window.supprimerEcheance = function(id) {
+    echeances = echeances.filter(e => e.id !== id);
+    renderEcheances();
+  };
+
+  function calculerReste() {
+    const total = echeances.reduce((sum, e) => sum + e.montant, 0);
+    const resteElement = document.getElementById('reste-calcul');
+    if (resteElement) {
+      resteElement.textContent = formatMontant(MONTANT_TOTAL - total);
+    }
+  }
+
+  function renderEcheances() {
+    const tbody = document.getElementById('echeances-list');
+    if (!tbody) return;
+    
+    // Supprimer les lignes d'échéances existantes
+    const existingRows = tbody.querySelectorAll('.echeance-row');
+    existingRows.forEach(row => row.remove());
+    
+    const totalRow = tbody.querySelector('.total-row');
+    
+    // Ajouter chaque échéance
+    echeances.forEach((ech, i) => {
+      const row = document.createElement('tr');
+      row.className = 'echeance-row';
+      row.innerHTML = `
+        <td>Éch. ${i + 1}</td>
+        <td>
+          <input type="number" step="0.01" min="0" 
+                 class="input" style="max-width:100px; margin:0" 
+                 data-id="${ech.id}" data-field="montant" 
+                 value="${ech.montant || ''}"> €
+        </td>
+        <td>
+          <input type="date" value="${ech.date}" 
+                 class="input" style="max-width:150px" 
+                 data-id="${ech.id}" data-field="date">
+        </td>
+        <td>
+          <button type="button" class="btn sm" onclick="supprimerEcheance('${ech.id}')">×</button>
+        </td>
+      `;
       
-      const datePrevueInput = document.getElementById('datePrevueInput');
-      const dateRealisationInput = document.getElementById('dateRealisationInput');
-      const datePaiementInput = document.getElementById('datePaiementInput');
-
-      function toggleDateFields(){
-        if (!statutSelect || !datePrevueGroup || !dateRealisationGroup || !datePaiementGroup) {
-          return;
-        }
-        
-        const v = statutSelect.value;
-        const now = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        const nowFormatted = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate())
-                            + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-        
-        datePrevueGroup.style.display = 'none';
-        dateRealisationGroup.style.display = 'none';
-        datePaiementGroup.style.display = 'none';
-        
-        if (datePrevueInput) datePrevueInput.required = false;
-        if (dateRealisationInput) dateRealisationInput.required = false;
-        if (datePaiementInput) datePaiementInput.required = false;
-        
-        if (v === 'planifie') {
-          datePrevueGroup.style.display = '';
-          if (datePrevueInput) {
-            datePrevueInput.required = true;
-            if (!datePrevueInput.value) {
-              datePrevueInput.value = nowFormatted;
-            }
-          }
-        } else if (v === 'realise') {
-          dateRealisationGroup.style.display = '';
-          if (dateRealisationInput) {
-            dateRealisationInput.required = true;
-            if (!dateRealisationInput.value) {
-              dateRealisationInput.value = nowFormatted;
-            }
-          }
-        } else if (v === 'paye') {
-          dateRealisationGroup.style.display = '';
-          datePaiementGroup.style.display = '';
-          if (dateRealisationInput) {
-            dateRealisationInput.required = true;
-            if (!dateRealisationInput.value) {
-              dateRealisationInput.value = nowFormatted;
-            }
-          }
-          if (datePaiementInput) {
-            datePaiementInput.required = true;
-            if (!datePaiementInput.value) {
-              datePaiementInput.value = nowFormatted;
-            }
-          }
-        }
+      if (totalRow && totalRow.nextSibling) {
+        totalRow.parentNode.insertBefore(row, totalRow.nextSibling);
+      } else if (totalRow) {
+        tbody.appendChild(row);
       }
+    });
+    
+    // Ajouter les événements sur les inputs
+    document.querySelectorAll('.echeance-row input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const id = e.target.dataset.id;
+        const field = e.target.dataset.field;
+        const echeance = echeances.find(e => e.id === id);
+        
+        if (echeance) {
+          if (field === 'montant') {
+            echeance.montant = parseFloat(e.target.value) || 0;
+          } else if (field === 'date') {
+            echeance.date = e.target.value;
+          }
+          calculerReste();
+        }
+      });
+    });
+    
+    calculerReste();
+  }
 
-      if (statutSelect) {
-        statutSelect.addEventListener('change', toggleDateFields);
-        toggleDateFields();
+  // ============================================
+  // INITIALISATION DES DATES PAR DÉFAUT
+  // ============================================
+  
+  const datePaiementInput = document.getElementById('date-paiement');
+  if (datePaiementInput && !datePaiementInput.value) {
+    datePaiementInput.value = getTodayDate();
+  }
+
+  const devisDateEnvoi = document.getElementById('devis-date-envoi');
+  if (devisDateEnvoi && !devisDateEnvoi.value) {
+    devisDateEnvoi.value = getTodayDate();
+  }
+
+  // ============================================
+  // CONFIRMATION AVANT SUPPRESSION
+  // ============================================
+  
+  document.querySelectorAll('form[onsubmit*="confirm"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      if (!confirm('Êtes-vous sûr de vouloir supprimer cette ligne ?')) {
+        e.preventDefault();
+        return false;
       }
-    })();
-  </script>
+    });
+  });
+
+  // ============================================
+  // DEBUG (à retirer en production)
+  // ============================================
+  
+  console.log('📊 Données chargées:');
+  console.log('- Montant total:', MONTANT_TOTAL);
+  console.log('- Lignes initiales:', LIGNES_INITIALES);
+  console.log('✅ JavaScript initialisé avec succès');
+});
+</script>
 </body>
 </html>

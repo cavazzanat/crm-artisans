@@ -15,6 +15,7 @@ from django.contrib.auth import login, logout  # ← Ajoutez logout
 
 from django.core.management import call_command
 from django.http import HttpResponse, JsonResponse
+from decimal import Decimal
 import io
 import sys
 import json
@@ -185,6 +186,24 @@ def operation_detail(request, operation_id):
     if request.method == 'POST':
         action = request.POST.get('action')
         
+        # NOUVEAU : Gestion du statut du devis
+        if action == 'update_devis_status':
+            devis_cree = request.POST.get('devis_cree') == 'oui'
+            devis_date_envoi = request.POST.get('devis_date_envoi', '')
+            devis_statut = request.POST.get('devis_statut', '')
+            
+            # Sauvegarder dans un champ JSON ou créer des champs dédiés
+            # Pour l'instant, on utilise l'historique
+            if devis_cree:
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Devis envoyé le {devis_date_envoi} - Statut: {devis_statut}",
+                    utilisateur=request.user
+                )
+            
+            messages.success(request, "Statut du devis mis à jour")
+            return redirect('operation_detail', operation_id=operation.id)
+        
         if action == 'change_status':
             nouveau_statut = request.POST.get('statut')
             date_prevue_str = request.POST.get('date_prevue', '')
@@ -195,7 +214,6 @@ def operation_detail(request, operation_id):
                 ancien_statut = operation.get_statut_display()
                 operation.statut = nouveau_statut
                 
-                # Gérer les dates selon le statut
                 from datetime import datetime
                 
                 if nouveau_statut == 'planifie' and date_prevue_str:
@@ -222,23 +240,14 @@ def operation_detail(request, operation_id):
                 
                 operation.save()
                 
-                # Ajouter à l'historique
                 HistoriqueOperation.objects.create(
                     operation=operation,
                     action=f"Statut changé : {ancien_statut} → {operation.get_statut_display()}",
                     utilisateur=request.user
                 )
                 
-                if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-                    return JsonResponse({
-                        'success': True,
-                        'message': f"Statut mis à jour : {operation.get_statut_display()}",
-                        'new_status': operation.statut,
-                        'new_status_display': operation.get_statut_display()
-                    })
-                else:
-                    messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
-                    return redirect('operation_detail', operation_id=operation.id)
+                messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
+                return redirect('operation_detail', operation_id=operation.id)
 
         elif action == 'add_intervention':
             description = request.POST.get('description', '').strip()
@@ -248,7 +257,6 @@ def operation_detail(request, operation_id):
                 try:
                     montant = float(montant_str)
                     
-                    # Déterminer l'ordre
                     dernier_ordre = operation.interventions.aggregate(
                         max_ordre=Max('ordre')
                     )['max_ordre'] or 0
@@ -299,7 +307,6 @@ def operation_detail(request, operation_id):
             return redirect('operation_detail', operation_id=operation.id)
         
         elif action == 'update_planning':
-
             from datetime import datetime
             planning_type = request.POST.get('planning_type')
             
@@ -340,10 +347,19 @@ def operation_detail(request, operation_id):
                         messages.error(request, "Date invalide")
             
             return redirect('operation_detail', operation_id=operation.id)
-        
-    # Récupérer les données pour l'affichage
-    interventions = operation.interventions.all()
-    historique = operation.historique.all()[:10]  # 10 dernières actions
+    
+    # GET - Récupérer les données
+    interventions = operation.interventions.all().order_by('ordre')
+    historique = operation.historique.all().order_by('-date')[:10]
+    
+    # Préparer les lignes pour JavaScript
+    lignes_json = json.dumps([
+        {
+            'id': int(i.id),
+            'description': i.description,
+            'montant': float(i.montant)
+        } for i in interventions
+    ])
     
     context = {
         'operation': operation,
@@ -351,9 +367,10 @@ def operation_detail(request, operation_id):
         'historique': historique,
         'statuts_choices': Operation.STATUTS,
         'montant_total': operation.montant_total,
+        'lignes_json': lignes_json,
     }
     
-    return render(request, 'operations/detail.html', context)
+    return render(request, 'operations/detail_new.html', context)
 
 
 @login_required
