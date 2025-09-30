@@ -370,7 +370,7 @@ def operation_detail(request, operation_id):
         'lignes_json': lignes_json,
     }
     
-    return render(request, 'operations/detail_new.html', context)
+    return render(request, 'operations/detail.html', context)
 
 
 @login_required
