@@ -296,7 +296,7 @@
               </div>
             </div>
 
-            <div id="devis-details" style="margin-top:1rem; {% if not operation.devis_cree %}display:none{% endif %}">
+            <div id="devis-details" style="margin-top:1rem">
               <div class="info-grid">
                 <div class="info-card">
                   <div class="label">Date d'envoi au client</div>
@@ -649,43 +649,58 @@
         return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
       }
 
-      // Gestion du statut du devis
-      const devisCreeSelect = document.getElementById('devis-cree');
-      const devisDetails = document.getElementById('devis-details');
-      const noDevisAlert = document.getElementById('no-devis-alert');
-      const devisStatutSelect = document.getElementById('devis-statut');
+// Gestion du statut du devis
+const devisCreeSelect = document.getElementById('devis-cree');
+const devisDetails = document.getElementById('devis-details');
+const noDevisAlert = document.getElementById('no-devis-alert');
+const devisStatutSelect = document.getElementById('devis-statut');
 
-      function updateDevisDisplay() {
-        const isCreated = devisCreeSelect.value === 'oui';
-        devisDetails.style.display = isCreated ? 'block' : 'none';
-        noDevisAlert.style.display = isCreated ? 'none' : 'flex';
-        if (isCreated) updateDevisAlerts();
-      }
+function updateDevisDisplay() {
+  const isCreated = devisCreeSelect.value === 'oui';
+  
+  if (devisDetails) {
+    devisDetails.style.display = isCreated ? 'block' : 'none';
+  }
+  
+  if (noDevisAlert) {
+    noDevisAlert.style.display = isCreated ? 'none' : 'flex';
+  }
+  
+  if (isCreated && devisStatutSelect) {
+    updateDevisAlerts();
+  }
+}
 
-      function updateDevisAlerts() {
-        const statut = devisStatutSelect.value;
-        
-        document.getElementById('devis-accepte-alert').style.display = 'none';
-        document.getElementById('devis-refuse-alert').style.display = 'none';
-        document.getElementById('devis-attente-alert').style.display = 'none';
-        document.getElementById('devis-relance-alert').style.display = 'none';
-        
-        if (statut === 'accepte') {
-          document.getElementById('devis-accepte-alert').style.display = 'flex';
-        } else if (statut === 'refuse') {
-          document.getElementById('devis-refuse-alert').style.display = 'flex';
-        } else if (statut === 'en_attente') {
-          document.getElementById('devis-attente-alert').style.display = 'flex';
-        } else if (statut === 'relance') {
-          document.getElementById('devis-relance-alert').style.display = 'flex';
-        }
-      }
+function updateDevisAlerts() {
+  if (!devisStatutSelect) return;
+  
+  const statut = devisStatutSelect.value;
+  
+  const alerts = {
+    'devis-accepte-alert': statut === 'accepte',
+    'devis-refuse-alert': statut === 'refuse',
+    'devis-attente-alert': statut === 'en_attente',
+    'devis-relance-alert': statut === 'relance'
+  };
+  
+  Object.keys(alerts).forEach(alertId => {
+    const alertElement = document.getElementById(alertId);
+    if (alertElement) {
+      alertElement.style.display = alerts[alertId] ? 'flex' : 'none';
+    }
+  });
+}
 
-      if (devisCreeSelect && devisStatutSelect) {
-        devisCreeSelect.addEventListener('change', updateDevisDisplay);
-        devisStatutSelect.addEventListener('change', updateDevisAlerts);
-        updateDevisDisplay();
-      }
+if (devisCreeSelect) {
+  devisCreeSelect.addEventListener('change', updateDevisDisplay);
+  
+  // IMPORTANT : Appeler au chargement pour afficher l'état initial
+  updateDevisDisplay();
+}
+
+if (devisStatutSelect) {
+  devisStatutSelect.addEventListener('change', updateDevisAlerts);
+}
 
       // Gestion de la planification
       const planificationType = document.getElementById('planification-type');
