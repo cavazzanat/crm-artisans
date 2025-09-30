@@ -237,7 +237,6 @@
 
     <div class="main-content">
       <div class="left-column">
-        <!-- Informations générales -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">Informations générales</h2>
@@ -524,7 +523,7 @@
 
             <div id="comptant-fields" class="payment-box" {% if operation.mode_paiement != 'comptant' %}style="display:none"{% endif %}>
               <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Date paiement</label>
-              <input type="date" id="date-paiement" name="date_paiement" class="input"
+              <input type="date" id="date-paiement" name="date_paiement_comptant" class="input"
                      value="{% if operation.date_paiement %}{{ operation.date_paiement|date:'Y-m-d' }}{% endif %}">
             </div>
 
@@ -601,7 +600,6 @@
       </div>
 
       <div class="right-column">
-        <!-- Historique -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">Historique</h2>
@@ -637,12 +635,8 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Variables globales
       let MONTANT_TOTAL = {{ montant_total|default:0 }};
-      const LIGNES_INITIALES = {{ lignes_json|safe }};
-      const ECHEANCES_INITIALES = {{ echeances_json|safe }};
       
-      // Fonctions utilitaires
       function getNowFormatted() {
         const now = new Date();
         const pad = n => String(n).padStart(2, '0');
@@ -653,10 +647,6 @@
         const now = new Date();
         const pad = n => String(n).padStart(2, '0');
         return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
-      }
-
-      function formatMontant(montant) {
-        return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(montant) + ' €';
       }
 
       // Gestion du statut du devis
@@ -791,10 +781,7 @@
         devisDateEnvoi.value = getTodayDate();
       }
 
-      console.log('✅ JavaScript initialisé');
-      console.log('Montant total:', MONTANT_TOTAL);
-      console.log('Lignes:', LIGNES_INITIALES);
-      console.log('Échéances:', ECHEANCES_INITIALES);
+      console.log('✅ JavaScript initialisé - Montant total:', MONTANT_TOTAL);
     });
   </script>
 </body>
