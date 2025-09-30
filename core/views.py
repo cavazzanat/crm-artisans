@@ -298,6 +298,49 @@ def operation_detail(request, operation_id):
             
             return redirect('operation_detail', operation_id=operation.id)
         
+        elif action == 'update_planning':
+
+            from datetime import datetime
+            planning_type = request.POST.get('planning_type')
+            
+            if planning_type == 'a_planifier':
+                date_prevue_str = request.POST.get('date_prevue', '')
+                if date_prevue_str:
+                    try:
+                        operation.date_prevue = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
+                        operation.statut = 'planifie'
+                        operation.save()
+                        
+                        HistoriqueOperation.objects.create(
+                            operation=operation,
+                            action="Opération planifiée",
+                            utilisateur=request.user
+                        )
+                        
+                        messages.success(request, "Opération planifiée avec succès")
+                    except ValueError:
+                        messages.error(request, "Date invalide")
+            
+            elif planning_type == 'deja_realise':
+                date_realisation_str = request.POST.get('date_realisation', '')
+                if date_realisation_str:
+                    try:
+                        operation.date_realisation = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                        operation.statut = 'realise'
+                        operation.save()
+                        
+                        HistoriqueOperation.objects.create(
+                            operation=operation,
+                            action="Réalisation validée",
+                            utilisateur=request.user
+                        )
+                        
+                        messages.success(request, "Réalisation validée avec succès")
+                    except ValueError:
+                        messages.error(request, "Date invalide")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+        
     # Récupérer les données pour l'affichage
     interventions = operation.interventions.all()
     historique = operation.historique.all()[:10]  # 10 dernières actions
