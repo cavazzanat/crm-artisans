@@ -4,7 +4,188 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ operation.id_operation }} - {{ operation.type_prestation }} – CRM Artisans</title>
-  <!-- Gardez tout le CSS existant -->
+  <style>
+    :root{
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --muted: #64748b;
+      --text: #1e293b;
+      --primary: #6366f1;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --accent: #8b5cf6;
+      --border: #e2e8f0;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; 
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
+      background: var(--bg);
+      color: var(--text); 
+      line-height: 1.6; 
+      padding-bottom:3rem;
+    }
+
+    .header{ 
+      position: sticky; top: 0; z-index: 40; 
+      background: white;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+    .header-inner{ 
+      max-width:1280px; margin:0 auto; padding:.85rem 1rem; 
+      display:flex; align-items:center; gap:1rem; justify-content:space-between 
+    }
+    .brand{ display:flex; align-items:center; gap:.75rem; font-weight:700; letter-spacing:.2px; color: var(--text); }
+    .logo{ 
+      width:34px; height:34px; border-radius:10px; 
+      background:linear-gradient(145deg, var(--primary), var(--accent)); 
+      box-shadow: var(--shadow); display:grid; place-items:center 
+    }
+    .logo svg{ width:18px; height:18px; color:white }
+
+    .container{ max-width:1280px; margin: 2rem auto; padding: 0 1rem }
+    
+    h1{ font-size:1.8rem; font-weight:800; margin-bottom:.5rem; color: var(--text); }
+    .breadcrumb{ color:var(--muted); font-size:.9rem; margin-bottom:1rem }
+    .breadcrumb a{ color:var(--muted); text-decoration:none }
+    .breadcrumb a:hover{ color:var(--text) }
+
+    .status-badge{ 
+      display:inline-flex; align-items:center; gap:.5rem; padding:.4rem .75rem; 
+      border-radius:20px; font-size:.85rem; font-weight:600; border:1px solid;
+    }
+    .status-badge::before{ content:''; width:8px; height:8px; border-radius:50%; background:currentColor }
+    .status-badge.en_attente_devis{ color:#f59e0b; background: rgba(245,158,11,.1); border-color: rgba(245,158,11,.3); }
+    .status-badge.a_planifier{ color:#3b82f6; background: rgba(59,130,246,.1); border-color: rgba(59,130,246,.3); }
+    .status-badge.planifie{ color:#8b5cf6; background: rgba(139,92,246,.1); border-color: rgba(139,92,246,.3); }
+    .status-badge.realise{ color:#22c55e; background: rgba(34,197,94,.1); border-color: rgba(34,197,94,.3); }
+    .status-badge.paye{ color:#10b981; background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.3); }
+    .status-badge.devis_refuse{ color:#ef4444; background: rgba(239,68,68,.1); border-color: rgba(239,68,68,.3); }
+    
+    .section{ 
+      background: white;
+      border:1px solid var(--border); 
+      border-radius:12px; 
+      padding:1.5rem; 
+      box-shadow: var(--shadow); 
+      margin-bottom:1.5rem 
+    }
+    .section-header{ 
+      display:flex; align-items:center; justify-content:space-between; gap:1rem; 
+      padding-bottom:1rem; border-bottom:1px solid var(--border); margin-bottom:1rem;
+    }
+    .section-title{ display:flex; gap:.6rem; align-items:center; font-size:1.05rem; font-weight:700; color: var(--text); }
+
+    .info-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem }
+    .info-card{
+      background: #f8fafc;
+      border:1px solid var(--border); 
+      border-radius:10px; 
+      padding:1rem; 
+      transition: all 0.2s ease;
+    }
+    .info-card:hover{ background: #f1f5f9; border-color: #cbd5e1; }
+    .info-card .label{
+      display:flex; align-items:center; gap:.5rem; color:var(--muted); 
+      font-size:.85rem; font-weight:600; text-transform:uppercase; 
+      letter-spacing:.05rem; margin-bottom:.75rem
+    }
+    .info-card .value{ color: var(--text); font-weight: 600; font-size: 1rem; line-height: 1.4 }
+
+    .input, .select{ 
+      width:100%; padding:.65rem .8rem; border-radius:8px; border:1px solid var(--border); 
+      background: white; color: var(--text); font:inherit 
+    }
+    .input:focus, .select:focus{ 
+      outline:none; 
+      box-shadow: 0 0 0 3px rgba(99,102,241,.1); 
+      border-color: var(--primary);
+    }
+
+    .btn{ 
+      display:inline-flex; align-items:center; gap:.5rem; padding:.55rem .8rem; 
+      border-radius:8px; border:1px solid var(--border); 
+      background:white; color:var(--text); cursor:pointer; font:inherit; text-decoration:none;
+      transition: all 0.2s;
+    }
+    .btn:hover{ background:#f8fafc; border-color: #cbd5e1; }
+    .btn.success{ 
+      background:var(--success); 
+      border-color: var(--success); 
+      color: white;
+    }
+    .btn.success:hover{ background:#16a34a; }
+    .btn.primary{ 
+      background:var(--primary);
+      border-color: var(--primary); 
+      color: white;
+    }
+    .btn.primary:hover{ background:#4f46e5; }
+    .btn.danger{ 
+      background: var(--danger);
+      border-color: var(--danger);
+      color: white;
+    }
+    .btn.danger:hover{ background:#dc2626; }
+    .btn.sm{ padding:.4rem .6rem; border-radius:6px; font-size:.9rem }
+
+    .alert{ 
+      padding:.75rem 1rem; border-radius:8px; margin-top:1rem; 
+      display:flex; align-items:center; gap:.5rem; font-size:.9rem;
+    }
+    .alert.warning{ background: #fef3c7; color: #92400e; border:1px solid #fde68a; }
+    .alert.danger, .alert.error{ background: #fee2e2; color: #991b1b; border:1px solid #fecaca; }
+    .alert.success{ background: #d1fae5; color: #065f46; border:1px solid #a7f3d0; }
+    .alert.info{ background: #dbeafe; color: #1e40af; border:1px solid #bfdbfe; }
+
+    .radio-option{ 
+      display:flex; align-items:center; gap:.5rem; padding:.6rem 1rem; 
+      border:2px solid var(--border); border-radius:8px; cursor:pointer; 
+      transition: all .2s; margin-bottom:.5rem; background: white;
+    }
+    .radio-option:hover{ border-color:var(--primary); background:#f8fafc; }
+    .radio-option.selected{ border-color:var(--primary); background:#eef2ff; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
+    .radio-option input[type="radio"]{ width:auto; margin:0; cursor:pointer }
+    .radio-option label{ margin:0; cursor:pointer; font-weight:500; flex:1 }
+
+    .payment-box{ background: #f8fafc; border:1px solid var(--border); border-radius:10px; padding:1rem; margin-top:1rem }
+
+    .table-wrap{ overflow:auto; border-radius:10px; border:1px solid var(--border); margin-top:1rem; background: white; }
+    table{ width:100%; border-collapse: collapse }
+    thead th{ 
+      background: #f8fafc;
+      color:var(--muted); 
+      text-transform:uppercase; letter-spacing:.08rem; 
+      font-size:.75rem; 
+      text-align:left; padding:.9rem .85rem; 
+      border-bottom:1px solid var(--border)
+    }
+    tbody td{ padding:.9rem .85rem; border-bottom:1px solid var(--border); }
+    tbody tr:hover{ background: #f8fafc; }
+    .echeance-row{ background: #f0fdf4; }
+    .reste-row{ background: #fef3c7; font-weight:700; color:#92400e; }
+    .total-row{ background: #eef2ff; font-weight:700; }
+
+    .workflow-steps{
+      display:flex; align-items:center; gap:.5rem; margin-top:1rem; padding:1rem; 
+      background:white; border-radius:10px; flex-wrap:wrap; border:1px solid var(--border);
+    }
+    .workflow-step{
+      padding:.4rem .8rem; background:#f1f5f9; 
+      border-radius:6px; font-size:.8rem; color:var(--muted); font-weight:600;
+    }
+    .workflow-step.active{ background:var(--primary); color:white; }
+    .workflow-arrow{ color:var(--muted); font-weight:bold }
+
+    .main-content{ display:grid; grid-template-columns:2fr 1fr; gap:2rem; align-items:start }
+
+    @media (max-width: 1024px){ 
+      .main-content{ grid-template-columns: 1fr }
+    }
+  </style>
 </head>
 <body>
   <header class="header">
@@ -34,10 +215,9 @@
     <h1>{{ operation.id_operation }} - {{ operation.type_prestation }}</h1>
     <span class="status-badge {{ operation.statut }}">{{ operation.get_statut_display }}</span>
 
-    <!-- Messages Django -->
     {% if messages %}
     {% for message in messages %}
-    <div class="alert {{ message.tags }}" style="margin-top:1rem">
+    <div class="alert {{ message.tags }}">
       {{ message }}
     </div>
     {% endfor %}
@@ -57,7 +237,7 @@
 
     <div class="main-content">
       <div class="left-column">
-        <!-- Section Informations générales -->
+        <!-- Informations générales -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">Informations générales</h2>
@@ -94,7 +274,7 @@
           </div>
         </section>
 
-        <!-- Section Statut du devis -->
+        <!-- Statut du devis -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">
@@ -111,18 +291,19 @@
               <div class="label">Avez-vous créé un devis ?</div>
               <div class="value">
                 <select id="devis-cree" name="devis_cree" class="select" style="max-width:200px">
-                  <option value="non">Non</option>
-                  <option value="oui">Oui</option>
+                  <option value="non" {% if not operation.devis_cree %}selected{% endif %}>Non</option>
+                  <option value="oui" {% if operation.devis_cree %}selected{% endif %}>Oui</option>
                 </select>
               </div>
             </div>
 
-            <div id="devis-details" style="margin-top:1rem; display:none">
+            <div id="devis-details" style="margin-top:1rem; {% if not operation.devis_cree %}display:none{% endif %}">
               <div class="info-grid">
                 <div class="info-card">
                   <div class="label">Date d'envoi au client</div>
                   <div class="value">
-                    <input type="date" id="devis-date-envoi" name="devis_date_envoi" class="input">
+                    <input type="date" id="devis-date-envoi" name="devis_date_envoi" class="input"
+                           value="{% if operation.devis_date_envoi %}{{ operation.devis_date_envoi|date:'Y-m-d' }}{% endif %}">
                   </div>
                 </div>
                 
@@ -130,10 +311,10 @@
                   <div class="label">Réponse du client</div>
                   <div class="value">
                     <select id="devis-statut" name="devis_statut" class="select">
-                      <option value="en_attente">En attente de réponse</option>
-                      <option value="accepte">Devis accepté</option>
-                      <option value="refuse">Devis refusé</option>
-                      <option value="relance">À relancer</option>
+                      <option value="en_attente" {% if operation.devis_statut == 'en_attente' %}selected{% endif %}>En attente de réponse</option>
+                      <option value="accepte" {% if operation.devis_statut == 'accepte' %}selected{% endif %}>Devis accepté</option>
+                      <option value="refuse" {% if operation.devis_statut == 'refuse' %}selected{% endif %}>Devis refusé</option>
+                      <option value="relance" {% if operation.devis_statut == 'relance' %}selected{% endif %}>À relancer</option>
                     </select>
                   </div>
                 </div>
@@ -162,14 +343,14 @@
               <button type="submit" class="btn success" style="margin-top:1rem">Enregistrer le statut du devis</button>
             </div>
 
-            <div id="no-devis-alert" class="alert info">
+            <div id="no-devis-alert" class="alert info" {% if operation.devis_cree %}style="display:none"{% endif %}>
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="1.6"/></svg>
               <div><strong>Aucun devis créé</strong> - Créez les lignes ci-dessous puis générez le PDF.</div>
             </div>
           </form>
         </section>
 
-        <!-- Section Lignes du devis -->
+        <!-- Lignes du devis -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">
@@ -244,7 +425,7 @@
           </div>
         </section>
 
-        <!-- Section Planification -->
+        <!-- Planification -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">Planification</h2>
@@ -318,19 +499,109 @@
           </form>
         </section>
 
-        <!-- Section Paiement (placeholder pour future extension) -->
+        <!-- Paiement -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">Paiement</h2>
+            <button class="btn primary" onclick="alert('Fonctionnalité en développement')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>
+              Générer facture
+            </button>
           </div>
-          <div class="alert info">
-            <div>Module de gestion des paiements à venir (comptant / échelonné)</div>
-          </div>
+          
+          <form method="POST" id="paiement-form">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_mode_paiement">
+            
+            <div class="radio-option {% if operation.mode_paiement == 'comptant' %}selected{% endif %}" id="option-comptant">
+              <input type="radio" name="mode_paiement" value="comptant" id="radio-comptant" {% if operation.mode_paiement == 'comptant' %}checked{% endif %}>
+              <label for="radio-comptant">Comptant</label>
+            </div>
+            <div class="radio-option {% if operation.mode_paiement == 'echelonne' %}selected{% endif %}" id="option-echelonne">
+              <input type="radio" name="mode_paiement" value="echelonne" id="radio-echelonne" {% if operation.mode_paiement == 'echelonne' %}checked{% endif %}>
+              <label for="radio-echelonne">Échelonné</label>
+            </div>
+
+            <div id="comptant-fields" class="payment-box" {% if operation.mode_paiement != 'comptant' %}style="display:none"{% endif %}>
+              <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Date paiement</label>
+              <input type="date" id="date-paiement" name="date_paiement" class="input"
+                     value="{% if operation.date_paiement %}{{ operation.date_paiement|date:'Y-m-d' }}{% endif %}">
+            </div>
+
+            <div id="echelonne-fields" class="payment-box" {% if operation.mode_paiement != 'echelonne' %}style="display:none"{% endif %}>
+              {% if echeances %}
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr><th>Échéance</th><th>Montant</th><th>Date</th><th style="width:80px"></th></tr>
+                  </thead>
+                  <tbody id="echeances-list">
+                    {% for echeance in echeances %}
+                    <tr class="echeance-row">
+                      <td>Éch. {{ echeance.numero }}</td>
+                      <td>{{ echeance.montant }} €</td>
+                      <td>{{ echeance.date_echeance|date:"d/m/Y" }}</td>
+                      <td>
+                        <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette échéance ?')">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="delete_echeance">
+                          <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
+                          <button type="submit" class="btn sm">×</button>
+                        </form>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                    <tr class="total-row">
+                      <td colspan="2"><strong>Total échéances</strong></td>
+                      <td colspan="2"><strong id="total-echeances">{{ total_echeances }} €</strong></td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr class="reste-row">
+                      <td colspan="2"><strong>Reste à planifier</strong></td>
+                      <td colspan="2"><strong id="reste-calcul">{{ reste_a_payer }} €</strong></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+              {% else %}
+              <div class="alert info">Aucune échéance définie</div>
+              {% endif %}
+              
+              <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border)">
+                <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Ajouter une échéance</h4>
+                <form method="POST">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="add_echeance">
+                  <div style="display:flex; gap:1rem; align-items:end; flex-wrap:wrap">
+                    <div style="flex:0 0 100px">
+                      <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">N°</label>
+                      <input type="number" name="numero" class="input" placeholder="1" min="1" required>
+                    </div>
+                    <div style="flex:0 0 150px">
+                      <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Montant (€)</label>
+                      <input type="number" name="montant" class="input" placeholder="0.00" step="0.01" required>
+                    </div>
+                    <div style="flex:1; min-width:180px">
+                      <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Date échéance</label>
+                      <input type="date" name="date_echeance" class="input" required>
+                    </div>
+                    <button type="submit" class="btn success">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+                      Ajouter
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <button type="submit" class="btn success" style="width:100%; margin-top:1rem">Enregistrer le mode de paiement</button>
+          </form>
         </section>
       </div>
 
       <div class="right-column">
-        <!-- Section Historique -->
+        <!-- Historique -->
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">Historique</h2>
@@ -364,332 +635,167 @@
     </div>
   </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // ============================================
-  // VARIABLES GLOBALES
-  // ============================================
-  let MONTANT_TOTAL = {{ montant_total|default:0 }};
-  const LIGNES_INITIALES = {{ lignes_json|safe }};
-  
-  // ============================================
-  // FONCTIONS UTILITAIRES
-  // ============================================
-  
-  function getNowFormatted() {
-    const now = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-  }
-
-  function getTodayDate() {
-    const now = new Date();
-    const pad = n => String(n).padStart(2, '0');
-    return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
-  }
-
-  function formatMontant(montant) {
-    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(montant) + ' €';
-  }
-
-  // ============================================
-  // GESTION DU STATUT DU DEVIS
-  // ============================================
-  
-  const devisCreeSelect = document.getElementById('devis-cree');
-  const devisDetails = document.getElementById('devis-details');
-  const noDevisAlert = document.getElementById('no-devis-alert');
-  const devisStatutSelect = document.getElementById('devis-statut');
-
-  function updateDevisDisplay() {
-    const isCreated = devisCreeSelect.value === 'oui';
-    devisDetails.style.display = isCreated ? 'block' : 'none';
-    noDevisAlert.style.display = isCreated ? 'none' : 'flex';
-    if (isCreated) {
-      updateDevisAlerts();
-    }
-  }
-
-  function updateDevisAlerts() {
-    const statut = devisStatutSelect.value;
-    
-    // Cacher toutes les alertes
-    document.getElementById('devis-accepte-alert').style.display = 'none';
-    document.getElementById('devis-refuse-alert').style.display = 'none';
-    document.getElementById('devis-attente-alert').style.display = 'none';
-    document.getElementById('devis-relance-alert').style.display = 'none';
-    
-    // Afficher l'alerte correspondante
-    if (statut === 'accepte') {
-      document.getElementById('devis-accepte-alert').style.display = 'flex';
-    } else if (statut === 'refuse') {
-      document.getElementById('devis-refuse-alert').style.display = 'flex';
-    } else if (statut === 'en_attente') {
-      document.getElementById('devis-attente-alert').style.display = 'flex';
-    } else if (statut === 'relance') {
-      document.getElementById('devis-relance-alert').style.display = 'flex';
-    }
-  }
-
-  if (devisCreeSelect && devisStatutSelect) {
-    devisCreeSelect.addEventListener('change', updateDevisDisplay);
-    devisStatutSelect.addEventListener('change', updateDevisAlerts);
-    updateDevisDisplay();
-  }
-
-  // ============================================
-  // GESTION DE LA PLANIFICATION
-  // ============================================
-  
-  const planificationType = document.getElementById('planification-type');
-  const planningSection = document.getElementById('planning-section');
-  const dejaRealiseSection = document.getElementById('deja-realise-section');
-  const planningDate = document.getElementById('planning-date');
-  const realisationDate = document.getElementById('realisation-date');
-  const datePasseeAlert = document.getElementById('date-passee-alert');
-
-  function updatePlanningDisplay() {
-    const type = planificationType.value;
-    
-    if (type === 'a_planifier') {
-      planningSection.style.display = 'block';
-      dejaRealiseSection.style.display = 'none';
-      checkDatePassee();
-    } else {
-      planningSection.style.display = 'none';
-      dejaRealiseSection.style.display = 'block';
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Variables globales
+      let MONTANT_TOTAL = {{ montant_total|default:0 }};
+      const LIGNES_INITIALES = {{ lignes_json|safe }};
+      const ECHEANCES_INITIALES = {{ echeances_json|safe }};
       
-      // Pré-remplir avec la date actuelle si vide
-      if (!realisationDate.value) {
-        realisationDate.value = getNowFormatted();
+      // Fonctions utilitaires
+      function getNowFormatted() {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
       }
-    }
-  }
 
-  function checkDatePassee() {
-    if (planningDate.value) {
-      const dateSelectionnee = new Date(planningDate.value);
-      const maintenant = new Date();
-      
-      if (dateSelectionnee < maintenant) {
-        datePasseeAlert.style.display = 'flex';
-      } else {
-        datePasseeAlert.style.display = 'none';
+      function getTodayDate() {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
       }
-    }
-  }
 
-  if (planificationType) {
-    planificationType.addEventListener('change', updatePlanningDisplay);
-    updatePlanningDisplay();
-  }
-
-  if (planningDate) {
-    planningDate.addEventListener('change', checkDatePassee);
-    checkDatePassee();
-  }
-
-  // ============================================
-  // CALCUL AUTOMATIQUE DU TOTAL (côté client)
-  // ============================================
-  
-  function calculerTotalDevis() {
-    const tbody = document.getElementById('lignes-devis');
-    if (!tbody) return;
-    
-    const rows = tbody.querySelectorAll('tr');
-    let total = 0;
-    
-    rows.forEach(row => {
-      const montantCell = row.querySelector('td:nth-child(2) strong');
-      if (montantCell) {
-        const montantText = montantCell.textContent.trim();
-        const montant = parseFloat(montantText.replace(',', '.')) || 0;
-        total += montant;
+      function formatMontant(montant) {
+        return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(montant) + ' €';
       }
-    });
-    
-    MONTANT_TOTAL = total;
-    
-    const totalElement = document.getElementById('total-devis');
-    if (totalElement) {
-      totalElement.textContent = formatMontant(total);
-    }
-  }
 
-  // Calculer le total au chargement si des lignes existent
-  if (document.getElementById('lignes-devis')) {
-    calculerTotalDevis();
-  }
+      // Gestion du statut du devis
+      const devisCreeSelect = document.getElementById('devis-cree');
+      const devisDetails = document.getElementById('devis-details');
+      const noDevisAlert = document.getElementById('no-devis-alert');
+      const devisStatutSelect = document.getElementById('devis-statut');
 
-  // ============================================
-  // GESTION DES PAIEMENTS ÉCHELONNÉS (FUTUR)
-  // ============================================
-  
-  const optComptant = document.getElementById('option-comptant');
-  const optEchelonne = document.getElementById('option-echelonne');
-  const radioComptant = document.getElementById('radio-comptant');
-  const radioEchelonne = document.getElementById('radio-echelonne');
-
-  function toggleModePaiement() {
-    if (!radioComptant || !radioEchelonne) return;
-    
-    const isComptant = radioComptant.checked;
-    
-    if (optComptant) optComptant.classList.toggle('selected', isComptant);
-    if (optEchelonne) optEchelonne.classList.toggle('selected', !isComptant);
-    
-    const comptantFields = document.getElementById('comptant-fields');
-    const echelonneFields = document.getElementById('echelonne-fields');
-    
-    if (comptantFields) comptantFields.style.display = isComptant ? 'block' : 'none';
-    if (echelonneFields) echelonneFields.style.display = isComptant ? 'none' : 'block';
-  }
-
-  if (optComptant && optEchelonne && radioComptant && radioEchelonne) {
-    optComptant.addEventListener('click', () => {
-      radioComptant.checked = true;
-      toggleModePaiement();
-    });
-    
-    optEchelonne.addEventListener('click', () => {
-      radioEchelonne.checked = true;
-      toggleModePaiement();
-    });
-    
-    radioComptant.addEventListener('change', toggleModePaiement);
-    radioEchelonne.addEventListener('change', toggleModePaiement);
-    
-    toggleModePaiement();
-  }
-
-  // ============================================
-  // GESTION DES ÉCHÉANCES (MODULE AVANCÉ - FUTUR)
-  // ============================================
-  
-  let echeances = [];
-  let echeanceCounter = 0;
-
-  window.ajouterEcheance = function() {
-    echeanceCounter++;
-    const id = 'ech-' + echeanceCounter;
-    echeances.push({
-      id: id,
-      montant: 0,
-      date: getTodayDate()
-    });
-    renderEcheances();
-  };
-
-  window.supprimerEcheance = function(id) {
-    echeances = echeances.filter(e => e.id !== id);
-    renderEcheances();
-  };
-
-  function calculerReste() {
-    const total = echeances.reduce((sum, e) => sum + e.montant, 0);
-    const resteElement = document.getElementById('reste-calcul');
-    if (resteElement) {
-      resteElement.textContent = formatMontant(MONTANT_TOTAL - total);
-    }
-  }
-
-  function renderEcheances() {
-    const tbody = document.getElementById('echeances-list');
-    if (!tbody) return;
-    
-    // Supprimer les lignes d'échéances existantes
-    const existingRows = tbody.querySelectorAll('.echeance-row');
-    existingRows.forEach(row => row.remove());
-    
-    const totalRow = tbody.querySelector('.total-row');
-    
-    // Ajouter chaque échéance
-    echeances.forEach((ech, i) => {
-      const row = document.createElement('tr');
-      row.className = 'echeance-row';
-      row.innerHTML = `
-        <td>Éch. ${i + 1}</td>
-        <td>
-          <input type="number" step="0.01" min="0" 
-                 class="input" style="max-width:100px; margin:0" 
-                 data-id="${ech.id}" data-field="montant" 
-                 value="${ech.montant || ''}"> €
-        </td>
-        <td>
-          <input type="date" value="${ech.date}" 
-                 class="input" style="max-width:150px" 
-                 data-id="${ech.id}" data-field="date">
-        </td>
-        <td>
-          <button type="button" class="btn sm" onclick="supprimerEcheance('${ech.id}')">×</button>
-        </td>
-      `;
-      
-      if (totalRow && totalRow.nextSibling) {
-        totalRow.parentNode.insertBefore(row, totalRow.nextSibling);
-      } else if (totalRow) {
-        tbody.appendChild(row);
+      function updateDevisDisplay() {
+        const isCreated = devisCreeSelect.value === 'oui';
+        devisDetails.style.display = isCreated ? 'block' : 'none';
+        noDevisAlert.style.display = isCreated ? 'none' : 'flex';
+        if (isCreated) updateDevisAlerts();
       }
-    });
-    
-    // Ajouter les événements sur les inputs
-    document.querySelectorAll('.echeance-row input').forEach(input => {
-      input.addEventListener('input', (e) => {
-        const id = e.target.dataset.id;
-        const field = e.target.dataset.field;
-        const echeance = echeances.find(e => e.id === id);
+
+      function updateDevisAlerts() {
+        const statut = devisStatutSelect.value;
         
-        if (echeance) {
-          if (field === 'montant') {
-            echeance.montant = parseFloat(e.target.value) || 0;
-          } else if (field === 'date') {
-            echeance.date = e.target.value;
-          }
-          calculerReste();
+        document.getElementById('devis-accepte-alert').style.display = 'none';
+        document.getElementById('devis-refuse-alert').style.display = 'none';
+        document.getElementById('devis-attente-alert').style.display = 'none';
+        document.getElementById('devis-relance-alert').style.display = 'none';
+        
+        if (statut === 'accepte') {
+          document.getElementById('devis-accepte-alert').style.display = 'flex';
+        } else if (statut === 'refuse') {
+          document.getElementById('devis-refuse-alert').style.display = 'flex';
+        } else if (statut === 'en_attente') {
+          document.getElementById('devis-attente-alert').style.display = 'flex';
+        } else if (statut === 'relance') {
+          document.getElementById('devis-relance-alert').style.display = 'flex';
         }
-      });
-    });
-    
-    calculerReste();
-  }
-
-  // ============================================
-  // INITIALISATION DES DATES PAR DÉFAUT
-  // ============================================
-  
-  const datePaiementInput = document.getElementById('date-paiement');
-  if (datePaiementInput && !datePaiementInput.value) {
-    datePaiementInput.value = getTodayDate();
-  }
-
-  const devisDateEnvoi = document.getElementById('devis-date-envoi');
-  if (devisDateEnvoi && !devisDateEnvoi.value) {
-    devisDateEnvoi.value = getTodayDate();
-  }
-
-  // ============================================
-  // CONFIRMATION AVANT SUPPRESSION
-  // ============================================
-  
-  document.querySelectorAll('form[onsubmit*="confirm"]').forEach(form => {
-    form.addEventListener('submit', function(e) {
-      if (!confirm('Êtes-vous sûr de vouloir supprimer cette ligne ?')) {
-        e.preventDefault();
-        return false;
       }
-    });
-  });
 
-  // ============================================
-  // DEBUG (à retirer en production)
-  // ============================================
-  
-  console.log('📊 Données chargées:');
-  console.log('- Montant total:', MONTANT_TOTAL);
-  console.log('- Lignes initiales:', LIGNES_INITIALES);
-  console.log('✅ JavaScript initialisé avec succès');
-});
-</script>
+      if (devisCreeSelect && devisStatutSelect) {
+        devisCreeSelect.addEventListener('change', updateDevisDisplay);
+        devisStatutSelect.addEventListener('change', updateDevisAlerts);
+        updateDevisDisplay();
+      }
+
+      // Gestion de la planification
+      const planificationType = document.getElementById('planification-type');
+      const planningSection = document.getElementById('planning-section');
+      const dejaRealiseSection = document.getElementById('deja-realise-section');
+      const planningDate = document.getElementById('planning-date');
+      const realisationDate = document.getElementById('realisation-date');
+      const datePasseeAlert = document.getElementById('date-passee-alert');
+
+      function updatePlanningDisplay() {
+        const type = planificationType.value;
+        if (type === 'a_planifier') {
+          planningSection.style.display = 'block';
+          dejaRealiseSection.style.display = 'none';
+          checkDatePassee();
+        } else {
+          planningSection.style.display = 'none';
+          dejaRealiseSection.style.display = 'block';
+          if (!realisationDate.value) {
+            realisationDate.value = getNowFormatted();
+          }
+        }
+      }
+
+      function checkDatePassee() {
+        if (planningDate.value) {
+          const dateSelectionnee = new Date(planningDate.value);
+          const maintenant = new Date();
+          if (dateSelectionnee < maintenant) {
+            datePasseeAlert.style.display = 'flex';
+          } else {
+            datePasseeAlert.style.display = 'none';
+          }
+        }
+      }
+
+      if (planificationType) {
+        planificationType.addEventListener('change', updatePlanningDisplay);
+        updatePlanningDisplay();
+      }
+
+      if (planningDate) {
+        planningDate.addEventListener('change', checkDatePassee);
+        checkDatePassee();
+      }
+
+      // Gestion des paiements
+      const optComptant = document.getElementById('option-comptant');
+      const optEchelonne = document.getElementById('option-echelonne');
+      const radioComptant = document.getElementById('radio-comptant');
+      const radioEchelonne = document.getElementById('radio-echelonne');
+
+      function toggleModePaiement() {
+        if (!radioComptant || !radioEchelonne) return;
+        
+        const isComptant = radioComptant.checked;
+        
+        if (optComptant) optComptant.classList.toggle('selected', isComptant);
+        if (optEchelonne) optEchelonne.classList.toggle('selected', !isComptant);
+        
+        const comptantFields = document.getElementById('comptant-fields');
+        const echelonneFields = document.getElementById('echelonne-fields');
+        
+        if (comptantFields) comptantFields.style.display = isComptant ? 'block' : 'none';
+        if (echelonneFields) echelonneFields.style.display = isComptant ? 'none' : 'block';
+      }
+
+      if (optComptant && optEchelonne && radioComptant && radioEchelonne) {
+        optComptant.addEventListener('click', () => {
+          radioComptant.checked = true;
+          toggleModePaiement();
+        });
+        
+        optEchelonne.addEventListener('click', () => {
+          radioEchelonne.checked = true;
+          toggleModePaiement();
+        });
+        
+        radioComptant.addEventListener('change', toggleModePaiement);
+        radioEchelonne.addEventListener('change', toggleModePaiement);
+        
+        toggleModePaiement();
+      }
+
+      // Initialisation des dates
+      const datePaiementInput = document.getElementById('date-paiement');
+      if (datePaiementInput && !datePaiementInput.value) {
+        datePaiementInput.value = getTodayDate();
+      }
+
+      const devisDateEnvoi = document.getElementById('devis-date-envoi');
+      if (devisDateEnvoi && !devisDateEnvoi.value) {
+        devisDateEnvoi.value = getTodayDate();
+      }
+
+      console.log('✅ JavaScript initialisé');
+      console.log('Montant total:', MONTANT_TOTAL);
+      console.log('Lignes:', LIGNES_INITIALES);
+      console.log('Échéances:', ECHEANCES_INITIALES);
+    });
+  </script>
 </body>
 </html>

@@ -23,7 +23,6 @@ class Client(models.Model):
     def save(self, *args, **kwargs):
         if not self.id_client:
             import uuid
-            # Génère un ID unique : USER_ID + UUID court
             unique_suffix = str(uuid.uuid4())[:6].upper()
             self.id_client = f"U{self.user.id}CL{unique_suffix}"
         super().save(*args, **kwargs)
@@ -38,6 +37,7 @@ class Client(models.Model):
             statut='planifie', 
             date_prevue__gte=timezone.now()
         ).order_by('date_prevue').first()
+
 
 class Operation(models.Model):
     STATUTS = [
@@ -55,14 +55,39 @@ class Operation(models.Model):
     type_prestation = models.CharField(max_length=200)
     adresse_intervention = models.TextField()
     date_prevue = models.DateTimeField(null=True, blank=True)
-    #date_intervention = models.DateTimeField(blank=True, null=True)
-    date_realisation = models.DateTimeField(null=True, blank=True)  # À ajouter
-    date_paiement = models.DateTimeField(null=True, blank=True)  
+    date_realisation = models.DateTimeField(null=True, blank=True)
+    date_paiement = models.DateTimeField(null=True, blank=True)
     
     statut = models.CharField(max_length=20, choices=STATUTS, default='en_attente_devis')
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
-
+    
+    # CHAMPS POUR LE DEVIS
+    devis_cree = models.BooleanField(default=False, verbose_name="Devis créé")
+    devis_date_envoi = models.DateField(null=True, blank=True, verbose_name="Date envoi devis")
+    devis_statut = models.CharField(
+        max_length=20,
+        choices=[
+            ('en_attente', 'En attente de réponse'),
+            ('accepte', 'Devis accepté'),
+            ('refuse', 'Devis refusé'),
+            ('relance', 'À relancer'),
+        ],
+        null=True,
+        blank=True,
+        verbose_name="Statut du devis"
+    )
+    
+    # CHAMP POUR LE MODE DE PAIEMENT
+    mode_paiement = models.CharField(
+        max_length=20,
+        choices=[
+            ('comptant', 'Comptant'),
+            ('echelonne', 'Échelonné'),
+        ],
+        default='comptant',
+        verbose_name="Mode de paiement"
+    )
     
     class Meta:
         ordering = ['-date_creation']
@@ -73,7 +98,6 @@ class Operation(models.Model):
     def save(self, *args, **kwargs):
         if not self.id_operation:
             import uuid
-            # Génère un ID unique : USER_ID + UUID court
             unique_suffix = str(uuid.uuid4())[:6].upper()
             self.id_operation = f"U{self.user.id}OP{unique_suffix}"
         super().save(*args, **kwargs)
@@ -86,6 +110,34 @@ class Operation(models.Model):
     def peut_generer_facture(self):
         return self.statut in ['realise', 'paye']
 
+
+# MODÈLE SÉPARÉ pour les échéances (pas à l'intérieur de Operation!)
+class Echeance(models.Model):
+    operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='echeances')
+    numero = models.IntegerField(verbose_name="Numéro d'échéance")
+    montant = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Montant")
+    date_echeance = models.DateField(verbose_name="Date d'échéance")
+    date_paiement = models.DateField(null=True, blank=True, verbose_name="Date de paiement réel")
+    statut = models.CharField(
+        max_length=20,
+        choices=[
+            ('en_attente', 'En attente'),
+            ('paye', 'Payé'),
+            ('retard', 'En retard'),
+        ],
+        default='en_attente'
+    )
+    ordre = models.IntegerField(default=1)
+    
+    class Meta:
+        ordering = ['ordre']
+        verbose_name = "Échéance de paiement"
+        verbose_name_plural = "Échéances de paiement"
+    
+    def __str__(self):
+        return f"Échéance {self.numero} - {self.montant}€ ({self.operation.id_operation})"
+
+
 class Intervention(models.Model):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='interventions')
     description = models.CharField(max_length=200)
@@ -97,6 +149,7 @@ class Intervention(models.Model):
     
     def __str__(self):
         return f"{self.description} - {self.montant}€"
+
 
 class HistoriqueOperation(models.Model):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='historique')

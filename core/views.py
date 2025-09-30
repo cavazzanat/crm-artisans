@@ -186,25 +186,105 @@ def operation_detail(request, operation_id):
     if request.method == 'POST':
         action = request.POST.get('action')
         
-        # NOUVEAU : Gestion du statut du devis
+        # GESTION DU STATUT DU DEVIS
         if action == 'update_devis_status':
             devis_cree = request.POST.get('devis_cree') == 'oui'
             devis_date_envoi = request.POST.get('devis_date_envoi', '')
             devis_statut = request.POST.get('devis_statut', '')
             
-            # Sauvegarder dans un champ JSON ou créer des champs dédiés
-            # Pour l'instant, on utilise l'historique
+            operation.devis_cree = devis_cree
+            
             if devis_cree:
+                from datetime import datetime
+                if devis_date_envoi:
+                    try:
+                        operation.devis_date_envoi = datetime.fromisoformat(devis_date_envoi).date()
+                    except ValueError:
+                        pass
+                
+                if devis_statut:
+                    operation.devis_statut = devis_statut
+                
+                operation.save()
+                
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=f"Devis envoyé le {devis_date_envoi} - Statut: {devis_statut}",
+                    action=f"Devis mis à jour - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'N/A'}",
                     utilisateur=request.user
                 )
+            else:
+                operation.devis_date_envoi = None
+                operation.devis_statut = None
+                operation.save()
             
             messages.success(request, "Statut du devis mis à jour")
             return redirect('operation_detail', operation_id=operation.id)
         
-        if action == 'change_status':
+        # GESTION DES ÉCHÉANCES
+        elif action == 'add_echeance':
+            numero = request.POST.get('numero', '')
+            montant_str = request.POST.get('montant', '')
+            date_echeance_str = request.POST.get('date_echeance', '')
+            
+            if numero and montant_str and date_echeance_str:
+                try:
+                    from datetime import datetime
+                    montant = float(montant_str)
+                    date_echeance = datetime.fromisoformat(date_echeance_str).date()
+                    
+                    dernier_ordre = operation.echeances.aggregate(
+                        max_ordre=Max('ordre')
+                    )['max_ordre'] or 0
+                    
+                    Echeance.objects.create(
+                        operation=operation,
+                        numero=int(numero),
+                        montant=montant,
+                        date_echeance=date_echeance,
+                        ordre=dernier_ordre + 1
+                    )
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"Échéance ajoutée : {montant}€ pour le {date_echeance}",
+                        utilisateur=request.user
+                    )
+                    
+                    messages.success(request, "Échéance ajoutée")
+                except (ValueError, TypeError):
+                    messages.error(request, "Données invalides")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+        
+        elif action == 'delete_echeance':
+            echeance_id = request.POST.get('echeance_id')
+            try:
+                echeance = Echeance.objects.get(id=echeance_id, operation=operation)
+                echeance.delete()
+                messages.success(request, "Échéance supprimée")
+            except Echeance.DoesNotExist:
+                messages.error(request, "Échéance introuvable")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+        
+        elif action == 'update_mode_paiement':
+            mode_paiement = request.POST.get('mode_paiement')
+            if mode_paiement in ['comptant', 'echelonne']:
+                operation.mode_paiement = mode_paiement
+                operation.save()
+                
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Mode de paiement changé : {operation.get_mode_paiement_display()}",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, "Mode de paiement mis à jour")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+        
+        # GESTION DU CHANGEMENT DE STATUT
+        elif action == 'change_status':
             nouveau_statut = request.POST.get('statut')
             date_prevue_str = request.POST.get('date_prevue', '')
             date_realisation_str = request.POST.get('date_realisation', '')
@@ -249,6 +329,7 @@ def operation_detail(request, operation_id):
                 messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
                 return redirect('operation_detail', operation_id=operation.id)
 
+        # GESTION DES INTERVENTIONS
         elif action == 'add_intervention':
             description = request.POST.get('description', '').strip()
             montant_str = request.POST.get('montant', '').strip()
@@ -306,6 +387,7 @@ def operation_detail(request, operation_id):
             
             return redirect('operation_detail', operation_id=operation.id)
         
+        # GESTION DE LA PLANIFICATION
         elif action == 'update_planning':
             from datetime import datetime
             planning_type = request.POST.get('planning_type')
@@ -350,9 +432,15 @@ def operation_detail(request, operation_id):
     
     # GET - Récupérer les données
     interventions = operation.interventions.all().order_by('ordre')
+    echeances = operation.echeances.all().order_by('ordre')
     historique = operation.historique.all().order_by('-date')[:10]
     
-    # Préparer les lignes pour JavaScript
+    # Calculs pour les échéances
+    total_echeances = echeances.aggregate(total=Sum('montant'))['total'] or 0
+    reste_a_payer = operation.montant_total - total_echeances
+    
+    # Préparer les données pour JavaScript
+    import json
     lignes_json = json.dumps([
         {
             'id': int(i.id),
@@ -361,13 +449,26 @@ def operation_detail(request, operation_id):
         } for i in interventions
     ])
     
+    echeances_json = json.dumps([
+        {
+            'id': int(e.id),
+            'numero': e.numero,
+            'montant': float(e.montant),
+            'date_echeance': e.date_echeance.isoformat() if e.date_echeance else ''
+        } for e in echeances
+    ])
+    
     context = {
         'operation': operation,
         'interventions': interventions,
+        'echeances': echeances,
+        'total_echeances': total_echeances,
+        'reste_a_payer': reste_a_payer,
         'historique': historique,
         'statuts_choices': Operation.STATUTS,
         'montant_total': operation.montant_total,
         'lignes_json': lignes_json,
+        'echeances_json': echeances_json,
     }
     
     return render(request, 'operations/detail.html', context)
