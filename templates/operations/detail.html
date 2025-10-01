@@ -666,7 +666,6 @@ function updateDevisDisplay() {
   const isCreated = devisCreeSelect.value === 'oui';
   
   if (devisDetails) {
-    // ✅ Ajouter/retirer la classe au lieu de modifier le style
     if (isCreated) {
       devisDetails.classList.remove('hidden');
     } else {
@@ -675,7 +674,6 @@ function updateDevisDisplay() {
   }
   
   if (noDevisAlert) {
-    // ✅ Même chose pour l'alerte
     if (isCreated) {
       noDevisAlert.classList.add('hidden');
     } else {
@@ -710,8 +708,7 @@ function updateDevisAlerts() {
 
 if (devisCreeSelect) {
   devisCreeSelect.addEventListener('change', updateDevisDisplay);
-  updateDevisDisplay(); // Premier appel
-  setTimeout(updateDevisDisplay, 0); // Deuxième appel après le rendu
+  updateDevisDisplay(); // Appel au chargement
 }
 
 if (devisStatutSelect) {
