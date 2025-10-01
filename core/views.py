@@ -188,12 +188,15 @@ def operation_detail(request, operation_id):
         # GESTION DU STATUT DU DEVIS
         if action == 'update_devis_status':
             devis_cree = request.POST.get('devis_cree') == 'oui'
-            devis_date_envoi = request.POST.get('devis_date_envoi', '')
-            devis_statut = request.POST.get('devis_statut', '')
-            
-            operation.devis_cree = devis_cree
-            
+        
+# This Python code snippet is handling the updating of a "devis" (which translates to "quote" or
+# "estimate" in English) within an operation. Here is a breakdown of the key steps:
             if devis_cree:
+                devis_date_envoi = request.POST.get('devis_date_envoi', '')
+                devis_statut = request.POST.get('devis_statut', '')
+                
+                operation.devis_cree = True
+                
                 from datetime import datetime
                 if devis_date_envoi:
                     try:
@@ -211,12 +214,12 @@ def operation_detail(request, operation_id):
                     action=f"Devis mis à jour - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'N/A'}",
                     utilisateur=request.user
                 )
+                
+                messages.success(request, "Statut du devis enregistré")
             else:
-                operation.devis_date_envoi = None
-                operation.devis_statut = None
-                operation.save()
+                # NE PAS SAUVEGARDER si "Non" - juste ignorer
+                messages.info(request, "Aucun devis créé")
             
-            messages.success(request, "Statut du devis mis à jour")
             return redirect('operation_detail', operation_id=operation.id)
         
         # GESTION DES ÉCHÉANCES
