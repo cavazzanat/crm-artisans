@@ -297,7 +297,7 @@
             </div>
 
             <!-- CETTE DIV S'AFFICHE UNIQUEMENT SI OUI -->
-            <div id="devis-details" style="margin-top:1rem; display:none">
+            <div id="devis-details" style="margin-top:1rem; {% if not operation.devis_cree %}display:none{% endif %}">
               <div class="info-grid">
                 <div class="info-card">
                   <div class="label">Date d'envoi au client</div>
