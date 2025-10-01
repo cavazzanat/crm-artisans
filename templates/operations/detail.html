@@ -181,6 +181,7 @@
     .workflow-arrow{ color:var(--muted); font-weight:bold }
 
     .main-content{ display:grid; grid-template-columns:2fr 1fr; gap:2rem; align-items:start }
+    .hidden { display: none !important; }
 
     @media (max-width: 1024px){ 
       .main-content{ grid-template-columns: 1fr }
@@ -297,7 +298,7 @@
             </div>
 
             <!-- CETTE DIV S'AFFICHE UNIQUEMENT SI OUI -->
-            <div id="devis-details" style="margin-top:1rem; {% if not operation.devis_cree %}display:none{% endif %}">
+            <div id="devis-details" class="{% if not operation.devis_cree %}hidden{% endif %}" style="margin-top:1rem">
               <div class="info-grid">
                 <div class="info-card">
                   <div class="label">Date d'envoi au client</div>
