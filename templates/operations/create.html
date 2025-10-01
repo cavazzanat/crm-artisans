@@ -468,6 +468,14 @@
         const input = document.getElementById(id);
         if (input) input.required = false;
       });
+
+        // NOUVELLE LOGIQUE : Afficher selon statut
+      if (statut === 'en_attente_devis') {
+        // Rien de spécial, juste le statut
+      }
+      else if (statut === 'a_planifier') {
+        // Rien de spécial
+      }
       
       if (statut === 'planifie') {
         datePrevueGroup.style.display = 'block';

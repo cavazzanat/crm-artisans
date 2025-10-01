@@ -89,6 +89,17 @@ class Operation(models.Model):
         verbose_name="Mode de paiement"
     )
     
+    date_realisation = models.DateTimeField(
+        null=True, 
+        blank=True,
+        verbose_name="Date de réalisation"
+    )
+    date_paiement = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de paiement"
+    )
+    
     class Meta:
         ordering = ['-date_creation']
     
