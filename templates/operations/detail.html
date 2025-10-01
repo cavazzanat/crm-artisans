@@ -710,9 +710,8 @@ function updateDevisAlerts() {
 
 if (devisCreeSelect) {
   devisCreeSelect.addEventListener('change', updateDevisDisplay);
-  
-  // IMPORTANT : Appeler au chargement pour afficher l'état initial
-  updateDevisDisplay();
+  updateDevisDisplay(); // Premier appel
+  setTimeout(updateDevisDisplay, 0); // Deuxième appel après le rendu
 }
 
 if (devisStatutSelect) {
