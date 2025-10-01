@@ -666,11 +666,21 @@ function updateDevisDisplay() {
   const isCreated = devisCreeSelect.value === 'oui';
   
   if (devisDetails) {
-    devisDetails.style.display = isCreated ? 'block' : 'none';
+    // ✅ Ajouter/retirer la classe au lieu de modifier le style
+    if (isCreated) {
+      devisDetails.classList.remove('hidden');
+    } else {
+      devisDetails.classList.add('hidden');
+    }
   }
   
   if (noDevisAlert) {
-    noDevisAlert.style.display = isCreated ? 'none' : 'flex';
+    // ✅ Même chose pour l'alerte
+    if (isCreated) {
+      noDevisAlert.classList.add('hidden');
+    } else {
+      noDevisAlert.classList.remove('hidden');
+    }
   }
   
   if (isCreated && devisStatutSelect) {
