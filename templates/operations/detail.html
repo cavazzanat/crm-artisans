@@ -643,7 +643,12 @@
   <script>
 document.addEventListener('DOMContentLoaded', function() {
   let MONTANT_TOTAL = 0; // Remplacer par {{ montant_total|default:0 }}
+  let echeances = [];
+  let echeanceCounter = 0;
   
+  // ========================================
+  // FONCTIONS UTILITAIRES
+  // ========================================
   function getNowFormatted() {
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
@@ -654,6 +659,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
     return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  }
+
+  function formatMontant(montant) {
+    return new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2}).format(montant) + ' €';
   }
 
   // ========================================
@@ -669,27 +678,18 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Afficher/masquer la section des détails du devis
     if (devisDetails) {
-      if (isCreated) {
-        devisDetails.classList.remove('hidden');
-      } else {
-        devisDetails.classList.add('hidden');
-      }
+      devisDetails.style.display = isCreated ? 'block' : 'none';
     }
     
     // Afficher/masquer l'alerte "pas de devis"
     if (noDevisAlert) {
-      if (isCreated) {
-        noDevisAlert.style.display = 'none';
-      } else {
-        noDevisAlert.style.display = 'flex';
-      }
+      noDevisAlert.style.display = isCreated ? 'none' : 'flex';
     }
     
     // Si devis créé, mettre à jour les alertes selon le statut
     if (isCreated && devisStatutSelect) {
       updateDevisAlerts();
     } else {
-      // Si pas de devis, masquer toutes les alertes de statut
       hideAllDevisAlerts();
     }
   }
@@ -726,13 +726,11 @@ document.addEventListener('DOMContentLoaded', function() {
   // Attacher les événements
   if (devisCreeSelect) {
     devisCreeSelect.addEventListener('change', updateDevisDisplay);
-    // IMPORTANT : Appeler au chargement pour initialiser l'état correct
     updateDevisDisplay();
   }
 
   if (devisStatutSelect) {
     devisStatutSelect.addEventListener('change', updateDevisAlerts);
-    // IMPORTANT : Appeler au chargement si un devis existe
     if (devisCreeSelect && devisCreeSelect.value === 'oui') {
       updateDevisAlerts();
     }
@@ -787,12 +785,73 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (planificationType) {
     planificationType.addEventListener('change', updatePlanningDisplay);
-    updatePlanningDisplay(); // Initialiser au chargement
+    updatePlanningDisplay();
   }
 
   if (planningDate) {
     planningDate.addEventListener('change', checkDatePassee);
-    checkDatePassee(); // Initialiser au chargement
+    checkDatePassee();
+  }
+
+  // ========================================
+  // GESTION DES LIGNES DE DEVIS
+  // ========================================
+  window.ajouterLigne = function() {
+    const description = document.getElementById('nouvelle-description').value.trim();
+    const montant = parseFloat(document.getElementById('nouveau-montant').value);
+    
+    if (!description || !montant || montant <= 0) {
+      alert('Veuillez remplir la description et un montant valide');
+      return;
+    }
+    
+    const tbody = document.getElementById('lignes-devis');
+    const newRow = document.createElement('tr');
+    newRow.innerHTML = `
+      <td>${description}</td>
+      <td><strong>${montant.toFixed(2)}</strong></td>
+      <td><button class="btn danger sm" onclick="supprimerLigne(this)">Supprimer</button></td>
+    `;
+    tbody.appendChild(newRow);
+    
+    document.getElementById('nouvelle-description').value = '';
+    document.getElementById('nouveau-montant').value = '';
+    
+    calculerTotalDevis();
+  };
+
+  window.supprimerLigne = function(btn) {
+    if (confirm('Supprimer cette ligne ?')) {
+      btn.closest('tr').remove();
+      calculerTotalDevis();
+    }
+  };
+
+  function calculerTotalDevis() {
+    const tbody = document.getElementById('lignes-devis');
+    const rows = tbody.querySelectorAll('tr');
+    let total = 0;
+    
+    rows.forEach(row => {
+      const montantText = row.querySelector('td:nth-child(2) strong')?.textContent;
+      if (montantText) {
+        total += parseFloat(montantText.replace(',', '.')) || 0;
+      }
+    });
+    
+    MONTANT_TOTAL = total;
+    const totalDevisElement = document.getElementById('total-devis');
+    if (totalDevisElement) {
+      totalDevisElement.textContent = formatMontant(total);
+    }
+    
+    // Mettre à jour aussi le total des échéances si l'élément existe
+    const totalEcheancesElement = document.getElementById('total-echeances');
+    if (totalEcheancesElement) {
+      totalEcheancesElement.textContent = formatMontant(total);
+    }
+    
+    calculerReste();
   }
 
   // ========================================
@@ -845,6 +904,81 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Initialiser l'état au chargement
   toggleModePaiement();
+
+  // ========================================
+  // GESTION DES ÉCHÉANCES (PAIEMENT ÉCHELONNÉ)
+  // ========================================
+  window.ajouterEcheance = function() {
+    echeanceCounter++;
+    const id = 'ech-' + echeanceCounter;
+    echeances.push({ id, montant: 0, date: getTodayDate() });
+    renderEcheances();
+  };
+
+  window.supprimerEcheance = function(id) {
+    if (confirm('Supprimer cette échéance ?')) {
+      echeances = echeances.filter(e => e.id !== id);
+      renderEcheances();
+    }
+  };
+
+  function calculerReste() {
+    const totalEcheances = echeances.reduce((sum, e) => sum + e.montant, 0);
+    const resteElement = document.getElementById('reste-calcul');
+    if (resteElement) {
+      resteElement.textContent = formatMontant(MONTANT_TOTAL - totalEcheances);
+    }
+  }
+
+  function renderEcheances() {
+    const tbody = document.getElementById('echeances-list');
+    if (!tbody) return;
+    
+    // Supprimer les lignes d'échéances existantes
+    const existingRows = tbody.querySelectorAll('.echeance-row');
+    existingRows.forEach(row => row.remove());
+    
+    // Trouver la ligne "Total"
+    const totalRow = tbody.querySelector('.total-row');
+    
+    // Ajouter chaque échéance
+    echeances.forEach((ech, i) => {
+      const row = document.createElement('tr');
+      row.className = 'echeance-row';
+      row.innerHTML = `
+        <td>Éch. ${i + 1}</td>
+        <td><input type="number" step="0.01" min="0" class="input" style="max-width:100px; margin:0; padding:.4rem" data-id="${ech.id}" data-field="montant" value="${ech.montant || ''}"> €</td>
+        <td><input type="date" value="${ech.date}" class="input" style="max-width:150px; padding:.4rem" data-id="${ech.id}" data-field="date"></td>
+        <td><button type="button" class="btn sm" onclick="supprimerEcheance('${ech.id}')">×</button></td>
+      `;
+      
+      // Insérer avant la ligne "Total" (ou à la fin si pas de totalRow)
+      if (totalRow) {
+        totalRow.parentNode.insertBefore(row, totalRow);
+      } else {
+        tbody.appendChild(row);
+      }
+    });
+    
+    // Attacher les événements sur les inputs
+    document.querySelectorAll('.echeance-row input').forEach(input => {
+      input.addEventListener('input', (e) => {
+        const id = e.target.dataset.id;
+        const field = e.target.dataset.field;
+        const echeance = echeances.find(e => e.id === id);
+        if (echeance) {
+          if (field === 'montant') {
+            echeance.montant = parseFloat(e.target.value) || 0;
+          } else if (field === 'date') {
+            echeance.date = e.target.value;
+          }
+          calculerReste();
+        }
+      });
+    });
+    
+    calculerReste();
+  }
 
   // ========================================
   // INITIALISATION DES DATES PAR DÉFAUT
