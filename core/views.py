@@ -271,17 +271,33 @@ def operation_detail(request, operation_id):
         
         elif action == 'update_mode_paiement':
             mode_paiement = request.POST.get('mode_paiement')
+            date_paiement_comptant = request.POST.get('date_paiement_comptant', '')
+            
             if mode_paiement in ['comptant', 'echelonne']:
                 operation.mode_paiement = mode_paiement
+                
+                # Si paiement comptant avec date, marquer comme payé
+                if mode_paiement == 'comptant' and date_paiement_comptant:
+                    from datetime import datetime
+                    try:
+                        operation.date_paiement = datetime.fromisoformat(date_paiement_comptant).date()
+                        operation.statut = 'paye'  # ← IMPORTANT : Changer le statut
+                    except ValueError:
+                        pass
+                
                 operation.save()
                 
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=f"Mode de paiement changé : {operation.get_mode_paiement_display()}",
+                    action=f"Mode de paiement changé : {operation.get_mode_paiement_display()}" + 
+                        (f" - Payé le {operation.date_paiement}" if operation.statut == 'paye' else ""),
                     utilisateur=request.user
                 )
                 
-                messages.success(request, "Mode de paiement mis à jour")
+                if operation.statut == 'paye':
+                    messages.success(request, "Paiement enregistré - Opération marquée comme payée")
+                else:
+                    messages.success(request, "Mode de paiement mis à jour")
             
             return redirect('operation_detail', operation_id=operation.id)
         
