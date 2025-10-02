@@ -280,22 +280,26 @@ def operation_detail(request, operation_id):
                 if mode_paiement == 'comptant' and date_paiement_comptant:
                     from datetime import datetime
                     try:
-                        operation.date_paiement = datetime.fromisoformat(date_paiement_comptant).date()
-                        operation.statut = 'paye'  # ← IMPORTANT : Changer le statut
-                    except ValueError:
-                        pass
+                        # Convertir la date en datetime (avec l'heure à minuit)
+                        date_obj = datetime.strptime(date_paiement_comptant, '%Y-%m-%d')
+                        operation.date_paiement = date_obj  # ← Datetime complet, pas .date()
+                        operation.statut = 'paye'
+                        print(f"✓ Paiement enregistré: {operation.date_paiement}")
+                    except ValueError as e:
+                        print(f"✗ Erreur conversion date: {e}")
+                        messages.error(request, "Format de date invalide")
                 
                 operation.save()
                 
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=f"Mode de paiement changé : {operation.get_mode_paiement_display()}" + 
-                        (f" - Payé le {operation.date_paiement}" if operation.statut == 'paye' else ""),
+                    action=f"Mode de paiement: {operation.get_mode_paiement_display()}" + 
+                        (f" - Payé le {operation.date_paiement.strftime('%d/%m/%Y')}" if operation.statut == 'paye' else ""),
                     utilisateur=request.user
                 )
                 
                 if operation.statut == 'paye':
-                    messages.success(request, "Paiement enregistré - Opération marquée comme payée")
+                    messages.success(request, "✓ Paiement enregistré - Opération marquée comme payée")
                 else:
                     messages.success(request, "Mode de paiement mis à jour")
             
@@ -335,6 +339,11 @@ def operation_detail(request, operation_id):
                             operation.date_paiement = datetime.fromisoformat(date_paiement_str.replace('T', ' '))
                         except ValueError:
                             pass
+                        
+                print(f"DEBUG: date_paiement_comptant reçu = '{date_paiement_comptant}'")
+                print(f"DEBUG: mode_paiement = '{mode_paiement}'")
+                print(f"DEBUG: statut avant save = '{operation.statut}'")
+                print(f"DEBUG: date_paiement avant save = '{operation.date_paiement}'")
                 
                 operation.save()
                 
