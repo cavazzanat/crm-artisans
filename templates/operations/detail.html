@@ -710,6 +710,7 @@
   </div>
 
   <script>
+    
 document.addEventListener('DOMContentLoaded', function() {
   let MONTANT_TOTAL = 0; // Remplacer par {{ montant_total|default:0 }}
   let echeances = [];
@@ -747,7 +748,13 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Afficher/masquer la section des détails du devis
     if (devisDetails) {
-      devisDetails.style.display = isCreated ? 'block' : 'none';
+      if (isCreated) {
+        devisDetails.classList.remove('hidden');
+        devisDetails.style.display = 'block';  // ← Ajoutez cette ligne
+      } else {
+        devisDetails.classList.add('hidden');
+        devisDetails.style.display = 'none';   // ← Ajoutez cette ligne
+      }
     }
     
     // Afficher/masquer l'alerte "pas de devis"
