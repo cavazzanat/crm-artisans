@@ -503,7 +503,7 @@
         </section>
 
         <!-- Paiement -->
-        {% if operation.statut == 'realise' or operation.statut == 'paye' %}
+        {% if operation.devis_statut == 'accepte' or operation.statut == 'realise' or operation.statut == 'paye' %}
         <section class="section">
           <div class="section-header">
             <h2 class="section-title">Paiement</h2>
@@ -512,6 +512,13 @@
               Générer facture
             </button>
           </div>
+          
+          {% if operation.statut != 'realise' and operation.statut != 'paye' %}
+          <div class="alert info" style="margin-bottom:1rem">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+            <div>Vous pouvez enregistrer des acomptes avant la réalisation (arrhes, avances).</div>
+          </div>
+          {% endif %}
           
           <form method="POST" id="paiement-form">
             {% csrf_token %}
