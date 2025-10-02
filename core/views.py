@@ -630,146 +630,218 @@ def client_detail(request, client_id):
 def operation_create(request):
     """Formulaire de création d'une nouvelle opération"""
     if request.method == 'POST':
-        # Récupération des données du formulaire
-        client_id = request.POST.get('client_id')
-        nouveau_client_nom = request.POST.get('nouveau_client_nom', '').strip()
-        nouveau_client_prenom = request.POST.get('nouveau_client_prenom', '').strip()
-        nouveau_client_email = request.POST.get('nouveau_client_email', '').strip()
-        nouveau_client_telephone = request.POST.get('nouveau_client_telephone', '').strip()
-        nouveau_client_adresse = request.POST.get('nouveau_client_adresse', '').strip()
-        nouveau_client_ville = request.POST.get('nouveau_client_ville', '').strip()
-        
-        type_prestation = request.POST.get('type_prestation', '').strip()
-        adresse_intervention = request.POST.get('adresse_intervention', '').strip()
-        statut = request.POST.get('statut', 'en_attente_devis')
-        
-        # NOUVEAU : Gestion des dates selon le statut
-        date_prevue_str = request.POST.get('date_prevue', '')
-        date_realisation_str = request.POST.get('date_realisation', '')
-        
-        # Interventions (lignes du devis)
-        descriptions = request.POST.getlist('description[]')
-        montants = request.POST.getlist('montant[]')
+        print("\n" + "="*60)
+        print("DÉBUT CRÉATION OPÉRATION")
+        print("="*60)
+        print(f"User: {request.user.username} (ID: {request.user.id})")
+        print(f"\nDonnées POST reçues:")
+        for key, value in request.POST.items():
+            if key != 'csrfmiddlewaretoken':
+                print(f"  {key}: '{value}'")
         
         try:
-            # Déterminer le client
-            if client_id and client_id != 'nouveau':
+            # 1. GESTION DU CLIENT
+            client_id = request.POST.get('client_id')
+            client_type = 'nouveau' if not client_id or client_id == '' else 'existant'
+            
+            print(f"\n{'─'*60}")
+            print("ÉTAPE 1: GESTION DU CLIENT")
+            print(f"{'─'*60}")
+            print(f"Type: {client_type}")
+            print(f"ID reçu: '{client_id}'")
+            
+            if client_type == 'existant' and client_id:
                 client = get_object_or_404(Client, id=client_id, user=request.user)
+                print(f"✓ Client existant trouvé: {client.nom} {client.prenom} (ID: {client.id})")
             else:
-                # Créer un nouveau client
-                if not (nouveau_client_nom and nouveau_client_prenom and nouveau_client_telephone):
+                # Nouveau client
+                nom = request.POST.get('nouveau_client_nom', '').strip()
+                prenom = request.POST.get('nouveau_client_prenom', '').strip()
+                telephone = request.POST.get('nouveau_client_telephone', '').strip()
+                email = request.POST.get('nouveau_client_email', '').strip()
+                adresse = request.POST.get('nouveau_client_adresse', '').strip()
+                ville = request.POST.get('nouveau_client_ville', '').strip()
+                
+                print(f"Création nouveau client:")
+                print(f"  Nom: '{nom}'")
+                print(f"  Prénom: '{prenom}'")
+                print(f"  Téléphone: '{telephone}'")
+                
+                if not (nom and prenom and telephone):
+                    print("✗ ERREUR: Champs obligatoires manquants")
                     messages.error(request, "Nom, prénom et téléphone sont obligatoires pour un nouveau client")
-                    return redirect('operation_create')
+                    clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
+                    context = {'clients': clients, 'statuts_choices': Operation.STATUTS}
+                    return render(request, 'operations/create.html', context)
                 
                 client = Client.objects.create(
                     user=request.user,
-                    nom=nouveau_client_nom,
-                    prenom=nouveau_client_prenom,
-                    email=nouveau_client_email,
-                    telephone=nouveau_client_telephone,
-                    adresse=nouveau_client_adresse,
-                    ville=nouveau_client_ville
+                    nom=nom,
+                    prenom=prenom,
+                    email=email,
+                    telephone=telephone,
+                    adresse=adresse,
+                    ville=ville
                 )
+                print(f"✓ Nouveau client créé: {client.nom} {client.prenom} (ID: {client.id})")
             
-            # Dans operation_create, remplacez la section "NOUVELLE LOGIQUE" par :
-
-            # LOGIQUE A 3 DATES : Traitement selon le statut
+            # 2. INFORMATIONS OPÉRATION
+            type_prestation = request.POST.get('type_prestation', '').strip()
+            adresse_intervention = request.POST.get('adresse_intervention', '').strip()
+            statut = request.POST.get('statut', 'en_attente_devis')
+            
+            print(f"\n{'─'*60}")
+            print("ÉTAPE 2: INFORMATIONS OPÉRATION")
+            print(f"{'─'*60}")
+            print(f"Type prestation: '{type_prestation}'")
+            print(f"Adresse intervention: '{adresse_intervention}'")
+            print(f"Statut: '{statut}'")
+            
+            if not type_prestation:
+                print("✗ ERREUR: Type de prestation manquant")
+                messages.error(request, "Le type de prestation est obligatoire")
+                clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
+                context = {'clients': clients, 'statuts_choices': Operation.STATUTS}
+                return render(request, 'operations/create.html', context)
+            
+            # 3. GESTION DES DATES
             from datetime import datetime
             date_prevue_complete = None
             date_realisation_complete = None
             date_paiement_complete = None
-
+            
+            date_prevue_str = request.POST.get('date_prevue', '')
+            date_realisation_str = request.POST.get('date_realisation', '')
+            date_paiement_str = request.POST.get('date_paiement', '')
+            
+            print(f"\n{'─'*60}")
+            print("ÉTAPE 3: TRAITEMENT DES DATES")
+            print(f"{'─'*60}")
+            print(f"date_prevue reçue: '{date_prevue_str}'")
+            print(f"date_realisation reçue: '{date_realisation_str}'")
+            print(f"date_paiement reçue: '{date_paiement_str}'")
+            
             if statut == 'planifie' and date_prevue_str:
-                # Statut planifié : utiliser date_prevue
                 try:
                     date_prevue_complete = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
-                    from django.utils import timezone
-                    if date_prevue_complete <= timezone.now():
-                        messages.error(request, "Impossible de planifier une opération dans le passé")
-                        # Recharger le formulaire avec les clients
-                        clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
-                        context = {
-                            'clients': clients,
-                            'statuts_choices': Operation.STATUTS,
-                        }
-                        return render(request, 'operations/create.html', context)
-                
-                except ValueError:
-                    pass
-
-            elif statut == 'realise':
-                # Statut réalisé : utiliser date_realisation
-                date_realisation_str = request.POST.get('date_realisation', '')
-                if date_realisation_str:
-                    try:
-                        date_realisation_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
-                    except ValueError:
-                        pass
-
+                    print(f"✓ date_prevue convertie: {date_prevue_complete}")
+                except ValueError as e:
+                    print(f"✗ Erreur conversion date_prevue: {e}")
+            
+            elif statut == 'realise' and date_realisation_str:
+                try:
+                    date_realisation_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                    print(f"✓ date_realisation convertie: {date_realisation_complete}")
+                except ValueError as e:
+                    print(f"✗ Erreur conversion date_realisation: {e}")
+            
             elif statut == 'paye':
-                # Statut payé : récupérer les 2 dates (réalisation + paiement)
-                date_realisation_str = request.POST.get('date_realisation', '')
-                date_paiement_str = request.POST.get('date_paiement', '')
-                
                 if date_realisation_str:
                     try:
                         date_realisation_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
-                    except ValueError:
-                        pass
+                        print(f"✓ date_realisation convertie: {date_realisation_complete}")
+                    except ValueError as e:
+                        print(f"✗ Erreur conversion date_realisation: {e}")
                         
                 if date_paiement_str:
                     try:
                         date_paiement_complete = datetime.fromisoformat(date_paiement_str.replace('T', ' '))
-                    except ValueError:
-                        pass
+                        print(f"✓ date_paiement convertie: {date_paiement_complete}")
+                    except ValueError as e:
+                        print(f"✗ Erreur conversion date_paiement: {e}")
             
-            # Créer l'opération
-            # Remplacez la partie création d'opération par :
+            # 4. CRÉATION DE L'OPÉRATION
+            print(f"\n{'─'*60}")
+            print("ÉTAPE 4: CRÉATION DANS LA BASE DE DONNÉES")
+            print(f"{'─'*60}")
+            
+            adresse_finale = adresse_intervention or f"{client.adresse}, {client.ville}"
+            print(f"Adresse finale: '{adresse_finale}'")
+            print(f"Tentative de création...")
+            
             operation = Operation.objects.create(
                 user=request.user,
                 client=client,
                 type_prestation=type_prestation,
-                adresse_intervention=adresse_intervention or f"{client.adresse}, {client.ville}",
+                adresse_intervention=adresse_finale,
                 date_prevue=date_prevue_complete,
-                date_realisation=date_realisation_complete,  # À décommenter après migration
-                date_paiement=date_paiement_complete,        # À décommenter après migration
+                date_realisation=date_realisation_complete,
+                date_paiement=date_paiement_complete,
                 statut=statut
             )
             
-            # Créer les interventions
+            print(f"✓✓✓ OPÉRATION CRÉÉE AVEC SUCCÈS")
+            print(f"    ID: {operation.id}")
+            print(f"    Code: {operation.id_operation}")
+            
+            # 5. INTERVENTIONS
+            descriptions = request.POST.getlist('description[]')
+            montants = request.POST.getlist('montant[]')
+            
+            print(f"\n{'─'*60}")
+            print("ÉTAPE 5: CRÉATION DES INTERVENTIONS")
+            print(f"{'─'*60}")
+            print(f"Nombre de lignes reçues: {len(descriptions)}")
+            
+            interventions_creees = 0
             for i, (description, montant) in enumerate(zip(descriptions, montants)):
-                if description.strip() and montant.strip():
+                desc_clean = description.strip()
+                mont_clean = montant.strip()
+                
+                if desc_clean and mont_clean:
                     try:
-                        Intervention.objects.create(
+                        intervention = Intervention.objects.create(
                             operation=operation,
-                            description=description.strip(),
-                            montant=float(montant),
+                            description=desc_clean,
+                            montant=float(mont_clean),
                             ordre=i + 1
                         )
-                    except ValueError:
-                        pass  # Ignorer les montants invalides
+                        interventions_creees += 1
+                        print(f"  ✓ Ligne {i+1}: {desc_clean} - {mont_clean}€")
+                    except ValueError as e:
+                        print(f"  ✗ Erreur montant ligne {i+1}: {e}")
+                else:
+                    print(f"  ⊘ Ligne {i+1} ignorée (vide)")
             
-            # Ajouter à l'historique
+            print(f"Total interventions créées: {interventions_creees}")
+            
+            # 6. HISTORIQUE
             HistoriqueOperation.objects.create(
                 operation=operation,
                 action="Opération créée",
                 utilisateur=request.user
             )
+            print(f"✓ Historique créé")
+            
+            print(f"\n{'='*60}")
+            print("✓✓✓ SUCCÈS COMPLET - OPÉRATION ENREGISTRÉE")
+            print(f"{'='*60}\n")
             
             messages.success(request, f"Opération {operation.id_operation} créée avec succès")
             return redirect('operation_detail', operation_id=operation.id)
             
         except Exception as e:
+            print(f"\n{'='*60}")
+            print("✗✗✗ ERREUR CRITIQUE")
+            print(f"{'='*60}")
+            print(f"Type d'erreur: {type(e).__name__}")
+            print(f"Message: {str(e)}")
+            print(f"\nTraceback complet:")
+            import traceback
+            traceback.print_exc()
+            print(f"{'='*60}\n")
+            
             messages.error(request, f"Erreur lors de la création : {str(e)}")
+            clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
+            context = {'clients': clients, 'statuts_choices': Operation.STATUTS}
+            return render(request, 'operations/create.html', context)
     
-    # GET - Afficher le formulaire
+    # GET - Formulaire vide
     clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
-    
     context = {
         'clients': clients,
         'statuts_choices': Operation.STATUTS,
     }
-    
     return render(request, 'operations/create.html', context)
 
 @login_required

@@ -491,22 +491,31 @@
       }
     }
 
-    function validateForm(event) {
-      const statut = document.getElementById('statut').value;
-      const datePrevue = document.getElementById('date_prevue');
-      
-      if (statut === 'planifie' && datePrevue && datePrevue.value) {
-        const selectedDate = new Date(datePrevue.value);
-        const now = new Date();
-        
-        if (selectedDate <= now) {
-          event.preventDefault();
-          alert('Erreur : Impossible de planifier une opération dans le passé');
-          return false;
-        }
-      }
-      return true;
+function validateForm(event) {
+  console.log('Validation du formulaire...');
+  
+  const statut = document.getElementById('statut').value;
+  console.log('Statut sélectionné:', statut);
+  
+  const datePrevue = document.getElementById('date_prevue');
+  
+  if (statut === 'planifie' && datePrevue && datePrevue.value) {
+    const selectedDate = new Date(datePrevue.value);
+    const now = new Date();
+    
+    console.log('Date sélectionnée:', selectedDate);
+    console.log('Date actuelle:', now);
+    
+    if (selectedDate <= now) {
+      event.preventDefault();
+      alert('Erreur : Impossible de planifier une opération dans le passé');
+      return false;
     }
+  }
+  
+  console.log('Formulaire valide, soumission en cours...');
+  return true;
+}
 
     let interventionCount = 0;
 
