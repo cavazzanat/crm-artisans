@@ -683,6 +683,17 @@ def operation_create(request):
                 # Statut planifié : utiliser date_prevue
                 try:
                     date_prevue_complete = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
+                    from django.utils import timezone
+                    if date_prevue_complete <= timezone.now():
+                        messages.error(request, "Impossible de planifier une opération dans le passé")
+                        # Recharger le formulaire avec les clients
+                        clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
+                        context = {
+                            'clients': clients,
+                            'statuts_choices': Operation.STATUTS,
+                        }
+                        return render(request, 'operations/create.html', context)
+                
                 except ValueError:
                     pass
 
