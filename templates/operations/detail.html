@@ -641,176 +641,232 @@
   </div>
 
   <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      let MONTANT_TOTAL = {{ montant_total|default:0 }};
-      
-      function getNowFormatted() {
-        const now = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
-      }
-
-      function getTodayDate() {
-        const now = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
-      }
-
-// Gestion du statut du devis
-const devisCreeSelect = document.getElementById('devis-cree');
-const devisDetails = document.getElementById('devis-details');
-const noDevisAlert = document.getElementById('no-devis-alert');
-const devisStatutSelect = document.getElementById('devis-statut');
-
-function updateDevisDisplay() {
-  const isCreated = devisCreeSelect.value === 'oui';
+document.addEventListener('DOMContentLoaded', function() {
+  let MONTANT_TOTAL = 0; // Remplacer par {{ montant_total|default:0 }}
   
-  if (devisDetails) {
-    if (isCreated) {
-      devisDetails.classList.remove('hidden');
+  function getNowFormatted() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+  }
+
+  function getTodayDate() {
+    const now = new Date();
+    const pad = n => String(n).padStart(2, '0');
+    return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  }
+
+  // ========================================
+  // GESTION DU STATUT DU DEVIS
+  // ========================================
+  const devisCreeSelect = document.getElementById('devis-cree');
+  const devisDetails = document.getElementById('devis-details');
+  const noDevisAlert = document.getElementById('no-devis-alert');
+  const devisStatutSelect = document.getElementById('devis-statut');
+
+  function updateDevisDisplay() {
+    const isCreated = devisCreeSelect.value === 'oui';
+    
+    // Afficher/masquer la section des détails du devis
+    if (devisDetails) {
+      if (isCreated) {
+        devisDetails.classList.remove('hidden');
+      } else {
+        devisDetails.classList.add('hidden');
+      }
+    }
+    
+    // Afficher/masquer l'alerte "pas de devis"
+    if (noDevisAlert) {
+      if (isCreated) {
+        noDevisAlert.style.display = 'none';
+      } else {
+        noDevisAlert.style.display = 'flex';
+      }
+    }
+    
+    // Si devis créé, mettre à jour les alertes selon le statut
+    if (isCreated && devisStatutSelect) {
+      updateDevisAlerts();
     } else {
-      devisDetails.classList.add('hidden');
+      // Si pas de devis, masquer toutes les alertes de statut
+      hideAllDevisAlerts();
     }
   }
-  
-  if (noDevisAlert) {
-    if (isCreated) {
-      noDevisAlert.classList.add('hidden');
-    } else {
-      noDevisAlert.classList.remove('hidden');
-    }
-  }
-  
-  if (isCreated && devisStatutSelect) {
-    updateDevisAlerts();
-  }
-}
 
-function updateDevisAlerts() {
-  if (!devisStatutSelect) return;
-  
-  const statut = devisStatutSelect.value;
-  
-  const alerts = {
-    'devis-accepte-alert': statut === 'accepte',
-    'devis-refuse-alert': statut === 'refuse',
-    'devis-attente-alert': statut === 'en_attente',
-    'devis-relance-alert': statut === 'relance'
-  };
-  
-  Object.keys(alerts).forEach(alertId => {
-    const alertElement = document.getElementById(alertId);
-    if (alertElement) {
-      alertElement.style.display = alerts[alertId] ? 'flex' : 'none';
-    }
-  });
-}
-
-if (devisCreeSelect) {
-  devisCreeSelect.addEventListener('change', updateDevisDisplay);
-  updateDevisDisplay(); // Appel au chargement
-}
-
-if (devisStatutSelect) {
-  devisStatutSelect.addEventListener('change', updateDevisAlerts);
-}
-
-      // Gestion de la planification
-      const planificationType = document.getElementById('planification-type');
-      const planningSection = document.getElementById('planning-section');
-      const dejaRealiseSection = document.getElementById('deja-realise-section');
-      const planningDate = document.getElementById('planning-date');
-      const realisationDate = document.getElementById('realisation-date');
-      const datePasseeAlert = document.getElementById('date-passee-alert');
-
-      function updatePlanningDisplay() {
-        const type = planificationType.value;
-        if (type === 'a_planifier') {
-          planningSection.style.display = 'block';
-          dejaRealiseSection.style.display = 'none';
-          checkDatePassee();
-        } else {
-          planningSection.style.display = 'none';
-          dejaRealiseSection.style.display = 'block';
-          if (!realisationDate.value) {
-            realisationDate.value = getNowFormatted();
-          }
-        }
+  function updateDevisAlerts() {
+    if (!devisStatutSelect) return;
+    
+    const statut = devisStatutSelect.value;
+    
+    const alerts = {
+      'devis-accepte-alert': statut === 'accepte',
+      'devis-refuse-alert': statut === 'refuse',
+      'devis-attente-alert': statut === 'en_attente',
+      'devis-relance-alert': statut === 'relance'
+    };
+    
+    Object.keys(alerts).forEach(alertId => {
+      const alertElement = document.getElementById(alertId);
+      if (alertElement) {
+        alertElement.style.display = alerts[alertId] ? 'flex' : 'none';
       }
-
-      function checkDatePassee() {
-        if (planningDate.value) {
-          const dateSelectionnee = new Date(planningDate.value);
-          const maintenant = new Date();
-          if (dateSelectionnee < maintenant) {
-            datePasseeAlert.style.display = 'flex';
-          } else {
-            datePasseeAlert.style.display = 'none';
-          }
-        }
-      }
-
-      if (planificationType) {
-        planificationType.addEventListener('change', updatePlanningDisplay);
-        updatePlanningDisplay();
-      }
-
-      if (planningDate) {
-        planningDate.addEventListener('change', checkDatePassee);
-        checkDatePassee();
-      }
-
-      // Gestion des paiements
-      const optComptant = document.getElementById('option-comptant');
-      const optEchelonne = document.getElementById('option-echelonne');
-      const radioComptant = document.getElementById('radio-comptant');
-      const radioEchelonne = document.getElementById('radio-echelonne');
-
-      function toggleModePaiement() {
-        if (!radioComptant || !radioEchelonne) return;
-        
-        const isComptant = radioComptant.checked;
-        
-        if (optComptant) optComptant.classList.toggle('selected', isComptant);
-        if (optEchelonne) optEchelonne.classList.toggle('selected', !isComptant);
-        
-        const comptantFields = document.getElementById('comptant-fields');
-        const echelonneFields = document.getElementById('echelonne-fields');
-        
-        if (comptantFields) comptantFields.style.display = isComptant ? 'block' : 'none';
-        if (echelonneFields) echelonneFields.style.display = isComptant ? 'none' : 'block';
-      }
-
-      if (optComptant && optEchelonne && radioComptant && radioEchelonne) {
-        optComptant.addEventListener('click', () => {
-          radioComptant.checked = true;
-          toggleModePaiement();
-        });
-        
-        optEchelonne.addEventListener('click', () => {
-          radioEchelonne.checked = true;
-          toggleModePaiement();
-        });
-        
-        radioComptant.addEventListener('change', toggleModePaiement);
-        radioEchelonne.addEventListener('change', toggleModePaiement);
-        
-        toggleModePaiement();
-      }
-
-      // Initialisation des dates
-      const datePaiementInput = document.getElementById('date-paiement');
-      if (datePaiementInput && !datePaiementInput.value) {
-        datePaiementInput.value = getTodayDate();
-      }
-
-      const devisDateEnvoi = document.getElementById('devis-date-envoi');
-      if (devisDateEnvoi && !devisDateEnvoi.value) {
-        devisDateEnvoi.value = getTodayDate();
-      }
-
-      console.log('✅ JavaScript initialisé - Montant total:', MONTANT_TOTAL);
     });
+  }
+
+  function hideAllDevisAlerts() {
+    ['devis-accepte-alert', 'devis-refuse-alert', 'devis-attente-alert', 'devis-relance-alert'].forEach(alertId => {
+      const alertElement = document.getElementById(alertId);
+      if (alertElement) {
+        alertElement.style.display = 'none';
+      }
+    });
+  }
+
+  // Attacher les événements
+  if (devisCreeSelect) {
+    devisCreeSelect.addEventListener('change', updateDevisDisplay);
+    // IMPORTANT : Appeler au chargement pour initialiser l'état correct
+    updateDevisDisplay();
+  }
+
+  if (devisStatutSelect) {
+    devisStatutSelect.addEventListener('change', updateDevisAlerts);
+    // IMPORTANT : Appeler au chargement si un devis existe
+    if (devisCreeSelect && devisCreeSelect.value === 'oui') {
+      updateDevisAlerts();
+    }
+  }
+
+  // ========================================
+  // GESTION DE LA PLANIFICATION
+  // ========================================
+  const planificationType = document.getElementById('planification-type');
+  const planningSection = document.getElementById('planning-section');
+  const dejaRealiseSection = document.getElementById('deja-realise-section');
+  const planningDate = document.getElementById('planning-date');
+  const realisationDate = document.getElementById('realisation-date');
+  const datePasseeAlert = document.getElementById('date-passee-alert');
+
+  function updatePlanningDisplay() {
+    if (!planificationType) return;
+    
+    const type = planificationType.value;
+    
+    if (type === 'a_planifier') {
+      if (planningSection) planningSection.style.display = 'block';
+      if (dejaRealiseSection) dejaRealiseSection.style.display = 'none';
+      checkDatePassee();
+    } else {
+      if (planningSection) planningSection.style.display = 'none';
+      if (dejaRealiseSection) dejaRealiseSection.style.display = 'block';
+      
+      // Pré-remplir la date de réalisation si vide
+      if (realisationDate && !realisationDate.value) {
+        realisationDate.value = getNowFormatted();
+      }
+    }
+  }
+
+  function checkDatePassee() {
+    if (!planningDate || !datePasseeAlert) return;
+    
+    if (planningDate.value) {
+      const dateSelectionnee = new Date(planningDate.value);
+      const maintenant = new Date();
+      
+      if (dateSelectionnee < maintenant) {
+        datePasseeAlert.style.display = 'flex';
+      } else {
+        datePasseeAlert.style.display = 'none';
+      }
+    } else {
+      datePasseeAlert.style.display = 'none';
+    }
+  }
+
+  if (planificationType) {
+    planificationType.addEventListener('change', updatePlanningDisplay);
+    updatePlanningDisplay(); // Initialiser au chargement
+  }
+
+  if (planningDate) {
+    planningDate.addEventListener('change', checkDatePassee);
+    checkDatePassee(); // Initialiser au chargement
+  }
+
+  // ========================================
+  // GESTION DES PAIEMENTS
+  // ========================================
+  const optComptant = document.getElementById('option-comptant');
+  const optEchelonne = document.getElementById('option-echelonne');
+  const radioComptant = document.getElementById('radio-comptant');
+  const radioEchelonne = document.getElementById('radio-echelonne');
+  const comptantFields = document.getElementById('comptant-fields');
+  const echelonneFields = document.getElementById('echelonne-fields');
+
+  function toggleModePaiement() {
+    if (!radioComptant || !radioEchelonne) return;
+    
+    const isComptant = radioComptant.checked;
+    
+    // Mettre à jour les classes CSS des options
+    if (optComptant) optComptant.classList.toggle('selected', isComptant);
+    if (optEchelonne) optEchelonne.classList.toggle('selected', !isComptant);
+    
+    // Afficher/masquer les champs correspondants
+    if (comptantFields) comptantFields.style.display = isComptant ? 'block' : 'none';
+    if (echelonneFields) echelonneFields.style.display = isComptant ? 'none' : 'block';
+  }
+
+  // Attacher les événements de clic sur les options
+  if (optComptant && radioComptant) {
+    optComptant.addEventListener('click', () => {
+      radioComptant.checked = true;
+      toggleModePaiement();
+    });
+  }
+  
+  if (optEchelonne && radioEchelonne) {
+    optEchelonne.addEventListener('click', () => {
+      radioEchelonne.checked = true;
+      toggleModePaiement();
+    });
+  }
+
+  // Attacher les événements de changement sur les radios
+  if (radioComptant) {
+    radioComptant.addEventListener('change', toggleModePaiement);
+  }
+  
+  if (radioEchelonne) {
+    radioEchelonne.addEventListener('change', toggleModePaiement);
+  }
+  
+  // Initialiser l'état au chargement
+  toggleModePaiement();
+
+  // ========================================
+  // INITIALISATION DES DATES PAR DÉFAUT
+  // ========================================
+  const datePaiementInput = document.getElementById('date-paiement');
+  if (datePaiementInput && !datePaiementInput.value) {
+    datePaiementInput.value = getTodayDate();
+  }
+
+  const devisDateEnvoi = document.getElementById('devis-date-envoi');
+  if (devisDateEnvoi && !devisDateEnvoi.value) {
+    devisDateEnvoi.value = getTodayDate();
+  }
+
+  // ========================================
+  // LOG DE DÉBOGAGE
+  // ========================================
+  console.log('✅ JavaScript CRM Artisans initialisé');
+  console.log('📊 Montant total:', MONTANT_TOTAL, '€');
+  console.log('📝 Devis créé:', devisCreeSelect ? devisCreeSelect.value : 'N/A');
+  console.log('💳 Mode paiement:', radioComptant && radioComptant.checked ? 'Comptant' : 'Échelonné');
+});
   </script>
 </body>
 </html>
