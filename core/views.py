@@ -250,6 +250,11 @@ def operation_detail(request, operation_id):
                         date_echeance=date_echeance,
                         ordre=dernier_ordre + 1
                     )
+
+                    # ✅ AJOUTEZ CES LIGNES : Enregistrer automatiquement le mode échelonné
+                    if not operation.mode_paiement:
+                        operation.mode_paiement = 'echelonne'
+                        operation.save()
                     
                     HistoriqueOperation.objects.create(
                         operation=operation,
