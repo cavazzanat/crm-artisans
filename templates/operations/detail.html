@@ -662,23 +662,36 @@
                       <th>Montant</th>
                       <th>Date prévue</th>
                       <th>Statut</th>
-                      <th style="width:80px">Actions</th>
+                      <th style="width:120px">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {% for echeance in echeances %}
-                    <tr class="echeance-row">
+                    <tr class="echeance-row" style="{% if echeance.statut_display == 'retard' %}background: #fee2e2;{% endif %}">
                       <td><strong>Paiement {{ echeance.numero }}</strong></td>
                       <td>{{ echeance.montant }} €</td>
                       <td>{{ echeance.date_echeance|date:"d/m/Y" }}</td>
                       <td>
                         {% if echeance.paye %}
-                        <span style="color:var(--success); font-weight:600">✓ Payé</span>
+                          <span style="color:var(--success); font-weight:600">✓ Payé</span>
                         {% else %}
-                        <span style="color:var(--warning); font-weight:600">En attente</span>
+                          {% now "Y-m-d" as today %}
+                          {% if echeance.date_echeance|date:"Y-m-d" < today %}
+                            <span style="color:var(--danger); font-weight:600">⚠ En retard</span>
+                          {% else %}
+                            <span style="color:var(--warning); font-weight:600">⏳ En attente</span>
+                          {% endif %}
                         {% endif %}
                       </td>
                       <td>
+                        {% if not echeance.paye %}
+                        <form method="POST" style="display:inline; margin-right:.5rem">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="marquer_paye_echeance">
+                          <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
+                          <button type="submit" class="btn success sm" title="Marquer comme payé">✓</button>
+                        </form>
+                        {% endif %}
                         <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer ce paiement ?')">
                           {% csrf_token %}
                           <input type="hidden" name="action" value="delete_echeance">

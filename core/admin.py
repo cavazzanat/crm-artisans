@@ -16,7 +16,7 @@ class InterventionInline(admin.TabularInline):
 class EcheanceInline(admin.TabularInline):
     model = Echeance
     extra = 1
-    fields = ['numero', 'montant', 'date_echeance', 'date_paiement', 'statut', 'ordre']
+    fields = ['numero', 'montant', 'date_echeance', 'paye', 'ordre']  # ← Modifié
 
 @admin.register(Operation)
 class OperationAdmin(admin.ModelAdmin):
@@ -44,8 +44,8 @@ class OperationAdmin(admin.ModelAdmin):
 
 @admin.register(Echeance)
 class EcheanceAdmin(admin.ModelAdmin):
-    list_display = ['operation', 'numero', 'montant', 'date_echeance', 'date_paiement', 'statut']
-    list_filter = ['statut', 'date_echeance']
+    list_display = ['operation', 'numero', 'montant', 'date_echeance', 'paye']  # ← Modifié
+    list_filter = ['paye', 'date_echeance']  # ← Modifié
     search_fields = ['operation__id_operation', 'operation__client__nom']
     ordering = ['operation', 'ordre']
 

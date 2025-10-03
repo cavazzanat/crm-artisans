@@ -279,6 +279,39 @@ def operation_detail(request, operation_id):
             
             return redirect('operation_detail', operation_id=operation.id)
         
+        elif action == 'marquer_paye_echeance':
+            echeance_id = request.POST.get('echeance_id')
+            try:
+                echeance = Echeance.objects.get(id=echeance_id, operation=operation)
+                echeance.paye = True
+                echeance.save()
+                
+                # Vérifier si toutes les échéances sont payées
+                toutes_payees = not operation.echeances.filter(paye=False).exists()
+                
+                if toutes_payees:
+                    operation.statut = 'paye'
+                    operation.save()
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"Échéance {echeance.numero} marquée comme payée - Toutes les échéances sont payées",
+                        utilisateur=request.user
+                    )
+                    messages.success(request, "Échéance marquée comme payée. Toutes les échéances sont réglées !")
+                else:
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"Échéance {echeance.numero} marquée comme payée",
+                        utilisateur=request.user
+                    )
+                    messages.success(request, "Échéance marquée comme payée")
+                    
+            except Echeance.DoesNotExist:
+                messages.error(request, "Échéance introuvable")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+        
         elif action == 'update_mode_paiement':
             mode_paiement = request.POST.get('mode_paiement')
             date_paiement_comptant = request.POST.get('date_paiement_comptant', '')

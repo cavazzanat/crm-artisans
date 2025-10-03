@@ -128,16 +128,7 @@ class Echeance(models.Model):
     numero = models.IntegerField(verbose_name="Numéro d'échéance")
     montant = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Montant")
     date_echeance = models.DateField(verbose_name="Date d'échéance")
-    date_paiement = models.DateField(null=True, blank=True, verbose_name="Date de paiement réel")
-    statut = models.CharField(
-        max_length=20,
-        choices=[
-            ('en_attente', 'En attente'),
-            ('paye', 'Payé'),
-            ('retard', 'En retard'),
-        ],
-        default='en_attente'
-    )
+    paye = models.BooleanField(default=False, verbose_name="Payé")  # ← AJOUTEZ cette ligne
     ordre = models.IntegerField(default=1)
     
     class Meta:
@@ -147,6 +138,17 @@ class Echeance(models.Model):
     
     def __str__(self):
         return f"Échéance {self.numero} - {self.montant}€ ({self.operation.id_operation})"
+    
+    def statut_display(self):
+        """Retourne le statut dynamique de l'échéance"""
+        from django.utils import timezone
+        
+        if self.paye:
+            return 'paye'
+        elif self.date_echeance < timezone.now().date():
+            return 'retard'
+        else:
+            return 'en_attente'
 
 
 class Intervention(models.Model):
