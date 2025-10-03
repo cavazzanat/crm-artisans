@@ -582,102 +582,162 @@
           </div>
           {% endif %}
           
-          <!-- ✅ FORMULAIRE PRINCIPAL DE PAIEMENT -->
-          <form method="POST" id="paiement-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_mode_paiement">
-            
-            <div class="radio-option {% if operation.mode_paiement == 'comptant' %}selected{% endif %}" id="option-comptant">
-              <input type="radio" name="mode_paiement" value="comptant" id="radio-comptant" {% if operation.mode_paiement == 'comptant' %}checked{% endif %}>
-              <label for="radio-comptant">Comptant</label>
+          <!-- Choix du mode de paiement -->
+          <div class="info-card" style="margin-bottom:1.5rem">
+            <div class="label">Mode de paiement</div>
+            <div class="value">
+              <select id="mode-paiement-select" class="select" style="max-width:300px">
+                <option value="">-- Sélectionnez --</option>
+                <option value="comptant" {% if operation.mode_paiement == 'comptant' %}selected{% endif %}>Paiement comptant</option>
+                <option value="echelonne" {% if operation.mode_paiement == 'echelonne' %}selected{% endif %}>Paiement en plusieurs fois</option>
+              </select>
             </div>
-            <div class="radio-option {% if operation.mode_paiement == 'echelonne' %}selected{% endif %}" id="option-echelonne">
-              <input type="radio" name="mode_paiement" value="echelonne" id="radio-echelonne" {% if operation.mode_paiement == 'echelonne' %}checked{% endif %}>
-              <label for="radio-echelonne">Échelonné</label>
-            </div>
+          </div>
 
-            <div id="comptant-fields" class="payment-box" {% if operation.mode_paiement != 'comptant' %}style="display:none"{% endif %}>
-              <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Date paiement</label>
-              <input type="date" id="date-paiement" name="date_paiement_comptant" class="input"
-                    value="{% if operation.date_paiement %}{{ operation.date_paiement|date:'Y-m-d' }}{% endif %}">
-            </div>
-
-            <div id="echelonne-fields" class="payment-box" {% if operation.mode_paiement != 'echelonne' %}style="display:none"{% endif %}>
-              {% if echeances %}
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr><th>Échéance</th><th>Montant</th><th>Date</th><th style="width:80px"></th></tr>
-                  </thead>
-                  <tbody id="echeances-list">
-                    {% for echeance in echeances %}
-                    <tr class="echeance-row">
-                      <td>Éch. {{ echeance.numero }}</td>
-                      <td>{{ echeance.montant }} €</td>
-                      <td>{{ echeance.date_echeance|date:"d/m/Y" }}</td>
-                      <td>
-                        <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette échéance ?')">
-                          {% csrf_token %}
-                          <input type="hidden" name="action" value="delete_echeance">
-                          <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
-                          <button type="submit" class="btn sm">×</button>
-                        </form>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                    <tr class="total-row">
-                      <td colspan="2"><strong>Total échéances</strong></td>
-                      <td colspan="2"><strong id="total-echeances">{{ total_echeances }} €</strong></td>
-                    </tr>
-                  </tbody>
-                  <tfoot>
-                    <tr class="reste-row">
-                      <td colspan="2"><strong>Reste à planifier</strong></td>
-                      <td colspan="2"><strong id="reste-calcul">{{ reste_a_payer }} €</strong></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-              {% else %}
-              <div class="alert info">Aucune échéance définie</div>
-              {% endif %}
-            </div>
-
-            <!-- ✅ BOUTON ENREGISTRER LE MODE DE PAIEMENT -->
-            <button type="submit" class="btn success" style="width:100%; margin-top:1rem">
-              Enregistrer le mode de paiement
-            </button>
-          </form>
-          <!-- ✅ FIN DU FORMULAIRE PRINCIPAL -->
-
-          <!-- ✅ FORMULAIRE SÉPARÉ POUR AJOUTER UNE ÉCHÉANCE -->
-          {% if operation.mode_paiement == 'echelonne' %}
-          <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border)">
-            <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Ajouter une échéance</h4>
+          <!-- ===== PAIEMENT COMPTANT ===== -->
+          <div id="comptant-section" style="display:none">
             <form method="POST">
               {% csrf_token %}
-              <input type="hidden" name="action" value="add_echeance">
-              <div style="display:flex; gap:1rem; align-items:end; flex-wrap:wrap">
-                <div style="flex:0 0 100px">
-                  <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">N°</label>
-                  <input type="number" name="numero" class="input" placeholder="1" min="1" required>
+              <input type="hidden" name="action" value="paiement_comptant">
+              
+              <div class="payment-box">
+                <div class="info-grid">
+                  <div class="info-card">
+                    <div class="label">Montant total</div>
+                    <div class="value" style="font-size:1.4rem; color:var(--primary)">{{ montant_total }} €</div>
+                  </div>
+                  
+                  <div class="info-card">
+                    <div class="label">Date de paiement</div>
+                    <div class="value">
+                      <input type="date" name="date_paiement" class="input" id="date-paiement-comptant" required>
+                    </div>
+                  </div>
                 </div>
-                <div style="flex:0 0 150px">
-                  <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Montant (€)</label>
-                  <input type="number" name="montant" class="input" placeholder="0.00" step="0.01" required>
-                </div>
-                <div style="flex:1; min-width:180px">
-                  <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Date échéance</label>
-                  <input type="date" name="date_echeance" class="input" required>
-                </div>
-                <button type="submit" class="btn success">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-                  Ajouter
+                
+                <button type="submit" class="btn success" style="width:100%; margin-top:1rem">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                  Valider le paiement comptant
                 </button>
               </div>
             </form>
           </div>
-          {% endif %}
+
+          <!-- ===== PAIEMENT ÉCHELONNÉ ===== -->
+          <div id="echelonne-section" style="display:none">
+            
+            <!-- Récapitulatif financier -->
+            <div class="payment-box" style="margin-bottom:1.5rem">
+              <div class="info-grid">
+                <div class="info-card">
+                  <div class="label">Montant total</div>
+                  <div class="value" style="font-size:1.4rem; color:var(--primary)">{{ montant_total }} €</div>
+                </div>
+                
+                <div class="info-card">
+                  <div class="label">Total payé</div>
+                  <div class="value" style="font-size:1.4rem; color:var(--success)">
+                    <span id="total-paye">{{ total_echeances|default:0 }}</span> €
+                  </div>
+                </div>
+                
+                <div class="info-card">
+                  <div class="label">Reste à payer</div>
+                  <div class="value" style="font-size:1.4rem; color:var(--warning)">
+                    <span id="reste-a-payer">{{ reste_a_payer|default:montant_total }}</span> €
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Liste des paiements enregistrés -->
+            {% if echeances %}
+            <div class="payment-box" style="margin-bottom:1.5rem">
+              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Paiements enregistrés</h4>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>N°</th>
+                      <th>Montant</th>
+                      <th>Date prévue</th>
+                      <th>Statut</th>
+                      <th style="width:80px">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for echeance in echeances %}
+                    <tr class="echeance-row">
+                      <td><strong>Paiement {{ echeance.numero }}</strong></td>
+                      <td>{{ echeance.montant }} €</td>
+                      <td>{{ echeance.date_echeance|date:"d/m/Y" }}</td>
+                      <td>
+                        {% if echeance.paye %}
+                        <span style="color:var(--success); font-weight:600">✓ Payé</span>
+                        {% else %}
+                        <span style="color:var(--warning); font-weight:600">En attente</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer ce paiement ?')">
+                          {% csrf_token %}
+                          <input type="hidden" name="action" value="delete_echeance">
+                          <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
+                          <button type="submit" class="btn danger sm">×</button>
+                        </form>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            {% endif %}
+
+            <!-- Formulaire d'ajout de paiement -->
+            <div class="payment-box">
+              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">
+                {% if echeances %}Ajouter un paiement supplémentaire{% else %}Enregistrer le premier paiement{% endif %}
+              </h4>
+              
+              <form method="POST" id="form-add-echeance">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_echeance">
+                
+                <div class="info-grid" style="margin-bottom:1rem">
+                  <div class="info-card">
+                    <div class="label">Montant (€)</div>
+                    <div class="value">
+                      <input type="number" name="montant" class="input" placeholder="Ex: 500" step="0.01" min="0.01" max="{{ reste_a_payer|default:montant_total }}" required>
+                    </div>
+                  </div>
+                  
+                  <div class="info-card">
+                    <div class="label">Date prévue</div>
+                    <div class="value">
+                      <input type="date" name="date_echeance" class="input" required>
+                    </div>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn success" style="width:100%">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+                  Enregistrer ce paiement
+                </button>
+              </form>
+            </div>
+            
+            <!-- Bouton de validation finale -->
+            {% if echeances %}
+            <form method="POST" style="margin-top:1rem">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="valider_echelonnement">
+              <button type="submit" class="btn primary" style="width:100%">
+                Valider le plan de paiement échelonné
+              </button>
+            </form>
+            {% endif %}
+          </div>
           
         </section>
         {% endif %}
@@ -719,11 +779,7 @@
   </div>
 
   <script>
-    
 document.addEventListener('DOMContentLoaded', function() {
-  let MONTANT_TOTAL = 0; // Remplacer par {{ montant_total|default:0 }}
-  let echeances = [];
-  let echeanceCounter = 0;
   
   // ========================================
   // FONCTIONS UTILITAIRES
@@ -755,23 +811,20 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateDevisDisplay() {
     const isCreated = devisCreeSelect.value === 'oui';
     
-    // Afficher/masquer la section des détails du devis
     if (devisDetails) {
       if (isCreated) {
         devisDetails.classList.remove('hidden');
-        devisDetails.style.display = 'block';  // ← Ajoutez cette ligne
+        devisDetails.style.display = 'block';
       } else {
         devisDetails.classList.add('hidden');
-        devisDetails.style.display = 'none';   // ← Ajoutez cette ligne
+        devisDetails.style.display = 'none';
       }
     }
     
-    // Afficher/masquer l'alerte "pas de devis"
     if (noDevisAlert) {
       noDevisAlert.style.display = isCreated ? 'none' : 'flex';
     }
     
-    // Si devis créé, mettre à jour les alertes selon le statut
     if (isCreated && devisStatutSelect) {
       updateDevisAlerts();
     } else {
@@ -808,7 +861,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
-  // Attacher les événements
   if (devisCreeSelect) {
     devisCreeSelect.addEventListener('change', updateDevisDisplay);
     updateDevisDisplay();
@@ -844,7 +896,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (planningSection) planningSection.style.display = 'none';
       if (dejaRealiseSection) dejaRealiseSection.style.display = 'block';
       
-      // Pré-remplir la date de réalisation si vide
       if (realisationDate && !realisationDate.value) {
         realisationDate.value = getNowFormatted();
       }
@@ -879,200 +930,38 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ========================================
-  // GESTION DES LIGNES DE DEVIS
+  // GESTION MODE PAIEMENT (SELECT)
   // ========================================
-  window.ajouterLigne = function() {
-    const description = document.getElementById('nouvelle-description').value.trim();
-    const montant = parseFloat(document.getElementById('nouveau-montant').value);
-    
-    if (!description || !montant || montant <= 0) {
-      alert('Veuillez remplir la description et un montant valide');
-      return;
-    }
-    
-    const tbody = document.getElementById('lignes-devis');
-    const newRow = document.createElement('tr');
-    newRow.innerHTML = `
-      <td>${description}</td>
-      <td><strong>${montant.toFixed(2)}</strong></td>
-      <td><button class="btn danger sm" onclick="supprimerLigne(this)">Supprimer</button></td>
-    `;
-    tbody.appendChild(newRow);
-    
-    document.getElementById('nouvelle-description').value = '';
-    document.getElementById('nouveau-montant').value = '';
-    
-    calculerTotalDevis();
-  };
+  const modePaiementSelect = document.getElementById('mode-paiement-select');
+  const comptantSection = document.getElementById('comptant-section');
+  const echelonneSection = document.getElementById('echelonne-section');
+  const datePaiementComptant = document.getElementById('date-paiement-comptant');
 
-  window.supprimerLigne = function(btn) {
-    if (confirm('Supprimer cette ligne ?')) {
-      btn.closest('tr').remove();
-      calculerTotalDevis();
-    }
-  };
-
-  function calculerTotalDevis() {
-    const tbody = document.getElementById('lignes-devis');
-    const rows = tbody.querySelectorAll('tr');
-    let total = 0;
-    
-    rows.forEach(row => {
-      const montantText = row.querySelector('td:nth-child(2) strong')?.textContent;
-      if (montantText) {
-        total += parseFloat(montantText.replace(',', '.')) || 0;
-      }
-    });
-    
-    MONTANT_TOTAL = total;
-    const totalDevisElement = document.getElementById('total-devis');
-    if (totalDevisElement) {
-      totalDevisElement.textContent = formatMontant(total);
-    }
-    
-    // Mettre à jour aussi le total des échéances si l'élément existe
-    const totalEcheancesElement = document.getElementById('total-echeances');
-    if (totalEcheancesElement) {
-      totalEcheancesElement.textContent = formatMontant(total);
-    }
-    
-    calculerReste();
-  }
-
-  // ========================================
-  // GESTION DES PAIEMENTS
-  // ========================================
-  const optComptant = document.getElementById('option-comptant');
-  const optEchelonne = document.getElementById('option-echelonne');
-  const radioComptant = document.getElementById('radio-comptant');
-  const radioEchelonne = document.getElementById('radio-echelonne');
-  const comptantFields = document.getElementById('comptant-fields');
-  const echelonneFields = document.getElementById('echelonne-fields');
-
-  function toggleModePaiement() {
-    if (!radioComptant || !radioEchelonne) return;
-    
-    const isComptant = radioComptant.checked;
-    
-    // Mettre à jour les classes CSS des options
-    if (optComptant) optComptant.classList.toggle('selected', isComptant);
-    if (optEchelonne) optEchelonne.classList.toggle('selected', !isComptant);
-    
-    // Afficher/masquer les champs correspondants
-    if (comptantFields) comptantFields.style.display = isComptant ? 'block' : 'none';
-    if (echelonneFields) echelonneFields.style.display = isComptant ? 'none' : 'block';
-  }
-
-  // Attacher les événements de clic sur les options
-  if (optComptant && radioComptant) {
-    optComptant.addEventListener('click', () => {
-      radioComptant.checked = true;
-      toggleModePaiement();
-    });
-  }
-  
-  if (optEchelonne && radioEchelonne) {
-    optEchelonne.addEventListener('click', () => {
-      radioEchelonne.checked = true;
-      toggleModePaiement();
-    });
-  }
-
-  // Attacher les événements de changement sur les radios
-  if (radioComptant) {
-    radioComptant.addEventListener('change', toggleModePaiement);
-  }
-  
-  if (radioEchelonne) {
-    radioEchelonne.addEventListener('change', toggleModePaiement);
-  }
-  
-  // Initialiser l'état au chargement
-  toggleModePaiement();
-
-  // ========================================
-  // GESTION DES ÉCHÉANCES (PAIEMENT ÉCHELONNÉ)
-  // ========================================
-  window.ajouterEcheance = function() {
-    echeanceCounter++;
-    const id = 'ech-' + echeanceCounter;
-    echeances.push({ id, montant: 0, date: getTodayDate() });
-    renderEcheances();
-  };
-
-  window.supprimerEcheance = function(id) {
-    if (confirm('Supprimer cette échéance ?')) {
-      echeances = echeances.filter(e => e.id !== id);
-      renderEcheances();
-    }
-  };
-
-  function calculerReste() {
-    const totalEcheances = echeances.reduce((sum, e) => sum + e.montant, 0);
-    const resteElement = document.getElementById('reste-calcul');
-    if (resteElement) {
-      resteElement.textContent = formatMontant(MONTANT_TOTAL - totalEcheances);
-    }
-  }
-
-  function renderEcheances() {
-    const tbody = document.getElementById('echeances-list');
-    if (!tbody) return;
-    
-    // Supprimer les lignes d'échéances existantes
-    const existingRows = tbody.querySelectorAll('.echeance-row');
-    existingRows.forEach(row => row.remove());
-    
-    // Trouver la ligne "Total"
-    const totalRow = tbody.querySelector('.total-row');
-    
-    // Ajouter chaque échéance
-    echeances.forEach((ech, i) => {
-      const row = document.createElement('tr');
-      row.className = 'echeance-row';
-      row.innerHTML = `
-        <td>Éch. ${i + 1}</td>
-        <td><input type="number" step="0.01" min="0" class="input" style="max-width:100px; margin:0; padding:.4rem" data-id="${ech.id}" data-field="montant" value="${ech.montant || ''}"> €</td>
-        <td><input type="date" value="${ech.date}" class="input" style="max-width:150px; padding:.4rem" data-id="${ech.id}" data-field="date"></td>
-        <td><button type="button" class="btn sm" onclick="supprimerEcheance('${ech.id}')">×</button></td>
-      `;
+  if (modePaiementSelect) {
+    modePaiementSelect.addEventListener('change', function() {
+      const mode = this.value;
       
-      // Insérer avant la ligne "Total" (ou à la fin si pas de totalRow)
-      if (totalRow) {
-        totalRow.parentNode.insertBefore(row, totalRow);
-      } else {
-        tbody.appendChild(row);
+      if (comptantSection) comptantSection.style.display = 'none';
+      if (echelonneSection) echelonneSection.style.display = 'none';
+      
+      if (mode === 'comptant' && comptantSection) {
+        comptantSection.style.display = 'block';
+        if (datePaiementComptant && !datePaiementComptant.value) {
+          datePaiementComptant.value = getTodayDate();
+        }
+      } else if (mode === 'echelonne' && echelonneSection) {
+        echelonneSection.style.display = 'block';
       }
     });
     
-    // Attacher les événements sur les inputs
-    document.querySelectorAll('.echeance-row input').forEach(input => {
-      input.addEventListener('input', (e) => {
-        const id = e.target.dataset.id;
-        const field = e.target.dataset.field;
-        const echeance = echeances.find(e => e.id === id);
-        if (echeance) {
-          if (field === 'montant') {
-            echeance.montant = parseFloat(e.target.value) || 0;
-          } else if (field === 'date') {
-            echeance.date = e.target.value;
-          }
-          calculerReste();
-        }
-      });
-    });
-    
-    calculerReste();
+    if (modePaiementSelect.value) {
+      modePaiementSelect.dispatchEvent(new Event('change'));
+    }
   }
 
   // ========================================
   // INITIALISATION DES DATES PAR DÉFAUT
   // ========================================
-  const datePaiementInput = document.getElementById('date-paiement');
-  if (datePaiementInput && !datePaiementInput.value) {
-    datePaiementInput.value = getTodayDate();
-  }
-
   const devisDateEnvoi = document.getElementById('devis-date-envoi');
   if (devisDateEnvoi && !devisDateEnvoi.value) {
     devisDateEnvoi.value = getTodayDate();
@@ -1082,10 +971,9 @@ document.addEventListener('DOMContentLoaded', function() {
   // LOG DE DÉBOGAGE
   // ========================================
   console.log('✅ JavaScript CRM Artisans initialisé');
-  console.log('📊 Montant total:', MONTANT_TOTAL, '€');
   console.log('📝 Devis créé:', devisCreeSelect ? devisCreeSelect.value : 'N/A');
-  console.log('💳 Mode paiement:', radioComptant && radioComptant.checked ? 'Comptant' : 'Échelonné');
+  console.log('💳 Mode paiement sélectionné:', modePaiementSelect ? modePaiementSelect.value : 'N/A');
 });
-  </script>
+</script>
 </body>
 </html>

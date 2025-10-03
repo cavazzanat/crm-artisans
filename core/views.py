@@ -227,12 +227,17 @@ def operation_detail(request, operation_id):
             numero = request.POST.get('numero', '')
             montant_str = request.POST.get('montant', '')
             date_echeance_str = request.POST.get('date_echeance', '')
-            
-            if numero and montant_str and date_echeance_str:
+
+            if montant_str and date_echeance_str:
                 try:
                     from datetime import datetime
                     montant = float(montant_str)
                     date_echeance = datetime.fromisoformat(date_echeance_str).date()
+                    
+                    # Auto-générer le numéro
+                    dernier_numero = operation.echeances.aggregate(
+                        max_numero=Max('numero')
+                    )['max_numero'] or 0
                     
                     dernier_ordre = operation.echeances.aggregate(
                         max_ordre=Max('ordre')
@@ -240,7 +245,7 @@ def operation_detail(request, operation_id):
                     
                     Echeance.objects.create(
                         operation=operation,
-                        numero=int(numero),
+                        numero=dernier_numero + 1,  # ← Auto-incrémenté
                         montant=montant,
                         date_echeance=date_echeance,
                         ordre=dernier_ordre + 1
@@ -455,6 +460,44 @@ def operation_detail(request, operation_id):
                     except ValueError:
                         messages.error(request, "Date invalide")
             
+            return redirect('operation_detail', operation_id=operation.id)
+
+        # ===== PAIEMENT COMPTANT ===== (← NOUVELLE ACTION SÉPARÉE)
+        elif action == 'paiement_comptant':
+            date_paiement_str = request.POST.get('date_paiement', '')
+            
+            if date_paiement_str:
+                from datetime import datetime
+                try:
+                    operation.date_paiement = datetime.strptime(date_paiement_str, '%Y-%m-%d')
+                    operation.mode_paiement = 'comptant'
+                    operation.statut = 'paye'
+                    operation.save()
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"Paiement comptant validé - {operation.date_paiement.strftime('%d/%m/%Y')}",
+                        utilisateur=request.user
+                    )
+                    
+                    messages.success(request, "✓ Paiement comptant enregistré avec succès")
+                except ValueError:
+                    messages.error(request, "Date invalide")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+
+        # ===== VALIDATION ÉCHELONNEMENT ===== (← NOUVELLE ACTION SÉPARÉE)
+        elif action == 'valider_echelonnement':
+            operation.mode_paiement = 'echelonne'
+            operation.save()
+            
+            HistoriqueOperation.objects.create(
+                operation=operation,
+                action="Plan de paiement échelonné validé",
+                utilisateur=request.user
+            )
+            
+            messages.success(request, "Plan de paiement échelonné validé")
             return redirect('operation_detail', operation_id=operation.id)
     
     # GET - Récupérer les données
