@@ -954,9 +954,17 @@ def operation_create(request):
     
     # GET - Formulaire vide
     clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
+
+    # ✅ Exclure 'devis_refuse' du formulaire de création
+    statuts_disponibles = [
+        (value, label) 
+        for value, label in Operation.STATUTS 
+        if value != 'devis_refuse'
+    ]
+
     context = {
         'clients': clients,
-        'statuts_choices': Operation.STATUTS,
+        'statuts_choices': statuts_disponibles,
     }
     return render(request, 'operations/create.html', context)
 

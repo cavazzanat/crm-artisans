@@ -675,5 +675,19 @@
       return confirm('ATTENTION : Supprimer {{ client.nom }} {{ client.prenom }} ET toutes ses {{ nb_operations }} opération(s) ? Action irréversible.');
     }
   </script>
+
+{% if messages %}
+{% for message in messages %}
+<div class="alert {{ message.tags }}">
+  {{ message }}
+</div>
+{% endfor %}
+
+<script>
+setTimeout(function() {
+  document.querySelectorAll('.alert').forEach(el => el.remove());
+}, 3000); // 3 secondes
+</script>
+{% endif %}
 </body>
 </html>
