@@ -543,9 +543,18 @@ def operation_detail(request, operation_id):
     echeances = operation.echeances.all().order_by('ordre')
     historique = operation.historique.all().order_by('-date')[:10]
     
-    # Calculs pour les échéances
-    total_echeances = echeances.aggregate(total=Sum('montant'))['total'] or 0
-    reste_a_payer = operation.montant_total - total_echeances
+    # ✅ CORRECTION : Calculer uniquement les échéances PAYÉES
+    total_echeances_payees = echeances.filter(paye=True).aggregate(
+        total=Sum('montant')
+    )['total'] or 0
+    
+    # Reste à payer = montant total - ce qui est réellement payé
+    reste_a_payer = operation.montant_total - total_echeances_payees
+    
+    # Total prévu (pour info) = somme de toutes les échéances
+    total_echeances_prevu = echeances.aggregate(
+        total=Sum('montant')
+    )['total'] or 0
     
     # Préparer les données pour JavaScript
     import json
@@ -570,7 +579,8 @@ def operation_detail(request, operation_id):
         'operation': operation,
         'interventions': interventions,
         'echeances': echeances,
-        'total_echeances': total_echeances,
+        'total_echeances': total_echeances_payees,  # ← Uniquement les payées
+        'total_echeances_prevu': total_echeances_prevu,  # ← Total planifié (optionnel)
         'reste_a_payer': reste_a_payer,
         'historique': historique,
         'statuts_choices': Operation.STATUTS,
