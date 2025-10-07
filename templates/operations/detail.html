@@ -959,7 +959,9 @@
       </a>
     </div>
   </div>
-  <script>
+
+
+<script>
 document.addEventListener('DOMContentLoaded', function() {
   
   // ========================================
@@ -1149,15 +1151,89 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // ========================================
+  // GESTION DES SECTIONS REPLIABLES
+  // ========================================
+  const statut = '{{ operation.statut }}';
+  
+  // Par défaut, TOUT REPLIER sauf la section pertinente
+  const sections = document.querySelectorAll('.section');
+  sections.forEach((section) => {
+    const header = section.querySelector('.section-header');
+    const body = section.querySelector('.section-body');
+    const title = header.querySelector('.section-title').textContent.trim();
+    
+    // Vérifier si un état est sauvegardé
+    const savedState = localStorage.getItem(`section-${title}`);
+    
+    if (savedState) {
+      // Utiliser l'état sauvegardé (priorité à l'utilisateur)
+      if (savedState === 'collapsed') {
+        header.classList.add('collapsed');
+        body.classList.add('collapsed');
+      }
+    } else {
+      // NOUVEAU : Par défaut, tout replier d'abord
+      header.classList.add('collapsed');
+      body.classList.add('collapsed');
+      
+      // Puis ouvrir UNIQUEMENT la section pertinente selon le statut
+      let shouldOpen = false;
+      
+      switch(statut) {
+        case 'en_attente_devis':
+          // Ouvrir : Statut du devis
+          shouldOpen = title.includes('Statut du devis');
+          break;
+          
+        case 'a_planifier':
+          // Ouvrir : Lignes du devis (pour vérifier le montant) + Planification
+          shouldOpen = title.includes('Devis / Opération - Lignes') || title.includes('Planification');
+          break;
+          
+        case 'planifie':
+          // Ouvrir : Planification
+          shouldOpen = title.includes('Planification');
+          break;
+          
+        case 'realise':
+          // Ouvrir : Paiement
+          shouldOpen = title.includes('Paiement');
+          break;
+          
+        case 'paye':
+          // Ouvrir : Paiement (pour voir le récapitulatif)
+          shouldOpen = title.includes('Paiement');
+          break;
+          
+        case 'devis_refuse':
+          // Ouvrir : Statut du devis
+          shouldOpen = title.includes('Statut du devis');
+          break;
+          
+        default:
+          // Par défaut, ouvrir Informations générales
+          shouldOpen = title.includes('Informations générales');
+      }
+      
+      // Ouvrir la section si nécessaire
+      if (shouldOpen) {
+        header.classList.remove('collapsed');
+        body.classList.remove('collapsed');
+      }
+    }
+  });
+
+  // ========================================
   // LOG DE DÉBOGAGE
   // ========================================
   console.log('✅ JavaScript CRM Artisans initialisé');
   console.log('📝 Devis créé:', devisCreeSelect ? devisCreeSelect.value : 'N/A');
   console.log('💳 Mode paiement sélectionné:', modePaiementSelect ? modePaiementSelect.value : 'N/A');
+  console.log('🎯 Statut opération:', statut);
 });
 
 // ========================================
-// GESTION DES SECTIONS REPLIABLES
+// GESTION DES SECTIONS REPLIABLES (TOGGLE)
 // ========================================
 function toggleSection(header) {
   const section = header.closest('.section');
@@ -1172,61 +1248,7 @@ function toggleSection(header) {
   const isCollapsed = body.classList.contains('collapsed');
   localStorage.setItem(`section-${sectionTitle}`, isCollapsed ? 'collapsed' : 'expanded');
 }
-
-// Restaurer l'état des sections au chargement
-document.addEventListener('DOMContentLoaded', function() {
-  // ... votre code existant ...
-  
-  // Logique d'ouverture/fermeture intelligente
-  const statut = '{{ operation.statut }}';
-  
-  // Par défaut, replier certaines sections selon le statut
-  const sections = document.querySelectorAll('.section');
-  sections.forEach((section, index) => {
-    const header = section.querySelector('.section-header');
-    const body = section.querySelector('.section-body');
-    const title = header.querySelector('.section-title').textContent.trim();
-    
-    // Vérifier si un état est sauvegardé
-    const savedState = localStorage.getItem(`section-${title}`);
-    
-    if (savedState) {
-      // Utiliser l'état sauvegardé
-      if (savedState === 'collapsed') {
-        header.classList.add('collapsed');
-        body.classList.add('collapsed');
-      }
-    } else {
-      // Logique par défaut selon le statut
-      if (statut === 'en_attente_devis') {
-        // Ouvrir: Informations générales, Devis, Lignes
-        // Fermer: Planification, Paiement
-        if (title.includes('Planification') || title.includes('Paiement')) {
-          header.classList.add('collapsed');
-          body.classList.add('collapsed');
-        }
-      } else if (statut === 'planifie') {
-        // Ouvrir: Planification
-        // Fermer: Paiement
-        if (title.includes('Paiement')) {
-          header.classList.add('collapsed');
-          body.classList.add('collapsed');
-        }
-      } else if (statut === 'paye') {
-        // Tout ouvrir
-        // (ne rien faire)
-      }
-      
-      // Toujours garder "Informations générales" ouvert
-      if (title.includes('Informations générales')) {
-        header.classList.remove('collapsed');
-        body.classList.remove('collapsed');
-      }
-    }
-  });
-});
 </script>
-
 {% if messages %}
 {% for message in messages %}
 <div class="alert {{ message.tags }}">
