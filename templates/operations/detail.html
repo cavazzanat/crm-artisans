@@ -145,8 +145,74 @@
     .section-header{ 
       display:flex; align-items:center; justify-content:space-between; gap:1rem; 
       padding-bottom:1rem; border-bottom:1px solid var(--border); margin-bottom:1rem;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.2s ease;
+    }
+    .section-header:hover {
+      background: rgba(148,163,184,.03);
+      border-radius: 8px;
+      padding-left: 0.5rem;
+      padding-right: 0.5rem;
     }
     .section-title{ display:flex; gap:.6rem; align-items:center; font-size:1.05rem; font-weight:700; color: var(--text); }
+
+    /* ========================================
+       SECTIONS REPLIABLES (ACCORDÉON)
+       ======================================== */
+    .section-header .toggle-icon {
+      transition: transform 0.3s ease;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .section-header.collapsed .toggle-icon {
+      transform: rotate(-90deg);
+    }
+
+    .section-body {
+      max-height: 5000px;
+      overflow: hidden;
+      transition: max-height 0.4s ease, opacity 0.3s ease, margin-top 0.3s ease;
+      opacity: 1;
+    }
+
+    .section-body.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0 !important;
+      padding-top: 0 !important;
+    }
+
+    /* Badge indicateur sur les sections */
+    .section-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .2rem .5rem;
+      border-radius: 12px;
+      font-size: .75rem;
+      font-weight: 600;
+      margin-left: .5rem;
+    }
+
+    .section-badge.complete {
+      background: rgba(34,197,94,.1);
+      color: var(--success);
+      border: 1px solid rgba(34,197,94,.2);
+    }
+
+    .section-badge.pending {
+      background: rgba(245,158,11,.1);
+      color: var(--warning);
+      border: 1px solid rgba(245,158,11,.2);
+    }
+
+    .section-badge.disabled {
+      background: rgba(148,163,184,.1);
+      color: var(--muted);
+      border: 1px solid rgba(148,163,184,.2);
+    }
 
     .info-grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem }
     .info-card{
@@ -300,307 +366,415 @@
 
     <div class="main-content">
       <div class="left-column">
+        <!-- ========================================
+             INFORMATIONS GÉNÉRALES
+             ======================================== -->
         <section class="section">
-          <div class="section-header">
-            <h2 class="section-title">Informations générales</h2>
+          <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+              Informations générales
+              <span class="section-badge complete">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                Complété
+              </span>
+            </h2>
+            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
           </div>
-          <div class="info-grid">
-            <div class="info-card">
-              <div class="label">Client</div>
-              <div class="value">
-                <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
-                <a href="{% url 'client_detail' client_id=operation.client.id %}" style="color:var(--primary); text-decoration:none">Voir le profil</a>
+          <div class="section-body">
+            <div class="info-grid">
+              <div class="info-card">
+                <div class="label">Client</div>
+                <div class="value">
+                  <strong>{{ operation.client.nom }} {{ operation.client.prenom }}</strong><br>
+                  <a href="{% url 'client_detail' client_id=operation.client.id %}" style="color:var(--primary); text-decoration:none">Voir le profil</a>
+                </div>
               </div>
-            </div>
-            <div class="info-card">
-              <div class="label">Type de prestation</div>
-              <div class="value">{{ operation.type_prestation }}</div>
-            </div>
-            <div class="info-card">
-              <div class="label">Adresse</div>
-              <div class="value">{{ operation.adresse_intervention }}</div>
-            </div>
-            <div class="info-card">
-              <div class="label">Contact</div>
-              <div class="value">
-                <a href="tel:{{ operation.client.telephone }}" style="color:var(--primary); text-decoration:none">
-                  {{ operation.client.telephone }}
-                </a>
-                {% if operation.client.email %}
-                <br><a href="mailto:{{ operation.client.email }}" style="color:var(--primary); text-decoration:none">
-                  {{ operation.client.email }}
-                </a>
-                {% endif %}
+              <div class="info-card">
+                <div class="label">Type de prestation</div>
+                <div class="value">{{ operation.type_prestation }}</div>
+              </div>
+              <div class="info-card">
+                <div class="label">Adresse</div>
+                <div class="value">{{ operation.adresse_intervention }}</div>
+              </div>
+              <div class="info-card">
+                <div class="label">Contact</div>
+                <div class="value">
+                  <a href="tel:{{ operation.client.telephone }}" style="color:var(--primary); text-decoration:none">
+                    {{ operation.client.telephone }}
+                  </a>
+                  {% if operation.client.email %}
+                  <br><a href="mailto:{{ operation.client.email }}" style="color:var(--primary); text-decoration:none">
+                    {{ operation.client.email }}
+                  </a>
+                  {% endif %}
+                </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- Statut du devis -->
+        <!-- ========================================
+             STATUT DU DEVIS
+             ======================================== -->
         <section class="section">
-          <div class="section-header">
+          <div class="section-header" onclick="toggleSection(this)">
             <h2 class="section-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="1.6"/></svg>
               Statut du devis
+              {% if operation.devis_cree %}
+                {% if operation.devis_statut == 'accepte' %}
+                <span class="section-badge complete">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                  Accepté
+                </span>
+                {% elif operation.devis_statut == 'refuse' %}
+                <span class="section-badge" style="background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid rgba(239,68,68,.2);">
+                  ✗ Refusé
+                </span>
+                {% else %}
+                <span class="section-badge pending">
+                  {{ operation.get_devis_statut_display }}
+                </span>
+                {% endif %}
+              {% else %}
+              <span class="section-badge pending">⏳ En attente</span>
+              {% endif %}
             </h2>
+            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
           </div>
           
-          <form method="POST" id="devis-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_devis_status">
-            
-            <div class="info-card">
-              <div class="label">Avez-vous créé un devis ?</div>
-              <div class="value">
-                <select id="devis-cree" name="devis_cree" class="select" style="max-width:200px">
-                  <option value="non" {% if not operation.devis_cree %}selected{% endif %}>Non</option>
-                  <option value="oui" {% if operation.devis_cree %}selected{% endif %}>Oui</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- CETTE DIV S'AFFICHE UNIQUEMENT SI OUI -->
-            <div id="devis-details" class="{% if not operation.devis_cree %}hidden{% endif %}" style="margin-top:1rem">
-              <div class="info-grid">
-                <div class="info-card">
-                  <div class="label">Date d'envoi au client</div>
-                  <div class="value">
-                    <input type="date" id="devis-date-envoi" name="devis_date_envoi" class="input"
-                          value="{% if operation.devis_date_envoi %}{{ operation.devis_date_envoi|date:'Y-m-d' }}{% endif %}">
-                  </div>
-                </div>
-                
-                <div class="info-card">
-                  <div class="label">Réponse du client</div>
-                  <div class="value">
-                    <select id="devis-statut" name="devis_statut" class="select">
-                      <option value="en_attente" {% if operation.devis_statut == 'en_attente' %}selected{% endif %}>En attente de réponse</option>
-                      <option value="accepte" {% if operation.devis_statut == 'accepte' %}selected{% endif %}>Devis accepté</option>
-                      <option value="refuse" {% if operation.devis_statut == 'refuse' %}selected{% endif %}>Devis refusé</option>
-                      <option value="relance" {% if operation.devis_statut == 'relance' %}selected{% endif %}>À relancer</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Alertes selon statut -->
-              <div id="devis-accepte-alert" class="alert success" style="display:none">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                <div><strong>Devis accepté !</strong> Vous pouvez maintenant planifier l'intervention.</div>
-              </div>
-
-              <div id="devis-refuse-alert" class="alert danger" style="display:none">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="2"/></svg>
-                <div><strong>Devis refusé</strong> - L'opération ne peut pas progresser.</div>
-              </div>
-
-              <div id="devis-attente-alert" class="alert info" style="display:none">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.6"/></svg>
-                <div><strong>En attente de réponse</strong> - Le client n'a pas encore répondu.</div>
-              </div>
-
-              <div id="devis-relance-alert" class="alert warning" style="display:none">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="1.6"/></svg>
-                <div><strong>À relancer</strong> - Pensez à relancer le client.</div>
-              </div>
-
-              <button type="submit" class="btn success" style="margin-top:1rem">Enregistrer le statut du devis</button>
-            </div>
-
-            <!-- ALERTE SI NON -->
-            <div id="no-devis-alert" class="alert info" style="display:none">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="1.6"/></svg>
-              <div><strong>Aucun devis créé</strong> - Créez les lignes ci-dessous puis générez le PDF.</div>
-            </div>
-          </form>
-        </section>
-
-        <!-- Lignes du devis -->
-        <section class="section">
-          <div class="section-header">
-            <h2 class="section-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.6"/></svg>
-              Devis / Opération - Lignes
-            </h2>
-            <button class="btn primary" onclick="alert('Fonctionnalité PDF en développement')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>
-              Générer PDF
-            </button>
-          </div>
-          
-          {% if interventions %}
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Description</th>
-                  <th style="width:120px">Montant (€)</th>
-                  <th style="width:100px">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="lignes-devis">
-                {% for intervention in interventions %}
-                <tr data-id="{{ intervention.id }}">
-                  <td>{{ intervention.description }}</td>
-                  <td><strong>{{ intervention.montant }}</strong></td>
-                  <td>
-                    <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette ligne ?')">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="delete_intervention">
-                      <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
-                      <button type="submit" class="btn danger sm">Supprimer</button>
-                    </form>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-              <tfoot>
-                <tr class="total-row">
-                  <td><strong>TOTAL</strong></td>
-                  <td><strong id="total-devis">{{ montant_total }} €</strong></td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          {% else %}
-          <div class="alert info">Aucune ligne ajoutée au devis</div>
-          {% endif %}
-
-          <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border)">
-            <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Ajouter une ligne</h4>
-            <form method="POST">
+          <div class="section-body">
+            <form method="POST" id="devis-form">
               {% csrf_token %}
-              <input type="hidden" name="action" value="add_intervention">
-              <div style="display:flex; gap:1rem; align-items:end; flex-wrap:wrap">
-                <div style="flex:1; min-width:250px">
-                  <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Description</label>
-                  <input type="text" name="description" class="input" placeholder="Ex: Main d'œuvre, Fournitures..." required>
+              <input type="hidden" name="action" value="update_devis_status">
+              
+              <div class="info-card">
+                <div class="label">Avez-vous créé un devis ?</div>
+                <div class="value">
+                  <select id="devis-cree" name="devis_cree" class="select" style="max-width:200px">
+                    <option value="non" {% if not operation.devis_cree %}selected{% endif %}>Non</option>
+                    <option value="oui" {% if operation.devis_cree %}selected{% endif %}>Oui</option>
+                  </select>
                 </div>
-                <div style="flex:0 0 150px">
-                  <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Montant (€)</label>
-                  <input type="number" name="montant" class="input" placeholder="0.00" step="0.01" required>
+              </div>
+
+              <div id="devis-details" class="{% if not operation.devis_cree %}hidden{% endif %}" style="margin-top:1rem">
+                <div class="info-grid">
+                  <div class="info-card">
+                    <div class="label">Date d'envoi au client</div>
+                    <div class="value">
+                      <input type="date" id="devis-date-envoi" name="devis_date_envoi" class="input"
+                            value="{% if operation.devis_date_envoi %}{{ operation.devis_date_envoi|date:'Y-m-d' }}{% endif %}">
+                    </div>
+                  </div>
+                  
+                  <div class="info-card">
+                    <div class="label">Réponse du client</div>
+                    <div class="value">
+                      <select id="devis-statut" name="devis_statut" class="select">
+                        <option value="en_attente" {% if operation.devis_statut == 'en_attente' %}selected{% endif %}>En attente de réponse</option>
+                        <option value="accepte" {% if operation.devis_statut == 'accepte' %}selected{% endif %}>Devis accepté</option>
+                        <option value="refuse" {% if operation.devis_statut == 'refuse' %}selected{% endif %}>Devis refusé</option>
+                        <option value="relance" {% if operation.devis_statut == 'relance' %}selected{% endif %}>À relancer</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
-                <button type="submit" class="btn success">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-                  Ajouter
-                </button>
+
+                <div id="devis-accepte-alert" class="alert success" style="display:none">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                  <div><strong>Devis accepté !</strong> Vous pouvez maintenant planifier l'intervention.</div>
+                </div>
+
+                <div id="devis-refuse-alert" class="alert danger" style="display:none">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="2"/></svg>
+                  <div><strong>Devis refusé</strong> - L'opération ne peut pas progresser.</div>
+                </div>
+
+                <div id="devis-attente-alert" class="alert info" style="display:none">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.6"/></svg>
+                  <div><strong>En attente de réponse</strong> - Le client n'a pas encore répondu.</div>
+                </div>
+
+                <div id="devis-relance-alert" class="alert warning" style="display:none">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="1.6"/></svg>
+                  <div><strong>À relancer</strong> - Pensez à relancer le client.</div>
+                </div>
+
+                <button type="submit" class="btn success" style="margin-top:1rem">Enregistrer le statut du devis</button>
+              </div>
+
+              <div id="no-devis-alert" class="alert info" style="display:none">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="1.6"/></svg>
+                <div><strong>Aucun devis créé</strong> - Créez les lignes ci-dessous puis générez le PDF.</div>
               </div>
             </form>
           </div>
         </section>
 
-        <!-- Planification -->
+        <!-- ========================================
+             LIGNES DU DEVIS
+             ======================================== -->
         <section class="section">
-          <div class="section-header">
-            <h2 class="section-title">Planification</h2>
+          <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.6"/></svg>
+              Devis / Opération - Lignes
+              {% if interventions %}
+              <span class="section-badge complete">
+                {{ interventions.count }} ligne{{ interventions.count|pluralize }}
+              </span>
+              {% else %}
+              <span class="section-badge pending">Aucune ligne</span>
+              {% endif %}
+            </h2>
+            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
           </div>
           
-          <form method="POST" id="planning-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_planning">
+          <div class="section-body">
+            {% if interventions %}
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th style="width:120px">Montant (€)</th>
+                    <th style="width:100px">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="lignes-devis">
+                  {% for intervention in interventions %}
+                  <tr data-id="{{ intervention.id }}">
+                    <td>{{ intervention.description }}</td>
+                    <td><strong>{{ intervention.montant }}</strong></td>
+                    <td>
+                      <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette ligne ?')">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_intervention">
+                        <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
+                        <button type="submit" class="btn danger sm">Supprimer</button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+                <tfoot>
+                  <tr class="total-row">
+                    <td><strong>TOTAL</strong></td>
+                    <td><strong id="total-devis">{{ montant_total }} €</strong></td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            {% else %}
+            <div class="alert info">Aucune ligne ajoutée au devis</div>
+            {% endif %}
+
+            <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border)">
+              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Ajouter une ligne</h4>
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_intervention">
+                <div style="display:flex; gap:1rem; align-items:end; flex-wrap:wrap">
+                  <div style="flex:1; min-width:250px">
+                    <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Description</label>
+                    <input type="text" name="description" class="input" placeholder="Ex: Main d'œuvre, Fournitures..." required>
+                  </div>
+                  <div style="flex:0 0 150px">
+                    <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Montant (€)</label>
+                    <input type="number" name="montant" class="input" placeholder="0.00" step="0.01" required>
+                  </div>
+                  <button type="submit" class="btn success">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+                    Ajouter
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- ========================================
+             PLANIFICATION
+             ======================================== -->
+        <section class="section">
+          <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/></svg>
+              Planification
+              {% if operation.date_prevue %}
+              <span class="section-badge complete">
+                📅 {{ operation.date_prevue|date:"d/m/Y H:i" }}
+              </span>
+              {% elif operation.statut == 'en_attente_devis' %}
+              <span class="section-badge disabled">Non applicable</span>
+              {% else %}
+              <span class="section-badge pending">À planifier</span>
+              {% endif %}
+            </h2>
+            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          
+          <div class="section-body">
+            <form method="POST" id="planning-form">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="update_planning">
+              
+              <div class="info-card" style="margin-bottom:1rem">
+                <div class="label">Cette opération est-elle :</div>
+                <div class="value">
+                  <select id="planification-type" name="planning_type" class="select" style="max-width:300px">
+                    <option value="a_planifier">À planifier (intervention future)</option>
+                    <option value="deja_realise">Déjà réalisée (saisie après coup)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div id="planning-section">
+                <div class="alert warning" id="date-passee-alert" style="display:none">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0M12 3l9 18H3L12 3z" stroke="currentColor" stroke-width="1.6"/></svg>
+                  <div><strong>Date dépassée !</strong> La date prévue est passée. Confirmez la réalisation ou replanifiez.</div>
+                </div>
+                
+                <div class="info-grid">
+                  <div class="info-card">
+                    <div class="label">Date prévue d'intervention</div>
+                    <div class="value">
+                      <input type="datetime-local" id="planning-date" name="date_prevue" class="input" 
+                             value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
+                    </div>
+                  </div>
+                  
+                  <div class="info-card">
+                    <div class="label">Actions</div>
+                    <div class="value">
+                      <button type="submit" class="btn success" style="width:100%; margin-bottom:.5rem">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                        Enregistrer la planification
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div id="deja-realise-section" style="display:none">
+                <div class="info-grid">
+                  <div class="info-card">
+                    <div class="label">Date de réalisation</div>
+                    <div class="value">
+                      <input type="datetime-local" id="realisation-date" name="date_realisation" class="input"
+                             value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}">
+                    </div>
+                  </div>
+                  
+                  <div class="info-card">
+                    <div class="label">Actions</div>
+                    <div class="value">
+                      <button type="submit" class="btn success" style="width:100%">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                        Valider la réalisation
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p style="margin-top:.5rem; color:var(--muted); font-size:.85rem">
+                  Utilisez cette option si l'intervention a déjà eu lieu et que vous souhaitez la saisir dans le système.
+                </p>
+              </div>
+            </form>
+          </div>
+        </section>
+
+        <!-- ========================================
+             PAIEMENT
+             ======================================== -->
+        {% if operation.devis_statut == 'accepte' or operation.statut == 'realise' or operation.statut == 'paye' %}
+        <section class="section">
+          <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 8.5h20M2 12.5h20M6 16.5h8M6 20.5h8M6 4.5h8" stroke="currentColor" stroke-width="1.6"/></svg>
+              Paiement
+              {% if operation.statut == 'paye' %}
+              <span class="section-badge complete">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                Payé
+              </span>
+              {% elif operation.mode_paiement %}
+              <span class="section-badge pending">{{ operation.get_mode_paiement_display }}</span>
+              {% else %}
+              <span class="section-badge disabled">Non configuré</span>
+              {% endif %}
+            </h2>
+            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+          
+          <div class="section-body">
+            {% if operation.statut != 'realise' and operation.statut != 'paye' %}
+            <div class="alert info" style="margin-bottom:1rem">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+              <div>Vous pouvez enregistrer des acomptes avant la réalisation (arrhes, avances).</div>
+            </div>
+            {% endif %}
             
-            <div class="info-card" style="margin-bottom:1rem">
-              <div class="label">Cette opération est-elle :</div>
+            <!-- Choix du mode de paiement -->
+            <div class="info-card" style="margin-bottom:1.5rem">
+              <div class="label">Mode de paiement</div>
               <div class="value">
-                <select id="planification-type" name="planning_type" class="select" style="max-width:300px">
-                  <option value="a_planifier">À planifier (intervention future)</option>
-                  <option value="deja_realise">Déjà réalisée (saisie après coup)</option>
+                <select id="mode-paiement-select" class="select" style="max-width:300px">
+                  <option value="">-- Sélectionnez --</option>
+                  <option value="comptant" {% if operation.mode_paiement == 'comptant' %}selected{% endif %}>Paiement comptant</option>
+                  <option value="echelonne" {% if operation.mode_paiement == 'echelonne' %}selected{% endif %}>Paiement en plusieurs fois</option>
                 </select>
               </div>
             </div>
 
-            <div id="planning-section">
-              <div class="alert warning" id="date-passee-alert" style="display:none">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0M12 3l9 18H3L12 3z" stroke="currentColor" stroke-width="1.6"/></svg>
-                <div><strong>Date dépassée !</strong> La date prévue est passée. Confirmez la réalisation ou replanifiez.</div>
-              </div>
-              
-              <div class="info-grid">
-                <div class="info-card">
-                  <div class="label">Date prévue d'intervention</div>
-                  <div class="value">
-                    <input type="datetime-local" id="planning-date" name="date_prevue" class="input" 
-                           value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
-                  </div>
-                </div>
+            <!-- ===== PAIEMENT COMPTANT ===== -->
+            <div id="comptant-section" style="display:none">
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="paiement_comptant">
                 
-                <div class="info-card">
-                  <div class="label">Actions</div>
-                  <div class="value">
-                    <button type="submit" class="btn success" style="width:100%; margin-bottom:.5rem">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                      Enregistrer la planification
-                    </button>
+                <div class="payment-box">
+                  <div class="info-grid">
+                    <div class="info-card">
+                      <div class="label">Montant total</div>
+                      <div class="value" style="font-size:1.4rem; color:var(--primary)">{{ montant_total }} €</div>
+                    </div>
+                    
+                    <div class="info-card">
+                      <div class="label">Date de paiement</div>
+                      <div class="value">
+                        <input type="date" name="date_paiement" class="input" id="date-paiement-comptant" required>
+                      </div>
+                    </div>
                   </div>
+                  
+                  <button type="submit" class="btn success" style="width:100%; margin-top:1rem">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                    Valider le paiement comptant
+                  </button>
                 </div>
-              </div>
+              </form>
             </div>
 
-            <div id="deja-realise-section" style="display:none">
-              <div class="info-grid">
-                <div class="info-card">
-                  <div class="label">Date de réalisation</div>
-                  <div class="value">
-                    <input type="datetime-local" id="realisation-date" name="date_realisation" class="input"
-                           value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}">
-                  </div>
-                </div>
-                
-                <div class="info-card">
-                  <div class="label">Actions</div>
-                  <div class="value">
-                    <button type="submit" class="btn success" style="width:100%">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                      Valider la réalisation
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <p style="margin-top:.5rem; color:var(--muted); font-size:.85rem">
-                Utilisez cette option si l'intervention a déjà eu lieu et que vous souhaitez la saisir dans le système.
-              </p>
-            </div>
-          </form>
-        </section>
-
-        <!-- Paiement -->
-        {% if operation.devis_statut == 'accepte' or operation.statut == 'realise' or operation.statut == 'paye' %}
-        <section class="section">
-          <div class="section-header">
-            <h2 class="section-title">Paiement</h2>
-            <button class="btn primary" onclick="alert('Fonctionnalité en développement')">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6" stroke="currentColor" stroke-width="1.5"/></svg>
-              Générer facture
-            </button>
-          </div>
-          
-          {% if operation.statut != 'realise' and operation.statut != 'paye' %}
-          <div class="alert info" style="margin-bottom:1rem">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-            <div>Vous pouvez enregistrer des acomptes avant la réalisation (arrhes, avances).</div>
-          </div>
-          {% endif %}
-          
-          <!-- Choix du mode de paiement -->
-          <div class="info-card" style="margin-bottom:1.5rem">
-            <div class="label">Mode de paiement</div>
-            <div class="value">
-              <select id="mode-paiement-select" class="select" style="max-width:300px">
-                <option value="">-- Sélectionnez --</option>
-                <option value="comptant" {% if operation.mode_paiement == 'comptant' %}selected{% endif %}>Paiement comptant</option>
-                <option value="echelonne" {% if operation.mode_paiement == 'echelonne' %}selected{% endif %}>Paiement en plusieurs fois</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- ===== PAIEMENT COMPTANT ===== -->
-          <div id="comptant-section" style="display:none">
-            <form method="POST">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="paiement_comptant">
+            <!-- ===== PAIEMENT ÉCHELONNÉ ===== -->
+            <div id="echelonne-section" style="display:none">
               
-              <div class="payment-box">
+              <!-- Récapitulatif financier -->
+              <div class="payment-box" style="margin-bottom:1.5rem">
                 <div class="info-grid">
                   <div class="info-card">
                     <div class="label">Montant total</div>
@@ -608,183 +782,172 @@
                   </div>
                   
                   <div class="info-card">
-                    <div class="label">Date de paiement</div>
-                    <div class="value">
-                      <input type="date" name="date_paiement" class="input" id="date-paiement-comptant" required>
-                    </div>
-                  </div>
-                </div>
-                
-                <button type="submit" class="btn success" style="width:100%; margin-top:1rem">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                  Valider le paiement comptant
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <!-- ===== PAIEMENT ÉCHELONNÉ ===== -->
-          <div id="echelonne-section" style="display:none">
-            
-            <!-- Récapitulatif financier -->
-            <div class="payment-box" style="margin-bottom:1.5rem">
-              <div class="info-grid">
-                <div class="info-card">
-                  <div class="label">Montant total</div>
-                  <div class="value" style="font-size:1.4rem; color:var(--primary)">{{ montant_total }} €</div>
-                </div>
-                
-                <div class="info-card">
-                  <div class="label">Total payé</div>
-                  <div class="value" style="font-size:1.4rem; color:var(--success)">
-                    <span id="total-paye">{{ total_echeances|default:0 }}</span> €
-                  </div>
-                </div>
-                
-                <div class="info-card">
-                  <div class="label">Reste à payer</div>
-                  <div class="value" style="font-size:1.4rem; color:var(--warning)">
-                    <span id="reste-a-payer">{{ reste_a_payer|default:montant_total }}</span> €
-                  </div>
-                </div>
-                <div class="info-card">
-                  <div class="label">Total planifié</div>
-                  <div class="value" style="font-size:1.2rem; color:var(--muted)">
-                    {{ total_echeances_prevu }} €
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Liste des paiements enregistrés -->
-            {% if echeances %}
-            <div class="payment-box" style="margin-bottom:1.5rem">
-              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Paiements enregistrés</h4>
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>N°</th>
-                      <th>Montant</th>
-                      <th>Date prévue</th>
-                      <th>Statut</th>
-                      <th style="width:120px">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for echeance in echeances %}
-                    <tr class="echeance-row" style="{% if echeance.statut_display == 'retard' %}background: #fee2e2;{% endif %}">
-                      <td><strong>Paiement {{ echeance.numero }}</strong></td>
-                      <td>{{ echeance.montant }} €</td>
-                      <td>{{ echeance.date_echeance|date:"d/m/Y" }}</td>
-                      <td>
-                        {% if echeance.paye %}
-                          <span style="color:var(--success); font-weight:600">✓ Payé</span>
-                        {% else %}
-                          {% now "Y-m-d" as today %}
-                          {% if echeance.date_echeance|date:"Y-m-d" < today %}
-                            <span style="color:var(--danger); font-weight:600">⚠ En retard</span>
-                          {% else %}
-                            <span style="color:var(--warning); font-weight:600">⏳ En attente</span>
-                          {% endif %}
-                        {% endif %}
-                      </td>
-                      <td>
-                        {% if not echeance.paye %}
-                        <form method="POST" style="display:inline; margin-right:.5rem">
-                          {% csrf_token %}
-                          <input type="hidden" name="action" value="marquer_paye_echeance">
-                          <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
-                          <button type="submit" class="btn success sm" title="Marquer comme payé">✓</button>
-                        </form>
-                        {% endif %}
-                        <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer ce paiement ?')">
-                          {% csrf_token %}
-                          <input type="hidden" name="action" value="delete_echeance">
-                          <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
-                          <button type="submit" class="btn danger sm">×</button>
-                        </form>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            {% endif %}
-
-            <!-- Formulaire d'ajout de paiement -->
-            <div class="payment-box">
-              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">
-                {% if echeances %}Ajouter un paiement supplémentaire{% else %}Enregistrer le premier paiement{% endif %}
-              </h4>
-              
-              <form method="POST" id="form-add-echeance">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="add_echeance">
-                
-                <div class="info-grid" style="margin-bottom:1rem">
-                  <div class="info-card">
-                    <div class="label">Montant (€)</div>
-                    <div class="value">
-                      <input type="number" name="montant" class="input" placeholder="Ex: 500" step="0.01" min="0.01" max="{{ reste_a_payer|default:montant_total }}" required>
+                    <div class="label">Total payé</div>
+                    <div class="value" style="font-size:1.4rem; color:var(--success)">
+                      <span id="total-paye">{{ total_echeances|default:0 }}</span> €
                     </div>
                   </div>
                   
                   <div class="info-card">
-                    <div class="label">Date prévue</div>
-                    <div class="value">
-                      <input type="date" name="date_echeance" class="input" required>
+                    <div class="label">Reste à payer</div>
+                    <div class="value" style="font-size:1.4rem; color:var(--warning)">
+                      <span id="reste-a-payer">{{ reste_a_payer|default:montant_total }}</span> €
+                    </div>
+                  </div>
+                  <div class="info-card">
+                    <div class="label">Total planifié</div>
+                    <div class="value" style="font-size:1.2rem; color:var(--muted)">
+                      {{ total_echeances_prevu }} €
                     </div>
                   </div>
                 </div>
+              </div>
+
+              <!-- Liste des paiements enregistrés -->
+              {% if echeances %}
+              <div class="payment-box" style="margin-bottom:1.5rem">
+                <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Paiements enregistrés</h4>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>N°</th>
+                        <th>Montant</th>
+                        <th>Date prévue</th>
+                        <th>Statut</th>
+                        <th style="width:120px">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for echeance in echeances %}
+                      <tr class="echeance-row" style="{% if echeance.statut_display == 'retard' %}background: #fee2e2;{% endif %}">
+                        <td><strong>Paiement {{ echeance.numero }}</strong></td>
+                        <td>{{ echeance.montant }} €</td>
+                        <td>{{ echeance.date_echeance|date:"d/m/Y" }}</td>
+                        <td>
+                          {% if echeance.paye %}
+                            <span style="color:var(--success); font-weight:600">✓ Payé</span>
+                          {% else %}
+                            {% now "Y-m-d" as today %}
+                            {% if echeance.date_echeance|date:"Y-m-d" < today %}
+                              <span style="color:var(--danger); font-weight:600">⚠ En retard</span>
+                            {% else %}
+                              <span style="color:var(--warning); font-weight:600">⏳ En attente</span>
+                            {% endif %}
+                          {% endif %}
+                        </td>
+                        <td>
+                          {% if not echeance.paye %}
+                          <form method="POST" style="display:inline; margin-right:.5rem">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="marquer_paye_echeance">
+                            <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
+                            <button type="submit" class="btn success sm" title="Marquer comme payé">✓</button>
+                          </form>
+                          {% endif %}
+                          <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer ce paiement ?')">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="delete_echeance">
+                            <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
+                            <button type="submit" class="btn danger sm">×</button>
+                          </form>
+                        </td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              {% endif %}
+
+              <!-- Formulaire d'ajout de paiement -->
+              <div class="payment-box">
+                <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">
+                  {% if echeances %}Ajouter un paiement supplémentaire{% else %}Enregistrer le premier paiement{% endif %}
+                </h4>
                 
-                <button type="submit" class="btn success" style="width:100%">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-                  Enregistrer ce paiement
+                <form method="POST" id="form-add-echeance">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="add_echeance">
+                  
+                  <div class="info-grid" style="margin-bottom:1rem">
+                    <div class="info-card">
+                      <div class="label">Montant (€)</div>
+                      <div class="value">
+                        <input type="number" name="montant" class="input" placeholder="Ex: 500" step="0.01" min="0.01" max="{{ reste_a_payer|default:montant_total }}" required>
+                      </div>
+                    </div>
+                    
+                    <div class="info-card">
+                      <div class="label">Date prévue</div>
+                      <div class="value">
+                        <input type="date" name="date_echeance" class="input" required>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button type="submit" class="btn success" style="width:100%">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+                    Enregistrer ce paiement
+                  </button>
+                </form>
+              </div>
+              
+              <!-- Bouton de validation finale -->
+              {% if echeances %}
+              <form method="POST" style="margin-top:1rem">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="valider_echelonnement">
+                <button type="submit" class="btn primary" style="width:100%">
+                  Valider le plan de paiement échelonné
                 </button>
               </form>
+              {% endif %}
             </div>
             
-            <!-- Bouton de validation finale -->
-            {% if echeances %}
-            <form method="POST" style="margin-top:1rem">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="valider_echelonnement">
-              <button type="submit" class="btn primary" style="width:100%">
-                Valider le plan de paiement échelonné
-              </button>
-            </form>
-            {% endif %}
           </div>
-          
         </section>
         {% endif %}
       </div>
 
-
+      <!-- ========================================
+           COLONNE DROITE - HISTORIQUE
+           ======================================== -->
       <div class="right-column">
         <section class="section">
-          <div class="section-header">
-            <h2 class="section-title">Historique</h2>
+          <div class="section-header" onclick="toggleSection(this)">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+              Historique
+              {% if historique %}
+              <span class="section-badge complete">
+                {{ historique.count }} événement{{ historique.count|pluralize }}
+              </span>
+              {% endif %}
+            </h2>
+            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            </svg>
           </div>
-          {% if historique %}
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>Date</th><th>Action</th></tr></thead>
-              <tbody>
-                {% for entry in historique %}
-                <tr>
-                  <td style="font-size:.85rem">{{ entry.date|date:"d/m H:i" }}</td>
-                  <td style="font-size:.9rem">{{ entry.action }}</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
+          <div class="section-body">
+            {% if historique %}
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Date</th><th>Action</th></tr></thead>
+                <tbody>
+                  {% for entry in historique %}
+                  <tr>
+                    <td style="font-size:.85rem">{{ entry.date|date:"d/m H:i" }}</td>
+                    <td style="font-size:.9rem">{{ entry.action }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="alert info">Aucun historique</div>
+            {% endif %}
           </div>
-          {% else %}
-          <div class="alert info">Aucun historique</div>
-          {% endif %}
         </section>
       </div>
     </div>
@@ -796,7 +959,6 @@
       </a>
     </div>
   </div>
-
   <script>
 document.addEventListener('DOMContentLoaded', function() {
   
@@ -992,6 +1154,76 @@ document.addEventListener('DOMContentLoaded', function() {
   console.log('✅ JavaScript CRM Artisans initialisé');
   console.log('📝 Devis créé:', devisCreeSelect ? devisCreeSelect.value : 'N/A');
   console.log('💳 Mode paiement sélectionné:', modePaiementSelect ? modePaiementSelect.value : 'N/A');
+});
+
+// ========================================
+// GESTION DES SECTIONS REPLIABLES
+// ========================================
+function toggleSection(header) {
+  const section = header.closest('.section');
+  const body = section.querySelector('.section-body');
+  
+  // Toggle les classes
+  header.classList.toggle('collapsed');
+  body.classList.toggle('collapsed');
+  
+  // Sauvegarder l'état dans localStorage
+  const sectionTitle = header.querySelector('.section-title').textContent.trim();
+  const isCollapsed = body.classList.contains('collapsed');
+  localStorage.setItem(`section-${sectionTitle}`, isCollapsed ? 'collapsed' : 'expanded');
+}
+
+// Restaurer l'état des sections au chargement
+document.addEventListener('DOMContentLoaded', function() {
+  // ... votre code existant ...
+  
+  // Logique d'ouverture/fermeture intelligente
+  const statut = '{{ operation.statut }}';
+  
+  // Par défaut, replier certaines sections selon le statut
+  const sections = document.querySelectorAll('.section');
+  sections.forEach((section, index) => {
+    const header = section.querySelector('.section-header');
+    const body = section.querySelector('.section-body');
+    const title = header.querySelector('.section-title').textContent.trim();
+    
+    // Vérifier si un état est sauvegardé
+    const savedState = localStorage.getItem(`section-${title}`);
+    
+    if (savedState) {
+      // Utiliser l'état sauvegardé
+      if (savedState === 'collapsed') {
+        header.classList.add('collapsed');
+        body.classList.add('collapsed');
+      }
+    } else {
+      // Logique par défaut selon le statut
+      if (statut === 'en_attente_devis') {
+        // Ouvrir: Informations générales, Devis, Lignes
+        // Fermer: Planification, Paiement
+        if (title.includes('Planification') || title.includes('Paiement')) {
+          header.classList.add('collapsed');
+          body.classList.add('collapsed');
+        }
+      } else if (statut === 'planifie') {
+        // Ouvrir: Planification
+        // Fermer: Paiement
+        if (title.includes('Paiement')) {
+          header.classList.add('collapsed');
+          body.classList.add('collapsed');
+        }
+      } else if (statut === 'paye') {
+        // Tout ouvrir
+        // (ne rien faire)
+      }
+      
+      // Toujours garder "Informations générales" ouvert
+      if (title.includes('Informations générales')) {
+        header.classList.remove('collapsed');
+        body.classList.remove('collapsed');
+      }
+    }
+  });
 });
 </script>
 
