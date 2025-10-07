@@ -407,6 +407,43 @@
       <section class="section">
         <div class="section-header">
           <h2 class="section-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="1.6"/></svg>
+            Devis (optionnel)
+          </h2>
+        </div>
+        <div class="section-body">
+          <div class="form-group">
+            <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer">
+              <input type="checkbox" id="devis-checkbox" name="devis_cree" value="true" style="width:auto; margin:0">
+              <span>Un devis a déjà été créé pour cette opération</span>
+            </label>
+          </div>
+
+          <div id="devis-fields" style="display:none; margin-top:1rem">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="devis_date_envoi">Date d'envoi du devis au client</label>
+                <input type="date" name="devis_date_envoi" id="devis_date_envoi" class="input">
+              </div>
+              
+              <div class="form-group">
+                <label for="devis_statut">Statut du devis</label>
+                <select name="devis_statut" id="devis_statut" class="select">
+                  <option value="">-- Sélectionnez --</option>
+                  <option value="en_attente">En attente de réponse</option>
+                  <option value="accepte">Devis accepté</option>
+                  <option value="refuse">Devis refusé</option>
+                  <option value="relance">À relancer</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="section-header">
+          <h2 class="section-title">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.6"/></svg>
             Interventions - Lignes du devis
           </h2>
@@ -505,6 +542,29 @@
       document.getElementById('date_realisation').required = true;
       document.getElementById('date_paiement').required = true;
     }
+  }
+
+  // ========================================
+  // GESTION DU DEVIS DANS LE FORMULAIRE
+  // ========================================
+  const devisCheckbox = document.getElementById('devis-checkbox');
+  const devisFields = document.getElementById('devis-fields');
+  const devisDateEnvoi = document.getElementById('devis_date_envoi');
+
+  if (devisCheckbox) {
+    devisCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        devisFields.style.display = 'block';
+        // Mettre la date du jour par défaut
+        if (devisDateEnvoi && !devisDateEnvoi.value) {
+          const today = new Date();
+          const pad = n => String(n).padStart(2, '0');
+          devisDateEnvoi.value = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+        }
+      } else {
+        devisFields.style.display = 'none';
+      }
+    });
   }
 
   function validateForm(event) {

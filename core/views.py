@@ -886,6 +886,31 @@ def operation_create(request):
                 statut=statut
             )
             
+            # ✅ NOUVEAU : Gestion du devis lors de la création
+            devis_cree = request.POST.get('devis_cree') == 'true'
+            if devis_cree:
+                operation.devis_cree = True
+                
+                devis_date_envoi_str = request.POST.get('devis_date_envoi', '')
+                if devis_date_envoi_str:
+                    try:
+                        operation.devis_date_envoi = datetime.strptime(devis_date_envoi_str, '%Y-%m-%d').date()
+                    except ValueError:
+                        pass
+                
+                devis_statut = request.POST.get('devis_statut', '')
+                if devis_statut:
+                    operation.devis_statut = devis_statut
+                
+                operation.save()
+                
+                # Ajouter à l'historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Devis créé - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'Non défini'}",
+                    utilisateur=request.user
+                )
+            
             print(f"✓✓✓ OPÉRATION CRÉÉE AVEC SUCCÈS")
             print(f"    ID: {operation.id}")
             print(f"    Code: {operation.id_operation}")
