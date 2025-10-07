@@ -207,6 +207,14 @@ def operation_detail(request, operation_id):
                 if devis_statut:
                     operation.devis_statut = devis_statut
                 
+                    # ✅ NOUVEAU : Synchroniser le statut de l'opération
+                    if devis_statut == 'refuse':
+                        operation.statut = 'devis_refuse'
+                    elif devis_statut == 'accepte':
+                        # Si le devis est accepté, passer à "à planifier"
+                        if operation.statut == 'en_attente_devis':
+                            operation.statut = 'a_planifier'
+                
                 operation.save()
                 
                 HistoriqueOperation.objects.create(

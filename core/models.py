@@ -111,6 +111,11 @@ class Operation(models.Model):
             import uuid
             unique_suffix = str(uuid.uuid4())[:6].upper()
             self.id_operation = f"U{self.user.id}OP{unique_suffix}"
+        # ✅ NOUVEAU : Synchroniser automatiquement devis_statut et statut
+        if self.devis_statut == 'refuse' and self.statut != 'devis_refuse':
+            self.statut = 'devis_refuse'
+        elif self.devis_statut == 'accepte' and self.statut == 'en_attente_devis':
+            self.statut = 'a_planifier'
         super().save(*args, **kwargs)
     
     @property
