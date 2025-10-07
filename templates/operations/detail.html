@@ -1149,53 +1149,57 @@ document.addEventListener('DOMContentLoaded', function() {
   if (devisDateEnvoi && !devisDateEnvoi.value) {
     devisDateEnvoi.value = getTodayDate();
   }
-
 // ========================================
   // GESTION DES SECTIONS REPLIABLES
   // ========================================
-  const statut = '{{ operation.statut }}';  // ← Cette ligne doit rester identique
+  const statut = '{{ operation.statut }}';
+  const operationId = '{{ operation.id }}';
   
-  console.log('🔍 Statut détecté:', statut);  // ← Debug
+  // Clé unique pour cette opération
+  const storageKey = `operation-${operationId}-sections-initialized`;
+  const isFirstVisit = !localStorage.getItem(storageKey);
   
-  // Par défaut, TOUT REPLIER sauf la section pertinente
+  console.log('🔍 Statut détecté:', statut);
+  console.log('👁️ Première visite de cette opération:', isFirstVisit);
+  
   const sections = document.querySelectorAll('.section');
+  console.log('📦 Nombre de sections trouvées:', sections.length);
   
-  console.log('📦 Nombre de sections trouvées:', sections.length);  // ← Debug
+  let sectionToScrollTo = null; // ← Nouvelle variable pour tracker la section à scroller
   
   sections.forEach((section) => {
     const header = section.querySelector('.section-header');
     const body = section.querySelector('.section-body');
     
     if (!header || !body) {
-      console.warn('⚠️ Section sans header ou body trouvée');
+      console.warn('⚠️ Section sans header ou body');
       return;
     }
     
     const titleElement = header.querySelector('.section-title');
     if (!titleElement) {
-      console.warn('⚠️ Section sans titre trouvée');
+      console.warn('⚠️ Section sans titre');
       return;
     }
     
     const title = titleElement.textContent.trim();
-    console.log('📄 Section trouvée:', title);  // ← Debug
+    console.log('📄 Section trouvée:', title);
     
     // Vérifier si un état est sauvegardé
     const savedState = localStorage.getItem(`section-${title}`);
     
-    if (savedState) {
-      console.log(`💾 État sauvegardé pour "${title}":`, savedState);
-      // Utiliser l'état sauvegardé (priorité à l'utilisateur)
+    // ✅ IMPORTANT : Sur la première visite, ignorer localStorage
+    if (savedState && !isFirstVisit) {
+      console.log(`💾 État sauvegardé utilisé pour "${title}":`, savedState);
       if (savedState === 'collapsed') {
         header.classList.add('collapsed');
         body.classList.add('collapsed');
       }
     } else {
-      // NOUVEAU : Par défaut, tout replier d'abord
+      // Logique par défaut selon le statut
       header.classList.add('collapsed');
       body.classList.add('collapsed');
       
-      // Puis ouvrir UNIQUEMENT la section pertinente selon le statut
       let shouldOpen = false;
       
       switch(statut) {
@@ -1227,20 +1231,46 @@ document.addEventListener('DOMContentLoaded', function() {
           shouldOpen = title.includes('Informations générales');
       }
       
-      console.log(`🎯 Section "${title}" devrait être ouverte:`, shouldOpen);  // ← Debug
+      console.log(`🎯 Section "${title}" devrait être ouverte:`, shouldOpen);
       
-      // Ouvrir la section si nécessaire
       if (shouldOpen) {
         header.classList.remove('collapsed');
         body.classList.remove('collapsed');
         console.log(`✅ Section "${title}" ouverte !`);
+        
+        // ✅ NOUVEAU : Mémoriser cette section pour le scroll
+        if (!sectionToScrollTo) {
+          sectionToScrollTo = section;
+        }
       }
     }
   });
+  
+  // Marquer cette opération comme initialisée
+  if (isFirstVisit) {
+    localStorage.setItem(storageKey, 'true');
+    console.log('✅ Opération marquée comme initialisée');
+  }
 
   // ========================================
-  // LOG DE DÉBOGAGE
+  // SCROLL AUTOMATIQUE VERS LA SECTION OUVERTE
   // ========================================
+  if (sectionToScrollTo && isFirstVisit) {
+    // Attendre que les animations CSS soient terminées
+    setTimeout(() => {
+      const headerOffset = 100; // Espace en haut (pour le header sticky)
+      const elementPosition = sectionToScrollTo.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth' // Animation fluide
+      });
+      
+      console.log('📍 Scroll automatique vers la section ouverte');
+    }, 100); // 100ms pour laisser le DOM se stabiliser
+  }
+
   console.log('✅ JavaScript CRM Artisans initialisé');
   console.log('📝 Devis créé:', devisCreeSelect ? devisCreeSelect.value : 'N/A');
   console.log('💳 Mode paiement sélectionné:', modePaiementSelect ? modePaiementSelect.value : 'N/A');
