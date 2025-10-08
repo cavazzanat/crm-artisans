@@ -193,33 +193,49 @@ def operation_detail(request, operation_id):
 # "estimate" in English) within an operation. Here is a breakdown of the key steps:
             if devis_cree:
                 devis_date_envoi = request.POST.get('devis_date_envoi', '')
+                devis_date_reponse = request.POST.get('devis_date_reponse', '')
                 devis_statut = request.POST.get('devis_statut', '')
                 
                 operation.devis_cree = True
                 
                 from datetime import datetime
+                
                 if devis_date_envoi:
                     try:
                         operation.devis_date_envoi = datetime.fromisoformat(devis_date_envoi).date()
                     except ValueError:
                         pass
                 
+                # ✅ NOUVEAU : Enregistrer la date de réponse
+                if devis_date_reponse:
+                    try:
+                        operation.devis_date_reponse = datetime.fromisoformat(devis_date_reponse).date()
+                    except ValueError:
+                        pass
+                        
                 if devis_statut:
                     operation.devis_statut = devis_statut
                 
-                    # ✅ NOUVEAU : Synchroniser le statut de l'opération
+                    # Synchroniser le statut de l'opération
                     if devis_statut == 'refuse':
                         operation.statut = 'devis_refuse'
                     elif devis_statut == 'accepte':
-                        # Si le devis est accepté, passer à "à planifier"
                         if operation.statut == 'en_attente_devis':
                             operation.statut = 'a_planifier'
                 
                 operation.save()
                 
+                # ✅ NOUVEAU : Message d'historique amélioré avec délai
+                historique_message = f"Devis mis à jour - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'N/A'}"
+                
+                if operation.devis_date_envoi and operation.devis_date_reponse:
+                    delai = (operation.devis_date_reponse - operation.devis_date_envoi).days
+                    historique_message += f" - Délai de réponse: {delai} jour{'s' if delai > 1 else ''}"
+        
+                
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=f"Devis mis à jour - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'N/A'}",
+                    action=historique_message,  # ← Utiliser la variable qui contient le délai
                     utilisateur=request.user
                 )
                 

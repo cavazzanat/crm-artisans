@@ -65,6 +65,7 @@ class Operation(models.Model):
     # CHAMPS POUR LE DEVIS
     devis_cree = models.BooleanField(default=False, verbose_name="Devis créé")
     devis_date_envoi = models.DateField(null=True, blank=True, verbose_name="Date envoi devis")
+    devis_date_reponse = models.DateField(null=True, blank=True, verbose_name="Date réponse client") 
     devis_statut = models.CharField(
         max_length=20,
         choices=[
