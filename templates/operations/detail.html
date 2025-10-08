@@ -1046,11 +1046,54 @@
 
 
 <script>
+// ========================================
+// ✅ FONCTIONS GLOBALES (DOIVENT ÊTRE EN PREMIER)
+// ========================================
+
+// Fonction de confirmation de suppression
+function confirmDeleteOperation() {
+  const id = '{{ operation.id_operation }}';
+  const type = '{{ operation.type_prestation|escapejs }}';
+  const client = '{{ operation.client.nom }} {{ operation.client.prenom }}';
+  const interventions = {{ interventions.count|default:0 }};
+  const echeances = {{ echeances.count|default:0 }};
+  
+  let message = '⚠️ ATTENTION : Supprimer l\'opération ' + id + ' ?\n\n';
+  message += '📋 Type : ' + type + '\n';
+  message += '👤 Client : ' + client + '\n';
+  
+  if (interventions > 0) {
+    message += '\n🔸 ' + interventions + ' ligne(s) d\'intervention seront supprimée(s)';
+  }
+  
+  if (echeances > 0) {
+    message += '\n💰 ' + echeances + ' échéance(s) de paiement seront supprimée(s)';
+  }
+  
+  message += '\n\n🚨 Cette action est IRRÉVERSIBLE !';
+  
+  return confirm(message);
+}
+
+// Fonction de toggle des sections
+function toggleSection(header) {
+  const section = header.closest('.section');
+  const body = section.querySelector('.section-body');
+  
+  header.classList.toggle('collapsed');
+  body.classList.toggle('collapsed');
+  
+  const sectionTitle = header.querySelector('.section-title').textContent.trim();
+  const isCollapsed = body.classList.contains('collapsed');
+  localStorage.setItem(`section-${sectionTitle}`, isCollapsed ? 'collapsed' : 'expanded');
+}
+
+// ========================================
+// INITIALISATION AU CHARGEMENT DE LA PAGE
+// ========================================
 document.addEventListener('DOMContentLoaded', function() {
   
-  // ========================================
-  // FONCTIONS UTILITAIRES
-  // ========================================
+  // Fonctions utilitaires
   function getNowFormatted() {
     const now = new Date();
     const pad = n => String(n).padStart(2, '0');
@@ -1067,59 +1110,55 @@ document.addEventListener('DOMContentLoaded', function() {
     return new Intl.NumberFormat('fr-FR', {minimumFractionDigits: 2}).format(montant) + ' €';
   }
 
-  // ========================================
-  // GESTION DU STATUT DU DEVIS
-  // ========================================
+  // Gestion du statut du devis
   const devisCreeSelect = document.getElementById('devis-cree');
   const devisDetails = document.getElementById('devis-details');
   const noDevisAlert = document.getElementById('no-devis-alert');
   const devisStatutSelect = document.getElementById('devis-statut');
 
-function updateDevisDisplay() {
-  const isCreated = devisCreeSelect.value === 'oui';
-  
-  if (devisDetails) {
-    if (isCreated) {
-      devisDetails.classList.remove('hidden');
-      devisDetails.style.display = 'block';
+  function updateDevisDisplay() {
+    const isCreated = devisCreeSelect.value === 'oui';
+    
+    if (devisDetails) {
+      if (isCreated) {
+        devisDetails.classList.remove('hidden');
+        devisDetails.style.display = 'block';
+      } else {
+        devisDetails.classList.add('hidden');
+        devisDetails.style.display = 'none';
+      }
+    }
+    
+    if (noDevisAlert) {
+      noDevisAlert.style.display = isCreated ? 'none' : 'flex';
+    }
+    
+    if (isCreated && devisStatutSelect) {
+      updateDevisAlerts();
     } else {
-      devisDetails.classList.add('hidden');
-      devisDetails.style.display = 'none';
+      hideAllDevisAlerts();
     }
   }
-  
-  if (noDevisAlert) {
-    noDevisAlert.style.display = isCreated ? 'none' : 'flex';
-  }
-  
-  // ✅ MODIFICATION : Ne pas afficher les alertes si devis pas créé
-  if (isCreated && devisStatutSelect) {
-    updateDevisAlerts();
-  } else {
-    hideAllDevisAlerts();
-  }
-}
 
-function updateDevisAlerts() {
-  if (!devisStatutSelect) return;
-  
-  const statut = devisStatutSelect.value;
-  
-  // ✅ MODIFICATION : Ne jamais afficher "En attente" automatiquement
-  const alerts = {
-    'devis-accepte-alert': statut === 'accepte',
-    'devis-refuse-alert': statut === 'refuse',
-    'devis-attente-alert': false,  // ← Toujours à false
-    'devis-relance-alert': statut === 'relance'
-  };
-  
-  Object.keys(alerts).forEach(alertId => {
-    const alertElement = document.getElementById(alertId);
-    if (alertElement) {
-      alertElement.style.display = alerts[alertId] ? 'flex' : 'none';
-    }
-  });
-}
+  function updateDevisAlerts() {
+    if (!devisStatutSelect) return;
+    
+    const statut = devisStatutSelect.value;
+    
+    const alerts = {
+      'devis-accepte-alert': statut === 'accepte',
+      'devis-refuse-alert': statut === 'refuse',
+      'devis-attente-alert': false,
+      'devis-relance-alert': statut === 'relance'
+    };
+    
+    Object.keys(alerts).forEach(alertId => {
+      const alertElement = document.getElementById(alertId);
+      if (alertElement) {
+        alertElement.style.display = alerts[alertId] ? 'flex' : 'none';
+      }
+    });
+  }
 
   function hideAllDevisAlerts() {
     ['devis-accepte-alert', 'devis-refuse-alert', 'devis-attente-alert', 'devis-relance-alert'].forEach(alertId => {
@@ -1142,9 +1181,7 @@ function updateDevisAlerts() {
     }
   }
 
-  // ========================================
-  // GESTION DE LA PLANIFICATION
-  // ========================================
+  // Gestion de la planification
   const planificationType = document.getElementById('planification-type');
   const planningSection = document.getElementById('planning-section');
   const dejaRealiseSection = document.getElementById('deja-realise-section');
@@ -1196,33 +1233,26 @@ function updateDevisAlerts() {
   if (planningDate) {
     planningDate.addEventListener('change', checkDatePassee);
     checkDatePassee();
-  
   }
 
-  // ========================================
-  // GESTION DES COMMENTAIRES
-  // ========================================
+  // Gestion des commentaires
   const commentairesTextarea = document.getElementById('commentaires-textarea');
   const commentairesForm = document.getElementById('commentaires-form');
   let originalCommentaires = commentairesTextarea ? commentairesTextarea.value : '';
 
-  // Fonction pour réinitialiser le textarea
   window.resetCommentaires = function() {
     if (commentairesTextarea) {
       commentairesTextarea.value = originalCommentaires;
     }
   }
 
-  // Mettre à jour la valeur originale après soumission réussie
   if (commentairesForm) {
     commentairesForm.addEventListener('submit', function() {
       originalCommentaires = commentairesTextarea.value;
     });
   }
 
-  // ========================================
-  // ✅ NOUVEAU : GESTION DATE DE RÉPONSE
-  // ========================================
+  // Gestion date de réponse
   const dateEnvoiInput = document.getElementById('devis-date-envoi');
   const dateReponseInput = document.getElementById('devis-date-reponse');
   const dateReponseCard = document.getElementById('date-reponse-card');
@@ -1238,30 +1268,28 @@ function updateDevisAlerts() {
     else if (delaiReponseInfo) delaiReponseInfo.style.display = 'none';
   }
 
-function calculateDelai() {
-  if (!dateEnvoiInput || !dateReponseInput || !delaiReponseInfo || !delaiReponseText) return;
-  
-  const dateEnvoi = dateEnvoiInput.value;
-  const dateReponse = dateReponseInput.value;
-  
-  if (dateEnvoi && dateReponse) {
-    const d1 = new Date(dateEnvoi);
-    const d2 = new Date(dateReponse);
-    const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+  function calculateDelai() {
+    if (!dateEnvoiInput || !dateReponseInput || !delaiReponseInfo || !delaiReponseText) return;
     
-    if (diffDays >= 0) {
-      // ✅ MODIFICATION : Afficher uniquement le délai en jours
-      let message = `<strong>Délai de réponse : ${diffDays} jour${diffDays > 1 ? 's' : ''}</strong>`;
+    const dateEnvoi = dateEnvoiInput.value;
+    const dateReponse = dateReponseInput.value;
+    
+    if (dateEnvoi && dateReponse) {
+      const d1 = new Date(dateEnvoi);
+      const d2 = new Date(dateReponse);
+      const diffDays = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
       
-      delaiReponseText.innerHTML = message;
-      delaiReponseInfo.style.display = 'flex';
+      if (diffDays >= 0) {
+        let message = `<strong>Délai de réponse : ${diffDays} jour${diffDays > 1 ? 's' : ''}</strong>`;
+        delaiReponseText.innerHTML = message;
+        delaiReponseInfo.style.display = 'flex';
+      } else {
+        delaiReponseInfo.style.display = 'none';
+      }
     } else {
       delaiReponseInfo.style.display = 'none';
     }
-  } else {
-    delaiReponseInfo.style.display = 'none';
   }
-}
 
   if (devisStatutSelect) {
     const originalChange = devisStatutSelect.onchange;
@@ -1275,9 +1303,7 @@ function calculateDelai() {
   if (dateEnvoiInput) dateEnvoiInput.addEventListener('change', calculateDelai);
   if (dateReponseInput) dateReponseInput.addEventListener('change', calculateDelai);
 
-  // ========================================
-  // GESTION MODE PAIEMENT (SELECT)
-  // ========================================
+  // Gestion mode paiement
   const modePaiementSelect = document.getElementById('mode-paiement-select');
   const comptantSection = document.getElementById('comptant-section');
   const echelonneSection = document.getElementById('echelonne-section');
@@ -1305,61 +1331,39 @@ function calculateDelai() {
     }
   }
 
-  // ========================================
-  // INITIALISATION DES DATES PAR DÉFAUT
-  // ========================================
+  // Initialisation des dates
   const devisDateEnvoi = document.getElementById('devis-date-envoi');
   if (devisDateEnvoi && !devisDateEnvoi.value) {
     devisDateEnvoi.value = getTodayDate();
   }
-// ========================================
-  // GESTION DES SECTIONS REPLIABLES
-  // ========================================
+
+  // Gestion des sections repliables
   const statut = '{{ operation.statut }}';
   const operationId = '{{ operation.id }}';
-  
-  // Clé unique pour cette opération
   const storageKey = `operation-${operationId}-sections-initialized`;
   const isFirstVisit = !localStorage.getItem(storageKey);
   
-  console.log('🔍 Statut détecté:', statut);
-  console.log('👁️ Première visite de cette opération:', isFirstVisit);
-  
   const sections = document.querySelectorAll('.section');
-  console.log('📦 Nombre de sections trouvées:', sections.length);
-  
-  let sectionToScrollTo = null; // ← Nouvelle variable pour tracker la section à scroller
+  let sectionToScrollTo = null;
   
   sections.forEach((section) => {
     const header = section.querySelector('.section-header');
     const body = section.querySelector('.section-body');
     
-    if (!header || !body) {
-      console.warn('⚠️ Section sans header ou body');
-      return;
-    }
+    if (!header || !body) return;
     
     const titleElement = header.querySelector('.section-title');
-    if (!titleElement) {
-      console.warn('⚠️ Section sans titre');
-      return;
-    }
+    if (!titleElement) return;
     
     const title = titleElement.textContent.trim();
-    console.log('📄 Section trouvée:', title);
-    
-    // Vérifier si un état est sauvegardé
     const savedState = localStorage.getItem(`section-${title}`);
     
-    // ✅ IMPORTANT : Sur la première visite, ignorer localStorage
     if (savedState && !isFirstVisit) {
-      console.log(`💾 État sauvegardé utilisé pour "${title}":`, savedState);
       if (savedState === 'collapsed') {
         header.classList.add('collapsed');
         body.classList.add('collapsed');
       }
     } else {
-      // Logique par défaut selon le statut
       header.classList.add('collapsed');
       body.classList.add('collapsed');
       
@@ -1369,39 +1373,28 @@ function calculateDelai() {
         case 'en_attente_devis':
           shouldOpen = title.includes('Statut du devis');
           break;
-          
         case 'a_planifier':
           shouldOpen = title.includes('Devis / Opération - Lignes') || title.includes('Planification');
           break;
-          
         case 'planifie':
           shouldOpen = title.includes('Planification');
           break;
-          
         case 'realise':
           shouldOpen = title.includes('Paiement');
           break;
-          
         case 'paye':
           shouldOpen = title.includes('Paiement');
           break;
-          
         case 'devis_refuse':
           shouldOpen = title.includes('Statut du devis');
           break;
-          
         default:
           shouldOpen = title.includes('Informations générales');
       }
       
-      console.log(`🎯 Section "${title}" devrait être ouverte:`, shouldOpen);
-      
       if (shouldOpen) {
         header.classList.remove('collapsed');
         body.classList.remove('collapsed');
-        console.log(`✅ Section "${title}" ouverte !`);
-        
-        // ✅ NOUVEAU : Mémoriser cette section pour le scroll
         if (!sectionToScrollTo) {
           sectionToScrollTo = section;
         }
@@ -1409,79 +1402,28 @@ function calculateDelai() {
     }
   });
   
-  // Marquer cette opération comme initialisée
   if (isFirstVisit) {
     localStorage.setItem(storageKey, 'true');
-    console.log('✅ Opération marquée comme initialisée');
   }
 
-  // Fonction de confirmation pour la suppression
-function confirmDeleteOperation() {
-  const id = '{{ operation.id_operation }}';
-  const type = '{{ operation.type_prestation }}';
-  const client = '{{ operation.client.nom }} {{ operation.client.prenom }}';
-  const interventions = {{ interventions.count }};
-  const echeances = {{ echeances.count }};
-  
-  let message = `ATTENTION : Supprimer l'opération ${id} ?\n\n`;
-  message += `Type : ${type}\n`;
-  message += `Client : ${client}\n`;
-  
-  if (interventions > 0) {
-    message += `\n⚠ ${interventions} ligne(s) d'intervention seront supprimée(s)`;
-  }
-  
-  if (echeances > 0) {
-    message += `\n⚠ ${echeances} échéance(s) de paiement seront supprimée(s)`;
-  }
-  
-  message += `\n\nCette action est IRRÉVERSIBLE.`;
-  
-  return confirm(message);
-}
-
-// ========================================
-  // SCROLL AUTOMATIQUE VERS LA SECTION OUVERTE
-  // ========================================
-  if (sectionToScrollTo) {  // ← Scroll à CHAQUE visite maintenant
-    // Attendre que les animations CSS soient terminées
+  // Scroll automatique
+  if (sectionToScrollTo) {
     setTimeout(() => {
-      const headerOffset = 100; // Espace en haut (pour le header sticky)
+      const headerOffset = 100;
       const elementPosition = sectionToScrollTo.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
       
       window.scrollTo({
         top: offsetPosition,
-        behavior: 'smooth' // Animation fluide
+        behavior: 'smooth'
       });
-      
-      console.log('📍 Scroll automatique vers la section ouverte');
     }, 100);
   }
 
   console.log('✅ JavaScript CRM Artisans initialisé');
-  console.log('📝 Devis créé:', devisCreeSelect ? devisCreeSelect.value : 'N/A');
-  console.log('💳 Mode paiement sélectionné:', modePaiementSelect ? modePaiementSelect.value : 'N/A');
-  console.log('🎯 Statut opération:', statut);
 });
-
-// ========================================
-// GESTION DES SECTIONS REPLIABLES (TOGGLE)
-// ========================================
-function toggleSection(header) {
-  const section = header.closest('.section');
-  const body = section.querySelector('.section-body');
-  
-  // Toggle les classes
-  header.classList.toggle('collapsed');
-  body.classList.toggle('collapsed');
-  
-  // Sauvegarder l'état dans localStorage
-  const sectionTitle = header.querySelector('.section-title').textContent.trim();
-  const isCollapsed = body.classList.contains('collapsed');
-  localStorage.setItem(`section-${sectionTitle}`, isCollapsed ? 'collapsed' : 'expanded');
-}
 </script>
+
 {% if messages %}
 {% for message in messages %}
 <div class="alert {{ message.tags }}">
