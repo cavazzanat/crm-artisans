@@ -235,7 +235,7 @@ def operation_detail(request, operation_id):
                 
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=historique_message,  # ← Utiliser la variable qui contient le délai
+                    action=f"Devis mis à jour - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'N/A'}",
                     utilisateur=request.user
                 )
                 
@@ -456,6 +456,22 @@ def operation_detail(request, operation_id):
             else:
                 messages.error(request, "Description et montant obligatoires")
             
+            return redirect('operation_detail', operation_id=operation.id)
+        
+        # GESTION DES COMMENTAIRES
+        elif action == 'update_commentaires':
+            commentaires = request.POST.get('commentaires', '').strip()
+            
+            operation.commentaires = commentaires
+            operation.save()
+            
+            HistoriqueOperation.objects.create(
+                operation=operation,
+                action="Commentaires mis à jour",
+                utilisateur=request.user
+            )
+            
+            messages.success(request, "Commentaires enregistrés avec succès")
             return redirect('operation_detail', operation_id=operation.id)
 
         elif action == 'delete_intervention':

@@ -57,6 +57,7 @@ class Operation(models.Model):
     date_prevue = models.DateTimeField(null=True, blank=True)
     date_realisation = models.DateTimeField(null=True, blank=True)
     date_paiement = models.DateTimeField(null=True, blank=True)
+    commentaires = models.TextField(blank=True, null=True, verbose_name="Commentaires / Notes")
     
     statut = models.CharField(max_length=20, choices=STATUTS, default='en_attente_devis')
     date_creation = models.DateTimeField(auto_now_add=True)
