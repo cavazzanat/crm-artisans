@@ -514,58 +514,82 @@
     }
   }
 
-  function toggleDateFields() {
-    const statut = document.getElementById('statut').value;
-    const datePrevueGroup = document.getElementById('datePrevueGroup');
-    const dateRealisationGroup = document.getElementById('dateRealisationGroup');
-    const datePaiementGroup = document.getElementById('datePaiementGroup');
-    
-    // Cacher tous les champs et retirer required
-    [datePrevueGroup, dateRealisationGroup, datePaiementGroup].forEach(group => {
-      if (group) {
-        group.style.display = 'none';
-        const input = group.querySelector('input');
-        if (input) input.required = false;
-      }
-    });
-
-    // Afficher selon le statut
-    if (statut === 'planifie') {
-      datePrevueGroup.style.display = 'block';
-      document.getElementById('date_prevue').required = true;
-    } else if (statut === 'realise') {
-      dateRealisationGroup.style.display = 'block';
-      document.getElementById('date_realisation').required = true;
-    } else if (statut === 'paye') {
-      dateRealisationGroup.style.display = 'block';
-      datePaiementGroup.style.display = 'block';
-      document.getElementById('date_realisation').required = true;
-      document.getElementById('date_paiement').required = true;
+function toggleDateFields() {
+  const statut = document.getElementById('statut').value;
+  const datePrevueGroup = document.getElementById('datePrevueGroup');
+  const dateRealisationGroup = document.getElementById('dateRealisationGroup');
+  const datePaiementGroup = document.getElementById('datePaiementGroup');
+  
+  // Cacher tous les champs et retirer required
+  [datePrevueGroup, dateRealisationGroup, datePaiementGroup].forEach(group => {
+    if (group) {
+      group.style.display = 'none';
+      const input = group.querySelector('input');
+      if (input) input.required = false;
     }
-  }
+  });
 
-  // ========================================
-  // GESTION DU DEVIS DANS LE FORMULAIRE
-  // ========================================
+  // Afficher selon le statut
+  if (statut === 'planifie') {
+    datePrevueGroup.style.display = 'block';
+    document.getElementById('date_prevue').required = true;
+  } else if (statut === 'realise') {
+    dateRealisationGroup.style.display = 'block';
+    document.getElementById('date_realisation').required = true;
+  } else if (statut === 'paye') {
+    dateRealisationGroup.style.display = 'block';
+    datePaiementGroup.style.display = 'block';
+    document.getElementById('date_realisation').required = true;
+    document.getElementById('date_paiement').required = true;
+  }
+  
+  // ✅ NOUVEAU : Gérer automatiquement la case devis
   const devisCheckbox = document.getElementById('devis-checkbox');
   const devisFields = document.getElementById('devis-fields');
   const devisDateEnvoi = document.getElementById('devis_date_envoi');
-
-  if (devisCheckbox) {
-    devisCheckbox.addEventListener('change', function() {
-      if (this.checked) {
-        devisFields.style.display = 'block';
-        // Mettre la date du jour par défaut
-        if (devisDateEnvoi && !devisDateEnvoi.value) {
-          const today = new Date();
-          const pad = n => String(n).padStart(2, '0');
-          devisDateEnvoi.value = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
-        }
-      } else {
-        devisFields.style.display = 'none';
-      }
-    });
+  
+  if (statut === 'en_attente_devis') {
+    // Cocher automatiquement et afficher les champs
+    devisCheckbox.checked = true;
+    devisFields.style.display = 'block';
+    
+    // Mettre la date du jour par défaut si vide
+    if (!devisDateEnvoi.value) {
+      const today = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      devisDateEnvoi.value = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+    }
+    
+    // Présélectionner "En attente de réponse" si aucun statut
+    const devisStatut = document.getElementById('devis_statut');
+    if (!devisStatut.value) {
+      devisStatut.value = 'en_attente';
+    }
   }
+}
+
+// ========================================
+// GESTION DU DEVIS DANS LE FORMULAIRE
+// ========================================
+const devisCheckbox = document.getElementById('devis-checkbox');
+const devisFields = document.getElementById('devis-fields');
+const devisDateEnvoi = document.getElementById('devis_date_envoi');
+
+if (devisCheckbox) {
+  devisCheckbox.addEventListener('change', function() {
+    if (this.checked) {
+      devisFields.style.display = 'block';
+      // Mettre la date du jour par défaut
+      if (devisDateEnvoi && !devisDateEnvoi.value) {
+        const today = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        devisDateEnvoi.value = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+      }
+    } else {
+      devisFields.style.display = 'none';
+    }
+  });
+}
 
   function validateForm(event) {
     console.log('Validation du formulaire...');
