@@ -631,6 +631,34 @@ def operation_detail(request, operation_id):
     
     return render(request, 'operations/detail.html', context)
 
+@login_required
+def operation_delete(request, operation_id):
+    """Suppression d'une opération avec ses données liées"""
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    
+    if request.method == 'POST':
+        force_delete = request.POST.get('force_delete') == 'true'
+        id_operation = operation.id_operation
+        type_prestation = operation.type_prestation
+        client_nom = f"{operation.client.nom} {operation.client.prenom}"
+        
+        if force_delete:
+            # Supprimer les données liées
+            operation.interventions.all().delete()
+            operation.historique.all().delete()
+            operation.echeances.all().delete()
+            
+            # Supprimer l'opération
+            operation.delete()
+            
+            messages.success(request, f"Opération {id_operation} ({type_prestation}) supprimée avec succès.")
+            return redirect('operations')
+        else:
+            messages.error(request, "Confirmation requise pour la suppression")
+            return redirect('operation_detail', operation_id=operation.id)
+    
+    # GET : rediriger vers la fiche opération
+    return redirect('operation_detail', operation_id=operation.id)
 
 @login_required
 def operation_duplicate(request, operation_id):

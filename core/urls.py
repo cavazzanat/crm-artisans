@@ -15,6 +15,7 @@ urlpatterns = [
     path('clients/<int:client_id>/supprimer/', views.client_delete, name='client_delete'),
     path('clients/<int:client_id>/modifier/', views.client_edit, name='client_edit'),
     
+    path('operations/<int:operation_id>/delete/', views.operation_delete, name='operation_delete'),
     # Dans urls.py
     path('operations/<int:operation_id>/modifier/', views.operation_edit, name='operation_edit'),
 

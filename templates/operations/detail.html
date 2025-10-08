@@ -341,6 +341,9 @@
       {{ operation.id_operation }}
     </div>
 
+    <!-- ✅ NOUVEAU : En-tête avec bouton de suppression -->
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; flex-wrap:wrap">
+
     <h1>{{ operation.id_operation }} - {{ operation.type_prestation }}</h1>
     <span class="status-badge {{ operation.statut }}">{{ operation.get_statut_display }}</span>
 
@@ -1087,10 +1090,11 @@ function updateDevisAlerts() {
   
   const statut = devisStatutSelect.value;
   
+  // ✅ MODIFICATION : Ne jamais afficher "En attente" automatiquement
   const alerts = {
     'devis-accepte-alert': statut === 'accepte',
     'devis-refuse-alert': statut === 'refuse',
-    'devis-attente-alert': false,  // ✅ MODIFICATION : Ne jamais afficher l'alerte "En attente"
+    'devis-attente-alert': false,  // ← Toujours à false
     'devis-relance-alert': statut === 'relance'
   };
   
