@@ -341,11 +341,26 @@
       {{ operation.id_operation }}
     </div>
 
+
+
     <!-- ✅ NOUVEAU : En-tête avec bouton de suppression -->
     <div style="display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:1rem; flex-wrap:wrap">
-
-    <h1>{{ operation.id_operation }} - {{ operation.type_prestation }}</h1>
-    <span class="status-badge {{ operation.statut }}">{{ operation.get_statut_display }}</span>
+      <div>
+        <h1>{{ operation.id_operation }} - {{ operation.type_prestation }}</h1>
+        <span class="status-badge {{ operation.statut }}">{{ operation.get_statut_display }}</span>
+      </div>
+      
+      <form method="POST" action="{% url 'operation_delete' operation.id %}" onsubmit="return confirmDeleteOperation()" style="display:inline">
+        {% csrf_token %}
+        <input type="hidden" name="force_delete" value="true">
+        <button type="submit" class="btn danger" title="Supprimer l'opération">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M4 7h16M9 7v12m6-12v12M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13M9 7l1-3h4l1 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          Supprimer l'opération
+        </button>
+      </form>
+    </div>
 
     {% if messages %}
     {% for message in messages %}
@@ -1399,6 +1414,31 @@ function calculateDelai() {
     localStorage.setItem(storageKey, 'true');
     console.log('✅ Opération marquée comme initialisée');
   }
+
+  // Fonction de confirmation pour la suppression
+function confirmDeleteOperation() {
+  const id = '{{ operation.id_operation }}';
+  const type = '{{ operation.type_prestation }}';
+  const client = '{{ operation.client.nom }} {{ operation.client.prenom }}';
+  const interventions = {{ interventions.count }};
+  const echeances = {{ echeances.count }};
+  
+  let message = `ATTENTION : Supprimer l'opération ${id} ?\n\n`;
+  message += `Type : ${type}\n`;
+  message += `Client : ${client}\n`;
+  
+  if (interventions > 0) {
+    message += `\n⚠ ${interventions} ligne(s) d'intervention seront supprimée(s)`;
+  }
+  
+  if (echeances > 0) {
+    message += `\n⚠ ${echeances} échéance(s) de paiement seront supprimée(s)`;
+  }
+  
+  message += `\n\nCette action est IRRÉVERSIBLE.`;
+  
+  return confirm(message);
+}
 
 // ========================================
   // SCROLL AUTOMATIQUE VERS LA SECTION OUVERTE
