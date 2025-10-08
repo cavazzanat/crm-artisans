@@ -513,7 +513,6 @@
       clientIdSelect.required = clientExistant;
     }
   }
-
 function toggleDateFields() {
   const statut = document.getElementById('statut').value;
   const datePrevueGroup = document.getElementById('datePrevueGroup');
@@ -543,27 +542,36 @@ function toggleDateFields() {
     document.getElementById('date_paiement').required = true;
   }
   
-  // ✅ GESTION DU DEVIS
+  // ✅ GESTION DU DEVIS AMÉLIORÉE
   const devisCheckbox = document.getElementById('devis-checkbox');
   const devisFields = document.getElementById('devis-fields');
   const devisDateEnvoi = document.getElementById('devis_date_envoi');
   const devisStatut = document.getElementById('devis_statut');
   
-  // Seulement cocher automatiquement si ce n'est pas déjà fait manuellement
-  if (statut === 'en_attente_devis' && !devisCheckbox.hasAttribute('data-manual-change')) {
-    devisCheckbox.checked = true;
-    devisFields.style.display = 'block';
-    
-    // Mettre la date du jour par défaut si vide
-    if (!devisDateEnvoi.value) {
-      const today = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      devisDateEnvoi.value = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+  if (statut === 'en_attente_devis') {
+    // Seulement cocher automatiquement si ce n'est pas déjà fait manuellement
+    if (!devisCheckbox.hasAttribute('data-manual-change')) {
+      devisCheckbox.checked = true;
+      devisFields.style.display = 'block';
+      
+      // Mettre la date du jour par défaut si vide
+      if (!devisDateEnvoi.value) {
+        const today = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        devisDateEnvoi.value = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+      }
+      
+      // Présélectionner "En attente de réponse" si aucun statut
+      if (!devisStatut.value) {
+        devisStatut.value = 'en_attente';
+      }
     }
-    
-    // Présélectionner "En attente de réponse" si aucun statut
-    if (!devisStatut.value) {
-      devisStatut.value = 'en_attente';
+  } else {
+    // ✅ NOUVEAU : Décocher automatiquement si on change vers un autre statut
+    // SAUF si l'utilisateur l'a coché manuellement
+    if (!devisCheckbox.hasAttribute('data-manual-change')) {
+      devisCheckbox.checked = false;
+      devisFields.style.display = 'none';
     }
   }
 }
