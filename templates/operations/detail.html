@@ -1309,27 +1309,28 @@ document.addEventListener('DOMContentLoaded', function() {
   const echelonneSection = document.getElementById('echelonne-section');
   const datePaiementComptant = document.getElementById('date-paiement-comptant');
 
-  if (modePaiementSelect) {
-    modePaiementSelect.addEventListener('change', function() {
-      const mode = this.value;
-      
-      if (comptantSection) comptantSection.style.display = 'none';
-      if (echelonneSection) echelonneSection.style.display = 'none';
-      
-      if (mode === 'comptant' && comptantSection) {
-        comptantSection.style.display = 'block';
-        if (datePaiementComptant && !datePaiementComptant.value) {
-          datePaiementComptant.value = getTodayDate();
-        }
-      } else if (mode === 'echelonne' && echelonneSection) {
-        echelonneSection.style.display = 'block';
-      }
-    });
+if (modePaiementSelect) {
+  modePaiementSelect.addEventListener('change', function() {
+    const mode = this.value;
     
-    if (modePaiementSelect.value) {
-      modePaiementSelect.dispatchEvent(new Event('change'));
+    if (comptantSection) comptantSection.style.display = 'none';
+    if (echelonneSection) echelonneSection.style.display = 'none';
+    
+    if (mode === 'comptant' && comptantSection) {
+      comptantSection.style.display = 'block';
+      // ✅ CORRECTION : Toujours mettre la date d'aujourd'hui quand on ouvre la section
+      if (datePaiementComptant) {
+        datePaiementComptant.value = getTodayDate();
+      }
+    } else if (mode === 'echelonne' && echelonneSection) {
+      echelonneSection.style.display = 'block';
     }
+  });
+  
+  if (modePaiementSelect.value) {
+    modePaiementSelect.dispatchEvent(new Event('change'));
   }
+}
 
   // Initialisation des dates
   const devisDateEnvoi = document.getElementById('devis-date-envoi');
