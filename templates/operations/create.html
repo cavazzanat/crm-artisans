@@ -543,13 +543,14 @@ function toggleDateFields() {
     document.getElementById('date_paiement').required = true;
   }
   
-  // ✅ NOUVEAU : Gérer automatiquement la case devis
+  // ✅ GESTION DU DEVIS
   const devisCheckbox = document.getElementById('devis-checkbox');
   const devisFields = document.getElementById('devis-fields');
   const devisDateEnvoi = document.getElementById('devis_date_envoi');
+  const devisStatut = document.getElementById('devis_statut');
   
-  if (statut === 'en_attente_devis') {
-    // Cocher automatiquement et afficher les champs
+  // Seulement cocher automatiquement si ce n'est pas déjà fait manuellement
+  if (statut === 'en_attente_devis' && !devisCheckbox.hasAttribute('data-manual-change')) {
     devisCheckbox.checked = true;
     devisFields.style.display = 'block';
     
@@ -561,7 +562,6 @@ function toggleDateFields() {
     }
     
     // Présélectionner "En attente de réponse" si aucun statut
-    const devisStatut = document.getElementById('devis_statut');
     if (!devisStatut.value) {
       devisStatut.value = 'en_attente';
     }
@@ -571,25 +571,36 @@ function toggleDateFields() {
 // ========================================
 // GESTION DU DEVIS DANS LE FORMULAIRE
 // ========================================
-const devisCheckbox = document.getElementById('devis-checkbox');
-const devisFields = document.getElementById('devis-fields');
-const devisDateEnvoi = document.getElementById('devis_date_envoi');
+document.addEventListener('DOMContentLoaded', function() {
+  const devisCheckbox = document.getElementById('devis-checkbox');
+  const devisFields = document.getElementById('devis-fields');
+  const devisDateEnvoi = document.getElementById('devis_date_envoi');
 
-if (devisCheckbox) {
-  devisCheckbox.addEventListener('change', function() {
-    if (this.checked) {
-      devisFields.style.display = 'block';
-      // Mettre la date du jour par défaut
-      if (devisDateEnvoi && !devisDateEnvoi.value) {
-        const today = new Date();
-        const pad = n => String(n).padStart(2, '0');
-        devisDateEnvoi.value = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+  if (devisCheckbox) {
+    devisCheckbox.addEventListener('change', function() {
+      // Marquer comme changement manuel
+      this.setAttribute('data-manual-change', 'true');
+      
+      if (this.checked) {
+        devisFields.style.display = 'block';
+        // Mettre la date du jour par défaut
+        if (devisDateEnvoi && !devisDateEnvoi.value) {
+          const today = new Date();
+          const pad = n => String(n).padStart(2, '0');
+          devisDateEnvoi.value = today.getFullYear() + '-' + pad(today.getMonth() + 1) + '-' + pad(today.getDate());
+        }
+      } else {
+        devisFields.style.display = 'none';
       }
-    } else {
-      devisFields.style.display = 'none';
-    }
-  });
-}
+    });
+  }
+
+  // Initialisation
+  toggleClientFields();
+  toggleDateFields();
+  ajouterIntervention();
+  preselectClient();
+});
 
   function validateForm(event) {
     console.log('Validation du formulaire...');
