@@ -54,16 +54,34 @@ class Operation(models.Model):
     id_operation = models.CharField(max_length=15, blank=True)
     type_prestation = models.CharField(max_length=200)
     adresse_intervention = models.TextField()
-    date_prevue = models.DateTimeField(null=True, blank=True)
-    date_realisation = models.DateTimeField(null=True, blank=True)
-    date_paiement = models.DateTimeField(null=True, blank=True)
     commentaires = models.TextField(blank=True, null=True, verbose_name="Commentaires / Notes")
     
     statut = models.CharField(max_length=20, choices=STATUTS, default='en_attente_devis')
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
     
+    # ========================================
+    # DATES D'OPÉRATION
+    # ========================================
+    date_prevue = models.DateTimeField(
+        null=True, 
+        blank=True,
+        verbose_name="Date prévue d'intervention"
+    )
+    date_realisation = models.DateTimeField(
+        null=True, 
+        blank=True,
+        verbose_name="Date de réalisation"
+    )
+    date_paiement = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de paiement"
+    )
+    
+    # ========================================
     # CHAMPS POUR LE DEVIS
+    # ========================================
     devis_cree = models.BooleanField(default=False, verbose_name="Devis créé")
     devis_date_envoi = models.DateField(null=True, blank=True, verbose_name="Date envoi devis")
     devis_date_reponse = models.DateField(null=True, blank=True, verbose_name="Date réponse client") 
@@ -80,7 +98,9 @@ class Operation(models.Model):
         verbose_name="Statut du devis"
     )
     
+    # ========================================
     # CHAMP POUR LE MODE DE PAIEMENT
+    # ========================================
     mode_paiement = models.CharField(
         max_length=20,
         choices=[
@@ -89,17 +109,6 @@ class Operation(models.Model):
         ],
         default='comptant',
         verbose_name="Mode de paiement"
-    )
-    
-    date_realisation = models.DateTimeField(
-        null=True, 
-        blank=True,
-        verbose_name="Date de réalisation"
-    )
-    date_paiement = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="Date de paiement"
     )
     
     class Meta:
@@ -113,11 +122,13 @@ class Operation(models.Model):
             import uuid
             unique_suffix = str(uuid.uuid4())[:6].upper()
             self.id_operation = f"U{self.user.id}OP{unique_suffix}"
-        # ✅ NOUVEAU : Synchroniser automatiquement devis_statut et statut
+        
+        # Synchroniser automatiquement devis_statut et statut
         if self.devis_statut == 'refuse' and self.statut != 'devis_refuse':
             self.statut = 'devis_refuse'
         elif self.devis_statut == 'accepte' and self.statut == 'en_attente_devis':
             self.statut = 'a_planifier'
+        
         super().save(*args, **kwargs)
     
     @property
@@ -126,8 +137,7 @@ class Operation(models.Model):
     
     @property
     def peut_generer_facture(self):
-        return self.statut in ['realise', 'paye']
-
+        return self.statut in ['realise', 'paye']    
 
 # MODÈLE SÉPARÉ pour les échéances (pas à l'intérieur de Operation!)
 class Echeance(models.Model):
