@@ -842,7 +842,9 @@
                     <div class="info-card">
                       <div class="label">Date de paiement</div>
                       <div class="value">
-                        <input type="date" name="date_paiement" class="input" id="date-paiement-comptant" required>
+                        <input type="date" name="date_paiement" class="input" id="date-paiement-comptant" 
+                              value="{% if operation.date_paiement %}{{ operation.date_paiement|date:'Y-m-d' }}{% endif %}"
+                              required>
                       </div>
                     </div>
                   </div>
