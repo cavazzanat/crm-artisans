@@ -341,6 +341,15 @@
       {{ operation.id_operation }}
     </div>
 
+    
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert {{ message.tags }}">
+      {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
 
 
     <!-- ✅ NOUVEAU : En-tête avec bouton de suppression -->
@@ -361,14 +370,6 @@
         </button>
       </form>
     </div>
-
-    {% if messages %}
-    {% for message in messages %}
-    <div class="alert {{ message.tags }}">
-      {{ message }}
-    </div>
-    {% endfor %}
-    {% endif %}
 
     <div class="workflow-steps">
       <div class="workflow-step {% if operation.statut == 'en_attente_devis' %}active{% endif %}">Devis</div>
@@ -1318,7 +1319,7 @@ if (modePaiementSelect) {
     
     if (mode === 'comptant' && comptantSection) {
       comptantSection.style.display = 'block';
-      // ✅ CORRECTION : Toujours mettre la date d'aujourd'hui quand on ouvre la section
+      // ✅ CORRECTION : Toujours mettre la date d'aujourd'hui
       if (datePaiementComptant) {
         datePaiementComptant.value = getTodayDate();
       }
@@ -1424,13 +1425,6 @@ if (modePaiementSelect) {
   console.log('✅ JavaScript CRM Artisans initialisé');
 });
 </script>
-
-{% if messages %}
-{% for message in messages %}
-<div class="alert {{ message.tags }}">
-  {{ message }}
-</div>
-{% endfor %}
 
 <script>
 setTimeout(function() {
