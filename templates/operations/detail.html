@@ -1304,11 +1304,11 @@ document.addEventListener('DOMContentLoaded', function() {
   if (dateEnvoiInput) dateEnvoiInput.addEventListener('change', calculateDelai);
   if (dateReponseInput) dateReponseInput.addEventListener('change', calculateDelai);
 
-  // Gestion mode paiement
-  const modePaiementSelect = document.getElementById('mode-paiement-select');
-  const comptantSection = document.getElementById('comptant-section');
-  const echelonneSection = document.getElementById('echelonne-section');
-  const datePaiementComptant = document.getElementById('date-paiement-comptant');
+// Gestion mode paiement
+const modePaiementSelect = document.getElementById('mode-paiement-select');
+const comptantSection = document.getElementById('comptant-section');
+const echelonneSection = document.getElementById('echelonne-section');
+const datePaiementComptant = document.getElementById('date-paiement-comptant');
 
 if (modePaiementSelect) {
   modePaiementSelect.addEventListener('change', function() {
@@ -1319,15 +1319,17 @@ if (modePaiementSelect) {
     
     if (mode === 'comptant' && comptantSection) {
       comptantSection.style.display = 'block';
-      // ✅ CORRECTION : Ne remplir que si vide
+      // ✅ CORRECTION : Ne remplir la date QUE si le champ est vide
       if (datePaiementComptant && !datePaiementComptant.value) {
         datePaiementComptant.value = getTodayDate();
       }
-    }else if (mode === 'echelonne' && echelonneSection) {
+    } else if (mode === 'echelonne' && echelonneSection) {
+      // ✅ AJOUT : espace entre } et else
       echelonneSection.style.display = 'block';
     }
   });
   
+  // Initialisation au chargement
   if (modePaiementSelect.value) {
     modePaiementSelect.dispatchEvent(new Event('change'));
   }
