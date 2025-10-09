@@ -1319,11 +1319,11 @@ if (modePaiementSelect) {
     
     if (mode === 'comptant' && comptantSection) {
       comptantSection.style.display = 'block';
-      // ✅ CORRECTION : Toujours mettre la date d'aujourd'hui
-      if (datePaiementComptant) {
+      // ✅ CORRECTION : Ne remplir que si vide
+      if (datePaiementComptant && !datePaiementComptant.value) {
         datePaiementComptant.value = getTodayDate();
       }
-    } else if (mode === 'echelonne' && echelonneSection) {
+    }else if (mode === 'echelonne' && echelonneSection) {
       echelonneSection.style.display = 'block';
     }
   });
