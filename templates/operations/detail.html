@@ -1206,7 +1206,9 @@ document.addEventListener('DOMContentLoaded', function() {
       if (dejaRealiseSection) dejaRealiseSection.style.display = 'block';
       
       if (realisationDate && !realisationDate.value) {
-        realisationDate.value = getNowFormatted();
+        // ✅ LOGIQUE AMÉLIORÉE : Si une date est planifiée, l'utiliser. Sinon date actuelle.
+        const datePlanifiee = planningDate ? planningDate.value : null;
+        realisationDate.value = datePlanifiee || getNowFormatted();
       }
     }
   }
