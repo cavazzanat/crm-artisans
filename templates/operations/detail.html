@@ -1465,19 +1465,27 @@ if (modePaiementSelect) {
     localStorage.setItem(storageKey, 'true');
   }
 
-  // Scroll automatique
-  if (sectionToScrollTo) {
-    setTimeout(() => {
-      const headerOffset = 100;
-      const elementPosition = sectionToScrollTo.getBoundingClientRect().top;
-      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-      
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: 'smooth'
-      });
-    }, 100);
-  }
+// Scroll automatique (désactivé après première visite)
+if (sectionToScrollTo && isFirstVisit) {
+  setTimeout(() => {
+    const headerOffset = 100;
+    const elementPosition = sectionToScrollTo.getBoundingClientRect().top;
+    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+    
+    window.scrollTo({
+      top: offsetPosition,
+      behavior: 'smooth'
+    });
+  }, 100);
+}
+
+  // Détection Safari et ajout de placeholders
+if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
+  document.querySelectorAll('input[type="datetime-local"]').forEach(input => {
+    input.placeholder = "JJ/MM/AAAA HH:MM";
+    input.style.minWidth = "200px";
+  });
+}
 
   console.log('✅ JavaScript CRM Artisans initialisé');
 });
