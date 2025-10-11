@@ -757,16 +757,6 @@
 
               <!-- ===== REPLANIFIER ===== -->
               <div id="replanifier-section" style="display:none">
-                {% if operation.date_prevue %}
-                <div class="alert warning" style="margin-bottom:1rem">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-                  <div>
-                    <strong>Date actuellement prévue :</strong> {{ operation.date_prevue|date:"d/m/Y à H:i" }}
-                    <br><small>Choisissez la nouvelle date ci-dessous</small>
-                  </div>
-                </div>
-                {% endif %}
-                
                 <div class="info-grid">
                   <div class="info-card">
                     <div class="label">Nouvelle date d'intervention</div>
@@ -793,10 +783,6 @@
                     </div>
                   </div>
                 </div>
-                
-                <p style="margin-top:.75rem; color:var(--muted); font-size:.85rem; text-align:center">
-                  💡 Le changement de date sera enregistré dans l'historique
-                </p>
               </div>
 
               <!-- ===== DÉJÀ RÉALISÉE ===== -->
