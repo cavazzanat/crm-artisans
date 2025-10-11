@@ -302,6 +302,127 @@
     .main-content{ display:grid; grid-template-columns:2fr 1fr; gap:2rem; align-items:start }
     .hidden { display: none !important; }
 
+    /* ========================================
+   NOTIFICATIONS TOAST
+   ======================================== */
+.toast-container {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.toast {
+  min-width: 320px;
+  max-width: 420px;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.15), 0 4px 12px rgba(0,0,0,.1);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  pointer-events: auto;
+  animation: slideInRight 0.3s ease-out;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.2);
+}
+
+.toast.hiding {
+  animation: slideOutRight 0.3s ease-in forwards;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+}
+
+.toast-content {
+  flex: 1;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.toast-close {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.toast-close:hover {
+  opacity: 1;
+}
+
+/* Types de toast */
+.toast.success {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.95), rgba(22, 163, 74, 0.95));
+  color: white;
+}
+
+.toast.error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+  color: white;
+}
+
+.toast.warning {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.95), rgba(217, 119, 6, 0.95));
+  color: white;
+}
+
+.toast.info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95));
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .toast-container {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+  }
+  
+  .toast {
+    min-width: auto;
+    max-width: none;
+  }
+}
+
     @media (max-width: 1024px){ 
       .main-content{ grid-template-columns: 1fr }
       .nav{ flex-wrap: wrap; }
@@ -342,13 +463,13 @@
     </div>
 
     
-    {% if messages %}
-    {% for message in messages %}
-    <div class="alert {{ message.tags }}">
-      {{ message }}
-    </div>
-    {% endfor %}
-    {% endif %}
+{% if messages %}
+<div id="django-messages" style="display:none">
+  {% for message in messages %}
+  <div data-type="{{ message.tags }}" data-message="{{ message }}"></div>
+  {% endfor %}
+</div>
+{% endif %}
 
 
 
@@ -1117,6 +1238,78 @@ function toggleSection(header) {
   const isCollapsed = body.classList.contains('collapsed');
   localStorage.setItem(`section-${sectionTitle}`, isCollapsed ? 'collapsed' : 'expanded');
 }
+
+// ========================================
+// SYSTÈME DE NOTIFICATIONS TOAST
+// ========================================
+function showToast(message, type = 'info', duration = 5000) {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  
+  // Créer le toast
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  // Icône selon le type
+  let icon = '';
+  switch(type) {
+    case 'success':
+      icon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 4 4 10-10"/></svg>';
+      break;
+    case 'error':
+      icon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6m0-6 6 6"/></svg>';
+      break;
+    case 'warning':
+      icon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4m0 4h0M12 3l9 18H3L12 3z"/></svg>';
+      break;
+    case 'info':
+    default:
+      icon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4m0-4h0"/></svg>';
+      break;
+  }
+  
+  toast.innerHTML = `
+    <div class="toast-icon">${icon}</div>
+    <div class="toast-content">${message}</div>
+    <button class="toast-close" onclick="dismissToast(this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M18 6 6 18M6 6l12 12"/>
+      </svg>
+    </button>
+  `;
+  
+  container.appendChild(toast);
+  
+  // Auto-dismiss
+  setTimeout(() => {
+    dismissToast(toast.querySelector('.toast-close'));
+  }, duration);
+}
+
+function dismissToast(button) {
+  const toast = button.closest('.toast');
+  if (!toast) return;
+  
+  toast.classList.add('hiding');
+  setTimeout(() => {
+    toast.remove();
+  }, 300);
+}
+
+// Afficher les messages Django au chargement
+window.addEventListener('DOMContentLoaded', function() {
+  const messagesContainer = document.getElementById('django-messages');
+  if (messagesContainer) {
+    const messages = messagesContainer.querySelectorAll('[data-message]');
+    messages.forEach((msg, index) => {
+      setTimeout(() => {
+        const type = msg.dataset.type || 'info';
+        const message = msg.dataset.message;
+        showToast(message, type);
+      }, index * 200); // Délai entre chaque toast
+    });
+  }
+});
 
 // ========================================
 // INITIALISATION AU CHARGEMENT DE LA PAGE
