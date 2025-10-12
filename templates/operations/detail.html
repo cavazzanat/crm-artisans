@@ -1669,6 +1669,24 @@ if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
   });
 }
 
+// ========================================
+// SAUVEGARDE DE LA POSITION DE SCROLL
+// ========================================
+
+// Sauvegarder la position avant soumission de formulaire
+document.querySelectorAll('form').forEach(form => {
+  form.addEventListener('submit', function() {
+    sessionStorage.setItem('scrollPosition', window.scrollY);
+  });
+});
+
+// Restaurer la position après rechargement
+const savedScrollPosition = sessionStorage.getItem('scrollPosition');
+if (savedScrollPosition !== null) {
+  window.scrollTo(0, parseInt(savedScrollPosition));
+  sessionStorage.removeItem('scrollPosition');
+}
+
   console.log('✅ JavaScript CRM Artisans initialisé');
 });
 </script>
