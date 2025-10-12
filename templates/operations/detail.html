@@ -431,43 +431,15 @@
 }
 
 /* ========================================
-   SECTION COMMENTAIRES FLOTTANTE
+   SECTION COMMENTAIRES STICKY
    ======================================== */
 .sticky-notes {
-  position: sticky;
-  top: 90px;
-  align-self: start; /* ← AJOUT CRITIQUE pour le sticky */
+  position: -webkit-sticky !important; /* Safari */
+  position: sticky !important;
+  top: 90px !important;
+  align-self: flex-start !important; /* Plus compatible que 'start' */
   max-height: calc(100vh - 110px);
   overflow-y: auto;
-}
-
-.notes-container {
-  background: white; /* ← Sobre comme le reste */
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.5rem;
-  box-shadow: var(--shadow);
-  transition: all 0.2s ease;
-}
-
-.notes-container:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,.1);
-}
-
-.notes-header {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.notes-title {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text);
-  margin: 0;
 }
 
 .notes-textarea {
@@ -505,7 +477,7 @@
 /* Responsive : désactiver sticky sur mobile */
 @media (max-width: 1024px) {
   .sticky-notes {
-    position: static;
+    position: static !important;
     max-height: none;
   }
 }
@@ -1229,36 +1201,44 @@
     </div>
   </section>
 
-  <!-- ✅ SECTION COMMENTAIRES (DOIT ÊTRE ICI, DANS .right-column) -->
-  <section class="section sticky-notes">
-    <div class="notes-container">
-      <div class="notes-header">
-        <h2 class="notes-title">Commentaires</h2>
-      </div>
+<!-- ✅ SECTION COMMENTAIRES (UN SEUL BLOC) -->
+<section class="section sticky-notes">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2 class="section-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M7 8h10M7 12h4m1 8-4-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3l-4 4Z" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      Commentaires
+    </h2>
+    <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+  
+  <div class="section-body">
+    <form method="POST" id="commentaires-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="update_commentaires">
       
-      <form method="POST" id="commentaires-form">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="update_commentaires">
-        
-        <textarea 
-          id="commentaires-textarea" 
-          name="commentaires" 
-          class="notes-textarea" 
-          rows="6" 
-          placeholder=""
-        >{{ operation.commentaires|default:'' }}</textarea>
-        
-        <div class="notes-actions">
-          <button type="submit" class="btn success" title="Enregistrer">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="m5 12 4 4 10-10"/>
-            </svg>
-            Enregistrer
-          </button>
-        </div>
-      </form>
-    </div>
-  </section>
+      <textarea 
+        id="commentaires-textarea" 
+        name="commentaires" 
+        class="notes-textarea" 
+        rows="6" 
+        placeholder=""
+      >{{ operation.commentaires|default:'' }}</textarea>
+      
+      <div class="notes-actions">
+        <button type="submit" class="btn success" title="Enregistrer">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="m5 12 4 4 10-10"/>
+          </svg>
+          Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
 </div> <!-- ✅ FIN DE .right-column (ICI, APRÈS LES COMMENTAIRES) -->
 </div> <!-- ✅ FIN DE .main-content -->
 
