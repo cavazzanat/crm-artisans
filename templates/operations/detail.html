@@ -764,6 +764,12 @@
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="1.6"/></svg>
             <div><strong>Aucun devis créé</strong> - Créez les lignes ci-dessous puis générez le PDF.</div>
           </div>
+            <!-- ✅ NOUVEAU BOUTON -->
+            <button type="submit" class="btn primary" style="margin-top:1rem; width:100%">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+              Enregistrer (pas de devis)
+            </button>
+          </div>
         </form>
       </div>
     </section>
@@ -1427,6 +1433,9 @@ document.addEventListener('DOMContentLoaded', function() {
   function updateDevisDisplay() {
     const isCreated = devisCreeSelect.value === 'oui';
     
+    const devisDetails = document.getElementById('devis-details');
+    const noDevisSection = document.getElementById('no-devis-section');
+    
     if (devisDetails) {
       if (isCreated) {
         devisDetails.classList.remove('hidden');
@@ -1437,8 +1446,8 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
     
-    if (noDevisAlert) {
-      noDevisAlert.style.display = isCreated ? 'none' : 'flex';
+    if (noDevisSection) {
+      noDevisSection.style.display = isCreated ? 'none' : 'block';
     }
     
     if (isCreated && devisStatutSelect) {

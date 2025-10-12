@@ -189,11 +189,9 @@ def operation_detail(request, operation_id):
         # GESTION DU STATUT DU DEVIS
         if action == 'update_devis_status':
             devis_cree = request.POST.get('devis_cree') == 'oui'
-        
-        
-# This Python code snippet is handling the updating of a "devis" (which translates to "quote" or
-# "estimate" in English) within an operation. Here is a breakdown of the key steps:
+            
             if devis_cree:
+                # Devis créé - traitement normal
                 devis_date_envoi = request.POST.get('devis_date_envoi', '')
                 devis_date_reponse = request.POST.get('devis_date_reponse', '')
                 devis_statut = request.POST.get('devis_statut', '')
@@ -208,7 +206,6 @@ def operation_detail(request, operation_id):
                     except ValueError:
                         pass
                 
-                # ✅ NOUVEAU : Enregistrer la date de réponse
                 if devis_date_reponse:
                     try:
                         operation.devis_date_reponse = datetime.fromisoformat(devis_date_reponse).date()
@@ -227,24 +224,32 @@ def operation_detail(request, operation_id):
                 
                 operation.save()
                 
-                # ✅ NOUVEAU : Message d'historique amélioré avec délai
                 historique_message = f"Devis mis à jour - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'N/A'}"
                 
                 if operation.devis_date_envoi and operation.devis_date_reponse:
                     delai = (operation.devis_date_reponse - operation.devis_date_envoi).days
                     historique_message += f" - Délai de réponse: {delai} jour{'s' if delai > 1 else ''}"
-        
                 
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=f"Devis mis à jour - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'N/A'}",
+                    action=historique_message,
                     utilisateur=request.user
                 )
                 
-                messages.success(request, "Statut du devis enregistré")
+                messages.success(request, "✅ Statut du devis enregistré")
+            
             else:
-                # NE PAS SAUVEGARDER si "Non" - juste ignorer
-                messages.info(request, "Aucun devis créé")
+                # ✅ Pas de devis - annulation simple
+                operation.devis_cree = False
+                operation.save()
+                
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action="Devis marqué comme non créé",
+                    utilisateur=request.user
+                )
+                
+                messages.info(request, "ℹ️ Enregistré : Aucun devis créé")
             
             return redirect('operation_detail', operation_id=operation.id)
         
