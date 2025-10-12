@@ -637,15 +637,15 @@
       </div>
     </section>
 
-
-        <!-- ========================================
-        STATUT DU DEVIS
-        ======================================== -->
+    <!-- ========================================
+    STATUT DU DEVIS
+    ======================================== -->
     <section class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <h2 class="section-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="1.6"/></svg>
           Statut du devis
+          
           {% if operation.devis_cree %}
             {% if operation.devis_statut == 'accepte' %}
             <span class="section-badge complete">
@@ -656,13 +656,23 @@
             <span class="section-badge" style="background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid rgba(239,68,68,.2);">
               ✗ Refusé
             </span>
+            {% elif operation.devis_statut == 'en_attente' %}
+            <span class="section-badge pending">
+              ⏳ En attente de réponse
+            </span>
+            {% elif operation.devis_statut == 'relance' %}
+            <span class="section-badge pending">
+              🔔 À relancer
+            </span>
             {% else %}
             <span class="section-badge pending">
               {{ operation.get_devis_statut_display }}
             </span>
             {% endif %}
           {% else %}
-          <span class="section-badge pending">⏳ En attente</span>
+            <span class="section-badge disabled">
+              ⊘ Pas de devis
+            </span>
           {% endif %}
         </h2>
         <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
