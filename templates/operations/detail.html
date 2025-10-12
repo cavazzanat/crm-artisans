@@ -870,16 +870,16 @@
               {% csrf_token %}
               <input type="hidden" name="action" value="update_planning">
               
-              <div class="info-card" style="margin-bottom:1rem">
-                <div class="label">Que souhaitez-vous faire ?</div>
-                <div class="value">
-                  <select id="planification-type" name="planning_type" class="select" style="max-width:400px">
-                    <option value="a_planifier">Planifier une intervention future</option>
-                    <option value="replanifier">Replanifier (reporter à une nouvelle date)</option>
-                    <option value="deja_realise">Déjà réalisée (saisie après coup)</option>
-                  </select>
+                <div class="info-card" style="margin-bottom:1rem">
+                  <div class="label">Que souhaitez-vous faire ?</div>
+                  <div class="value">
+                    <select id="planification-type" name="planning_type" class="select" style="max-width:400px">
+                      <option value="a_planifier" {% if operation.planning_mode == 'a_planifier' %}selected{% endif %}>Planifier une intervention future</option>
+                      <option value="replanifier" {% if operation.planning_mode == 'replanifier' %}selected{% endif %}>Replanifier (reporter à une nouvelle date)</option>
+                      <option value="deja_realise" {% if operation.planning_mode == 'deja_realise' %}selected{% endif %}>Déjà réalisée (saisie après coup)</option>
+                    </select>
+                  </div>
                 </div>
-              </div>
 
               <!-- ===== À PLANIFIER ===== -->
               <div id="planning-section">
@@ -1526,6 +1526,12 @@ function updatePlanningDisplay() {
       realisationDate.value = datePlanifiee || getNowFormatted();
     }
   }
+}
+
+if (planificationType) {
+  planificationType.addEventListener('change', updatePlanningDisplay);
+  // ✅ Appel initial pour afficher la bonne section au chargement
+  updatePlanningDisplay();
 }
 
   function checkDatePassee() {

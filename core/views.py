@@ -189,6 +189,7 @@ def operation_detail(request, operation_id):
         if action == 'update_devis_status':
             devis_cree = request.POST.get('devis_cree') == 'oui'
         
+        
 # This Python code snippet is handling the updating of a "devis" (which translates to "quote" or
 # "estimate" in English) within an operation. Here is a breakdown of the key steps:
             if devis_cree:
@@ -501,11 +502,12 @@ def operation_detail(request, operation_id):
         elif action == 'update_planning':
             from datetime import datetime
             planning_type = request.POST.get('planning_type')
-            date_prevue_str = request.POST.get('date_prevue', '')
-            raison_report = request.POST.get('raison_report', '').strip()
             
-            # ===== MODE : À PLANIFIER (première planification) =====
+            # ✅ SAUVEGARDER LE MODE DE PLANIFICATION
+            operation.planning_mode = planning_type
+            
             if planning_type == 'a_planifier':
+                date_prevue_str = request.POST.get('date_prevue', '')
                 if date_prevue_str:
                     try:
                         nouvelle_date = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
@@ -523,46 +525,31 @@ def operation_detail(request, operation_id):
                     except ValueError:
                         messages.error(request, "Date invalide")
             
-            # ===== MODE : REPLANIFIER (modifier une date existante) =====
             elif planning_type == 'replanifier':
+                date_prevue_str = request.POST.get('date_prevue', '')
                 if date_prevue_str:
                     try:
                         nouvelle_date = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
                         ancienne_date = operation.date_prevue
                         
-                        # Vérifier qu'il y a bien un changement
                         if ancienne_date and ancienne_date != nouvelle_date:
                             operation.date_prevue = nouvelle_date
                             operation.statut = 'planifie'
                             operation.save()
                             
-                            # Message d'historique détaillé avec raison
-                            raison_msg = f" - Raison : {raison_report}" if raison_report else ""
-                            historique_msg = (
-                                f"📅 Intervention replanifiée du "
-                                f"{ancienne_date.strftime('%d/%m/%Y à %H:%M')} au "
-                                f"{nouvelle_date.strftime('%d/%m/%Y à %H:%M')}"
-                                f"{raison_msg}"
-                            )
-                            
                             HistoriqueOperation.objects.create(
                                 operation=operation,
-                                action=historique_msg,
+                                action=f"📅 Intervention replanifiée du {ancienne_date.strftime('%d/%m/%Y à %H:%M')} au {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}",
                                 utilisateur=request.user
                             )
                             
-                            messages.success(
-                                request, 
-                                f"🔄 Intervention replanifiée au {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}"
-                            )
+                            messages.success(request, f"🔄 Intervention replanifiée au {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}")
                         else:
-                            # Pas de changement de date
                             messages.info(request, "Aucun changement de date détecté")
                             
                     except ValueError:
                         messages.error(request, "Date invalide")
             
-            # ===== MODE : DÉJÀ RÉALISÉE (saisie après coup) =====
             elif planning_type == 'deja_realise':
                 date_realisation_str = request.POST.get('date_realisation', '')
                 if date_realisation_str:
@@ -578,10 +565,7 @@ def operation_detail(request, operation_id):
                             utilisateur=request.user
                         )
                         
-                        messages.success(
-                            request, 
-                            f"✅ Réalisation validée le {date_realisation.strftime('%d/%m/%Y à %H:%M')}"
-                        )
+                        messages.success(request, f"✅ Réalisation validée le {date_realisation.strftime('%d/%m/%Y à %H:%M')}")
                     except ValueError:
                         messages.error(request, "Date invalide")
             

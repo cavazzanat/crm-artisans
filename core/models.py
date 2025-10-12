@@ -49,6 +49,19 @@ class Operation(models.Model):
         ('devis_refuse', 'Devis refusé / Opération annulée'),
     ]
     
+    PLANNING_MODE_CHOICES = [
+        ('a_planifier', 'À planifier'),
+        ('replanifier', 'Replanifier'),
+        ('deja_realise', 'Déjà réalisé'),
+    ]
+    
+    planning_mode = models.CharField(
+        max_length=20,
+        choices=PLANNING_MODE_CHOICES,
+        default='a_planifier',
+        verbose_name="Mode de planification"
+    )
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='operations')
     id_operation = models.CharField(max_length=15, blank=True)
