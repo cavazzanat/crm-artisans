@@ -425,6 +425,104 @@
   }
 }
 
+/* ========================================
+   SECTION COMMENTAIRES FLOTTANTE
+   ======================================== */
+.sticky-notes {
+  position: sticky;
+  top: 90px; /* Décalage sous le header */
+  max-height: calc(100vh - 110px);
+  overflow-y: auto;
+}
+
+.notes-container {
+  background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
+  border: 2px solid #fbbf24;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15);
+  transition: all 0.3s ease;
+}
+
+.notes-container:hover {
+  box-shadow: 0 8px 20px rgba(251, 191, 36, 0.25);
+  transform: translateY(-2px);
+}
+
+.notes-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px dashed #fbbf24;
+}
+
+.notes-icon {
+  width: 24px;
+  height: 24px;
+  color: #f59e0b;
+}
+
+.notes-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0;
+}
+
+.notes-textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 0.75rem;
+  border: 2px solid #fbbf24;
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.95rem;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.notes-textarea:focus {
+  outline: none;
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+}
+
+.notes-textarea::placeholder {
+  color: #a16207;
+  opacity: 0.6;
+}
+
+.notes-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  justify-content: flex-end;
+}
+
+.notes-count {
+  font-size: 0.85rem;
+  color: #92400e;
+  margin-top: 0.5rem;
+  text-align: right;
+  opacity: 0.8;
+}
+
+/* Responsive : désactiver sticky sur mobile */
+@media (max-width: 1024px) {
+  .sticky-notes {
+    position: static;
+    max-height: none;
+  }
+  
+  .notes-container {
+    margin-bottom: 1.5rem;
+  }
+}
+
     @media (max-width: 1024px){ 
       .main-content{ grid-template-columns: 1fr }
       .nav{ flex-wrap: wrap; }
@@ -558,52 +656,8 @@
           </div>
         </div>
 
-        <!-- ✅ NOUVEAU : Section Commentaires -->
-        <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border)">
-          <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem; display:flex; align-items:center; gap:.5rem">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-              <path d="M8 9h8M8 13h6M7 17l-4 4V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H7Z" stroke="currentColor" stroke-width="1.6"/>
-            </svg>
-            Commentaires / Notes
-          </h4>
-          
-          <form method="POST" id="commentaires-form">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="update_commentaires">
-            
-            <textarea 
-              id="commentaires-textarea" 
-              name="commentaires" 
-              class="input" 
-              rows="4" 
-              placeholder="Ajoutez des remarques, notes ou informations importantes sur cette opération..."
-              style="resize:vertical; min-height:100px; font-family: inherit;">{{ operation.commentaires|default:'' }}</textarea>
-            
-            <div style="display:flex; gap:.75rem; margin-top:1rem; justify-content:flex-end">
-              <button type="button" class="btn" onclick="resetCommentaires()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M4 12h16M12 4v16" stroke="currentColor" stroke-width="2" transform="rotate(45 12 12)"/>
-                </svg>
-                Annuler
-              </button>
-              <button type="submit" class="btn success">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
-                </svg>
-                Enregistrer les commentaires
-              </button>
-            </div>
-          </form>
-          
-          {% if operation.commentaires %}
-          <div class="alert info" style="margin-top:1rem">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/>
-            </svg>
-            <div><strong>Note :</strong> Les commentaires sont privés et visibles uniquement par vous.</div>
-          </div>
-          {% endif %}
-        </div>
+
+
       </div>
     </section>
 
@@ -1187,6 +1241,52 @@
             {% endif %}
           </div>
         </section>
+
+  <!-- ✅ NOUVELLE SECTION COMMENTAIRES FLOTTANTE -->
+  <section class="section sticky-notes">
+    <div class="notes-container">
+      <div class="notes-header">
+        <svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+        <h3 class="notes-title">📝 Notes personnelles</h3>
+      </div>
+      
+      <form method="POST" id="commentaires-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_commentaires">
+        
+        <textarea 
+          id="commentaires-textarea" 
+          name="commentaires" 
+          class="notes-textarea" 
+          rows="6" 
+          placeholder="💡 Notez ici vos remarques, détails importants, points d'attention...&#10;&#10;Exemples :&#10;• Matériaux spécifiques demandés&#10;• Contraintes d'accès au chantier&#10;• Préférences du client&#10;• Points à surveiller"
+        >{{ operation.commentaires|default:'' }}</textarea>
+        
+        <div class="notes-actions">
+          <button type="button" class="btn" onclick="resetCommentaires()" title="Annuler les modifications">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+              <path d="M3 3v5h5"/>
+            </svg>
+            Annuler
+          </button>
+          <button type="submit" class="btn success" title="Enregistrer les notes">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m5 12 4 4 10-10"/>
+            </svg>
+            Enregistrer
+          </button>
+        </div>
+        
+        <div class="notes-count" id="notes-count">
+          {{ operation.commentaires|length|default:0 }} caractères
+        </div>
+      </form>
+    </div>
+  </section>
+</div>
       </div>
     </div>
 
@@ -1691,6 +1791,31 @@ if (savedScrollPosition !== null) {
 
   console.log('✅ JavaScript CRM Artisans initialisé');
 });
+
+// ========================================
+// COMPTEUR DE CARACTÈRES POUR LES NOTES
+// ========================================
+const notesTextarea = document.getElementById('commentaires-textarea');
+const notesCount = document.getElementById('notes-count');
+
+if (notesTextarea && notesCount) {
+  notesTextarea.addEventListener('input', function() {
+    const length = this.value.length;
+    notesCount.textContent = `${length} caractère${length > 1 ? 's' : ''}`;
+    
+    // Changer la couleur selon la longueur
+    if (length > 500) {
+      notesCount.style.color = '#dc2626'; // Rouge
+      notesCount.style.fontWeight = '600';
+    } else if (length > 300) {
+      notesCount.style.color = '#f59e0b'; // Orange
+      notesCount.style.fontWeight = '500';
+    } else {
+      notesCount.style.color = '#92400e'; // Marron foncé
+      notesCount.style.fontWeight = '400';
+    }
+  });
+}
 </script>
 </body>
 </html>
