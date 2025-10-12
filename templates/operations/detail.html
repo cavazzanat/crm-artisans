@@ -307,13 +307,15 @@
    ======================================== */
 .toast-container {
   position: fixed;
-  top: 80px;
-  right: 20px;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 9999;
   display: flex;
   flex-direction: column;
   gap: 10px;
   pointer-events: none;
+  align-items: center;
 }
 
 .toast {
