@@ -939,7 +939,11 @@
                     <div class="label">Date de réalisation</div>
                     <div class="value">
                       <input type="datetime-local" id="realisation-date" name="date_realisation" class="input"
-                            value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}">
+                            value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}"
+                            max="{{ now|date:'Y-m-d\TH:i' }}">
+                      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                        ⚠️ La date ne peut pas être dans le futur
+                      </small>
                     </div>
                   </div>
                   
@@ -1743,6 +1747,29 @@ if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
     input.placeholder = "JJ/MM/AAAA HH:MM";
     input.style.minWidth = "200px";
   });
+}
+
+// ========================================
+// VALIDATION : Empêcher dates futures pour réalisation
+// ========================================
+const realisationDateInput = document.getElementById('realisation-date');
+
+if (realisationDateInput) {
+  realisationDateInput.addEventListener('change', function() {
+    const dateSelectionnee = new Date(this.value);
+    const maintenant = new Date();
+    
+    if (dateSelectionnee > maintenant) {
+      // Afficher un toast d'erreur
+      showToast("❌ La date de réalisation ne peut pas être dans le futur !", 'error');
+      
+      // Réinitialiser au maximum aujourd'hui
+      this.value = getNowFormatted();
+    }
+  });
+  
+  // Définir la date max à maintenant
+  realisationDateInput.setAttribute('max', getNowFormatted());
 }
 
 // ========================================

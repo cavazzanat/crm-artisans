@@ -12,6 +12,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login, logout
 from django.core.management import call_command
 from decimal import Decimal
+from django.utils import timezone
 import io
 import sys
 import json
@@ -503,7 +504,7 @@ def operation_detail(request, operation_id):
             from datetime import datetime
             planning_type = request.POST.get('planning_type')
             
-            # ✅ SAUVEGARDER LE MODE DE PLANIFICATION
+            # ✅ SAUVEGARDER LE MODE (sera sauvegardé à la fin)
             operation.planning_mode = planning_type
             
             if planning_type == 'a_planifier':
@@ -513,7 +514,6 @@ def operation_detail(request, operation_id):
                         nouvelle_date = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
                         operation.date_prevue = nouvelle_date
                         operation.statut = 'planifie'
-                        operation.save()
                         
                         HistoriqueOperation.objects.create(
                             operation=operation,
@@ -535,7 +535,6 @@ def operation_detail(request, operation_id):
                         if ancienne_date and ancienne_date != nouvelle_date:
                             operation.date_prevue = nouvelle_date
                             operation.statut = 'planifie'
-                            operation.save()
                             
                             HistoriqueOperation.objects.create(
                                 operation=operation,
@@ -557,7 +556,6 @@ def operation_detail(request, operation_id):
                         date_realisation = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
                         operation.date_realisation = date_realisation
                         operation.statut = 'realise'
-                        operation.save()
                         
                         HistoriqueOperation.objects.create(
                             operation=operation,
@@ -569,6 +567,8 @@ def operation_detail(request, operation_id):
                     except ValueError:
                         messages.error(request, "Date invalide")
             
+            # ✅ CRITIQUE : TOUJOURS sauvegarder à la fin (même si pas de date)
+            operation.save()
             return redirect('operation_detail', operation_id=operation.id)
 
         # ===== PAIEMENT COMPTANT ===== (← NOUVELLE ACTION SÉPARÉE)
@@ -658,6 +658,7 @@ def operation_detail(request, operation_id):
         'montant_total': operation.montant_total,
         'lignes_json': lignes_json,
         'echeances_json': echeances_json,
+        'now': timezone.now(),  # ✅ AJOUT
     }
     
     return render(request, 'operations/detail.html', context)
