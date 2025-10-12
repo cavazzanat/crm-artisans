@@ -553,7 +553,24 @@ def operation_detail(request, operation_id):
                 date_realisation_str = request.POST.get('date_realisation', '')
                 if date_realisation_str:
                     try:
+                        from django.utils import timezone
+                        
+                        # Convertir la date reçue
                         date_realisation = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                        
+                        # ✅ CORRECTION : Rendre la date "aware" (avec timezone)
+                        if timezone.is_naive(date_realisation):
+                            date_realisation = timezone.make_aware(date_realisation)
+                        
+                        # ✅ VALIDATION : Comparer avec maintenant (aware)
+                        maintenant = timezone.now()
+                        
+                        # Ajouter une marge de tolérance de 1 minute pour éviter les faux positifs
+                        if date_realisation > maintenant + timezone.timedelta(minutes=1):
+                            messages.error(request, "❌ La date de réalisation ne peut pas être dans le futur !")
+                            operation.save()
+                            return redirect('operation_detail', operation_id=operation.id)
+                        
                         operation.date_realisation = date_realisation
                         operation.statut = 'realise'
                         
@@ -564,8 +581,8 @@ def operation_detail(request, operation_id):
                         )
                         
                         messages.success(request, f"✅ Réalisation validée le {date_realisation.strftime('%d/%m/%Y à %H:%M')}")
-                    except ValueError:
-                        messages.error(request, "Date invalide")
+                    except ValueError as e:
+                        messages.error(request, f"Date invalide : {str(e)}")
             
             # ✅ CRITIQUE : TOUJOURS sauvegarder à la fin (même si pas de date)
             operation.save()
