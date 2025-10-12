@@ -312,7 +312,7 @@
    ======================================== */
 .toast-container {
   position: fixed;
-  top: 20px;
+  top: 80px; /* ← Changé de 20px à 80px pour être sous le header */
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;
@@ -1190,87 +1190,85 @@
       </div>
 
       <!-- ========================================
-           COLONNE DROITE - HISTORIQUE
-           ======================================== -->
-      <div class="right-column">
-        <section class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            <h2 class="section-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-              Historique
-              {% if historique %}
-              <span class="section-badge complete">
-                {{ historique.count }} événement{{ historique.count|pluralize }}
-              </span>
-              {% endif %}
-            </h2>
-            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          <div class="section-body">
-            {% if historique %}
-            <div class="table-wrap">
-              <table>
-                <thead><tr><th>Date</th><th>Action</th></tr></thead>
-                <tbody>
-                  {% for entry in historique %}
-                  <tr>
-                    <td style="font-size:.85rem">{{ entry.date|date:"d/m H:i" }}</td>
-                    <td style="font-size:.9rem">{{ entry.action }}</td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-            {% else %}
-            <div class="alert info">Aucun historique</div>
-            {% endif %}
-          </div>
-        </section>
+     COLONNE DROITE - HISTORIQUE
+     ======================================== -->
+<div class="right-column">
+  <section class="section">
+    <div class="section-header" onclick="toggleSection(this)">
+      <h2 class="section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+        Historique
+        {% if historique %}
+        <span class="section-badge complete">
+          {{ historique.count }} événement{{ historique.count|pluralize }}
+        </span>
+        {% endif %}
+      </h2>
+      <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <div class="section-body">
+      {% if historique %}
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Action</th></tr></thead>
+          <tbody>
+            {% for entry in historique %}
+            <tr>
+              <td style="font-size:.85rem">{{ entry.date|date:"d/m H:i" }}</td>
+              <td style="font-size:.9rem">{{ entry.action }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert info">Aucun historique</div>
+      {% endif %}
+    </div>
+  </section>
 
-    <!-- ✅ SECTION COMMENTAIRES -->
-    <section class="section sticky-notes">
-      <div class="notes-container">
-        <div class="notes-header">
-          <h2 class="notes-title">Commentaires</h2>
-        </div>
+  <!-- ✅ SECTION COMMENTAIRES (DOIT ÊTRE ICI, DANS .right-column) -->
+  <section class="section sticky-notes">
+    <div class="notes-container">
+      <div class="notes-header">
+        <h2 class="notes-title">Commentaires</h2>
+      </div>
+      
+      <form method="POST" id="commentaires-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_commentaires">
         
-        <form method="POST" id="commentaires-form">
-          {% csrf_token %}
-          <input type="hidden" name="action" value="update_commentaires">
-          
-          <textarea 
-            id="commentaires-textarea" 
-            name="commentaires" 
-            class="notes-textarea" 
-            rows="6" 
-            placeholder=""
-          >{{ operation.commentaires|default:'' }}</textarea>
-          
-          <div class="notes-actions">
-            <button type="submit" class="btn success" title="Enregistrer">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m5 12 4 4 10-10"/>
-              </svg>
-              Enregistrer
-            </button>
-          </div>
-        </form>
-      </div>
-    </section>
+        <textarea 
+          id="commentaires-textarea" 
+          name="commentaires" 
+          class="notes-textarea" 
+          rows="6" 
+          placeholder=""
+        >{{ operation.commentaires|default:'' }}</textarea>
+        
+        <div class="notes-actions">
+          <button type="submit" class="btn success" title="Enregistrer">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m5 12 4 4 10-10"/>
+            </svg>
+            Enregistrer
+          </button>
+        </div>
+      </form>
+    </div>
+  </section>
+</div> <!-- ✅ FIN DE .right-column (ICI, APRÈS LES COMMENTAIRES) -->
+</div> <!-- ✅ FIN DE .main-content -->
+
+<div style="margin-top:1.5rem">
+  <a href="{% url 'operations' %}" class="btn">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.5"/></svg>
+    Retour aux opérations
+  </a>
 </div>
-      </div>
-    </div>
-
-    <div style="margin-top:1.5rem">
-      <a href="{% url 'operations' %}" class="btn">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="1.5"/></svg>
-        Retour aux opérations
-      </a>
-    </div>
-  </div>
-
+</div> <!-- ✅ FIN DE .container -->
 
 <script>
 // ========================================
