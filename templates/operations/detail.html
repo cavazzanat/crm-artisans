@@ -299,7 +299,12 @@
     .workflow-step.active{ background:var(--primary); color:white; }
     .workflow-arrow{ color:var(--muted); font-weight:bold }
 
-    .main-content{ display:grid; grid-template-columns:2fr 1fr; gap:2rem; align-items:start }
+    .main-content{ 
+      display: grid; 
+      grid-template-columns: 2fr 1fr; 
+      gap: 2rem; 
+      align-items: start; /* ← AJOUTEZ CETTE LIGNE */
+    }
     .hidden { display: none !important; }
 
     /* ========================================
@@ -430,23 +435,23 @@
    ======================================== */
 .sticky-notes {
   position: sticky;
-  top: 90px; /* Décalage sous le header */
+  top: 90px;
+  align-self: start; /* ← AJOUT CRITIQUE pour le sticky */
   max-height: calc(100vh - 110px);
   overflow-y: auto;
 }
 
 .notes-container {
-  background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%);
-  border: 2px solid #fbbf24;
+  background: white; /* ← Sobre comme le reste */
+  border: 1px solid var(--border);
   border-radius: 12px;
-  padding: 1.25rem;
-  box-shadow: 0 4px 12px rgba(251, 191, 36, 0.15);
-  transition: all 0.3s ease;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
 }
 
 .notes-container:hover {
-  box-shadow: 0 8px 20px rgba(251, 191, 36, 0.25);
-  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,.1);
 }
 
 .notes-header {
@@ -454,20 +459,14 @@
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 2px dashed #fbbf24;
-}
-
-.notes-icon {
-  width: 24px;
-  height: 24px;
-  color: #f59e0b;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
 }
 
 .notes-title {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 700;
-  color: #92400e;
+  color: var(--text);
   margin: 0;
 }
 
@@ -475,7 +474,7 @@
   width: 100%;
   min-height: 150px;
   padding: 0.75rem;
-  border: 2px solid #fbbf24;
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: white;
   color: var(--text);
@@ -487,12 +486,12 @@
 
 .notes-textarea:focus {
   outline: none;
-  border-color: #f59e0b;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.1);
 }
 
 .notes-textarea::placeholder {
-  color: #a16207;
+  color: var(--muted);
   opacity: 0.6;
 }
 
@@ -503,23 +502,11 @@
   justify-content: flex-end;
 }
 
-.notes-count {
-  font-size: 0.85rem;
-  color: #92400e;
-  margin-top: 0.5rem;
-  text-align: right;
-  opacity: 0.8;
-}
-
 /* Responsive : désactiver sticky sur mobile */
 @media (max-width: 1024px) {
   .sticky-notes {
     position: static;
     max-height: none;
-  }
-  
-  .notes-container {
-    margin-bottom: 1.5rem;
   }
 }
 
@@ -1242,50 +1229,36 @@
           </div>
         </section>
 
-  <!-- ✅ NOUVELLE SECTION COMMENTAIRES FLOTTANTE -->
-  <section class="section sticky-notes">
-    <div class="notes-container">
-      <div class="notes-header">
-        <svg class="notes-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-          <path d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5m-1.414-9.414a2 2 0 1 1 2.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-        </svg>
-        <h3 class="notes-title">📝 Notes personnelles</h3>
+    <!-- ✅ SECTION COMMENTAIRES -->
+    <section class="section sticky-notes">
+      <div class="notes-container">
+        <div class="notes-header">
+          <h2 class="notes-title">Commentaires</h2>
+        </div>
+        
+        <form method="POST" id="commentaires-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="update_commentaires">
+          
+          <textarea 
+            id="commentaires-textarea" 
+            name="commentaires" 
+            class="notes-textarea" 
+            rows="6" 
+            placeholder=""
+          >{{ operation.commentaires|default:'' }}</textarea>
+          
+          <div class="notes-actions">
+            <button type="submit" class="btn success" title="Enregistrer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m5 12 4 4 10-10"/>
+              </svg>
+              Enregistrer
+            </button>
+          </div>
+        </form>
       </div>
-      
-      <form method="POST" id="commentaires-form">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="update_commentaires">
-        
-        <textarea 
-          id="commentaires-textarea" 
-          name="commentaires" 
-          class="notes-textarea" 
-          rows="6" 
-          placeholder="💡 Notez ici vos remarques, détails importants, points d'attention...&#10;&#10;Exemples :&#10;• Matériaux spécifiques demandés&#10;• Contraintes d'accès au chantier&#10;• Préférences du client&#10;• Points à surveiller"
-        >{{ operation.commentaires|default:'' }}</textarea>
-        
-        <div class="notes-actions">
-          <button type="button" class="btn" onclick="resetCommentaires()" title="Annuler les modifications">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-              <path d="M3 3v5h5"/>
-            </svg>
-            Annuler
-          </button>
-          <button type="submit" class="btn success" title="Enregistrer les notes">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="m5 12 4 4 10-10"/>
-            </svg>
-            Enregistrer
-          </button>
-        </div>
-        
-        <div class="notes-count" id="notes-count">
-          {{ operation.commentaires|length|default:0 }} caractères
-        </div>
-      </form>
-    </div>
-  </section>
+    </section>
 </div>
       </div>
     </div>
@@ -1792,30 +1765,6 @@ if (savedScrollPosition !== null) {
   console.log('✅ JavaScript CRM Artisans initialisé');
 });
 
-// ========================================
-// COMPTEUR DE CARACTÈRES POUR LES NOTES
-// ========================================
-const notesTextarea = document.getElementById('commentaires-textarea');
-const notesCount = document.getElementById('notes-count');
-
-if (notesTextarea && notesCount) {
-  notesTextarea.addEventListener('input', function() {
-    const length = this.value.length;
-    notesCount.textContent = `${length} caractère${length > 1 ? 's' : ''}`;
-    
-    // Changer la couleur selon la longueur
-    if (length > 500) {
-      notesCount.style.color = '#dc2626'; // Rouge
-      notesCount.style.fontWeight = '600';
-    } else if (length > 300) {
-      notesCount.style.color = '#f59e0b'; // Orange
-      notesCount.style.fontWeight = '500';
-    } else {
-      notesCount.style.color = '#92400e'; // Marron foncé
-      notesCount.style.fontWeight = '400';
-    }
-  });
-}
 </script>
 </body>
 </html>
