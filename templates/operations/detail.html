@@ -442,6 +442,23 @@
   overflow-y: auto;
 }
 
+/* ========================================
+   FIX CRITIQUE POUR LE STICKY
+   ======================================== */
+.sticky-notes.section {
+  overflow: visible !important; /* Empêche overflow:hidden de casser le sticky */
+}
+
+.sticky-notes .section-body {
+  overflow: visible !important; /* Idem pour le body */
+}
+
+/* Force le comportement sticky sur la colonne droite */
+.right-column {
+  position: relative;
+  z-index: 1;
+}
+
 .notes-textarea {
   width: 100%;
   min-height: 150px;
