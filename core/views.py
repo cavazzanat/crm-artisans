@@ -509,14 +509,28 @@ def operation_detail(request, operation_id):
             from datetime import datetime
             planning_type = request.POST.get('planning_type')
             
-            # ✅ SAUVEGARDER LE MODE (sera sauvegardé à la fin)
+            # ✅ DEBUG
+            print(f"\n{'='*60}")
+            print(f"PLANIFICATION DEBUG")
+            print(f"{'='*60}")
+            print(f"Type: {planning_type}")
+            
             operation.planning_mode = planning_type
             
             if planning_type == 'a_planifier':
                 date_prevue_str = request.POST.get('date_prevue', '')
+                
+                # ✅ DEBUG
+                print(f"Date reçue (brute): '{date_prevue_str}'")
+                
                 if date_prevue_str:
                     try:
                         nouvelle_date = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
+                        
+                        # ✅ DEBUG
+                        print(f"Date convertie: {nouvelle_date}")
+                        print(f"Type: {type(nouvelle_date)}")
+                        
                         operation.date_prevue = nouvelle_date
                         operation.statut = 'planifie'
                         
@@ -527,7 +541,8 @@ def operation_detail(request, operation_id):
                         )
                         
                         messages.success(request, f"✅ Intervention planifiée le {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}")
-                    except ValueError:
+                    except ValueError as e:
+                        print(f"❌ ERREUR: {e}")
                         messages.error(request, "Date invalide")
             
             elif planning_type == 'replanifier':
