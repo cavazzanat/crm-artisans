@@ -1773,27 +1773,28 @@ if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
 }
 
 // ========================================
-// VALIDATION : Empêcher dates futures pour réalisation
+// VALIDATION : Empêcher dates futures UNIQUEMENT pour réalisation
 // ========================================
 const realisationDateInput = document.getElementById('realisation-date');
 
 if (realisationDateInput) {
+  // ✅ Validation UNIQUEMENT sur le champ de réalisation
   realisationDateInput.addEventListener('change', function() {
     const dateSelectionnee = new Date(this.value);
     const maintenant = new Date();
     
     if (dateSelectionnee > maintenant) {
-      // Afficher un toast d'erreur
       showToast("❌ La date de réalisation ne peut pas être dans le futur !", 'error');
-      
-      // Réinitialiser au maximum aujourd'hui
       this.value = getNowFormatted();
     }
   });
   
-  // Définir la date max à maintenant
+  // ✅ Attribut max UNIQUEMENT sur le champ de réalisation
   realisationDateInput.setAttribute('max', getNowFormatted());
 }
+
+// ⚠️ NE PAS appliquer de validation sur les autres champs datetime-local
+// Les champs de planification (planning-date, replanification-date) doivent accepter les dates futures
 
 // ========================================
 // SAUVEGARDE DE LA POSITION DE SCROLL
