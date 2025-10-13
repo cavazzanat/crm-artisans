@@ -863,7 +863,7 @@
         </section>
 
         <!-- ========================================
-            PLANIFICATION
+            PLANIFICATION - VERSION SIMPLIFIÉE
             ======================================== -->
         <section class="section">
           <div class="section-header" onclick="toggleSection(this)">
@@ -874,8 +874,6 @@
               <span class="section-badge complete">
                 📅 {{ operation.date_prevue|date:"d/m/Y H:i" }}
               </span>
-              {% elif operation.statut == 'en_attente_devis' %}
-              <span class="section-badge disabled">Non applicable</span>
               {% else %}
               <span class="section-badge pending">À planifier</span>
               {% endif %}
@@ -886,103 +884,92 @@
           </div>
           
           <div class="section-body">
+            
+            <!-- ✅ SECTION 1 : Planification/Replanification -->
             <form method="POST" id="planning-form">
               {% csrf_token %}
               <input type="hidden" name="action" value="update_planning">
               
-                <div class="info-card" style="margin-bottom:1rem">
-                  <div class="label">Que souhaitez-vous faire ?</div>
-                  <div class="value">
-                    <select id="planification-type" name="planning_type" class="select" style="max-width:400px">
-                      <option value="a_planifier" {% if operation.planning_mode == 'a_planifier' %}selected{% endif %}>Planifier une intervention future</option>
-                      <option value="replanifier" {% if operation.planning_mode == 'replanifier' %}selected{% endif %}>Replanifier (reporter à une nouvelle date)</option>
-                      <option value="deja_realise" {% if operation.planning_mode == 'deja_realise' %}selected{% endif %}>Déjà réalisée (saisie après coup)</option>
-                    </select>
-                  </div>
+              <div class="info-card" style="margin-bottom:1rem">
+                <div class="label">Date d'intervention prévue</div>
+                <div class="value">
+                  <input type="datetime-local" 
+                        id="date-prevue-input" 
+                        name="date_prevue" 
+                        class="input" 
+                        value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}"
+                        required>
                 </div>
-
-                <!-- ===== À PLANIFIER ===== -->
-                <div id="planning-section">
-                  <div class="info-grid">
-                    <div class="info-card">
-                      <div class="label">Date prévue d'intervention</div>
-                      <div class="value">
-                        <input type="datetime-local" 
-                              id="planning-date" 
-                              name="date_prevue_planification"
-                              class="input" 
-                              value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
-                      </div>
-                    </div>
-                    
-                    <div class="info-card">
-                      <div class="label">Actions</div>
-                      <div class="value">
-                        <button type="submit" class="btn success" style="width:100%">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                          Enregistrer la planification
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- ===== REPLANIFIER ===== -->
-                <div id="replanifier-section" style="display:none">
-                  <div class="info-grid">
-                    <div class="info-card">
-                      <div class="label">Nouvelle date d'intervention</div>
-                      <div class="value">
-                        <input type="datetime-local" 
-                              id="replanification-date" 
-                              name="date_prevue_replanification"
-                              class="input" 
-                              value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
-                      </div>
-                    </div>
-                    
-                    <div class="info-card">
-                      <div class="label">Actions</div>
-                      <div class="value">
-                        <button type="submit" class="btn primary" style="width:100%">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-                          Confirmer la replanification
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-              <!-- ===== DÉJÀ RÉALISÉE ===== -->
-              <div id="deja-realise-section" style="display:none">
-                <div class="info-grid">
-                  <div class="info-card">
-                    <div class="label">Date de réalisation</div>
-                    <div class="value">
-                      <input type="datetime-local" id="realisation-date" name="date_realisation" class="input"
-                            value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}"
-                            max="{{ now|date:'Y-m-d\TH:i' }}">
-                      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
-                        ⚠️ La date ne peut pas être dans le futur
-                      </small>
-                    </div>
-                  </div>
-                  
-                  <div class="info-card">
-                    <div class="label">Actions</div>
-                    <div class="value">
-                      <button type="submit" class="btn success" style="width:100%">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                        Valider la réalisation
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <p style="margin-top:.5rem; color:var(--muted); font-size:.85rem">
-                  Utilisez cette option si l'intervention a déjà eu lieu et que vous souhaitez la saisir dans le système.
-                </p>
+              </div>
+              
+              <!-- Alerte si date passée -->
+              <div class="alert warning" id="date-passee-alert" style="display:none; margin-bottom:1rem">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0M12 3l9 18H3L12 3z" stroke="currentColor" stroke-width="1.6"/></svg>
+                <div><strong>⚠️ Date dépassée !</strong> La date prévue est dans le passé. Validez la réalisation ou modifiez la date.</div>
+              </div>
+              
+              <!-- Info replanification -->
+              {% if operation.date_prevue and operation.statut == 'planifie' %}
+              <div class="alert info" style="margin-bottom:1rem">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+                <div>💡 <strong>Actuellement planifié le {{ operation.date_prevue|date:"d/m/Y à H:i" }}</strong><br>
+                Modifiez la date ci-dessus pour replanifier.</div>
+              </div>
+              {% endif %}
+              
+              <div style="display:flex; gap:1rem; flex-wrap:wrap">
+                <button type="submit" class="btn primary" style="flex:1">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                  {% if operation.date_prevue %}Replanifier{% else %}Enregistrer la date{% endif %}
+                </button>
+                
+                {% if operation.date_prevue %}
+                <button type="button" class="btn success" style="flex:1" onclick="toggleRealisationForm()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                  Valider la réalisation
+                </button>
+                {% endif %}
               </div>
             </form>
+            
+            <!-- ✅ SECTION 2 : Validation réalisation (cachée par défaut) -->
+            <div id="realisation-form" style="display:none; margin-top:1.5rem; padding-top:1.5rem; border-top:2px solid var(--border)">
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="valider_realisation">
+                
+                <h4 style="margin-bottom:1rem; color:var(--success); font-size:1.1rem; display:flex; align-items:center; gap:.5rem">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                  Validation de la réalisation
+                </h4>
+                
+                <div class="info-card" style="margin-bottom:1rem">
+                  <div class="label">Date de réalisation effective</div>
+                  <div class="value">
+                    <input type="datetime-local" 
+                          id="date-realisation-input" 
+                          name="date_realisation" 
+                          class="input" 
+                          max="{{ now|date:'Y-m-d\TH:i' }}"
+                          required>
+                    <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                      ⚠️ La date ne peut pas être dans le futur
+                    </small>
+                  </div>
+                </div>
+                
+                <div style="display:flex; gap:1rem">
+                  <button type="button" class="btn" onclick="toggleRealisationForm()" style="flex:1">
+                    Annuler
+                  </button>
+                  <button type="submit" class="btn success" style="flex:1">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                    Confirmer la réalisation
+                  </button>
+                </div>
+              </form>
+            </div>
+            
           </div>
         </section>
 
@@ -1408,6 +1395,37 @@ window.addEventListener('DOMContentLoaded', function() {
 });
 
 // ========================================
+// ✅ FONCTION GLOBALE POUR LA PLANIFICATION
+// ========================================
+window.toggleRealisationForm = function() {
+  const realisationForm = document.getElementById('realisation-form');
+  const dateRealisationInput = document.getElementById('date-realisation-input');
+  
+  if (!realisationForm) return;
+  
+  const isVisible = realisationForm.style.display !== 'none';
+  
+  if (isVisible) {
+    // Fermer
+    realisationForm.style.display = 'none';
+  } else {
+    // Ouvrir et pré-remplir avec la date actuelle
+    realisationForm.style.display = 'block';
+    if (dateRealisationInput) {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      dateRealisationInput.value = now.getFullYear() + '-' + 
+                                    pad(now.getMonth() + 1) + '-' + 
+                                    pad(now.getDate()) + 'T' + 
+                                    pad(now.getHours()) + ':' + 
+                                    pad(now.getMinutes());
+    }
+    // Scroll smooth vers le formulaire
+    realisationForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ========================================
 // INITIALISATION AU CHARGEMENT DE LA PAGE
 // ========================================
 document.addEventListener('DOMContentLoaded', function() {
@@ -1503,92 +1521,45 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Gestion de la planification
-// Gestion de la planification
-const planificationType = document.getElementById('planification-type');
-const planningSection = document.getElementById('planning-section');
-const replanifierSection = document.getElementById('replanifier-section');  // ✅ NOUVEAU
-const dejaRealiseSection = document.getElementById('deja-realise-section');
-const planningDate = document.getElementById('planning-date');
-const realisationDate = document.getElementById('realisation-date');
+// ========================================
+// GESTION PLANIFICATION SIMPLIFIÉE
+// ========================================
+const datePrevueInput = document.getElementById('date-prevue-input');
+const dateRealisationInput = document.getElementById('date-realisation-input');
 const datePasseeAlert = document.getElementById('date-passee-alert');
 
-function updatePlanningDisplay() {
-  if (!planificationType) return;
+// Vérifier si date passée
+function checkDatePassee() {
+  if (!datePrevueInput || !datePasseeAlert) return;
   
-  const type = planificationType.value;
-  
-  // Cacher toutes les sections
-  if (planningSection) planningSection.style.display = 'none';
-  if (replanifierSection) replanifierSection.style.display = 'none';
-  if (dejaRealiseSection) dejaRealiseSection.style.display = 'none';
-  
-  if (type === 'a_planifier') {
-    // Mode "À planifier"
-    if (planningSection) planningSection.style.display = 'block';
-    checkDatePassee();
+  if (datePrevueInput.value) {
+    const dateSelectionnee = new Date(datePrevueInput.value);
+    const maintenant = new Date();
     
-  } else if (type === 'replanifier') {
-    // Mode "Replanifier"
-    if (replanifierSection) replanifierSection.style.display = 'block';
-    const replanificationDate = document.getElementById('replanification-date');
-    
-    // Si pas de date, proposer demain à 9h00
-    if (replanificationDate && !replanificationDate.value) {
-      const demain = new Date();
-      demain.setDate(demain.getDate() + 1);
-      demain.setHours(9, 0, 0, 0);
-      const pad = n => String(n).padStart(2, '0');
-      replanificationDate.value = demain.getFullYear() + '-' + 
-                                   pad(demain.getMonth() + 1) + '-' + 
-                                   pad(demain.getDate()) + 'T09:00';
-    }
-    
+    datePasseeAlert.style.display = (dateSelectionnee < maintenant) ? 'flex' : 'none';
   } else {
-    // Mode "Déjà réalisée"
-    if (dejaRealiseSection) dejaRealiseSection.style.display = 'block';
-    
-    // ✅ Pré-remplir intelligemment
-    if (realisationDate && !realisationDate.value) {
-      const datePlanifiee = planningDate ? planningDate.value : null;
-      realisationDate.value = datePlanifiee || getNowFormatted();
-    }
+    datePasseeAlert.style.display = 'none';
   }
 }
 
-if (planificationType) {
-  planificationType.addEventListener('change', updatePlanningDisplay);
-  // ✅ Appel initial pour afficher la bonne section au chargement
-  updatePlanningDisplay();
+// Validation date réalisation (pas dans le futur)
+if (dateRealisationInput) {
+  dateRealisationInput.addEventListener('change', function() {
+    const dateSelectionnee = new Date(this.value);
+    const maintenant = new Date();
+    
+    if (dateSelectionnee > maintenant) {
+      showToast("❌ La date de réalisation ne peut pas être dans le futur !", 'error');
+      this.value = getNowFormatted();
+    }
+  });
 }
 
-  function checkDatePassee() {
-    if (!planningDate || !datePasseeAlert) return;
-    
-    if (planningDate.value) {
-      const dateSelectionnee = new Date(planningDate.value);
-      const maintenant = new Date();
-      
-      if (dateSelectionnee < maintenant) {
-        datePasseeAlert.style.display = 'flex';
-      } else {
-        datePasseeAlert.style.display = 'none';
-      }
-    } else {
-      datePasseeAlert.style.display = 'none';
-    }
-  }
-
-  if (planificationType) {
-    planificationType.addEventListener('change', updatePlanningDisplay);
-    updatePlanningDisplay();
-  }
-
-  if (planningDate) {
-    planningDate.addEventListener('change', checkDatePassee);
-    checkDatePassee();
-  }
-
+// Écouter les changements de date prévue
+if (datePrevueInput) {
+  datePrevueInput.addEventListener('change', checkDatePassee);
+  checkDatePassee(); // Vérif initiale
+}
   // Gestion des commentaires
   const commentairesTextarea = document.getElementById('commentaires-textarea');
   const commentairesForm = document.getElementById('commentaires-form');

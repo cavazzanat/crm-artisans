@@ -507,88 +507,72 @@ def operation_detail(request, operation_id):
         # GESTION DE LA PLANIFICATION
         elif action == 'update_planning':
             from datetime import datetime
-            planning_type = request.POST.get('planning_type')
+            date_prevue_str = request.POST.get('date_prevue', '')
             
-            # ✅ DEBUG
             print(f"\n{'='*60}")
-            print(f"PLANIFICATION DEBUG")
-            print(f"{'='*60}")
-            print(f"Type: {planning_type}")
+            print(f"PLANIFICATION")
+            print(f"Date reçue: '{date_prevue_str}'")
             
-            operation.planning_mode = planning_type
-            
-            if planning_type == 'a_planifier':
-                date_prevue_str = request.POST.get('date_prevue_planification', '')
-                
-                # ✅ DEBUG
-                print(f"Date reçue (brute): '{date_prevue_str}'")
-                
-                if date_prevue_str:
-                    try:
-                        nouvelle_date = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
-                        
-                        # ✅ DEBUG
-                        print(f"Date convertie: {nouvelle_date}")
-                        print(f"Type: {type(nouvelle_date)}")
-                        
-                        operation.date_prevue = nouvelle_date
-                        operation.statut = 'planifie'
-                        
+            if date_prevue_str:
+                try:
+                    nouvelle_date = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
+                    ancienne_date = operation.date_prevue
+                    
+                    operation.date_prevue = nouvelle_date
+                    operation.statut = 'planifie'
+                    operation.save()
+                    
+                    if ancienne_date and ancienne_date != nouvelle_date:
+                        # Replanification
+                        HistoriqueOperation.objects.create(
+                            operation=operation,
+                            action=f"📅 Replanifié du {ancienne_date.strftime('%d/%m/%Y à %H:%M')} au {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}",
+                            utilisateur=request.user
+                        )
+                        messages.success(request, f"🔄 Intervention replanifiée au {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}")
+                    else:
+                        # Première planification
                         HistoriqueOperation.objects.create(
                             operation=operation,
                             action=f"Intervention planifiée le {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}",
                             utilisateur=request.user
                         )
-                        
                         messages.success(request, f"✅ Intervention planifiée le {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}")
-                    except ValueError as e:
-                        print(f"❌ ERREUR: {e}")
-                        messages.error(request, "Date invalide")
-            
-            elif planning_type == 'replanifier':
-                date_prevue_str = request.POST.get('date_prevue_replanification', '')
-                if date_prevue_str:
-                    try:
-                        nouvelle_date = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
-                        ancienne_date = operation.date_prevue
                         
-                        if ancienne_date and ancienne_date != nouvelle_date:
-                            operation.date_prevue = nouvelle_date
-                            operation.statut = 'planifie'
-                            
-                            HistoriqueOperation.objects.create(
-                                operation=operation,
-                                action=f"📅 Intervention replanifiée du {ancienne_date.strftime('%d/%m/%Y à %H:%M')} au {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}",
-                                utilisateur=request.user
-                            )
-                            
-                            messages.success(request, f"🔄 Intervention replanifiée au {nouvelle_date.strftime('%d/%m/%Y à %H:%M')}")
-                        else:
-                            messages.info(request, "Aucun changement de date détecté")
-                            
-                    except ValueError:
-                        messages.error(request, "Date invalide")
+                except ValueError as e:
+                    print(f"❌ ERREUR: {e}")
+                    messages.error(request, "Date invalide")
             
-            elif planning_type == 'deja_realise':
-                date_realisation_str = request.POST.get('date_realisation', '')
-                if date_realisation_str:
-                    try:
-                        date_realisation = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
-                        operation.date_realisation = date_realisation
-                        operation.statut = 'realise'
-                        
-                        HistoriqueOperation.objects.create(
-                            operation=operation,
-                            action=f"Intervention réalisée le {date_realisation.strftime('%d/%m/%Y à %H:%M')}",
-                            utilisateur=request.user
-                        )
-                        
-                        messages.success(request, f"✅ Réalisation validée le {date_realisation.strftime('%d/%m/%Y à %H:%M')}")
-                    except ValueError:
-                        messages.error(request, "Date invalide")
+            return redirect('operation_detail', operation_id=operation.id)
+
+        # VALIDATION DE LA RÉALISATION
+        elif action == 'valider_realisation':
+            from datetime import datetime
+            date_realisation_str = request.POST.get('date_realisation', '')
             
-            # ✅ CRITIQUE : TOUJOURS sauvegarder à la fin (même si pas de date)
-            operation.save()
+            if date_realisation_str:
+                try:
+                    date_realisation = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                    
+                    # Validation : pas dans le futur
+                    if date_realisation > timezone.now():
+                        messages.error(request, "❌ La date de réalisation ne peut pas être dans le futur")
+                        return redirect('operation_detail', operation_id=operation.id)
+                    
+                    operation.date_realisation = date_realisation
+                    operation.statut = 'realise'
+                    operation.save()
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"✅ Intervention réalisée le {date_realisation.strftime('%d/%m/%Y à %H:%M')}",
+                        utilisateur=request.user
+                    )
+                    
+                    messages.success(request, f"✅ Réalisation validée le {date_realisation.strftime('%d/%m/%Y à %H:%M')}")
+                except ValueError:
+                    messages.error(request, "Date invalide")
+            
             return redirect('operation_detail', operation_id=operation.id)
 
         # ===== PAIEMENT COMPTANT ===== (← NOUVELLE ACTION SÉPARÉE)
