@@ -1400,6 +1400,7 @@ window.addEventListener('DOMContentLoaded', function() {
 window.toggleRealisationForm = function() {
   const realisationForm = document.getElementById('realisation-form');
   const dateRealisationInput = document.getElementById('date-realisation-input');
+  const datePrevueInput = document.getElementById('date-prevue-input');
   
   if (!realisationForm) return;
   
@@ -1409,16 +1410,21 @@ window.toggleRealisationForm = function() {
     // Fermer
     realisationForm.style.display = 'none';
   } else {
-    // Ouvrir et pré-remplir avec la date actuelle
+    // Ouvrir et pré-remplir avec la date de planification (ou maintenant si pas de date prévue)
     realisationForm.style.display = 'block';
     if (dateRealisationInput) {
-      const now = new Date();
-      const pad = n => String(n).padStart(2, '0');
-      dateRealisationInput.value = now.getFullYear() + '-' + 
-                                    pad(now.getMonth() + 1) + '-' + 
-                                    pad(now.getDate()) + 'T' + 
-                                    pad(now.getHours()) + ':' + 
-                                    pad(now.getMinutes());
+      // ✅ NOUVEAU : Utiliser la date prévue si elle existe, sinon la date actuelle
+      if (datePrevueInput && datePrevueInput.value) {
+        dateRealisationInput.value = datePrevueInput.value;
+      } else {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        dateRealisationInput.value = now.getFullYear() + '-' + 
+                                      pad(now.getMonth() + 1) + '-' + 
+                                      pad(now.getDate()) + 'T' + 
+                                      pad(now.getHours()) + ':' + 
+                                      pad(now.getMinutes());
+      }
     }
     // Scroll smooth vers le formulaire
     realisationForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
