@@ -605,97 +605,140 @@ def operation_detail(request, operation_id):
             
             return redirect('operation_detail', operation_id=operation.id)
 
-        # ===== PAIEMENT COMPTANT ===== (← NOUVELLE ACTION SÉPARÉE)
-        elif action == 'paiement_comptant':
+        # ========================================
+        # GESTION DES PAIEMENTS (SIMPLIFIÉ)
+        # ========================================
+
+        # AJOUTER UN PAIEMENT
+        elif action == 'add_paiement':
+            montant_str = request.POST.get('montant', '')
             date_paiement_str = request.POST.get('date_paiement', '')
+            paye_str = request.POST.get('paye', 'false')
             
-            if date_paiement_str:
-                from datetime import datetime
+            if montant_str and date_paiement_str:
                 try:
-                    operation.date_paiement = datetime.strptime(date_paiement_str, '%Y-%m-%d')
-                    operation.mode_paiement = 'comptant'
+                    from datetime import datetime
+                    montant = float(montant_str)
+                    date_paiement = datetime.strptime(date_paiement_str, '%Y-%m-%d').date()
+                    paye = (paye_str == 'true')
+                    
+                    # Vérifier qu'on ne dépasse pas le montant total
+                    total_actuel = operation.echeances.filter(paye=True).aggregate(
+                        total=Sum('montant')
+                    )['total'] or 0
+                    
+                    if paye and (total_actuel + montant > operation.montant_total):
+                        messages.error(request, "❌ Le montant dépasse le total de l'opération")
+                        return redirect('operation_detail', operation_id=operation.id)
+                    
+                    # Auto-générer le numéro
+                    dernier_numero = operation.echeances.aggregate(
+                        max_numero=Max('numero')
+                    )['max_numero'] or 0
+                    
+                    dernier_ordre = operation.echeances.aggregate(
+                        max_ordre=Max('ordre')
+                    )['max_ordre'] or 0
+                    
+                    Echeance.objects.create(
+                        operation=operation,
+                        numero=dernier_numero + 1,
+                        montant=montant,
+                        date_echeance=date_paiement,
+                        paye=paye,
+                        ordre=dernier_ordre + 1
+                    )
+                    
+                    # Historique
+                    statut_txt = "payé" if paye else "prévu"
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"💰 Paiement {statut_txt} : {montant}€ le {date_paiement.strftime('%d/%m/%Y')}",
+                        utilisateur=request.user
+                    )
+                    
+                    # Vérifier si tout est payé
+                    total_paye = operation.echeances.filter(paye=True).aggregate(
+                        total=Sum('montant')
+                    )['total'] or 0
+                    
+                    if total_paye >= operation.montant_total:
+                        operation.statut = 'paye'
+                        operation.save()
+                        messages.success(request, f"✅ Paiement enregistré - Opération soldée ! 🎉")
+                    else:
+                        messages.success(request, f"✅ Paiement de {montant}€ enregistré")
+                    
+                except (ValueError, TypeError) as e:
+                    messages.error(request, f"Données invalides : {str(e)}")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+
+        # MARQUER UN PAIEMENT COMME PAYÉ
+        elif action == 'marquer_paye':
+            echeance_id = request.POST.get('echeance_id')
+            try:
+                echeance = Echeance.objects.get(id=echeance_id, operation=operation)
+                echeance.paye = True
+                echeance.save()
+                
+                # Vérifier si tout est payé
+                total_paye = operation.echeances.filter(paye=True).aggregate(
+                    total=Sum('montant')
+                )['total'] or 0
+                
+                if total_paye >= operation.montant_total:
                     operation.statut = 'paye'
                     operation.save()
                     
                     HistoriqueOperation.objects.create(
                         operation=operation,
-                        action=f"Paiement comptant validé - {operation.date_paiement.strftime('%d/%m/%Y')}",
+                        action=f"✅ Paiement de {echeance.montant}€ confirmé - Opération soldée ! 🎉",
                         utilisateur=request.user
                     )
+                    messages.success(request, "🎉 Opération soldée !")
+                else:
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"✅ Paiement de {echeance.montant}€ marqué comme reçu",
+                        utilisateur=request.user
+                    )
+                    messages.success(request, f"✅ Paiement de {echeance.montant}€ confirmé")
                     
-                    messages.success(request, "✓ Paiement comptant enregistré avec succès")
-                except ValueError:
-                    messages.error(request, "Date invalide")
+            except Echeance.DoesNotExist:
+                messages.error(request, "Paiement introuvable")
             
             return redirect('operation_detail', operation_id=operation.id)
 
-        # ===== VALIDATION ÉCHELONNEMENT ===== (← NOUVELLE ACTION SÉPARÉE)
-        elif action == 'valider_echelonnement':
-            operation.mode_paiement = 'echelonne'
-            operation.save()
+        # SUPPRIMER UN PAIEMENT
+        elif action == 'delete_paiement':
+            echeance_id = request.POST.get('echeance_id')
+            try:
+                echeance = Echeance.objects.get(id=echeance_id, operation=operation)
+                montant = echeance.montant
+                echeance.delete()
+                
+                # Si c'était payé, re-vérifier le statut
+                if operation.statut == 'paye':
+                    total_paye = operation.echeances.filter(paye=True).aggregate(
+                        total=Sum('montant')
+                    )['total'] or 0
+                    
+                    if total_paye < operation.montant_total:
+                        operation.statut = 'realise'
+                        operation.save()
+                
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"🗑️ Paiement de {montant}€ supprimé",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, "Paiement supprimé")
+            except Echeance.DoesNotExist:
+                messages.error(request, "Paiement introuvable")
             
-            HistoriqueOperation.objects.create(
-                operation=operation,
-                action="Plan de paiement échelonné validé",
-                utilisateur=request.user
-            )
-            
-            messages.success(request, "Plan de paiement échelonné validé")
             return redirect('operation_detail', operation_id=operation.id)
-    
-    # GET - Récupérer les données
-    interventions = operation.interventions.all().order_by('ordre')
-    echeances = operation.echeances.all().order_by('ordre')
-    historique = operation.historique.all().order_by('-date')[:10]
-    
-    # ✅ CORRECTION : Calculer uniquement les échéances PAYÉES
-    total_echeances_payees = echeances.filter(paye=True).aggregate(
-        total=Sum('montant')
-    )['total'] or 0
-    
-    # Reste à payer = montant total - ce qui est réellement payé
-    reste_a_payer = operation.montant_total - total_echeances_payees
-    
-    # Total prévu (pour info) = somme de toutes les échéances
-    total_echeances_prevu = echeances.aggregate(
-        total=Sum('montant')
-    )['total'] or 0
-    
-    # Préparer les données pour JavaScript
-    import json
-    lignes_json = json.dumps([
-        {
-            'id': int(i.id),
-            'description': i.description,
-            'montant': float(i.montant)
-        } for i in interventions
-    ])
-    
-    echeances_json = json.dumps([
-        {
-            'id': int(e.id),
-            'numero': e.numero,
-            'montant': float(e.montant),
-            'date_echeance': e.date_echeance.isoformat() if e.date_echeance else ''
-        } for e in echeances
-    ])
-    
-    context = {
-        'operation': operation,
-        'interventions': interventions,
-        'echeances': echeances,
-        'total_echeances': total_echeances_payees,  # ← Uniquement les payées
-        'total_echeances_prevu': total_echeances_prevu,  # ← Total planifié (optionnel)
-        'reste_a_payer': reste_a_payer,
-        'historique': historique,
-        'statuts_choices': Operation.STATUTS,
-        'montant_total': operation.montant_total,
-        'lignes_json': lignes_json,
-        'echeances_json': echeances_json,
-        'now': timezone.now(),  # ✅ AJOUT
-    }
-    
-    return render(request, 'operations/detail.html', context)
 
 @login_required
 def operation_delete(request, operation_id):

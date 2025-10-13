@@ -1054,8 +1054,8 @@
 
 
         <!-- ========================================
-             PAIEMENT
-             ======================================== -->
+            PAIEMENT - VERSION SIMPLIFIÉE
+            ======================================== -->
         {% if operation.devis_statut == 'accepte' or operation.statut == 'realise' or operation.statut == 'paye' %}
         <section class="section">
           <div class="section-header" onclick="toggleSection(this)">
@@ -1065,12 +1065,12 @@
               {% if operation.statut == 'paye' %}
               <span class="section-badge complete">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                Payé
+                Soldé
               </span>
-              {% elif operation.mode_paiement %}
-              <span class="section-badge pending">{{ operation.get_mode_paiement_display }}</span>
+              {% elif echeances %}
+              <span class="section-badge pending">{{ total_echeances }} € / {{ montant_total }} €</span>
               {% else %}
-              <span class="section-badge disabled">Non configuré</span>
+              <span class="section-badge disabled">Aucun paiement</span>
               {% endif %}
             </h2>
             <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -1079,190 +1079,207 @@
           </div>
           
           <div class="section-body">
-            {% if operation.statut != 'realise' and operation.statut != 'paye' %}
-            <div class="alert info" style="margin-bottom:1rem">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-              <div>Vous pouvez enregistrer des acomptes avant la réalisation (arrhes, avances).</div>
-            </div>
-            {% endif %}
             
-            <!-- Choix du mode de paiement -->
-            <div class="info-card" style="margin-bottom:1.5rem">
-              <div class="label">Mode de paiement</div>
-              <div class="value">
-                <select id="mode-paiement-select" class="select" style="max-width:300px">
-                  <option value="">-- Sélectionnez --</option>
-                  <option value="comptant" {% if operation.mode_paiement == 'comptant' %}selected{% endif %}>Paiement comptant</option>
-                  <option value="echelonne" {% if operation.mode_paiement == 'echelonne' %}selected{% endif %}>Paiement en plusieurs fois</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- ===== PAIEMENT COMPTANT ===== -->
-            <div id="comptant-section" style="display:none">
-              <form method="POST">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="paiement_comptant">
+            <!-- ========================================
+                RÉCAPITULATIF FINANCIER
+                ======================================== -->
+            <div class="payment-box" style="margin-bottom:1.5rem">
+              <div class="info-grid">
+                <div class="info-card">
+                  <div class="label">💰 Montant total</div>
+                  <div class="value" style="font-size:1.5rem; color:var(--primary); font-weight:700">
+                    {{ montant_total }} €
+                  </div>
+                </div>
                 
-                <div class="payment-box">
-                  <div class="info-grid">
-                    <div class="info-card">
-                      <div class="label">Montant total</div>
-                      <div class="value" style="font-size:1.4rem; color:var(--primary)">{{ montant_total }} €</div>
-                    </div>
-                    
-                    <div class="info-card">
-                      <div class="label">Date de paiement</div>
-                      <div class="value">
-                        <input type="date" name="date_paiement" class="input" id="date-paiement-comptant" 
-                              value="{% if operation.date_paiement %}{{ operation.date_paiement|date:'Y-m-d' }}{% endif %}"
-                              required>
-                      </div>
-                    </div>
+                <div class="info-card">
+                  <div class="label">✅ Total payé</div>
+                  <div class="value" style="font-size:1.5rem; color:var(--success); font-weight:700">
+                    {{ total_echeances|default:0 }} €
                   </div>
-                  
-                  <button type="submit" class="btn success" style="width:100%; margin-top:1rem">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                    Valider le paiement comptant
-                  </button>
                 </div>
-              </form>
-            </div>
-
-            <!-- ===== PAIEMENT ÉCHELONNÉ ===== -->
-            <div id="echelonne-section" style="display:none">
-              
-              <!-- Récapitulatif financier -->
-              <div class="payment-box" style="margin-bottom:1.5rem">
-                <div class="info-grid">
-                  <div class="info-card">
-                    <div class="label">Montant total</div>
-                    <div class="value" style="font-size:1.4rem; color:var(--primary)">{{ montant_total }} €</div>
-                  </div>
-                  
-                  <div class="info-card">
-                    <div class="label">Total payé</div>
-                    <div class="value" style="font-size:1.4rem; color:var(--success)">
-                      <span id="total-paye">{{ total_echeances|default:0 }}</span> €
-                    </div>
-                  </div>
-                  
-                  <div class="info-card">
-                    <div class="label">Reste à payer</div>
-                    <div class="value" style="font-size:1.4rem; color:var(--warning)">
-                      <span id="reste-a-payer">{{ reste_a_payer|default:montant_total }}</span> €
-                    </div>
-                  </div>
-                  <div class="info-card">
-                    <div class="label">Total planifié</div>
-                    <div class="value" style="font-size:1.2rem; color:var(--muted)">
-                      {{ total_echeances_prevu }} €
-                    </div>
+                
+                <div class="info-card">
+                  <div class="label">⏳ Reste à payer</div>
+                  <div class="value" style="font-size:1.5rem; font-weight:700; color:{% if reste_a_payer == 0 %}var(--success){% else %}var(--warning){% endif %}">
+                    {{ reste_a_payer|default:montant_total }} €
                   </div>
                 </div>
               </div>
+              
+              {% if reste_a_payer == 0 and echeances %}
+              <div class="alert success" style="margin-top:1rem">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                <div><strong>🎉 Opération soldée !</strong> Tous les paiements ont été reçus.</div>
+              </div>
+              {% endif %}
+            </div>
 
-              <!-- Liste des paiements enregistrés -->
-              {% if echeances %}
-              <div class="payment-box" style="margin-bottom:1.5rem">
-                <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Paiements enregistrés</h4>
-                <div class="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>N°</th>
-                        <th>Montant</th>
-                        <th>Date prévue</th>
-                        <th>Statut</th>
-                        <th style="width:120px">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for echeance in echeances %}
-                      <tr class="echeance-row" style="{% if echeance.statut_display == 'retard' %}background: #fee2e2;{% endif %}">
-                        <td><strong>Paiement {{ echeance.numero }}</strong></td>
-                        <td>{{ echeance.montant }} €</td>
-                        <td>{{ echeance.date_echeance|date:"d/m/Y" }}</td>
-                        <td>
-                          {% if echeance.paye %}
-                            <span style="color:var(--success); font-weight:600">✓ Payé</span>
-                          {% else %}
-                            {% now "Y-m-d" as today %}
-                            {% if echeance.date_echeance|date:"Y-m-d" < today %}
-                              <span style="color:var(--danger); font-weight:600">⚠ En retard</span>
-                            {% else %}
-                              <span style="color:var(--warning); font-weight:600">⏳ En attente</span>
-                            {% endif %}
-                          {% endif %}
-                        </td>
-                        <td>
+            <!-- ========================================
+                LISTE DES PAIEMENTS
+                ======================================== -->
+            {% if echeances %}
+            <div class="payment-box" style="margin-bottom:1.5rem">
+              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem; display:flex; align-items:center; gap:.5rem">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" stroke="currentColor" stroke-width="1.6"/></svg>
+                Historique des paiements
+              </h4>
+              
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Montant</th>
+                      <th>Statut</th>
+                      <th style="width:100px">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for echeance in echeances %}
+                    <tr style="{% if echeance.paye %}background: #f0fdf4;{% elif echeance.date_echeance|date:'Y-m-d' < now|date:'Y-m-d' %}background: #fee2e2;{% endif %}">
+                      <td>
+                        <strong>{{ echeance.date_echeance|date:"d/m/Y" }}</strong>
+                        {% if echeance.date_echeance|date:'Y-m-d' < now|date:'Y-m-d' and not echeance.paye %}
+                        <br><small style="color:var(--danger)">⚠️ En retard</small>
+                        {% endif %}
+                      </td>
+                      <td><strong>{{ echeance.montant }} €</strong></td>
+                      <td>
+                        {% if echeance.paye %}
+                          <span style="color:var(--success); font-weight:600; display:flex; align-items:center; gap:.3rem">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                            Payé
+                          </span>
+                        {% else %}
+                          <span style="color:var(--warning); font-weight:600; display:flex; align-items:center; gap:.3rem">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4" stroke="currentColor" stroke-width="1.6"/></svg>
+                            En attente
+                          </span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        <div style="display:flex; gap:.3rem">
                           {% if not echeance.paye %}
-                          <form method="POST" style="display:inline; margin-right:.5rem">
+                          <form method="POST" style="display:inline">
                             {% csrf_token %}
-                            <input type="hidden" name="action" value="marquer_paye_echeance">
+                            <input type="hidden" name="action" value="marquer_paye">
                             <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
-                            <button type="submit" class="btn success sm" title="Marquer comme payé">✓</button>
+                            <button type="submit" class="btn success sm" title="Marquer comme payé">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                            </button>
                           </form>
                           {% endif %}
+                          
                           <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer ce paiement ?')">
                             {% csrf_token %}
-                            <input type="hidden" name="action" value="delete_echeance">
+                            <input type="hidden" name="action" value="delete_paiement">
                             <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
-                            <button type="submit" class="btn danger sm">×</button>
+                            <button type="submit" class="btn danger sm">
+                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
+                            </button>
                           </form>
-                        </td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
+                        </div>
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  </tbody>
+                  <tfoot>
+                    <tr style="background: #eef2ff; font-weight:700">
+                      <td><strong>TOTAL PAYÉ</strong></td>
+                      <td><strong>{{ total_echeances|default:0 }} €</strong></td>
+                      <td colspan="2"></td>
+                    </tr>
+                  </tfoot>
+                </table>
               </div>
-              {% endif %}
+            </div>
+            {% endif %}
 
-              <!-- Formulaire d'ajout de paiement -->
-              <div class="payment-box">
-                <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">
-                  {% if echeances %}Ajouter un paiement supplémentaire{% else %}Enregistrer le premier paiement{% endif %}
-                </h4>
+            <!-- ========================================
+                FORMULAIRE D'AJOUT DE PAIEMENT
+                ======================================== -->
+            <div class="payment-box">
+              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem; display:flex; align-items:center; gap:.5rem">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+                {% if echeances %}Ajouter un paiement{% else %}Enregistrer le premier paiement{% endif %}
+              </h4>
+              
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_paiement">
                 
-                <form method="POST" id="form-add-echeance">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="add_echeance">
-                  
-                  <div class="info-grid" style="margin-bottom:1rem">
-                    <div class="info-card">
-                      <div class="label">Montant (€)</div>
-                      <div class="value">
-                        <input type="number" name="montant" class="input" placeholder="Ex: 500" step="0.01" min="0.01" max="{{ reste_a_payer|default:montant_total }}" required>
-                      </div>
-                    </div>
-                    
-                    <div class="info-card">
-                      <div class="label">Date prévue</div>
-                      <div class="value">
-                        <input type="date" name="date_echeance" class="input" required>
-                      </div>
+                <div class="info-grid" style="margin-bottom:1rem">
+                  <div class="info-card">
+                    <div class="label">💵 Montant (€)</div>
+                    <div class="value">
+                      <input type="number" 
+                            name="montant" 
+                            class="input" 
+                            placeholder="Ex: 500" 
+                            step="0.01" 
+                            min="0.01" 
+                            max="{{ reste_a_payer if reste_a_payer > 0 else montant_total }}"
+                            required>
+                      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                        {% if reste_a_payer > 0 %}
+                          💡 Reste à payer : <strong>{{ reste_a_payer }} €</strong>
+                        {% else %}
+                          ⚠️ Montant total : {{ montant_total }} €
+                        {% endif %}
+                      </small>
                     </div>
                   </div>
                   
-                  <button type="submit" class="btn success" style="width:100%">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-                    Enregistrer ce paiement
-                  </button>
-                </form>
-              </div>
-              
-              <!-- Bouton de validation finale -->
-              {% if echeances %}
-              <form method="POST" style="margin-top:1rem">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="valider_echelonnement">
-                <button type="submit" class="btn primary" style="width:100%">
-                  Valider le plan de paiement échelonné
+                  <div class="info-card">
+                    <div class="label">📅 Date du paiement</div>
+                    <div class="value">
+                      <input type="date" 
+                            name="date_paiement" 
+                            class="input" 
+                            value="{{ now|date:'Y-m-d' }}"
+                            required>
+                      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                        💡 Date prévue ou effective
+                      </small>
+                    </div>
+                  </div>
+                  
+                  <div class="info-card">
+                    <div class="label">✅ Statut</div>
+                    <div class="value">
+                      <select name="paye" class="select">
+                        <option value="true">Déjà payé</option>
+                        <option value="false">Prévu / À venir</option>
+                      </select>
+                      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                        💡 "Déjà payé" = reçu aujourd'hui<br>
+                        "Prévu" = attendu plus tard
+                      </small>
+                    </div>
+                  </div>
+                </div>
+                
+                <button type="submit" class="btn success" style="width:100%">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+                  Enregistrer ce paiement
                 </button>
               </form>
-              {% endif %}
             </div>
+            
+            <!-- Info aide -->
+            {% if not echeances %}
+            <div class="alert info" style="margin-top:1rem">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+              <div>
+                <strong>💡 Comment ça marche ?</strong><br>
+                • Ajoutez un paiement quand vous voulez<br>
+                • Vous pouvez enregistrer des acomptes, le solde, ou tout en une fois<br>
+                • Marquez "Déjà payé" si c'est reçu, sinon "Prévu"<br>
+                • Quand tout est payé, l'opération passe automatiquement en statut "Payé"
+              </div>
+            </div>
+            {% endif %}
             
           </div>
         </section>
