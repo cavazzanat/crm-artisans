@@ -518,7 +518,7 @@ def operation_detail(request, operation_id):
             operation.planning_mode = planning_type
             
             if planning_type == 'a_planifier':
-                date_prevue_str = request.POST.get('date_prevue', '')
+                date_prevue_str = request.POST.get('date_prevue_planification', '')
                 
                 # ✅ DEBUG
                 print(f"Date reçue (brute): '{date_prevue_str}'")
@@ -546,7 +546,7 @@ def operation_detail(request, operation_id):
                         messages.error(request, "Date invalide")
             
             elif planning_type == 'replanifier':
-                date_prevue_str = request.POST.get('date_prevue', '')
+                date_prevue_str = request.POST.get('date_prevue_replanification', '')
                 if date_prevue_str:
                     try:
                         nouvelle_date = datetime.fromisoformat(date_prevue_str.replace('T', ' '))

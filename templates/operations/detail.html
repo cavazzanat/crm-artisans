@@ -901,56 +901,57 @@
                   </div>
                 </div>
 
-              <!-- ===== À PLANIFIER ===== -->
-              <div id="planning-section">
-                <div class="alert warning" id="date-passee-alert" style="display:none">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0M12 3l9 18H3L12 3z" stroke="currentColor" stroke-width="1.6"/></svg>
-                  <div><strong>Date dépassée !</strong> La date prévue est passée. Confirmez la réalisation ou replanifiez.</div>
-                </div>
-                
-                <div class="info-grid">
-                  <div class="info-card">
-                    <div class="label">Date prévue d'intervention</div>
-                    <div class="value">
-                      <input type="datetime-local" id="planning-date" name="date_prevue" class="input" 
-                            value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
+                <!-- ===== À PLANIFIER ===== -->
+                <div id="planning-section">
+                  <div class="info-grid">
+                    <div class="info-card">
+                      <div class="label">Date prévue d'intervention</div>
+                      <div class="value">
+                        <input type="datetime-local" 
+                              id="planning-date" 
+                              name="date_prevue_planification"
+                              class="input" 
+                              value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
+                      </div>
+                    </div>
+                    
+                    <div class="info-card">
+                      <div class="label">Actions</div>
+                      <div class="value">
+                        <button type="submit" class="btn success" style="width:100%">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                          Enregistrer la planification
+                        </button>
+                      </div>
                     </div>
                   </div>
-                  
-                  <div class="info-card">
-                    <div class="label">Actions</div>
-                    <div class="value">
-                      <button type="submit" class="btn success" style="width:100%">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                        Enregistrer la planification
-                      </button>
-                    </div>
-                  </div>
                 </div>
-              </div>
 
-              <!-- ===== REPLANIFIER ===== -->
-              <div id="replanifier-section" style="display:none">
-                <div class="info-grid">
-                  <div class="info-card">
-                    <div class="label">Nouvelle date d'intervention</div>
-                    <div class="value">
-                      <input type="datetime-local" id="replanification-date" name="date_prevue" class="input" 
-                            value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
+                <!-- ===== REPLANIFIER ===== -->
+                <div id="replanifier-section" style="display:none">
+                  <div class="info-grid">
+                    <div class="info-card">
+                      <div class="label">Nouvelle date d'intervention</div>
+                      <div class="value">
+                        <input type="datetime-local" 
+                              id="replanification-date" 
+                              name="date_prevue_replanification"
+                              class="input" 
+                              value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}">
+                      </div>
                     </div>
-                  </div>
-                  
-                  <div class="info-card">
-                    <div class="label">Actions</div>
-                    <div class="value">
-                      <button type="submit" class="btn primary" style="width:100%">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-                        Confirmer la replanification
-                      </button>
+                    
+                    <div class="info-card">
+                      <div class="label">Actions</div>
+                      <div class="value">
+                        <button type="submit" class="btn primary" style="width:100%">
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+                          Confirmer la replanification
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
 
               <!-- ===== DÉJÀ RÉALISÉE ===== -->
               <div id="deja-realise-section" style="display:none">
