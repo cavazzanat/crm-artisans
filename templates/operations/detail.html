@@ -942,9 +942,13 @@
                   <div class="info-card">
                     <div class="label">Date de réalisation</div>
                     <div class="value">
-                      <input type="datetime-local" name="date_realisation" class="input" 
+                      <input type="datetime-local" 
+                            id="correction-date-realisation"
+                            name="date_realisation" 
+                            class="input" 
                             value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}"
-                            max="{{ now|date:'Y-m-d\TH:i' }}" required>
+                            max="{{ now|date:'Y-m-d\TH:i' }}" 
+                            required>
                     </div>
                   </div>
                 </div>
