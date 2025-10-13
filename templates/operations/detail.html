@@ -863,19 +863,25 @@
         </section>
 
         <!-- ========================================
-            PLANIFICATION - VERSION SIMPLIFIÉE
+            PLANIFICATION - AVEC AFFICHAGE CONDITIONNEL
             ======================================== -->
         <section class="section">
           <div class="section-header" onclick="toggleSection(this)">
             <h2 class="section-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/></svg>
               Planification
-              {% if operation.date_prevue %}
-              <span class="section-badge complete">
-                📅 {{ operation.date_prevue|date:"d/m/Y H:i" }}
-              </span>
+              
+              {% if operation.statut == 'realise' or operation.statut == 'paye' %}
+                <span class="section-badge complete">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                  Réalisée
+                </span>
+              {% elif operation.date_prevue %}
+                <span class="section-badge complete">
+                  📅 {{ operation.date_prevue|date:"d/m/Y H:i" }}
+                </span>
               {% else %}
-              <span class="section-badge pending">À planifier</span>
+                <span class="section-badge pending">À planifier</span>
               {% endif %}
             </h2>
             <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -885,7 +891,75 @@
           
           <div class="section-body">
             
-            <!-- ✅ SECTION 1 : Planification/Replanification -->
+            {% if operation.statut == 'realise' or operation.statut == 'paye' %}
+            <!-- ========================================
+                MODE 1 : AFFICHAGE RÉALISÉE (LECTURE SEULE)
+                ======================================== -->
+            <div class="alert success" style="margin-bottom:1rem">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+              <div>
+                <strong>✅ Intervention réalisée</strong>
+                {% if operation.date_realisation %}
+                  <br>Date de réalisation : <strong>{{ operation.date_realisation|date:"d/m/Y à H:i" }}</strong>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div class="info-grid">
+              {% if operation.date_prevue %}
+              <div class="info-card">
+                <div class="label">📅 Date prévue initialement</div>
+                <div class="value">{{ operation.date_prevue|date:"d/m/Y à H:i" }}</div>
+              </div>
+              {% endif %}
+              
+              {% if operation.date_realisation %}
+              <div class="info-card">
+                <div class="label">✅ Date de réalisation</div>
+                <div class="value" style="color:var(--success); font-weight:700">
+                  {{ operation.date_realisation|date:"d/m/Y à H:i" }}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+            
+            <!-- Bouton pour corriger si besoin -->
+            <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border)">
+              <button type="button" class="btn" onclick="toggleModificationDates()" style="width:100%">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.6"/></svg>
+                Corriger les dates (si erreur)
+              </button>
+            </div>
+            
+            <!-- Formulaire de correction (caché par défaut) -->
+            <div id="modification-dates-form" style="display:none; margin-top:1rem; padding:1rem; background:#fef3c7; border:1px solid #fde68a; border-radius:8px">
+              <h4 style="margin-bottom:1rem; color:#92400e">⚠️ Correction des dates</h4>
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="corriger_dates_realisation">
+                
+                <div class="info-grid" style="margin-bottom:1rem">
+                  <div class="info-card">
+                    <div class="label">Date de réalisation</div>
+                    <div class="value">
+                      <input type="datetime-local" name="date_realisation" class="input" 
+                            value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}"
+                            max="{{ now|date:'Y-m-d\TH:i' }}" required>
+                    </div>
+                  </div>
+                </div>
+                
+                <div style="display:flex; gap:1rem">
+                  <button type="button" class="btn" onclick="toggleModificationDates()" style="flex:1">Annuler</button>
+                  <button type="submit" class="btn primary" style="flex:1">Enregistrer la correction</button>
+                </div>
+              </form>
+            </div>
+            
+            {% else %}
+            <!-- ========================================
+                MODE 2 : PLANIFICATION ACTIVE (MODIFIABLE)
+                ======================================== -->
             <form method="POST" id="planning-form">
               {% csrf_token %}
               <input type="hidden" name="action" value="update_planning">
@@ -932,7 +1006,7 @@
               </div>
             </form>
             
-            <!-- ✅ SECTION 2 : Validation réalisation (cachée par défaut) -->
+            <!-- Formulaire de validation réalisation (caché par défaut) -->
             <div id="realisation-form" style="display:none; margin-top:1.5rem; padding-top:1.5rem; border-top:2px solid var(--border)">
               <form method="POST">
                 {% csrf_token %}
@@ -969,6 +1043,7 @@
                 </div>
               </form>
             </div>
+            {% endif %}
             
           </div>
         </section>
@@ -1428,6 +1503,21 @@ window.toggleRealisationForm = function() {
     }
     // Scroll smooth vers le formulaire
     realisationForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+}
+
+// ========================================
+// ✅ FONCTION POUR CORRIGER LES DATES (RÉALISÉ)
+// ========================================
+window.toggleModificationDates = function() {
+  const modificationForm = document.getElementById('modification-dates-form');
+  if (!modificationForm) return;
+  
+  const isVisible = modificationForm.style.display !== 'none';
+  modificationForm.style.display = isVisible ? 'none' : 'block';
+  
+  if (!isVisible) {
+    modificationForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 }
 

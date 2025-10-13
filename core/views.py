@@ -574,6 +574,36 @@ def operation_detail(request, operation_id):
                     messages.error(request, "Date invalide")
             
             return redirect('operation_detail', operation_id=operation.id)
+        
+        # CORRECTION DES DATES DE RÉALISATION
+        elif action == 'corriger_dates_realisation':
+            from datetime import datetime
+            date_realisation_str = request.POST.get('date_realisation', '')
+            
+            if date_realisation_str:
+                try:
+                    date_realisation = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
+                    
+                    # Validation : pas dans le futur
+                    if date_realisation > timezone.now():
+                        messages.error(request, "❌ La date de réalisation ne peut pas être dans le futur")
+                        return redirect('operation_detail', operation_id=operation.id)
+                    
+                    ancienne_date = operation.date_realisation
+                    operation.date_realisation = date_realisation
+                    operation.save()
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"⚠️ Date de réalisation corrigée : {ancienne_date.strftime('%d/%m/%Y à %H:%M')} → {date_realisation.strftime('%d/%m/%Y à %H:%M')}",
+                        utilisateur=request.user
+                    )
+                    
+                    messages.success(request, f"✅ Date de réalisation corrigée")
+                except ValueError:
+                    messages.error(request, "Date invalide")
+            
+            return redirect('operation_detail', operation_id=operation.id)
 
         # ===== PAIEMENT COMPTANT ===== (← NOUVELLE ACTION SÉPARÉE)
         elif action == 'paiement_comptant':
