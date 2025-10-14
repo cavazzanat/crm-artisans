@@ -783,8 +783,8 @@ def operation_detail(request, operation_id):
         'operation': operation,
         'interventions': interventions,
         'echeances': echeances,
-        'total_echeances': total_echeances_payees,  # ← Uniquement les payées
-        'total_echeances_prevu': total_echeances_prevu,  # ← Total planifié (optionnel)
+        'total_echeances': total_echeances_payees,
+        'total_echeances_prevu': total_echeances_prevu,
         'reste_a_payer': reste_a_payer,
         'historique': historique,
         'statuts_choices': Operation.STATUTS,
@@ -792,6 +792,7 @@ def operation_detail(request, operation_id):
         'lignes_json': lignes_json,
         'echeances_json': echeances_json,
         'now': timezone.now(),
+        'max_paiement': reste_a_payer if reste_a_payer > 0 else operation.montant_total,  # ← AJOUT
     }
     
     return render(request, 'operations/detail.html', context)   
