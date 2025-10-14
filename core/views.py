@@ -739,6 +739,63 @@ def operation_detail(request, operation_id):
                 messages.error(request, "Paiement introuvable")
             
             return redirect('operation_detail', operation_id=operation.id)
+        
+    # ========================================
+    # GET - Récupérer les données
+    # ========================================
+    interventions = operation.interventions.all().order_by('ordre')
+    echeances = operation.echeances.all().order_by('ordre')
+    historique = operation.historique.all().order_by('-date')[:10]
+    
+    # ✅ CORRECTION : Calculer uniquement les échéances PAYÉES
+    total_echeances_payees = echeances.filter(paye=True).aggregate(
+        total=Sum('montant')
+    )['total'] or 0
+    
+    # Reste à payer = montant total - ce qui est réellement payé
+    reste_a_payer = operation.montant_total - total_echeances_payees
+    
+    # Total prévu (pour info) = somme de toutes les échéances
+    total_echeances_prevu = echeances.aggregate(
+        total=Sum('montant')
+    )['total'] or 0
+    
+    # Préparer les données pour JavaScript
+    import json
+    lignes_json = json.dumps([
+        {
+            'id': int(i.id),
+            'description': i.description,
+            'montant': float(i.montant)
+        } for i in interventions
+    ])
+    
+    echeances_json = json.dumps([
+        {
+            'id': int(e.id),
+            'numero': e.numero,
+            'montant': float(e.montant),
+            'date_echeance': e.date_echeance.isoformat() if e.date_echeance else ''
+        } for e in echeances
+    ])
+    
+    context = {
+        'operation': operation,
+        'interventions': interventions,
+        'echeances': echeances,
+        'total_echeances': total_echeances_payees,  # ← Uniquement les payées
+        'total_echeances_prevu': total_echeances_prevu,  # ← Total planifié (optionnel)
+        'reste_a_payer': reste_a_payer,
+        'historique': historique,
+        'statuts_choices': Operation.STATUTS,
+        'montant_total': operation.montant_total,
+        'lignes_json': lignes_json,
+        'echeances_json': echeances_json,
+        'now': timezone.now(),
+    }
+    
+    return render(request, 'operations/detail.html', context)   
+
 
 @login_required
 def operation_delete(request, operation_id):
