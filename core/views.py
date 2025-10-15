@@ -780,6 +780,9 @@ def operation_detail(request, operation_id):
     # Reste à enregistrer = montant total - (payé + prévu)
     reste_a_enregistrer = operation.montant_total - total_echeances_tout
 
+    # ✅ AJOUT : Valeur absolue pour l'affichage
+    reste_a_enregistrer_abs = abs(reste_a_enregistrer)
+    
     # Max pour le formulaire : ne pas dépasser le montant total
     if reste_a_enregistrer > 0:
         max_paiement = reste_a_enregistrer
@@ -814,6 +817,7 @@ def operation_detail(request, operation_id):
         'total_echeances_tout': total_echeances_tout,
         'reste_a_payer': reste_a_payer,
         'reste_a_enregistrer': reste_a_enregistrer,
+        'reste_a_enregistrer_abs': reste_a_enregistrer_abs,
         'max_paiement': max_paiement,
         'historique': historique,
         'statuts_choices': Operation.STATUTS,
