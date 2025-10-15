@@ -264,7 +264,9 @@ def operation_detail(request, operation_id):
             if montant_str and date_echeance_str:
                 try:
                     from datetime import datetime
-                    montant = float(montant_str)
+                    from decimal import Decimal  # ✅ AJOUT
+                    
+                    montant = Decimal(montant_str)  # ✅ CORRECTION
                     date_echeance = datetime.fromisoformat(date_echeance_str).date()
                     
                     # Auto-générer le numéro
@@ -439,7 +441,8 @@ def operation_detail(request, operation_id):
             
             if description and montant_str:
                 try:
-                    montant = float(montant_str)
+                    from decimal import Decimal  # ✅ AJOUT
+                    montant = Decimal(montant_str)  # ✅ CORRECTION
                     
                     dernier_ordre = operation.interventions.aggregate(
                         max_ordre=Max('ordre')
@@ -611,7 +614,6 @@ def operation_detail(request, operation_id):
         # GESTION DES PAIEMENTS (SIMPLIFIÉ)
         # ========================================
 
-        # AJOUTER UN PAIEMENT
         elif action == 'add_paiement':
             montant_str = request.POST.get('montant', '')
             date_paiement_str = request.POST.get('date_paiement', '')
@@ -620,7 +622,9 @@ def operation_detail(request, operation_id):
             if montant_str and date_paiement_str:
                 try:
                     from datetime import datetime
-                    montant = float(montant_str)
+                    from decimal import Decimal  # ✅ AJOUT
+                    
+                    montant = Decimal(montant_str)  # ✅ CORRECTION
                     date_paiement = datetime.strptime(date_paiement_str, '%Y-%m-%d').date()
                     paye = (paye_str == 'true')
                     
