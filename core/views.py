@@ -45,6 +45,8 @@ def dashboard(request):
             statut='paye',
             date_creation__gte=debut_mois
         ).aggregate(total=Sum('interventions__montant'))['total'] or 0
+
+        
         
         # ✅ CALENDRIER : Logique simplifiée pour les opérations qui nécessitent attention
         from datetime import timedelta
@@ -622,13 +624,22 @@ def operation_detail(request, operation_id):
                     date_paiement = datetime.strptime(date_paiement_str, '%Y-%m-%d').date()
                     paye = (paye_str == 'true')
                     
-                    # Vérifier qu'on ne dépasse pas le montant total
-                    total_actuel = operation.echeances.filter(paye=True).aggregate(
+                    # ✅ VÉRIFICATION : Calculer le total avec ce nouveau paiement
+                    total_actuel_tout = operation.echeances.aggregate(
                         total=Sum('montant')
                     )['total'] or 0
                     
-                    if paye and (total_actuel + montant > operation.montant_total):
-                        messages.error(request, "❌ Le montant dépasse le total de l'opération")
+                    # Total si on ajoute ce paiement
+                    nouveau_total = total_actuel_tout + montant
+                    
+                    # Vérifier le dépassement
+                    if nouveau_total > operation.montant_total:
+                        depassement = nouveau_total - operation.montant_total
+                        messages.error(
+                            request, 
+                            f"❌ Dépassement de {depassement:.2f}€ ! "
+                            f"Total avec ce paiement : {nouveau_total:.2f}€ / Montant opération : {operation.montant_total:.2f}€"
+                        )
                         return redirect('operation_detail', operation_id=operation.id)
                     
                     # Auto-générer le numéro
@@ -740,26 +751,41 @@ def operation_detail(request, operation_id):
             
             return redirect('operation_detail', operation_id=operation.id)
         
+
     # ========================================
     # GET - Récupérer les données
     # ========================================
     interventions = operation.interventions.all().order_by('ordre')
     echeances = operation.echeances.all().order_by('ordre')
     historique = operation.historique.all().order_by('-date')[:10]
-    
-    # ✅ CORRECTION : Calculer uniquement les échéances PAYÉES
+
+    # Calculer uniquement les échéances PAYÉES
     total_echeances_payees = echeances.filter(paye=True).aggregate(
         total=Sum('montant')
     )['total'] or 0
-    
-    # Reste à payer = montant total - ce qui est réellement payé
-    reste_a_payer = operation.montant_total - total_echeances_payees
-    
-    # Total prévu (pour info) = somme de toutes les échéances
-    total_echeances_prevu = echeances.aggregate(
+
+    # Total PRÉVU (échéances prévues = non payées)
+    total_echeances_prevus = echeances.filter(paye=False).aggregate(
         total=Sum('montant')
     )['total'] or 0
-    
+
+    # Total de TOUS les paiements (payés + prévus)
+    total_echeances_tout = echeances.aggregate(
+        total=Sum('montant')
+    )['total'] or 0
+
+    # Reste à payer = montant total - ce qui est réellement payé
+    reste_a_payer = operation.montant_total - total_echeances_payees
+
+    # Reste à enregistrer = montant total - (payé + prévu)
+    reste_a_enregistrer = operation.montant_total - total_echeances_tout
+
+    # Max pour le formulaire : ne pas dépasser le montant total
+    if reste_a_enregistrer > 0:
+        max_paiement = reste_a_enregistrer
+    else:
+        max_paiement = operation.montant_total
+
     # Préparer les données pour JavaScript
     import json
     lignes_json = json.dumps([
@@ -769,7 +795,7 @@ def operation_detail(request, operation_id):
             'montant': float(i.montant)
         } for i in interventions
     ])
-    
+
     echeances_json = json.dumps([
         {
             'id': int(e.id),
@@ -778,25 +804,26 @@ def operation_detail(request, operation_id):
             'date_echeance': e.date_echeance.isoformat() if e.date_echeance else ''
         } for e in echeances
     ])
-    
+
     context = {
         'operation': operation,
         'interventions': interventions,
         'echeances': echeances,
         'total_echeances': total_echeances_payees,
-        'total_echeances_prevu': total_echeances_prevu,
+        'total_echeances_prevus': total_echeances_prevus,
+        'total_echeances_tout': total_echeances_tout,
         'reste_a_payer': reste_a_payer,
+        'reste_a_enregistrer': reste_a_enregistrer,
+        'max_paiement': max_paiement,
         'historique': historique,
         'statuts_choices': Operation.STATUTS,
         'montant_total': operation.montant_total,
         'lignes_json': lignes_json,
         'echeances_json': echeances_json,
         'now': timezone.now(),
-        'max_paiement': reste_a_payer if reste_a_payer > 0 else operation.montant_total,  # ← AJOUT
     }
-    
-    return render(request, 'operations/detail.html', context)   
 
+    return render(request, 'operations/detail.html', context)
 
 @login_required
 def operation_delete(request, operation_id):

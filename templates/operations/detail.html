@@ -1079,9 +1079,9 @@
           </div>
           
           <div class="section-body">
-            
+
             <!-- ========================================
-                RÉCAPITULATIF FINANCIER
+                RÉCAPITULATIF FINANCIER AMÉLIORÉ
                 ======================================== -->
             <div class="payment-box" style="margin-bottom:1.5rem">
               <div class="info-grid">
@@ -1093,24 +1093,48 @@
                 </div>
                 
                 <div class="info-card">
-                  <div class="label">✅ Total payé</div>
+                  <div class="label">✅ Payé</div>
                   <div class="value" style="font-size:1.5rem; color:var(--success); font-weight:700">
                     {{ total_echeances|default:0 }} €
                   </div>
                 </div>
                 
                 <div class="info-card">
-                  <div class="label">⏳ Reste à payer</div>
-                  <div class="value" style="font-size:1.5rem; font-weight:700; color:{% if reste_a_payer == 0 %}var(--success){% else %}var(--warning){% endif %}">
-                    {{ reste_a_payer|default:montant_total }} €
+                  <div class="label">⏳ En attente</div>
+                  <div class="value" style="font-size:1.2rem; color:var(--warning); font-weight:600">
+                    {{ total_echeances_prevus|default:0 }} €
+                  </div>
+                  <small style="color:var(--muted); font-size:0.8rem">Prévus non payés</small>
+                </div>
+                
+                <div class="info-card">
+                  <div class="label">🎯 Reste à enregistrer</div>
+                  <div class="value" style="font-size:1.5rem; font-weight:700; color:{% if reste_a_enregistrer == 0 %}var(--success){% elif reste_a_enregistrer < 0 %}var(--danger){% else %}var(--warning){% endif %}">
+                    {{ reste_a_enregistrer|default:montant_total }} €
                   </div>
                 </div>
               </div>
               
-              {% if reste_a_payer == 0 and echeances %}
+              <!-- Alerte si dépassement -->
+              {% if reste_a_enregistrer < 0 %}
+              <div class="alert danger" style="margin-top:1rem">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="2"/></svg>
+                <div>
+                  <strong>⚠️ ATTENTION : Dépassement de {{ reste_a_enregistrer|abs }} € !</strong><br>
+                  Total enregistré ({{ total_echeances_tout }} €) > Montant opération ({{ montant_total }} €)
+                </div>
+              </div>
+              {% endif %}
+              
+              {% if reste_a_enregistrer == 0 and reste_a_payer == 0 %}
               <div class="alert success" style="margin-top:1rem">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
                 <div><strong>🎉 Opération soldée !</strong> Tous les paiements ont été reçus.</div>
+              </div>
+              {% elif reste_a_enregistrer == 0 and reste_a_payer > 0 %}
+              <div class="alert info" style="margin-top:1rem">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.6"/></svg>
+                <div><strong>💡 Tous les paiements sont enregistrés</strong> - En attente de validation de {{ total_echeances_prevus }} €</div>
               </div>
               {% endif %}
             </div>
@@ -1222,10 +1246,12 @@
                             max="{{ max_paiement }}"
                             required>
                       <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
-                        {% if reste_a_payer > 0 %}
-                          💡 Reste à payer : <strong>{{ reste_a_payer }} €</strong>
+                        {% if reste_a_enregistrer > 0 %}
+                          💡 Reste à enregistrer : <strong>{{ reste_a_enregistrer }} €</strong>
+                        {% elif reste_a_enregistrer == 0 %}
+                          ✅ Tous les paiements sont enregistrés
                         {% else %}
-                          ⚠️ Montant total : {{ montant_total }} €
+                          ⚠️ Dépassement de {{ reste_a_enregistrer|abs }} €
                         {% endif %}
                       </small>
                     </div>
