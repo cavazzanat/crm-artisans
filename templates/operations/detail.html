@@ -1932,6 +1932,52 @@ if (savedScrollPosition !== null) {
   console.log('✅ JavaScript CRM Artisans initialisé');
 });
 
+// ========================================
+// FEEDBACK VISUEL SOUMISSIONS
+// ========================================
+document.getElementById('form-realisation').addEventListener('submit', function() {
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="animation: spin 1s linear infinite">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="8"/>
+    </svg>
+    Validation...
+  `;
+});
+
+document.getElementById('form-replanification').addEventListener('submit', function() {
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="animation: spin 1s linear infinite">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="8"/>
+    </svg>
+    Replanification...
+  `;
+});
+
+document.getElementById('form-commentaires').addEventListener('submit', function() {
+  const btn = this.querySelector('button[type="submit"]');
+  btn.disabled = true;
+  btn.innerHTML = `
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="animation: spin 1s linear infinite">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" stroke-dasharray="32" stroke-dashoffset="8"/>
+    </svg>
+    Enregistrement...
+  `;
+});
+
+// Animation spin
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(style);
+
 </script>
 </body>
 </html>

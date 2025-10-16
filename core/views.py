@@ -102,7 +102,8 @@ def dashboard(request):
                 'statut': op.statut,
                 'statut_display': status_text,
                 'color_class': color_class,
-                'is_past': is_past
+                'is_past': is_past,
+                'commentaires': op.commentaires or ''  # ← AJOUTÉ
             })
         
         context = {
@@ -548,7 +549,7 @@ def operation_detail(request, operation_id):
                     print(f"❌ ERREUR: {e}")
                     messages.error(request, "Date invalide")
             
-            return redirect('operation_detail', operation_id=operation.id)
+            return redirect('dashboard')
 
         # VALIDATION DE LA RÉALISATION
         elif action == 'valider_realisation':
@@ -578,7 +579,7 @@ def operation_detail(request, operation_id):
                 except ValueError:
                     messages.error(request, "Date invalide")
             
-            return redirect('operation_detail', operation_id=operation.id)
+            return redirect('dashboard')
         
         # CORRECTION DES DATES DE RÉALISATION
         elif action == 'corriger_dates_realisation':
@@ -754,6 +755,22 @@ def operation_detail(request, operation_id):
                 messages.error(request, "Paiement introuvable")
             
             return redirect('operation_detail', operation_id=operation.id)
+        
+        elif action == 'update_commentaires_dashboard':
+            commentaires = request.POST.get('commentaires', '').strip()
+            
+            operation.commentaires = commentaires
+            operation.save()
+            
+            HistoriqueOperation.objects.create(
+                operation=operation,
+                action="Commentaires mis à jour depuis dashboard",
+                utilisateur=request.user
+            )
+            
+            messages.success(request, "✅ Commentaire enregistré")
+            return redirect('dashboard')  # ← Retour au dashboard
+                
         
 
     # ========================================

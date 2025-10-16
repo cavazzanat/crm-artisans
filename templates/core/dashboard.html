@@ -762,6 +762,51 @@
     }
 
     /* ========================================
+   COMMENTAIRES DANS PANNEAU LATÉRAL
+   ======================================== */
+.commentaires-textarea {
+  width: 100%;
+  padding: .65rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: white;
+  color: var(--text);
+  font-family: inherit;
+  font-size: .9rem;
+  resize: vertical;
+  transition: all 0.2s ease;
+  min-height: 100px;
+}
+
+.commentaires-textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+}
+
+.commentaires-textarea::placeholder {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.commentaires-actions {
+  display: flex;
+  gap: .5rem;
+  margin-top: .75rem;
+}
+
+.commentaires-actions .btn {
+  flex: 1;
+}
+
+#commentaires-text:empty::before {
+  content: 'Aucun commentaire';
+  color: var(--muted);
+  font-style: italic;
+  font-size: .85rem;
+}
+
+    /* ========================================
        RESPONSIVE
        ======================================== */
     @media (max-width: 768px){
@@ -938,138 +983,174 @@
     </section>
   </main>
 
-  <!-- PANNEAU LATÉRAL SIMPLIFIÉ -->
-  <div class="side-panel" id="side-panel">
-    <div class="panel-header">
-      <div class="panel-title" id="panel-title">Intervention</div>
-      <div class="panel-subtitle" id="panel-date">-</div>
-      <button class="close-panel" onclick="closeSidePanel()">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/>
-        </svg>
-      </button>
-    </div>
+  <!-- PANNEAU LATÉRAL AVEC COMMENTAIRES -->
+<div class="side-panel" id="side-panel">
+  <div class="panel-header">
+    <div class="panel-title" id="panel-title">Intervention</div>
+    <div class="panel-subtitle" id="panel-date">-</div>
+    <button class="close-panel" onclick="closeSidePanel()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/>
+      </svg>
+    </button>
+  </div>
 
-    <div class="panel-content">
-      <!-- Onglets si plusieurs interventions le même jour -->
-      <div class="operation-tabs" id="operation-tabs"></div>
+  <div class="panel-content">
+    <!-- Onglets si plusieurs interventions le même jour -->
+    <div class="operation-tabs" id="operation-tabs"></div>
 
-      <!-- Détails intervention -->
-      <div class="detail-section">
-        <h4>📋 Intervention</h4>
-        <div class="detail-item">
-          <div class="detail-label">Service</div>
-          <div class="detail-value" id="detail-service">-</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Horaire prévu</div>
-          <div class="detail-value" id="detail-time">-</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Adresse</div>
-          <div class="detail-value" id="detail-address">-</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Statut</div>
-          <div class="detail-value status" id="detail-status">-</div>
-        </div>
+    <!-- Détails intervention -->
+    <div class="detail-section">
+      <h4>📋 Intervention</h4>
+      <div class="detail-item">
+        <div class="detail-label">Service</div>
+        <div class="detail-value" id="detail-service">-</div>
       </div>
-
-      <!-- Détails client -->
-      <div class="detail-section">
-        <h4>👤 Client</h4>
-        <div class="detail-item">
-          <div class="detail-label">Nom</div>
-          <div class="detail-value" id="detail-client">-</div>
-        </div>
-        <div class="detail-item">
-          <div class="detail-label">Téléphone</div>
-          <div class="detail-value">
-            <a href="#" id="detail-phone" style="color:var(--primary); text-decoration:none">-</a>
-          </div>
-        </div>
+      <div class="detail-item">
+        <div class="detail-label">Horaire prévu</div>
+        <div class="detail-value" id="detail-time">-</div>
       </div>
-
-      <!-- ACTIONS SIMPLIFIÉES -->
-      <div class="quick-actions">
-        
-        <!-- ✅ ACTION 1 : VALIDER LA RÉALISATION -->
-        <div id="action-realisation" style="display:none">
-          <div class="quick-action-title">✅ Valider la réalisation</div>
-          <div class="realisation-form">
-            <form id="form-realisation" method="POST" style="display:none">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="valider_realisation">
-              <div class="form-group">
-                <label for="date-realisation">Date de réalisation</label>
-                <input type="datetime-local" id="date-realisation" name="date_realisation" required>
-                <small style="display:block; margin-top:.5rem; color:var(--muted); font-size:.8rem">
-                  💡 Pré-rempli avec la date prévue
-                </small>
-              </div>
-              <div class="realisation-actions">
-                <button type="submit" class="btn success">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
-                  </svg>
-                  Confirmer
-                </button>
-                <button type="button" class="btn" onclick="cancelRealisation()">Annuler</button>
-              </div>
-            </form>
-            <button type="button" class="btn success" id="btn-start-realisation" onclick="startRealisation()" style="width:100%">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
-              </svg>
-              Opération réalisée
-            </button>
-          </div>
-        </div>
-
-        <!-- 🔄 ACTION 2 : REPLANIFIER -->
-        <div id="action-replanifier" style="display:none">
-          <div class="quick-action-title">🔄 Replanifier l'intervention</div>
-          <div class="replanification-form">
-            <form id="form-replanification" method="POST" style="display:none">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="update_planning">
-              <div class="form-group">
-                <label for="date-replanification">Nouvelle date</label>
-                <input type="datetime-local" id="date-replanification" name="date_prevue" required>
-              </div>
-              <div class="realisation-actions">
-                <button type="submit" class="btn warning">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                    <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.6"/>
-                  </svg>
-                  Replanifier
-                </button>
-                <button type="button" class="btn" onclick="cancelReplanification()">Annuler</button>
-              </div>
-            </form>
-            <button type="button" class="btn warning" id="btn-start-replanification" onclick="startReplanification()" style="width:100%">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.6"/>
-              </svg>
-              Replanifier
-            </button>
-          </div>
-        </div>
-
+      <div class="detail-item">
+        <div class="detail-label">Adresse</div>
+        <div class="detail-value" id="detail-address">-</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Statut</div>
+        <div class="detail-value status" id="detail-status">-</div>
       </div>
     </div>
 
-    <!-- Lien vers fiche complète -->
-    <div class="panel-footer">
-      <a href="#" class="btn primary" id="detail-btn-full">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-          <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke="currentColor" stroke-width="1.6"/>
-          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/>
-        </svg>
-        Voir la fiche complète
-      </a>
+    <!-- Détails client -->
+    <div class="detail-section">
+      <h4>👤 Client</h4>
+      <div class="detail-item">
+        <div class="detail-label">Nom</div>
+        <div class="detail-value" id="detail-client">-</div>
+      </div>
+      <div class="detail-item">
+        <div class="detail-label">Téléphone</div>
+        <div class="detail-value">
+          <a href="#" id="detail-phone" style="color:var(--primary); text-decoration:none">-</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ✅ NOUVEAU : SECTION COMMENTAIRES -->
+    <div class="detail-section">
+      <h4>📝 Commentaire / Constat</h4>
+      <form id="form-commentaires" method="POST" style="display:none">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="update_commentaires_dashboard">
+        <textarea 
+          id="commentaires-textarea" 
+          name="commentaires" 
+          class="commentaires-textarea" 
+          rows="4" 
+          placeholder="Ex: Client absent, travaux supplémentaires identifiés, matériel manquant..."
+        ></textarea>
+        <div class="commentaires-actions">
+          <button type="submit" class="btn success">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Enregistrer
+          </button>
+          <button type="button" class="btn" onclick="cancelCommentaires()">Annuler</button>
+        </div>
+      </form>
+      
+      <!-- Affichage commentaire existant ou bouton ajouter -->
+      <div id="commentaires-display">
+        <div id="commentaires-text" style="color:var(--text); font-size:.9rem; line-height:1.5; margin-bottom:.75rem; white-space:pre-wrap"></div>
+        <button type="button" class="btn" id="btn-edit-commentaires" onclick="startEditCommentaires()" style="width:100%">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+          <span id="btn-commentaires-text">Ajouter un commentaire</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ACTIONS SIMPLIFIÉES -->
+    <div class="quick-actions">
+      
+      <!-- ✅ ACTION 1 : VALIDER LA RÉALISATION -->
+      <div id="action-realisation" style="display:none">
+        <div class="quick-action-title">✅ Valider la réalisation</div>
+        <div class="realisation-form">
+          <form id="form-realisation" method="POST" style="display:none">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="valider_realisation">
+            <div class="form-group">
+              <label for="date-realisation">Date de réalisation</label>
+              <input type="datetime-local" id="date-realisation" name="date_realisation" required>
+              <small style="display:block; margin-top:.5rem; color:var(--muted); font-size:.8rem">
+                💡 Pré-rempli avec la date prévue
+              </small>
+            </div>
+            <div class="realisation-actions">
+              <button type="submit" class="btn success">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                Confirmer
+              </button>
+              <button type="button" class="btn" onclick="cancelRealisation()">Annuler</button>
+            </div>
+          </form>
+          <button type="button" class="btn success" id="btn-start-realisation" onclick="startRealisation()" style="width:100%">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Opération réalisée
+          </button>
+        </div>
+      </div>
+
+      <!-- 🔄 ACTION 2 : REPLANIFIER -->
+      <div id="action-replanifier" style="display:none">
+        <div class="quick-action-title">🔄 Replanifier l'intervention</div>
+        <div class="replanification-form">
+          <form id="form-replanification" method="POST" style="display:none">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="update_planning">
+            <div class="form-group">
+              <label for="date-replanification">Nouvelle date</label>
+              <input type="datetime-local" id="date-replanification" name="date_prevue" required>
+            </div>
+            <div class="realisation-actions">
+              <button type="submit" class="btn warning">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.6"/>
+                </svg>
+                Replanifier
+              </button>
+              <button type="button" class="btn" onclick="cancelReplanification()">Annuler</button>
+            </div>
+          </form>
+          <button type="button" class="btn warning" id="btn-start-replanification" onclick="startReplanification()" style="width:100%">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            Replanifier
+          </button>
+        </div>
+      </div>
+
     </div>
   </div>
+
+  <!-- Lien vers fiche complète -->
+  <div class="panel-footer">
+    <a href="#" class="btn primary" id="detail-btn-full">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+        <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      Voir la fiche complète
+    </a>
+  </div>
+</div>
 
   <!-- OVERLAY -->
   <div class="overlay" id="overlay" onclick="closeSidePanel()"></div>
@@ -1425,64 +1506,114 @@
       });
     }
 
-    function updateOperationDetails() {
-      if (!currentOperation) return;
+function updateOperationDetails() {
+  if (!currentOperation) return;
 
-      document.getElementById('detail-service').textContent = currentOperation.service || '-';
-      document.getElementById('detail-time').textContent = currentOperation.time || '-';
-      document.getElementById('detail-address').textContent = currentOperation.address || '-';
-      document.getElementById('detail-client').textContent = currentOperation.client_nom || '-';
-      
-      const phoneLink = document.getElementById('detail-phone');
-      phoneLink.textContent = currentOperation.phone || '-';
-      phoneLink.href = currentOperation.phone ? `tel:${currentOperation.phone}` : '#';
+  document.getElementById('detail-service').textContent = currentOperation.service || '-';
+  document.getElementById('detail-time').textContent = currentOperation.time || '-';
+  document.getElementById('detail-address').textContent = currentOperation.address || '-';
+  document.getElementById('detail-client').textContent = currentOperation.client_nom || '-';
+  
+  const phoneLink = document.getElementById('detail-phone');
+  phoneLink.textContent = currentOperation.phone || '-';
+  phoneLink.href = currentOperation.phone ? `tel:${currentOperation.phone}` : '#';
 
-      // Statut avec badge
-      const statusEl = document.getElementById('detail-status');
-      statusEl.textContent = currentOperation.statut_display || '-';
-      statusEl.className = 'detail-value status';
-      if (currentOperation.color_class) {
-        if (currentOperation.color_class.includes('planifie')) {
-          statusEl.classList.add('planifie');
-        } else if (currentOperation.color_class.includes('attention')) {
-          statusEl.classList.add('attention');
-        }
-      }
-
-      // Lien fiche complète
-      const btnFull = document.getElementById('detail-btn-full');
-      btnFull.href = currentOperation.url || '#';
-
-      // Définir les actions URL pour les formulaires
-      const formRealisation = document.getElementById('form-realisation');
-      const formReplanification = document.getElementById('form-replanification');
-      if (formRealisation && currentOperation.url) {
-        formRealisation.action = currentOperation.url;
-      }
-      if (formReplanification && currentOperation.url) {
-        formReplanification.action = currentOperation.url;
-      }
-
-      // ========================================
-      // LOGIQUE D'AFFICHAGE DES ACTIONS
-      // ========================================
-      const actionRealisation = document.getElementById('action-realisation');
-      const actionReplanifier = document.getElementById('action-replanifier');
-
-      // Cacher tout par défaut
-      actionRealisation.style.display = 'none';
-      actionReplanifier.style.display = 'none';
-
-      // Si statut planifié
-      if (currentOperation.statut === 'planifie') {
-        actionRealisation.style.display = 'block';
-        actionReplanifier.style.display = 'block';
-      }
-      // Si statut à planifier
-      else if (currentOperation.statut === 'a_planifier') {
-        actionReplanifier.style.display = 'block';
-      }
+  // Statut avec badge
+  const statusEl = document.getElementById('detail-status');
+  statusEl.textContent = currentOperation.statut_display || '-';
+  statusEl.className = 'detail-value status';
+  if (currentOperation.color_class) {
+    if (currentOperation.color_class.includes('planifie')) {
+      statusEl.classList.add('planifie');
+    } else if (currentOperation.color_class.includes('attention')) {
+      statusEl.classList.add('attention');
     }
+  }
+
+  // Lien fiche complète
+  const btnFull = document.getElementById('detail-btn-full');
+  btnFull.href = currentOperation.url || '#';
+
+  // Définir les actions URL pour les formulaires
+  const formRealisation = document.getElementById('form-realisation');
+  const formReplanification = document.getElementById('form-replanification');
+  const formCommentaires = document.getElementById('form-commentaires');
+  
+  if (formRealisation && currentOperation.url) {
+    formRealisation.action = currentOperation.url;
+  }
+  if (formReplanification && currentOperation.url) {
+    formReplanification.action = currentOperation.url;
+  }
+  if (formCommentaires && currentOperation.url) {
+    formCommentaires.action = currentOperation.url;
+  }
+
+  // ✅ NOUVEAU : Afficher les commentaires existants
+  const commentairesText = document.getElementById('commentaires-text');
+  const btnCommentairesText = document.getElementById('btn-commentaires-text');
+  
+  if (currentOperation.commentaires && currentOperation.commentaires.trim()) {
+    commentairesText.textContent = currentOperation.commentaires;
+    btnCommentairesText.textContent = 'Modifier le commentaire';
+  } else {
+    commentairesText.textContent = '';
+    btnCommentairesText.textContent = 'Ajouter un commentaire';
+  }
+
+  // Logique d'affichage des actions
+  const actionRealisation = document.getElementById('action-realisation');
+  const actionReplanifier = document.getElementById('action-replanifier');
+
+  actionRealisation.style.display = 'none';
+  actionReplanifier.style.display = 'none';
+
+  if (currentOperation.statut === 'planifie') {
+    actionRealisation.style.display = 'block';
+    actionReplanifier.style.display = 'block';
+  } else if (currentOperation.statut === 'a_planifier') {
+    actionReplanifier.style.display = 'block';
+  }
+}
+
+// ========================================
+// GESTION DES COMMENTAIRES
+// ========================================
+function startEditCommentaires() {
+  document.getElementById('commentaires-display').style.display = 'none';
+  document.getElementById('form-commentaires').style.display = 'block';
+  
+  // Pré-remplir avec le commentaire existant
+  const textarea = document.getElementById('commentaires-textarea');
+  if (currentOperation && currentOperation.commentaires) {
+    textarea.value = currentOperation.commentaires;
+  } else {
+    textarea.value = '';
+  }
+  
+  // Focus sur le textarea
+  textarea.focus();
+}
+
+function cancelCommentaires() {
+  document.getElementById('commentaires-display').style.display = 'block';
+  document.getElementById('form-commentaires').style.display = 'none';
+}
+
+// Reset lors de la fermeture du panneau
+function closeSidePanel() {
+  document.getElementById('side-panel').classList.remove('open');
+  document.getElementById('overlay').style.display = 'none';
+  document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
+  selectedDate = null;
+  selectedDayEvents = [];
+  currentOperation = null;
+  
+  // Reset formulaires
+  cancelRealisation();
+  cancelReplanification();
+  cancelCommentaires();  // ← Ajouté
+}
 
     // ========================================
     // ACTIONS SIMPLIFIÉES
