@@ -5,210 +5,504 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard - CRM Artisans</title>
 
-    {% load static %}
+  {% load static %}
   <link rel="icon" type="image/png" href="{% static 'core/image/favicon.png' %}">
   <style>
+    /* ========================================
+       VARIABLES - ALIGNÉES SUR LA DA EXISTANTE
+       ======================================== */
     :root{
-      --bg: #0b1220;
-      --card: #0f172a;
-      --muted: #94a3b8;
-      --text: #e2e8f0;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --muted: #64748b;
+      --text: #1e293b;
       --primary: #6366f1;
       --success: #22c55e;
       --warning: #f59e0b;
       --danger: #ef4444;
       --accent: #8b5cf6;
+      --border: #e2e8f0;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
       --ring: rgba(99,102,241,.35);
-      --border: rgba(148,163,184,.15);
-      --shadow: 0 10px 25px rgba(2,6,23,.3), 0 1px 0 rgba(255,255,255,.03) inset;
-
-      --bg-light: #f8fafc;
-      --card-light: #ffffff;
-      --text-light: #1e293b;
-      --muted-light: #64748b;
-      --border-light: rgba(30,41,59,.12);
-      --shadow-light: 0 10px 25px rgba(30,41,59,.08), 0 1px 0 rgba(255,255,255,.8) inset;
     }
+
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.12), transparent 40%),
-                  radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.12), transparent 40%),
-                  var(--bg);
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
+      background: var(--bg);
       color: var(--text);
-      line-height: 1.5;
+      line-height: 1.6;
+      padding-bottom: 3rem;
     }
 
-    /* Header */
+    /* ========================================
+       HEADER (IDENTIQUE AU RESTE)
+       ======================================== */
     .header{
-      position: sticky; top: 0; z-index: 40;
+      position: sticky;
+      top: 0;
+      z-index: 40;
       backdrop-filter: saturate(180%) blur(8px);
-      background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(15,23,42,.65));
+      background: linear-gradient(180deg, rgba(255,255,255,.95), rgba(255,255,255,.85));
       border-bottom: 1px solid var(--border);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
     }
     .header-inner{
-      max-width: 1280px; margin: 0 auto; padding: .85rem 1rem;
-      display:flex; align-items:center; gap:1rem; justify-content: space-between;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: .85rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      justify-content: space-between;
     }
-    .brand{ display:flex; align-items:center; gap:.75rem; font-weight:700; letter-spacing:.2px }
-    .logo{ width:34px; height:34px; border-radius:10px; background:linear-gradient(145deg, var(--primary), var(--accent)); box-shadow: var(--shadow); display:grid; place-items:center; }
-    .logo svg{ width:18px; height:18px; color:white }
-
-    .nav{ display:flex; gap:.25rem; align-items:center }
-    .nav a{ text-decoration:none; color:var(--muted); padding:.55rem .8rem; border-radius:10px; border:1px solid transparent }
-    .nav a:hover{ color:var(--text); background:rgba(148,163,184,.08); border-color:var(--border) }
-    .nav a.active{ color:white; background:rgba(99,102,241,.18); border-color: rgba(99,102,241,.35); box-shadow: 0 0 0 2px var(--ring) }
-
-    .user{ display:flex; align-items:center; gap:.75rem; color:var(--muted); font-size:.95rem }
-    .user form button{ background:none; border:none; color:var(--muted); cursor:pointer; text-decoration:underline; font:inherit }
-
-    /* Main container */
-    .container{ max-width:1280px; margin: 2rem auto; padding: 0 1rem }
-    .page-title{ font-size: clamp(1.4rem, 2.4vw, 2rem); font-weight:800; letter-spacing:.2px; margin-bottom: 1.25rem }
-    .subtitle{ color:var(--muted); margin-bottom:1.75rem }
-
-    /* KPI layout */
-    .kpi-grid{ display:grid; gap:1rem; grid-template-columns: repeat(12, 1fr); margin-bottom:2rem }
-    .kpi{ background: linear-gradient(180deg, rgba(2,6,23,.6), rgba(2,6,23,.4)); border:1px solid var(--border); border-radius:16px; padding:1.1rem; box-shadow: var(--shadow); position:relative; overflow:hidden }
-    .kpi:after{ content:""; position:absolute; inset:auto -30% -40% auto; width:180px; height:180px; background: radial-gradient(closest-side, rgba(99,102,241,.18), transparent 70%); transform: rotate(25deg) }
-    .kpi h3{ font-size:.8rem; text-transform:uppercase; letter-spacing:.12rem; color:var(--muted); margin:0 0 .45rem }
-    .kpi .value{ font-size: clamp(1.6rem, 2.5vw, 2.2rem); font-weight:800 }
-
-    .kpi.ca{ grid-column: span 6 }
-    .kpi.clients{ grid-column: span 6 }
-    .kpi.devis, .kpi.planifier, .kpi.paiement{ grid-column: span 4 }
-
-    .accent-success{ box-shadow: inset 0 0 0 1px rgba(34,197,94,.25) }
-    .accent-info{ box-shadow: inset 0 0 0 1px rgba(99,102,241,.25) }
-    .accent-warn{ box-shadow: inset 0 0 0 1px rgba(245,158,11,.25) }
-
-    /* Sections */
-    .section{ background: linear-gradient(180deg, rgba(2,6,23,.6), rgba(2,6,23,.4)); border:1px solid var(--border); border-radius:16px; padding:1rem; box-shadow: var(--shadow); margin-top:1.25rem }
-    .section-header{ display:flex; align-items:center; justify-content:space-between; gap:1rem; padding: .4rem .35rem .9rem; border-bottom:1px dashed var(--border) }
-    .section-title{ display:flex; gap:.6rem; align-items:center; font-size:1.05rem; font-weight:700 }
-    .section-title .badge{ font-size:.75rem; color:var(--muted); padding:.15rem .5rem; border-radius:999px; border:1px solid var(--border); background: rgba(148,163,184,.08) }
-
-    .toolbar{ display:flex; gap:.5rem; flex-wrap:wrap; align-items:center }
-    .btn{ display:inline-flex; align-items:center; gap:.5rem; padding:.55rem .8rem; border-radius:10px; border:1px solid var(--border); background:rgba(148,163,184,.07); color:var(--text); text-decoration:none; cursor:pointer; font-size:.9rem }
-    .btn:hover{ background:rgba(148,163,184,.12) }
-    .btn.primary{ background:linear-gradient(180deg, rgba(99,102,241,.18), rgba(99,102,241,.12)); border-color: rgba(99,102,241,.35); color:white }
-
-    /* Calendar */
-    .calendar-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:1.5rem; flex-wrap:wrap; gap:1rem }
-    .calendar-title{ font-size:1.1rem; font-weight:600 }
-    .nav-btn{ padding:.5rem; border:1px solid var(--border); background:rgba(148,163,184,.07); color:var(--text); cursor:pointer; border-radius:8px }
-    .nav-btn:hover{ background:rgba(148,163,184,.12) }
-
-    .view-buttons{ display:flex; gap:.25rem }
-    .view-btn{ padding:.4rem .7rem; border:1px solid var(--border); background:rgba(148,163,184,.07); color:var(--text); cursor:pointer; border-radius:6px; font-size:.85rem }
-    .view-btn:hover{ background:rgba(148,163,184,.12) }
-    .view-btn.active{ background:var(--primary); color:white; border-color:var(--primary) }
-
-    /* Vue Semaine + Mois */
-    .calendar-view{ margin-top:1rem }
-    .week-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:.5rem }
-    .day-card{
-      background:rgba(2,6,23,.4);
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:.75rem;
-      min-height:120px;
-      cursor: pointer;
+    .brand{
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      font-weight: 700;
+      letter-spacing: .2px;
+      color: var(--text);
     }
-    .day-card.today{ border-color:var(--primary); background:rgba(99,102,241,.1) }
-    .day-card.selected{ border-color:var(--warning); box-shadow: 0 0 0 2px rgba(245,158,11,.3) }
-    .day-header{ font-weight:600; margin-bottom:.5rem; font-size:.9rem }
-    .day-number{ color:var(--muted); font-size:.8rem; margin-bottom:.5rem }
+    .logo{
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, var(--primary), var(--accent));
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+    }
+    .logo svg{ width: 18px; height: 18px; color: white }
 
-    .event-item{
-      border-radius:6px;
-      padding:.3rem;
-      margin:.2rem 0;
-      font-size:.75rem;
-      cursor:pointer;
-      line-height:1.2;
+    .nav{
+      display: flex;
+      gap: .25rem;
+      align-items: center;
+    }
+    .nav a{
+      text-decoration: none;
+      color: var(--muted);
+      padding: .55rem .8rem;
+      border-radius: 10px;
+      border: 1px solid transparent;
       transition: all 0.2s ease;
-      border:1px solid;
     }
-    .event-item:hover{ transform: translateY(-1px) }
+    .nav a:hover{
+      color: var(--text);
+      background: rgba(148,163,184,.08);
+      border-color: var(--border);
+    }
+    .nav a.active{
+      color: white;
+      background: rgba(99,102,241,.18);
+      border-color: rgba(99,102,241,.35);
+      box-shadow: 0 0 0 2px var(--ring);
+    }
 
-    /* Couleurs par statut - Logique simplifiée */
-    .event-item.event-planifie{
-      /* Vert : opération planifiée future */
-      background:rgba(34,197,94,.2);
-      border-color:rgba(34,197,94,.3);
+    .user{
+      display: flex;
+      align-items: center;
+      gap: .75rem;
+      color: var(--muted);
+      font-size: .95rem;
     }
-    .event-item.event-planifie:hover{ background:rgba(34,197,94,.3) }
+    .user form button{
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: underline;
+      font: inherit;
+      padding: 0;
+    }
+    .user form button:hover{ color: var(--text); }
 
-    .event-item.event-attention{
-      /* Rouge : opération passée à valider */
-      background:rgba(239,68,68,.2);
-      border-color:rgba(239,68,68,.3);
-      animation: pulse 2s infinite;
+    /* ========================================
+       LAYOUT PRINCIPAL
+       ======================================== */
+    .container{
+      max-width: 1280px;
+      margin: 2rem auto;
+      padding: 0 1rem;
     }
-    .event-item.event-attention:hover{ background:rgba(239,68,68,.3) }
+    .page-title{
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin-bottom: .5rem;
+      color: var(--text);
+    }
+    .subtitle{
+      color: var(--muted);
+      margin-bottom: 1.75rem;
+      font-size: .95rem;
+    }
 
-    .event-item.event-pending{
-      /* Gris : opération à replanifier/traiter */
-      background:rgba(148,163,184,.15);
-      border-color:rgba(148,163,184,.3);
-      border-style: dashed;
+    /* ========================================
+       KPI - STYLE CARDS
+       ======================================== */
+    .kpi-grid{
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      margin-bottom: 2rem;
     }
-    .event-item.event-pending:hover{ background:rgba(148,163,184,.25) }
+    .kpi{
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+      transition: all 0.2s ease;
+    }
+    .kpi:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    }
+    .kpi h3{
+      font-size: .8rem;
+      text-transform: uppercase;
+      letter-spacing: .08rem;
+      color: var(--muted);
+      margin: 0 0 .5rem;
+      font-weight: 600;
+    }
+    .kpi .value{
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .kpi.success .value{ color: var(--success); }
+    .kpi.primary .value{ color: var(--primary); }
+    .kpi.warning .value{ color: var(--warning); }
 
-    /* Animation pulse pour les opérations qui nécessitent attention */
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.7; }
-      100% { opacity: 1; }
+    /* ========================================
+       SECTIONS (STYLE UNIFIÉ)
+       ======================================== */
+    .section{
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1.5rem;
     }
-    /* Vue Mois */
-    .month-grid{
-      display:grid;
+    .section-header{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+    .section-title{
+      display: flex;
+      gap: .6rem;
+      align-items: center;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .section-title .badge{
+      font-size: .75rem;
+      color: var(--muted);
+      padding: .2rem .5rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(148,163,184,.08);
+      font-weight: 600;
+    }
+
+    /* ========================================
+       BOUTONS (STYLE UNIFIÉ)
+       ======================================== */
+    .btn{
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .55rem .8rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      text-decoration: none;
+      cursor: pointer;
+      font-size: .9rem;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .btn:hover{
+      background: #f8fafc;
+      border-color: #cbd5e1;
+      transform: translateY(-1px);
+    }
+    .btn.primary{
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+    .btn.primary:hover{ background: #4f46e5; }
+    .btn.success{
+      background: var(--success);
+      border-color: var(--success);
+      color: white;
+    }
+    .btn.success:hover{ background: #16a34a; }
+    .btn.warning{
+      background: var(--warning);
+      border-color: var(--warning);
+      color: white;
+    }
+    .btn.warning:hover{ background: #d97706; }
+
+    /* ========================================
+       CALENDRIER - NAVIGATION
+       ======================================== */
+    .calendar-nav{
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .calendar-title{
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .calendar-controls{
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .nav-buttons{
+      display: flex;
+      gap: .5rem;
+    }
+    .nav-btn{
+      padding: .5rem .75rem;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: .85rem;
+      transition: all 0.2s;
+    }
+    .nav-btn:hover{
+      background: #f8fafc;
+      border-color: #cbd5e1;
+    }
+
+    .view-buttons{
+      display: flex;
+      gap: .25rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .25rem;
+      background: white;
+    }
+    .view-btn{
+      padding: .4rem .7rem;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: .85rem;
+      transition: all 0.2s;
+    }
+    .view-btn:hover{
+      background: rgba(148,163,184,.08);
+      color: var(--text);
+    }
+    .view-btn.active{
+      background: var(--primary);
+      color: white;
+    }
+
+    /* ========================================
+       CALENDRIER - VUE SEMAINE
+       ======================================== */
+    .week-grid{
+      display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap:.25rem;
-      margin-top:1rem;
+      gap: .75rem;
     }
-    .month-header-row{ display: contents; }
+    .day-card{
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: .75rem;
+      min-height: 140px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .day-card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,.1);
+    }
+    .day-card.today{
+      border-color: var(--primary);
+      background: rgba(99,102,241,.05);
+    }
+    .day-card.selected{
+      border-color: var(--warning);
+      box-shadow: 0 0 0 2px rgba(245,158,11,.3);
+    }
+    .day-header{
+      font-weight: 600;
+      margin-bottom: .5rem;
+      font-size: .9rem;
+      color: var(--text);
+    }
+    .day-number{
+      color: var(--muted);
+      font-size: .8rem;
+      margin-bottom: .75rem;
+    }
+
+    /* ========================================
+       ÉVÉNEMENTS - CODE COULEUR SIMPLIFIÉ
+       ======================================== */
+    .event-item{
+      border-radius: 6px;
+      padding: .4rem .5rem;
+      margin: .3rem 0;
+      font-size: .75rem;
+      cursor: pointer;
+      line-height: 1.3;
+      transition: all 0.2s ease;
+      border: 1px solid;
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+    }
+    .event-item:hover{
+      transform: translateX(2px);
+    }
+
+    /* 🟢 Vert : Planifié futur */
+    .event-item.event-planifie{
+      background: rgba(34,197,94,.1);
+      border-color: rgba(34,197,94,.3);
+      color: #166534;
+    }
+    .event-item.event-planifie:hover{
+      background: rgba(34,197,94,.2);
+    }
+
+    /* 🔴 Rouge : Passé, à valider */
+    .event-item.event-attention{
+      background: rgba(239,68,68,.1);
+      border-color: rgba(239,68,68,.3);
+      color: #991b1b;
+      animation: pulse-attention 2s infinite;
+    }
+    .event-item.event-attention:hover{
+      background: rgba(239,68,68,.2);
+    }
+
+    /* ⚪ Gris : À replanifier */
+    .event-item.event-pending{
+      background: rgba(148,163,184,.08);
+      border-color: rgba(148,163,184,.3);
+      border-style: dashed;
+      color: var(--muted);
+    }
+    .event-item.event-pending:hover{
+      background: rgba(148,163,184,.15);
+    }
+
+    @keyframes pulse-attention {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    /* Icône de statut dans les événements */
+    .event-status-icon{
+      flex-shrink: 0;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ========================================
+       CALENDRIER - VUE MOIS
+       ======================================== */
+    .month-grid{
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: .5rem;
+    }
     .month-day-header{
-      background: rgba(148,163,184,.1);
+      background: #f8fafc;
       color: var(--muted);
       font-size: .75rem;
       font-weight: 600;
       text-align: center;
       padding: .5rem;
-      border-radius: 6px 6px 0 0;
+      border-radius: 6px;
       text-transform: uppercase;
       letter-spacing: .05rem;
     }
     .month-day-cell{
-      background: rgba(2,6,23,.3);
+      background: white;
       border: 1px solid var(--border);
       border-radius: 6px;
-      padding: .4rem;
-      min-height: 80px;
+      padding: .5rem;
+      min-height: 90px;
       cursor: pointer;
-      position: relative;
+      transition: all 0.2s;
     }
-    .month-day-cell:hover{ background: rgba(2,6,23,.5); }
-    .month-day-cell.today{ border-color: var(--primary); background: rgba(99,102,241,.1); }
-    .month-day-cell.other-month{ opacity: 0.4; }
-    .month-day-cell.selected{ border-color: var(--warning); box-shadow: 0 0 0 2px rgba(245,158,11,.3); }
-    .month-day-number{ font-weight: 600; font-size: .8rem; margin-bottom: .25rem; }
-    .month-events{ display: flex; flex-direction: column; gap: .15rem; }
+    .month-day-cell:hover{
+      transform: translateY(-1px);
+      box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    .month-day-cell.today{
+      border-color: var(--primary);
+      background: rgba(99,102,241,.05);
+    }
+    .month-day-cell.other-month{
+      opacity: 0.4;
+    }
+    .month-day-cell.selected{
+      border-color: var(--warning);
+      box-shadow: 0 0 0 2px rgba(245,158,11,.3);
+    }
+    .month-day-number{
+      font-weight: 600;
+      font-size: .85rem;
+      margin-bottom: .5rem;
+      color: var(--text);
+    }
+    .month-events{
+      display: flex;
+      flex-direction: column;
+      gap: .2rem;
+    }
     .month-event-item{
-      background: rgba(99,102,241,.3);
-      border: 1px solid rgba(99,102,241,.4);
+      background: rgba(99,102,241,.15);
+      border: 1px solid rgba(99,102,241,.3);
       border-radius: 4px;
-      padding: .15rem .25rem;
+      padding: .2rem .3rem;
       font-size: .65rem;
-      line-height: 1.1;
+      line-height: 1.2;
       cursor: pointer;
       transition: all 0.2s ease;
+      color: var(--text);
     }
-    .month-event-item:hover{ background: rgba(99,102,241,.4); transform: translateY(-1px); }
+    .month-event-item:hover{
+      background: rgba(99,102,241,.25);
+      transform: translateY(-1px);
+    }
     .month-event-more{
       color: var(--muted);
       font-size: .6rem;
@@ -216,163 +510,298 @@
       cursor: pointer;
       padding: .1rem .25rem;
     }
-    .month-event-more:hover{ color: var(--text); }
+    .month-event-more:hover{
+      color: var(--text);
+    }
 
-    /* Panneau latéral */
+    /* ========================================
+       PANNEAU LATÉRAL - REFONTE COMPLÈTE
+       ======================================== */
     .side-panel{
       position: fixed;
       top: 0;
-      right: -400px;
-      width: 400px;
+      right: -450px;
+      width: 450px;
       height: 100vh;
-      background: linear-gradient(180deg, rgba(2,6,23,.95), rgba(2,6,23,.9));
+      background: white;
       border-left: 1px solid var(--border);
-      box-shadow: -10px 0 25px rgba(0,0,0,.2);
+      box-shadow: -10px 0 25px rgba(0,0,0,.1);
       z-index: 1000;
       transition: right 0.3s ease;
       overflow-y: auto;
-      backdrop-filter: blur(10px);
     }
-    .side-panel.open{ right: 0 }
+    .side-panel.open{
+      right: 0;
+    }
     .panel-header{
-      padding: 1.5rem 1.5rem 1rem;
+      padding: 1.5rem;
       border-bottom: 1px solid var(--border);
-      position: sticky; top: 0;
-      background: rgba(2,6,23,.9);
-      backdrop-filter: blur(10px);
+      position: sticky;
+      top: 0;
+      background: white;
+      z-index: 10;
     }
-    .panel-title{ font-size: 1.1rem; font-weight: 700; margin-bottom: .5rem; color: var(--text); }
-    .panel-subtitle{ color: var(--muted); font-size: .9rem; }
+    .panel-title{
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: .25rem;
+      color: var(--text);
+    }
+    .panel-subtitle{
+      color: var(--muted);
+      font-size: .9rem;
+    }
     .close-panel{
-      position: absolute; top: 1rem; right: 1rem;
-      background: none; border: none; color: var(--muted);
-      cursor: pointer; padding: .5rem; border-radius: 6px;
+      position: absolute;
+      top: 1.25rem;
+      right: 1.25rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      padding: .5rem;
+      border-radius: 6px;
+      transition: all 0.2s;
     }
-    .close-panel:hover{ background: rgba(148,163,184,.1); color: var(--text) }
-    .panel-content{ padding: 1.5rem; }
+    .close-panel:hover{
+      background: rgba(148,163,184,.1);
+      color: var(--text);
+    }
+    .panel-content{
+      padding: 1.5rem;
+    }
 
-    .operation-tabs{ display: flex; gap: .5rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-    .operation-tab{ padding: .4rem .8rem; background: rgba(148,163,184,.07); border: 1px solid var(--border); border-radius: 6px; font-size: .8rem; cursor: pointer; color: var(--muted); transition: all 0.2s ease; }
-    .operation-tab.active{ background: var(--primary); border-color: var(--primary); color: white; }
+    /* Onglets interventions */
+    .operation-tabs{
+      display: flex;
+      gap: .5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: .75rem;
+    }
+    .operation-tab{
+      padding: .5rem .75rem;
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: .85rem;
+      cursor: pointer;
+      color: var(--muted);
+      transition: all 0.2s ease;
+    }
+    .operation-tab:hover{
+      background: #f8fafc;
+      color: var(--text);
+    }
+    .operation-tab.active{
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
 
-    .detail-section{ margin-bottom: 1.5rem; }
-    .detail-section h4{ color: var(--text); font-size: .9rem; margin-bottom: .75rem; text-transform: uppercase; letter-spacing: .05rem; font-weight: 600; }
-    .detail-item{ margin-bottom: .5rem; padding: .5rem 0; }
-    .detail-label{ color: var(--muted); font-size: .8rem; margin-bottom: .25rem; }
-    .detail-value{ color: var(--text); font-size: .9rem; }
+    /* Détails opération */
+    .detail-section{
+      margin-bottom: 1.5rem;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    .detail-section h4{
+      color: var(--text);
+      font-size: .85rem;
+      margin-bottom: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .05rem;
+      font-weight: 600;
+    }
+    .detail-item{
+      margin-bottom: .75rem;
+    }
+    .detail-item:last-child{
+      margin-bottom: 0;
+    }
+    .detail-label{
+      color: var(--muted);
+      font-size: .8rem;
+      margin-bottom: .25rem;
+      font-weight: 500;
+    }
+    .detail-value{
+      color: var(--text);
+      font-size: .95rem;
+      font-weight: 500;
+    }
+    .detail-value.status{
+      display: inline-flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .3rem .6rem;
+      border-radius: 12px;
+      font-size: .85rem;
+      border: 1px solid;
+    }
+    .detail-value.status.planifie{
+      background: rgba(34,197,94,.1);
+      border-color: rgba(34,197,94,.3);
+      color: #166534;
+    }
+    .detail-value.status.attention{
+      background: rgba(239,68,68,.1);
+      border-color: rgba(239,68,68,.3);
+      color: #991b1b;
+    }
 
-    .client-actions{ display: flex; gap: .75rem; margin-top: 1.5rem; flex-wrap: wrap; }
-    .action-btn{
-      flex: 1; padding: .75rem 1rem; border: 1px solid var(--border); border-radius: 8px;
-      background: rgba(148,163,184,.07); color: var(--text); text-decoration: none; text-align: center;
-      font-size: .85rem; cursor: pointer; transition: all 0.2s ease; display: flex; align-items: center; justify-content: center; gap: .5rem;
+    /* ========================================
+       ACTIONS SIMPLIFIÉES (NOUVEAU)
+       ======================================== */
+    .quick-actions{
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
     }
-    .action-btn:hover{ background: rgba(148,163,184,.12); transform: translateY(-1px); }
-    .action-btn.success{ background: var(--success); border-color: var(--success); color: white; }
-    .action-btn.primary{ background: var(--primary); border-color: var(--primary); color: white; }
+    .quick-action-title{
+      font-size: .9rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: .5rem;
+    }
 
-    /* Contrôles de changement de statut */
-    .status-change-controls{ display: flex; flex-direction: column; gap: .75rem; }
-    .status-select{ 
-      width: 100%; padding: .5rem .7rem; border-radius: 8px; 
-      border: 1px solid var(--border); background: rgba(2,6,23,.35); 
-      color: var(--text); font-size: .9rem;
+    /* Formulaire réalisation */
+    .realisation-form{
+      background: rgba(34,197,94,.05);
+      border: 1px solid rgba(34,197,94,.2);
+      border-radius: 8px;
+      padding: 1rem;
     }
-    .status-select:focus{ 
-      outline: none; box-shadow: 0 0 0 2px var(--ring); 
-      border-color: rgba(99,102,241,.35);
+    .realisation-form .form-group{
+      margin-bottom: .75rem;
     }
-    .date-inputs{ display: flex; flex-direction: column; gap: .5rem; }
-    .date-input{ 
-      width: 100%; padding: .5rem .7rem; border-radius: 8px; 
-      border: 1px solid var(--border); background: rgba(2,6,23,.35); 
-      color: var(--text); font-size: .85rem;
+    .realisation-form label{
+      display: block;
+      font-size: .85rem;
+      color: var(--text);
+      margin-bottom: .5rem;
+      font-weight: 500;
     }
-    .date-input:focus{ 
-      outline: none; box-shadow: 0 0 0 2px var(--ring); 
-      border-color: rgba(99,102,241,.35);
+    .realisation-form input[type="datetime-local"]{
+      width: 100%;
+      padding: .55rem .7rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      font-size: .9rem;
+      font-family: inherit;
     }
-    .status-actions{ display: flex; gap: .5rem; justify-content: flex-end; }
-    .status-actions .action-btn{ flex: 0 0 auto; padding: .5rem .75rem; font-size: .85rem; }
+    .realisation-form input[type="datetime-local"]:focus{
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(34,197,94,.2);
+      border-color: var(--success);
+    }
+    .realisation-actions{
+      display: flex;
+      gap: .5rem;
+      margin-top: .75rem;
+    }
+    .realisation-actions .btn{
+      flex: 1;
+    }
 
-    /* Table */
-    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border) }
-    table{ width:100%; border-collapse: collapse; min-width: 980px }
-    thead th{
-      position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px);
-      color:var(--muted); text-transform:uppercase; letter-spacing:.08rem;
-      font-size:.75rem; text-align:left; padding:.9rem .85rem;
-      border-bottom:1px solid var(--border)
+    /* Replanification */
+    .replanification-form{
+      background: rgba(245,158,11,.05);
+      border: 1px solid rgba(245,158,11,.2);
+      border-radius: 8px;
+      padding: 1rem;
     }
-    tbody td{ padding:.9rem .85rem; border-bottom:1px dashed var(--border); vertical-align: top }
-    tbody tr:hover{ background: rgba(148,163,184,.05) }
-    .chip{ display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .55rem; border-radius:999px; font-size:.78rem; border:1px solid var(--border); color: var(--muted) }
-    .btn-view{ display:inline-flex; align-items:center; gap:.45rem; padding:.45rem .7rem; border-radius:8px; border:1px solid rgba(99,102,241,.35); background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem }
-    .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
+    .replanification-form input[type="datetime-local"]{
+      width: 100%;
+      padding: .55rem .7rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--text);
+      font-size: .9rem;
+      font-family: inherit;
+    }
+    .replanification-form input[type="datetime-local"]:focus{
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(245,158,11,.2);
+      border-color: var(--warning);
+    }
 
-    /* Responsive */
+    /* Lien vers fiche complète */
+    .panel-footer{
+      padding: 1.5rem;
+      border-top: 1px solid var(--border);
+      background: #f8fafc;
+    }
+    .panel-footer .btn{
+      width: 100%;
+      justify-content: center;
+    }
+
+    /* ========================================
+       OVERLAY
+       ======================================== */
+    .overlay{
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,.3);
+      z-index: 999;
+      backdrop-filter: blur(2px);
+    }
+
+    /* ========================================
+       RESPONSIVE
+       ======================================== */
     @media (max-width: 768px){
-      .kpi.ca, .kpi.clients, .kpi.devis, .kpi.planifier, .kpi.paiement{ grid-column: 1 / -1 }
-      .week-grid{ grid-template-columns: 1fr; gap:.3rem }
-      .month-grid{ grid-template-columns: repeat(7, 1fr); gap:.15rem }
-      .month-day-cell{ min-height: 60px; padding: .25rem }
-      .month-event-item{ font-size: .6rem; padding: .1rem .2rem }
-      .calendar-nav{ flex-direction:column; align-items:flex-start }
-      .side-panel{ width: 100%; right: -100% }
-      .table-wrap{ border:none }
-      table{ display:block }
-      thead{ display:none }
-      tbody{ display:grid; gap:.75rem }
-      tbody tr{ display:grid; gap:.4rem; border:1px solid var(--border); border-radius:12px; padding:.8rem; background: rgba(2,6,23,.5) }
-      tbody td{ padding:.15rem 0; border:none }
-    }
-
-    /* Light mode */
-    @media (prefers-color-scheme: light){
-      :root{
-        --bg: var(--bg-light);
-        --card: var(--card-light);
-        --text: var(--text-light);
-        --muted: var(--muted-light);
-        --border: var(--border-light);
-        --shadow: var(--shadow-light);
+      .kpi-grid{
+        grid-template-columns: 1fr;
       }
-      body{
-        background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.05), transparent 40%),
-                    radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.05), transparent 40%),
-                    var(--bg);
+      .week-grid{
+        grid-template-columns: 1fr;
+        gap: .5rem;
       }
-      .header{
-        background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.8));
-        backdrop-filter: saturate(180%) blur(8px);
+      .month-grid{
+        gap: .25rem;
       }
-      .kpi, .section{ background: var(--card); border: 1px solid var(--border); box-shadow: var(--shadow); }
-      .day-card, .month-day-cell{ background: var(--card) }
-      .day-card.today, .month-day-cell.today{ border-color:var(--primary); background:rgba(99,102,241,.05) }
-      .side-panel{ background: rgba(255,255,255,.98) }
-      .nav a.active, .view-btn.active{
-        color: var(--primary);
-        background: rgba(99,102,241,.08);
-        border-color: rgba(99,102,241,.2);
+      .month-day-cell{
+        min-height: 70px;
+        padding: .35rem;
       }
-      .btn.primary{
-        background: rgba(99,102,241,.1);
-        border-color: rgba(99,102,241,.2);
-        color: var(--primary);
+      .month-event-item{
+        font-size: .6rem;
+        padding: .15rem .25rem;
       }
-      .status-select, .date-input{ 
-        background: #fff; 
-        border-color: var(--border); 
-        color: var(--text) 
+      .calendar-nav{
+        flex-direction: column;
+        align-items: flex-start;
       }
-      .month-day-header{ background: rgba(148,163,184,.05); }
-      .month-day-cell{ background: var(--card); }
-      .month-event-item{ background: rgba(99,102,241,.1); border-color: rgba(99,102,241,.2); }
+      .calendar-controls{
+        width: 100%;
+        justify-content: space-between;
+      }
+      .side-panel{
+        width: 100%;
+        right: -100%;
+      }
     }
   </style>
 </head>
 <body>
   {% csrf_token %}
+  
+  <!-- HEADER -->
   <header class="header">
     <div class="header-inner">
       <div class="brand">
@@ -389,7 +818,7 @@
         <a href="{% url 'clients' %}">Clients</a>
       </nav>
       <div class="user">
-        <span>Connecté : {{ user.username }}</span>
+        <span>{{ user.username }}</span>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
           <button type="submit">Déconnexion</button>
@@ -398,35 +827,36 @@
     </div>
   </header>
 
+  <!-- MAIN CONTENT -->
   <main class="container">
     <h1 class="page-title">Tableau de bord</h1>
-    <p class="subtitle">Vue d'ensemble des performances et du planning.</p>
+    <p class="subtitle">Vue d'ensemble de vos performances et planning</p>
 
-    <!-- KPI dynamiques -->
+    <!-- KPI -->
     <section class="kpi-grid">
-      <article class="kpi ca accent-success">
+      <article class="kpi success">
         <h3>CA du mois</h3>
         <div class="value">{{ ca_mois|floatformat:0 }} €</div>
       </article>
-      <article class="kpi clients accent-info">
+      <article class="kpi primary">
         <h3>Clients</h3>
         <div class="value">{{ nb_clients }}</div>
       </article>
-      <article class="kpi devis accent-warn">
+      <article class="kpi warning">
         <h3>En attente devis</h3>
         <div class="value">{{ nb_en_attente_devis }}</div>
       </article>
-      <article class="kpi planifier accent-info">
+      <article class="kpi primary">
         <h3>À planifier</h3>
         <div class="value">{{ nb_a_planifier }}</div>
       </article>
-      <article class="kpi paiement accent-warn">
+      <article class="kpi warning">
         <h3>Attente paiement</h3>
         <div class="value">{{ nb_realise }}</div>
       </article>
     </section>
 
-    <!-- Planning -->
+    <!-- PLANNING -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
@@ -436,18 +866,31 @@
           Planning des interventions
           <span class="badge" id="events-count">0</span>
         </h2>
-        <div class="toolbar">
-          <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
+        <div>
+          <a href="{% url 'operation_create' %}" class="btn primary">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+              <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            Nouvelle opération
+          </a>
         </div>
       </div>
 
       <div class="calendar-nav">
         <div class="calendar-title" id="calendar-title">Semaine courante</div>
-        <div style="display:flex; gap:1rem; align-items:center; flex-wrap:wrap">
-          <div>
-            <button class="nav-btn" onclick="navigateCalendar(-1)">← Précédent</button>
-            <button class="nav-btn" onclick="navigateCalendar(0)" style="margin:0 .5rem">Aujourd'hui</button>
-            <button class="nav-btn" onclick="navigateCalendar(1)">Suivant →</button>
+        <div class="calendar-controls">
+          <div class="nav-buttons">
+            <button class="nav-btn" onclick="navigateCalendar(-1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+            <button class="nav-btn" onclick="navigateCalendar(0)">Aujourd'hui</button>
+            <button class="nav-btn" onclick="navigateCalendar(1)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
           </div>
           <div class="view-buttons">
             <button class="view-btn" onclick="setView('day')" id="day-btn">Jour</button>
@@ -458,34 +901,48 @@
       </div>
 
       <div class="calendar-view">
-        <div class="week-grid" id="calendar-grid"><!-- JS --></div>
+        <div class="week-grid" id="calendar-grid"><!-- Généré par JS --></div>
       </div>
     </section>
 
-
-    <!-- Actions rapides (liens Django) -->
+    <!-- ACTIONS RAPIDES -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-            <path d="M4 7h10M4 12h7M4 17h13" stroke="currentColor" stroke-width="1.6"/>
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8Z" stroke="currentColor" stroke-width="1.6"/>
           </svg>
           Actions rapides
         </h2>
       </div>
-      <div class="toolbar">
-        <a href="{% url 'operation_create' %}" class="btn primary">Nouvelle opération</a>
-        <a href="{% url 'clients' %}" class="btn">Voir les clients</a>
-        <a href="{% url 'client_create' %}" class="btn">Nouveau client</a>
+      <div style="display:flex; gap:.75rem; flex-wrap:wrap">
+        <a href="{% url 'operation_create' %}" class="btn primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          Nouvelle opération
+        </a>
+        <a href="{% url 'clients' %}" class="btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+          Voir les clients
+        </a>
+        <a href="{% url 'client_create' %}" class="btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M12.5 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM20 8v6M23 11h-6" stroke="currentColor" stroke-width="1.6"/>
+          </svg>
+          Nouveau client
+        </a>
       </div>
     </section>
   </main>
 
-  <!-- Panneau latéral -->
+  <!-- PANNEAU LATÉRAL SIMPLIFIÉ -->
   <div class="side-panel" id="side-panel">
     <div class="panel-header">
-      <div class="panel-title" id="panel-title">Interventions du jour</div>
-      <div class="panel-subtitle" id="panel-date">Sélectionnez une date</div>
+      <div class="panel-title" id="panel-title">Intervention</div>
+      <div class="panel-subtitle" id="panel-date">-</div>
       <button class="close-panel" onclick="closeSidePanel()">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
           <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/>
@@ -494,102 +951,148 @@
     </div>
 
     <div class="panel-content">
+      <!-- Onglets si plusieurs interventions le même jour -->
       <div class="operation-tabs" id="operation-tabs"></div>
 
-      <div class="operation-details">
-        <div class="detail-section">
-          <h4>Intervention</h4>
-          <div class="detail-item">
-            <div class="detail-label">Service</div>
-            <div class="detail-value" id="detail-service">-</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Horaire</div>
-            <div class="detail-value" id="detail-time">-</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Adresse</div>
-            <div class="detail-value" id="detail-address">-</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Statut actuel</div>
-            <div class="detail-value" id="detail-status">-</div>
-          </div>
+      <!-- Détails intervention -->
+      <div class="detail-section">
+        <h4>📋 Intervention</h4>
+        <div class="detail-item">
+          <div class="detail-label">Service</div>
+          <div class="detail-value" id="detail-service">-</div>
         </div>
-
-        <div class="detail-section">
-          <h4>Client</h4>
-          <div class="detail-item">
-            <div class="detail-label">Nom</div>
-            <div class="detail-value" id="detail-client">-</div>
-          </div>
-          <div class="detail-item">
-            <div class="detail-label">Téléphone</div>
-            <div class="detail-value" id="detail-phone">-</div>
-          </div>
+        <div class="detail-item">
+          <div class="detail-label">Horaire prévu</div>
+          <div class="detail-value" id="detail-time">-</div>
         </div>
-
-        <!-- Changement de statut rapide -->
-        <div class="detail-section">
-          <h4>Changer le statut</h4>
-          <form id="quick-status-form" style="display:none">
-            <div class="status-change-controls">
-              <select id="quick-status-select" class="status-select">
-                <option value="en_attente_devis">En attente devis</option>
-                <option value="a_planifier">À planifier</option>
-                <option value="planifie">Planifié</option>
-                <option value="realise">Réalisé</option>
-                <option value="paye">Payé</option>
-                <option value="devis_refuse">Devis refusé</option>
-              </select>
-              <div class="date-inputs" id="quick-date-inputs">
-                <input type="datetime-local" id="quick-date-prevue" class="date-input" style="display:none">
-                <input type="datetime-local" id="quick-date-realisation" class="date-input" style="display:none">  
-                <input type="datetime-local" id="quick-date-paiement" class="date-input" style="display:none">
-              </div>
-              <div class="status-actions">
-                <button type="button" class="action-btn success" onclick="saveQuickStatus()">Valider</button>
-                <button type="button" class="action-btn" onclick="cancelQuickStatus()">Annuler</button>
-              </div>
-            </div>
-          </form>
-          <button id="change-status-btn" class="action-btn primary" onclick="startQuickStatusChange()">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6"/>
-            </svg>
-            Changer le statut
-          </button>
+        <div class="detail-item">
+          <div class="detail-label">Adresse</div>
+          <div class="detail-value" id="detail-address">-</div>
         </div>
-
-        <div class="client-actions">
-          <a href="#" class="action-btn primary" id="detail-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <path d="M12 5C7 5 3.73 8.11 2 12c1.73 3.89 5 7 10 7s8.27-3.11 10-7c-1.73-3.89-5-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" stroke="currentColor" stroke-width="1.6"/>
-            </svg>
-            Voir la fiche complète
-          </a>
+        <div class="detail-item">
+          <div class="detail-label">Statut</div>
+          <div class="detail-value status" id="detail-status">-</div>
         </div>
       </div>
+
+      <!-- Détails client -->
+      <div class="detail-section">
+        <h4>👤 Client</h4>
+        <div class="detail-item">
+          <div class="detail-label">Nom</div>
+          <div class="detail-value" id="detail-client">-</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-label">Téléphone</div>
+          <div class="detail-value">
+            <a href="#" id="detail-phone" style="color:var(--primary); text-decoration:none">-</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIONS SIMPLIFIÉES -->
+      <div class="quick-actions">
+        
+        <!-- ✅ ACTION 1 : VALIDER LA RÉALISATION -->
+        <div id="action-realisation" style="display:none">
+          <div class="quick-action-title">✅ Valider la réalisation</div>
+          <div class="realisation-form">
+            <form id="form-realisation" method="POST" style="display:none">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="valider_realisation">
+              <div class="form-group">
+                <label for="date-realisation">Date de réalisation</label>
+                <input type="datetime-local" id="date-realisation" name="date_realisation" required>
+                <small style="display:block; margin-top:.5rem; color:var(--muted); font-size:.8rem">
+                  💡 Pré-rempli avec la date prévue
+                </small>
+              </div>
+              <div class="realisation-actions">
+                <button type="submit" class="btn success">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  Confirmer
+                </button>
+                <button type="button" class="btn" onclick="cancelRealisation()">Annuler</button>
+              </div>
+            </form>
+            <button type="button" class="btn success" id="btn-start-realisation" onclick="startRealisation()" style="width:100%">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Opération réalisée
+            </button>
+          </div>
+        </div>
+
+        <!-- 🔄 ACTION 2 : REPLANIFIER -->
+        <div id="action-replanifier" style="display:none">
+          <div class="quick-action-title">🔄 Replanifier l'intervention</div>
+          <div class="replanification-form">
+            <form id="form-replanification" method="POST" style="display:none">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="update_planning">
+              <div class="form-group">
+                <label for="date-replanification">Nouvelle date</label>
+                <input type="datetime-local" id="date-replanification" name="date_prevue" required>
+              </div>
+              <div class="realisation-actions">
+                <button type="submit" class="btn warning">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.6"/>
+                  </svg>
+                  Replanifier
+                </button>
+                <button type="button" class="btn" onclick="cancelReplanification()">Annuler</button>
+              </div>
+            </form>
+            <button type="button" class="btn warning" id="btn-start-replanification" onclick="startReplanification()" style="width:100%">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                <path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.6"/>
+              </svg>
+              Replanifier
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Lien vers fiche complète -->
+    <div class="panel-footer">
+      <a href="#" class="btn primary" id="detail-btn-full">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+        Voir la fiche complète
+      </a>
     </div>
   </div>
 
-  <!-- Overlay -->
-  <div id="overlay" onclick="closeSidePanel()" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.3); z-index:999"></div>
+  <!-- OVERLAY -->
+  <div class="overlay" id="overlay" onclick="closeSidePanel()"></div>
 
   <script>
-    // Variables globales
+    // ========================================
+    // VARIABLES GLOBALES
+    // ========================================
     let calendarEvents = [];
     let currentView = 'week';
     let currentOffset = 0;
     let selectedDate = null;
     let selectedDayEvents = [];
     let currentOperationIndex = 0;
+    let currentOperation = null;
 
-    const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin','Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
-    const monthsShort = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun','Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+    const monthsShort = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
     const dayNames = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 
-    // Données: parse JSON venant du backend (fallback léger si besoin)
+    // ========================================
+    // INITIALISATION
+    // ========================================
     function initCalendarEvents() {
       try {
         const jsonData = '{{ calendar_events_json|escapejs }}';
@@ -604,10 +1107,13 @@
       }
     }
 
-    // Utils
+    // ========================================
+    // UTILITAIRES
+    // ========================================
     function formatDate(date) {
       return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
     }
+
     function getWeekDates(offset = 0) {
       const today = new Date();
       const monday = new Date(today);
@@ -621,20 +1127,31 @@
       return dates;
     }
 
-    // Vues
+    function getNowFormatted() {
+      const now = new Date();
+      const pad = n => String(n).padStart(2, '0');
+      return now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) + 'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    }
+
+    // ========================================
+    // NAVIGATION VUES
+    // ========================================
     function setView(view) {
       currentView = view;
       document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
       document.getElementById(view + '-btn').classList.add('active');
       renderCalendar();
     }
+
     function navigateCalendar(direction) {
       if (direction === 0) currentOffset = 0;
       else currentOffset += direction;
       renderCalendar();
     }
 
-    // Rendu
+    // ========================================
+    // RENDU CALENDRIER
+    // ========================================
     function renderCalendar() {
       closeSidePanel();
       if (currentView === 'week') renderWeekView();
@@ -663,17 +1180,30 @@
 
         dayCard.innerHTML = `
           <div class="day-header">${dayNames[index]}</div>
-          <div class="day-number">${date.getDate()}</div>
+          <div class="day-number">${date.getDate()} ${monthsShort[date.getMonth()]}</div>
         `;
 
         const dayEvents = calendarEvents.filter(event => event.date === formatDate(date));
         dayEvents.forEach((event, eventIndex) => {
           const eventEl = document.createElement('div');
           eventEl.className = `event-item ${event.color_class || 'event-default'}`;
-          eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
-          eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(date), dayEvents, eventIndex); };
+          eventEl.innerHTML = `
+            <span class="event-status-icon"></span>
+            <span>${event.time || ''} ${event.client_nom || ''}</span>
+          `;
+          eventEl.onclick = (e) => {
+            e.stopPropagation();
+            handleEventClick(formatDate(date), dayEvents, eventIndex);
+          };
           dayCard.appendChild(eventEl);
         });
+
+        if (dayEvents.length === 0) {
+          const emptyMsg = document.createElement('div');
+          emptyMsg.style.cssText = 'color:var(--muted); font-size:.8rem; font-style:italic; margin-top:.5rem';
+          emptyMsg.textContent = 'Aucune intervention';
+          dayCard.appendChild(emptyMsg);
+        }
 
         dayCard.onclick = (e) => {
           if (dayEvents.length > 0 && (e.target === dayCard || e.target.classList.contains('day-header') || e.target.classList.contains('day-number'))) {
@@ -704,8 +1234,14 @@
       dayEvents.forEach((event, eventIndex) => {
         const eventEl = document.createElement('div');
         eventEl.className = `event-item ${event.color_class || 'event-default'}`;
-        eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
-        eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(date), dayEvents, eventIndex); };
+        eventEl.innerHTML = `
+          <span class="event-status-icon"></span>
+          <span>${event.time || ''} ${event.client_nom || ''}</span>
+        `;
+        eventEl.onclick = (e) => {
+          e.stopPropagation();
+          handleEventClick(formatDate(date), dayEvents, eventIndex);
+        };
         dayCard.appendChild(eventEl);
       });
 
@@ -727,19 +1263,18 @@
 
       const firstDay = new Date(currentMonth);
       const startOfWeek = new Date(firstDay);
-      const dayOfWeek = (firstDay.getDay() + 6) % 7; // Lundi=0
+      const dayOfWeek = (firstDay.getDay() + 6) % 7;
       startOfWeek.setDate(firstDay.getDate() - dayOfWeek);
 
-      const headerRow = document.createElement('div');
-      headerRow.className = 'month-header-row';
+      // En-têtes jours
       dayNames.forEach(day => {
         const dayHeader = document.createElement('div');
         dayHeader.className = 'month-day-header';
         dayHeader.textContent = day;
-        headerRow.appendChild(dayHeader);
+        grid.appendChild(dayHeader);
       });
-      grid.appendChild(headerRow);
 
+      // Cases jours
       for (let week = 0; week < 6; week++) {
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
           const cellDate = new Date(startOfWeek);
@@ -762,265 +1297,46 @@
             const eventContainer = document.createElement('div');
             eventContainer.className = 'month-events';
 
-            dayEvents.slice(0, 3).forEach((event, index) => {
+            dayEvents.slice(0, 2).forEach((event, index) => {
               const eventEl = document.createElement('div');
               eventEl.className = 'month-event-item';
               eventEl.innerHTML = `${event.time || ''} ${event.client_nom || ''}`;
-              eventEl.onclick = (e) => { e.stopPropagation(); handleEventClick(formatDate(cellDate), dayEvents, index); };
+              eventEl.onclick = (e) => {
+                e.stopPropagation();
+                handleEventClick(formatDate(cellDate), dayEvents, index);
+              };
               eventContainer.appendChild(eventEl);
             });
 
-            if (dayEvents.length > 3) {
+            if (dayEvents.length > 2) {
               const moreEl = document.createElement('div');
               moreEl.className = 'month-event-more';
-              moreEl.textContent = `+${dayEvents.length - 3} autres`;
+              moreEl.textContent = `+${dayEvents.length - 2} autre${dayEvents.length - 2 > 1 ? 's' : ''}`;
               moreEl.onclick = () => handleEventClick(formatDate(cellDate), dayEvents, 0);
               eventContainer.appendChild(moreEl);
             }
             dayCell.appendChild(eventContainer);
           }
 
-          dayCell.onclick = () => { if (dayEvents.length > 0) handleEventClick(formatDate(cellDate), dayEvents, 0); };
+          dayCell.onclick = () => {
+            if (dayEvents.length > 0) handleEventClick(formatDate(cellDate), dayEvents, 0);
+          };
           grid.appendChild(dayCell);
         }
       }
     }
 
-    // Sélection & panneau latéral
-    function handleEventClick(dateStr, dayEvents, operationIndex) {
-      selectedDate = dateStr;
-      selectedDayEvents = dayEvents;
-      currentOperationIndex = operationIndex;
-
-      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
-      const dayElements = document.querySelectorAll('.day-card, .month-day-cell');
-      dayElements.forEach(el => {
-        const dayNumber = el.querySelector('.day-number, .month-day-number');
-        if (dayNumber) {
-          const eventDate = new Date(dateStr);
-          if (parseInt(dayNumber.textContent) === eventDate.getDate()) el.classList.add('selected');
-        }
-      });
-      openSidePanel();
-    }
-
-    function openSidePanel() {
-      document.getElementById('side-panel').classList.add('open');
-      document.getElementById('overlay').style.display = 'block';
-      updatePanelContent();
-    }
-    function closeSidePanel() {
-      document.getElementById('side-panel').classList.remove('open');
-      document.getElementById('overlay').style.display = 'none';
-      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
-      selectedDate = null; selectedDayEvents = [];
-    }
-
-    function updatePanelContent() {
-      if (!selectedDate || selectedDayEvents.length === 0) return;
-
-      const date = new Date(selectedDate);
-      const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-
-      document.getElementById('panel-date').textContent = dateStr;
-      document.getElementById('panel-title').textContent = `${selectedDayEvents.length} intervention${selectedDayEvents.length > 1 ? 's' : ''}`;
-
-      const tabsContainer = document.getElementById('operation-tabs');
-      tabsContainer.innerHTML = '';
-      if (selectedDayEvents.length > 1) {
-        selectedDayEvents.forEach((event, index) => {
-          const tab = document.createElement('div');
-          tab.className = `operation-tab ${index === currentOperationIndex ? 'active' : ''}`;
-          tab.textContent = event.time || '--:--';
-          tab.onclick = () => switchOperation(index);
-          tabsContainer.appendChild(tab);
-        });
-      }
-      updateOperationDetails();
-    }
-
-    function switchOperation(index) {
-      currentOperationIndex = index;
-      updateOperationDetails();
-      document.querySelectorAll('.operation-tab').forEach((tab, i) => tab.classList.toggle('active', i === index));
-    }
-
-    function updateOperationDetails() {
-      const operation = selectedDayEvents[currentOperationIndex];
-      if (!operation) return;
-      
-      document.getElementById('detail-service').textContent = operation.service || '-';
-      document.getElementById('detail-time').textContent = operation.time || '-';
-      document.getElementById('detail-address').textContent = operation.address || '-';
-      document.getElementById('detail-client').textContent = operation.client_nom || '-';
-      document.getElementById('detail-phone').textContent = operation.phone || '-';
-      document.getElementById('detail-status').textContent = operation.statut_display || '-';
-      
-      document.getElementById('detail-btn').href = operation.url || '#';
-      
-      // Préparer le formulaire de changement de statut
-      const statusSelect = document.getElementById('quick-status-select');
-      if (statusSelect && operation.statut) {
-        statusSelect.value = operation.statut;
-      }
-    }
-
-    // Fonctions pour le changement rapide de statut
-    function startQuickStatusChange() {
-      document.getElementById('change-status-btn').style.display = 'none';
-      document.getElementById('quick-status-form').style.display = 'block';
-      updateDateFieldsQuick();
-    }
-
-    function cancelQuickStatus() {
-      document.getElementById('change-status-btn').style.display = 'flex';
-      document.getElementById('quick-status-form').style.display = 'none';
-    }
-
-    function updateDateFieldsQuick() {
-      const statusValue = document.getElementById('quick-status-select').value;
-      const datePrevueInput = document.getElementById('quick-date-prevue');
-      const dateRealisationInput = document.getElementById('quick-date-realisation');
-      const datePaiementInput = document.getElementById('quick-date-paiement');
-      
-      // Masquer tous les champs
-      datePrevueInput.style.display = 'none';
-      dateRealisationInput.style.display = 'none';
-      datePaiementInput.style.display = 'none';
-      
-      // Réinitialiser required
-      datePrevueInput.required = false;
-      dateRealisationInput.required = false;
-      datePaiementInput.required = false;
-      
-      // Date/heure actuelle formatée pour les inputs
-      const now = new Date();
-      const nowFormatted = now.getFullYear() + '-' + 
-        String(now.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(now.getDate()).padStart(2, '0') + 'T' + 
-        String(now.getHours()).padStart(2, '0') + ':' + 
-        String(now.getMinutes()).padStart(2, '0');
-      
-      // Afficher selon le statut
-      if (statusValue === 'planifie') {
-        datePrevueInput.style.display = 'block';
-        datePrevueInput.required = true;
-        if (!datePrevueInput.value) datePrevueInput.value = nowFormatted;
-        datePrevueInput.placeholder = 'Date prévue';
-      } else if (statusValue === 'realise') {
-        dateRealisationInput.style.display = 'block';
-        dateRealisationInput.required = true;
-        if (!dateRealisationInput.value) dateRealisationInput.value = nowFormatted;
-        dateRealisationInput.placeholder = 'Date de réalisation';
-      } else if (statusValue === 'paye') {
-        dateRealisationInput.style.display = 'block';
-        datePaiementInput.style.display = 'block';
-        dateRealisationInput.required = true;
-        datePaiementInput.required = true;
-        if (!dateRealisationInput.value) dateRealisationInput.value = nowFormatted;
-        if (!datePaiementInput.value) datePaiementInput.value = nowFormatted;
-        dateRealisationInput.placeholder = 'Date de réalisation';
-        datePaiementInput.placeholder = 'Date de paiement';
-      }
-    }
-
-    function saveQuickStatus() {
-      const operation = selectedDayEvents[currentOperationIndex];
-      if (!operation) return;
-      
-      const newStatus = document.getElementById('quick-status-select').value;
-      const datePrevue = document.getElementById('quick-date-prevue').value;
-      const dateRealisation = document.getElementById('quick-date-realisation').value;
-      const datePaiement = document.getElementById('quick-date-paiement').value;
-      
-      // Validation des dates obligatoires
-      if (newStatus === 'planifie' && !datePrevue) {
-        alert('La date prévue est obligatoire pour le statut "Planifié"');
-        return;
-      }
-      if (newStatus === 'realise' && !dateRealisation) {
-        alert('La date de réalisation est obligatoire pour le statut "Réalisé"');
-        return;
-      }
-      if (newStatus === 'paye' && (!dateRealisation || !datePaiement)) {
-        alert('Les dates de réalisation et de paiement sont obligatoires pour le statut "Payé"');
-        return;
-      }
-      
-      // Validation date future pour planifié
-      if (newStatus === 'planifie' && datePrevue) {
-        const selectedDate = new Date(datePrevue);
-        const now = new Date();
-        if (selectedDate <= now) {
-          alert('La date prévue ne peut pas être dans le passé');
-          return;
-        }
-      }
-      
-      // Obtenir le token CSRF
-      let csrfToken = '';
-      const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
-      if (csrfInput) {
-        csrfToken = csrfInput.value;
-      } else {
-        // Fallback : essayer de récupérer depuis les cookies
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-          const [name, value] = cookie.trim().split('=');
-          if (name === 'csrftoken') {
-            csrfToken = value;
-            break;
-          }
-        }
-      }
-      
-      // Préparer les données
-      const formData = new FormData();
-      formData.append('csrfmiddlewaretoken', csrfToken);
-      formData.append('action', 'change_status');
-      formData.append('statut', newStatus);
-      if (datePrevue) formData.append('date_prevue', datePrevue);
-      if (dateRealisation) formData.append('date_realisation', dateRealisation);
-      if (datePaiement) formData.append('date_paiement', datePaiement);
-      
-      // Envoyer la requête
-      fetch(operation.url, {
-        method: 'POST',
-        body: formData,
-        headers: {
-          'X-Requested-With': 'XMLHttpRequest',
-        }
-      })
-      .then(response => {
-        if (response.ok) {
-          return response.json();
-        } else {
-          throw new Error('Erreur HTTP');
-        }
-      })
-      .then(data => {
-        if (data.success) {
-          alert('Statut mis à jour avec succès !');
-          // Rafraîchir la page pour voir les changements
-          location.reload();
-        } else {
-          alert('Erreur lors de la mise à jour : ' + (data.message || 'Erreur inconnue'));
-        }
-      })
-      .catch(error => {
-        console.error('Erreur:', error);
-        alert('Erreur de connexion lors de la mise à jour');
-      });
-    }
-
     function updateEventCount() {
       let count = 0;
       if (currentView === 'day') {
-        const date = new Date(); date.setDate(date.getDate() + currentOffset);
+        const date = new Date();
+        date.setDate(date.getDate() + currentOffset);
         count = calendarEvents.filter(event => event.date === formatDate(date)).length;
       } else if (currentView === 'week') {
         const weekDates = getWeekDates(currentOffset);
-        weekDates.forEach(date => { count += calendarEvents.filter(event => event.date === formatDate(date)).length; });
+        weekDates.forEach(date => {
+          count += calendarEvents.filter(event => event.date === formatDate(date)).length;
+        });
       } else if (currentView === 'month') {
         const today = new Date();
         const currentMonth = new Date(today.getFullYear(), today.getMonth() + currentOffset, 1);
@@ -1033,38 +1349,211 @@
       document.getElementById('events-count').textContent = count;
     }
 
-    // Init
+    // ========================================
+    // PANNEAU LATÉRAL
+    // ========================================
+    function handleEventClick(dateStr, dayEvents, operationIndex) {
+      selectedDate = dateStr;
+      selectedDayEvents = dayEvents;
+      currentOperationIndex = operationIndex;
+      currentOperation = dayEvents[operationIndex];
+
+      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
+      const dayElements = document.querySelectorAll('.day-card, .month-day-cell');
+      dayElements.forEach(el => {
+        const dayNumber = el.querySelector('.day-number, .month-day-number');
+        if (dayNumber) {
+          const eventDate = new Date(dateStr);
+          if (parseInt(dayNumber.textContent) === eventDate.getDate()) {
+            el.classList.add('selected');
+          }
+        }
+      });
+      openSidePanel();
+    }
+
+    function openSidePanel() {
+      document.getElementById('side-panel').classList.add('open');
+      document.getElementById('overlay').style.display = 'block';
+      updatePanelContent();
+    }
+
+    function closeSidePanel() {
+      document.getElementById('side-panel').classList.remove('open');
+      document.getElementById('overlay').style.display = 'none';
+      document.querySelectorAll('.day-card, .month-day-cell').forEach(card => card.classList.remove('selected'));
+      selectedDate = null;
+      selectedDayEvents = [];
+      currentOperation = null;
+      
+      // Reset formulaires
+      cancelRealisation();
+      cancelReplanification();
+    }
+
+    function updatePanelContent() {
+      if (!selectedDate || selectedDayEvents.length === 0 || !currentOperation) return;
+
+      const date = new Date(selectedDate);
+      const dateStr = date.toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      document.getElementById('panel-date').textContent = dateStr;
+      document.getElementById('panel-title').textContent = `Intervention - ${currentOperation.client_nom || ''}`;
+
+      // Onglets si plusieurs interventions
+      const tabsContainer = document.getElementById('operation-tabs');
+      tabsContainer.innerHTML = '';
+      if (selectedDayEvents.length > 1) {
+        selectedDayEvents.forEach((event, index) => {
+          const tab = document.createElement('div');
+          tab.className = `operation-tab ${index === currentOperationIndex ? 'active' : ''}`;
+          tab.textContent = `${event.time || '--:--'} ${event.client_nom || ''}`;
+          tab.onclick = () => switchOperation(index);
+          tabsContainer.appendChild(tab);
+        });
+      }
+
+      updateOperationDetails();
+    }
+
+    function switchOperation(index) {
+      currentOperationIndex = index;
+      currentOperation = selectedDayEvents[index];
+      updateOperationDetails();
+      document.querySelectorAll('.operation-tab').forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+      });
+    }
+
+    function updateOperationDetails() {
+      if (!currentOperation) return;
+
+      document.getElementById('detail-service').textContent = currentOperation.service || '-';
+      document.getElementById('detail-time').textContent = currentOperation.time || '-';
+      document.getElementById('detail-address').textContent = currentOperation.address || '-';
+      document.getElementById('detail-client').textContent = currentOperation.client_nom || '-';
+      
+      const phoneLink = document.getElementById('detail-phone');
+      phoneLink.textContent = currentOperation.phone || '-';
+      phoneLink.href = currentOperation.phone ? `tel:${currentOperation.phone}` : '#';
+
+      // Statut avec badge
+      const statusEl = document.getElementById('detail-status');
+      statusEl.textContent = currentOperation.statut_display || '-';
+      statusEl.className = 'detail-value status';
+      if (currentOperation.color_class) {
+        if (currentOperation.color_class.includes('planifie')) {
+          statusEl.classList.add('planifie');
+        } else if (currentOperation.color_class.includes('attention')) {
+          statusEl.classList.add('attention');
+        }
+      }
+
+      // Lien fiche complète
+      const btnFull = document.getElementById('detail-btn-full');
+      btnFull.href = currentOperation.url || '#';
+
+      // Définir les actions URL pour les formulaires
+      const formRealisation = document.getElementById('form-realisation');
+      const formReplanification = document.getElementById('form-replanification');
+      if (formRealisation && currentOperation.url) {
+        formRealisation.action = currentOperation.url;
+      }
+      if (formReplanification && currentOperation.url) {
+        formReplanification.action = currentOperation.url;
+      }
+
+      // ========================================
+      // LOGIQUE D'AFFICHAGE DES ACTIONS
+      // ========================================
+      const actionRealisation = document.getElementById('action-realisation');
+      const actionReplanifier = document.getElementById('action-replanifier');
+
+      // Cacher tout par défaut
+      actionRealisation.style.display = 'none';
+      actionReplanifier.style.display = 'none';
+
+      // Si statut planifié
+      if (currentOperation.statut === 'planifie') {
+        actionRealisation.style.display = 'block';
+        actionReplanifier.style.display = 'block';
+      }
+      // Si statut à planifier
+      else if (currentOperation.statut === 'a_planifier') {
+        actionReplanifier.style.display = 'block';
+      }
+    }
+
+    // ========================================
+    // ACTIONS SIMPLIFIÉES
+    // ========================================
+
+    // RÉALISATION
+    function startRealisation() {
+      document.getElementById('btn-start-realisation').style.display = 'none';
+      document.getElementById('form-realisation').style.display = 'block';
+
+      // Pré-remplir avec la date de l'opération si disponible
+      const dateRealisationInput = document.getElementById('date-realisation');
+      if (currentOperation && currentOperation.date && currentOperation.time) {
+        const dateStr = currentOperation.date + 'T' + currentOperation.time;
+        dateRealisationInput.value = dateStr;
+      } else {
+        dateRealisationInput.value = getNowFormatted();
+      }
+    }
+
+    function cancelRealisation() {
+      document.getElementById('btn-start-realisation').style.display = 'block';
+      document.getElementById('form-realisation').style.display = 'none';
+    }
+
+    // REPLANIFICATION
+    function startReplanification() {
+      document.getElementById('btn-start-replanification').style.display = 'none';
+      document.getElementById('form-replanification').style.display = 'block';
+
+      // Pré-remplir avec date actuelle + 1 jour
+      const dateReplanificationInput = document.getElementById('date-replanification');
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(9, 0, 0, 0);
+      const pad = n => String(n).padStart(2, '0');
+      dateReplanificationInput.value = tomorrow.getFullYear() + '-' +
+        pad(tomorrow.getMonth() + 1) + '-' +
+        pad(tomorrow.getDate()) + 'T09:00';
+    }
+
+    function cancelReplanification() {
+      document.getElementById('btn-start-replanification').style.display = 'block';
+      document.getElementById('form-replanification').style.display = 'none';
+    }
+
+    // ========================================
+    // INITIALISATION
+    // ========================================
     document.addEventListener('DOMContentLoaded', function() {
       initCalendarEvents();
       renderCalendar();
-      
-      // Ajouter l'événement pour le changement de statut
-      const statusSelect = document.getElementById('quick-status-select');
-      if (statusSelect) {
-        statusSelect.addEventListener('change', updateDateFieldsQuick);
-      }
-    });
-
-    // Fermer panneau si clic extérieur
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.side-panel') && !e.target.closest('.event-item') && !e.target.closest('.day-card') && !e.target.closest('.month-event-item')) {
-        if (document.getElementById('side-panel').classList.contains('open')) closeSidePanel();
-      }
     });
   </script>
 
-{% if messages %}
-{% for message in messages %}
-<div class="alert {{ message.tags }}">
-  {{ message }}
-</div>
-{% endfor %}
+  {% if messages %}
+  {% for message in messages %}
+  <div class="alert {{ message.tags }}" style="position:fixed; top:80px; left:50%; transform:translateX(-50%); z-index:9999; padding:1rem 1.5rem; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.15); background:white; border:1px solid var(--border)">
+    {{ message }}
+  </div>
+  {% endfor %}
 
-<script>
-setTimeout(function() {
-  document.querySelectorAll('.alert').forEach(el => el.remove());
-}, 3000); // 3 secondes
-</script>
-{% endif %}
+  <script>
+  setTimeout(function() {
+    document.querySelectorAll('.alert').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity 0.3s';
+      setTimeout(() => el.remove(), 300);
+    });
+  }, 3000);
+  </script>
+  {% endif %}
 </body>
 </html>
