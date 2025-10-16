@@ -1026,7 +1026,7 @@ def operation_create(request):
                 print(f"  {key}: '{value}'")
         
         try:
-            # 1. GESTION DU CLIENT
+            # 1. GESTION DU CLIENT (inchangé)
             client_id = request.POST.get('client_id')
             client_type = 'nouveau' if not client_id or client_id == '' else 'existant'
             
@@ -1071,7 +1071,7 @@ def operation_create(request):
                 )
                 print(f"✓ Nouveau client créé: {client.nom} {client.prenom} (ID: {client.id})")
             
-            # 2. INFORMATIONS OPÉRATION
+            # 2. INFORMATIONS OPÉRATION (inchangé)
             type_prestation = request.POST.get('type_prestation', '').strip()
             adresse_intervention = request.POST.get('adresse_intervention', '').strip()
             statut = request.POST.get('statut', 'en_attente_devis')
@@ -1156,36 +1156,11 @@ def operation_create(request):
                 statut=statut
             )
             
-            # ✅ NOUVEAU : Gestion du devis lors de la création
-            devis_cree = request.POST.get('devis_cree') == 'true'
-            if devis_cree:
-                operation.devis_cree = True
-                
-                devis_date_envoi_str = request.POST.get('devis_date_envoi', '')
-                if devis_date_envoi_str:
-                    try:
-                        operation.devis_date_envoi = datetime.strptime(devis_date_envoi_str, '%Y-%m-%d').date()
-                    except ValueError:
-                        pass
-                
-                devis_statut = request.POST.get('devis_statut', '')
-                if devis_statut:
-                    operation.devis_statut = devis_statut
-                
-                operation.save()
-                
-                # Ajouter à l'historique
-                HistoriqueOperation.objects.create(
-                    operation=operation,
-                    action=f"Devis créé - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'Non défini'}",
-                    utilisateur=request.user
-                )
-            
             print(f"✓✓✓ OPÉRATION CRÉÉE AVEC SUCCÈS")
             print(f"    ID: {operation.id}")
             print(f"    Code: {operation.id_operation}")
             
-            # 5. INTERVENTIONS
+            # 5. INTERVENTIONS (IMPORTANT: avant la gestion du devis/paiement)
             descriptions = request.POST.getlist('description[]')
             montants = request.POST.getlist('montant[]')
             
@@ -1204,7 +1179,7 @@ def operation_create(request):
                         intervention = Intervention.objects.create(
                             operation=operation,
                             description=desc_clean,
-                            montant=float(mont_clean),
+                            montant=Decimal(mont_clean),
                             ordre=i + 1
                         )
                         interventions_creees += 1
@@ -1216,13 +1191,84 @@ def operation_create(request):
             
             print(f"Total interventions créées: {interventions_creees}")
             
-            # 6. HISTORIQUE
+            # ✅ 6. GESTION DU DEVIS (si créé lors de la création)
+            print(f"\n{'─'*60}")
+            print("ÉTAPE 6: GESTION DU DEVIS")
+            print(f"{'─'*60}")
+            
+            devis_cree = request.POST.get('devis_cree') == 'true'
+            print(f"Devis créé: {devis_cree}")
+            
+            if devis_cree:
+                operation.devis_cree = True
+                
+                devis_date_envoi_str = request.POST.get('devis_date_envoi', '')
+                if devis_date_envoi_str:
+                    try:
+                        operation.devis_date_envoi = datetime.strptime(devis_date_envoi_str, '%Y-%m-%d').date()
+                        print(f"✓ Date envoi devis: {operation.devis_date_envoi}")
+                    except ValueError as e:
+                        print(f"✗ Erreur date envoi devis: {e}")
+                
+                devis_statut = request.POST.get('devis_statut', '')
+                if devis_statut:
+                    operation.devis_statut = devis_statut
+                    print(f"✓ Statut devis: {devis_statut}")
+                
+                operation.save()
+                
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Devis créé - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'Non défini'}",
+                    utilisateur=request.user
+                )
+            
+            # ✅ 7. GESTION AUTOMATIQUE DU PAIEMENT SI STATUT = PAYÉ
+            print(f"\n{'─'*60}")
+            print("ÉTAPE 7: GESTION AUTOMATIQUE DU PAIEMENT")
+            print(f"{'─'*60}")
+            
+            if statut == 'paye':
+                # Calculer le montant total des interventions
+                montant_total = operation.montant_total
+                print(f"Montant total des interventions: {montant_total}€")
+                
+                if montant_total > 0:
+                    # Créer une échéance automatique pour le montant total
+                    date_paiement_final = date_paiement_complete or timezone.now()
+                    
+                    Echeance.objects.create(
+                        operation=operation,
+                        numero=1,
+                        montant=montant_total,
+                        date_echeance=date_paiement_final.date() if hasattr(date_paiement_final, 'date') else date_paiement_final,
+                        paye=True,  # ← IMPORTANT: marqué comme payé
+                        ordre=1
+                    )
+                    
+                    print(f"✓ Échéance automatique créée: {montant_total}€ (payée)")
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"💰 Paiement comptant enregistré: {montant_total}€ le {date_paiement_final.strftime('%d/%m/%Y')}",
+                        utilisateur=request.user
+                    )
+                else:
+                    print("⚠ Aucune intervention = pas d'échéance créée")
+            
+            elif statut == 'realise':
+                print("Statut 'réalisé' - Pas de paiement automatique")
+            
+            elif statut == 'planifie':
+                print("Statut 'planifié' - Pas de paiement automatique")
+            
+            # 8. HISTORIQUE INITIAL
             HistoriqueOperation.objects.create(
                 operation=operation,
                 action="Opération créée",
                 utilisateur=request.user
             )
-            print(f"✓ Historique créé")
+            print(f"✓ Historique initial créé")
             
             print(f"\n{'='*60}")
             print("✓✓✓ SUCCÈS COMPLET - OPÉRATION ENREGISTRÉE")
@@ -1250,7 +1296,7 @@ def operation_create(request):
     # GET - Formulaire vide
     clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
 
-    # ✅ Exclure 'devis_refuse' du formulaire de création
+    # Exclure 'devis_refuse' du formulaire de création
     statuts_disponibles = [
         (value, label) 
         for value, label in Operation.STATUTS 
