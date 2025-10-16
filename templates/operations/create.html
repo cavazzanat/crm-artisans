@@ -701,7 +701,6 @@ document.addEventListener('DOMContentLoaded', function() {
     updateStatutIndicator(); // Vérif initiale
   }
 });
-
 // ========================================
 // VALIDATION AVANT SOUMISSION DU FORMULAIRE
 // ========================================
@@ -723,7 +722,7 @@ function validateForm(event) {
     }
   }
   
-  // ✅ NOUVELLE VALIDATION : Montant obligatoire si statut = payé
+  // ✅ VALIDATION : Montant obligatoire si statut = payé
   if (statut === 'paye') {
     const montantInputs = document.querySelectorAll('input[name="montant[]"]');
     const hasAmount = Array.from(montantInputs).some(input => {
