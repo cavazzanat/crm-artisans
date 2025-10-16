@@ -665,6 +665,111 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
 
+// ========================================
+// VALIDATION : Montant obligatoire si statut = payé
+// ========================================
+document.addEventListener('DOMContentLoaded', function() {
+  const statutSelect = document.getElementById('statut');
+  const interventionsContainer = document.getElementById('interventions-container');
+  
+  // Fonction pour vérifier si au moins une intervention a un montant
+  function hasInterventionWithAmount() {
+    const montantInputs = document.querySelectorAll('input[name="montant[]"]');
+    return Array.from(montantInputs).some(input => input.value && parseFloat(input.value) > 0);
+  }
+  
+  // Ajouter un indicateur visuel sur le statut "Payé"
+  function updateStatutIndicator() {
+    if (statutSelect && statutSelect.value === 'paye') {
+      // Ajouter un badge d'avertissement
+      let badge = statutSelect.parentElement.querySelector('.statut-warning-badge');
+      if (!badge) {
+        badge = document.createElement('div');
+        badge.className = 'statut-warning-badge';
+        badge.style.cssText = 'margin-top: 0.5rem; padding: 0.5rem; background: #fef3c7; border: 1px solid #fde68a; border-radius: 8px; color: #92400e; font-size: 0.85rem;';
+        badge.innerHTML = '⚠️ <strong>Attention :</strong> Au moins une ligne avec montant est obligatoire pour ce statut';
+        statutSelect.parentElement.appendChild(badge);
+      }
+    } else {
+      const badge = statutSelect.parentElement.querySelector('.statut-warning-badge');
+      if (badge) badge.remove();
+    }
+  }
+  
+  if (statutSelect) {
+    statutSelect.addEventListener('change', updateStatutIndicator);
+    updateStatutIndicator(); // Vérif initiale
+  }
+});
+
+// ========================================
+// VALIDATION AVANT SOUMISSION DU FORMULAIRE
+// ========================================
+function validateForm(event) {
+  console.log('Validation du formulaire...');
+  
+  const statut = document.getElementById('statut').value;
+  const datePrevue = document.getElementById('date_prevue');
+  
+  // Validation date planifiée (existant)
+  if (statut === 'planifie' && datePrevue && datePrevue.value) {
+    const selectedDate = new Date(datePrevue.value);
+    const now = new Date();
+    
+    if (selectedDate <= now) {
+      event.preventDefault();
+      alert('Erreur : Impossible de planifier une opération dans le passé');
+      return false;
+    }
+  }
+  
+  // ✅ NOUVELLE VALIDATION : Montant obligatoire si statut = payé
+  if (statut === 'paye') {
+    const montantInputs = document.querySelectorAll('input[name="montant[]"]');
+    const hasAmount = Array.from(montantInputs).some(input => {
+      const value = input.value.trim();
+      return value && parseFloat(value) > 0;
+    });
+    
+    if (!hasAmount) {
+      event.preventDefault();
+      alert('❌ Erreur : Pour créer une opération en statut "Payé", vous devez ajouter au moins une ligne d\'intervention avec un montant.');
+      
+      // Scroller vers la section interventions
+      const interventionsSection = document.querySelector('.section:has(#interventions-container)');
+      if (interventionsSection) {
+        interventionsSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        interventionsSection.style.border = '2px solid #ef4444';
+        setTimeout(() => {
+          interventionsSection.style.border = '';
+        }, 3000);
+      }
+      
+      return false;
+    }
+  }
+  
+  // ✅ VALIDATION : Au moins une ligne si statut = réalisé
+  if (statut === 'realise') {
+    const montantInputs = document.querySelectorAll('input[name="montant[]"]');
+    const hasAmount = Array.from(montantInputs).some(input => {
+      const value = input.value.trim();
+      return value && parseFloat(value) > 0;
+    });
+    
+    if (!hasAmount) {
+      const confirmation = confirm('⚠️ Aucune ligne d\'intervention avec montant.\n\nVoulez-vous continuer quand même ?');
+      if (!confirmation) {
+        event.preventDefault();
+        return false;
+      }
+    }
+  }
+  
+  console.log('Formulaire valide, soumission en cours...');
+  return true;
+}
+
   </script>
 
   {% if messages %}
