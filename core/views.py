@@ -47,45 +47,38 @@ def dashboard(request):
         ).aggregate(total=Sum('interventions__montant'))['total'] or 0
 
         
-        
-        # ✅ CALENDRIER : Logique simplifiée pour les opérations qui nécessitent attention
+        # ✅ CALENDRIER : Uniquement les opérations planifiées et suivantes
         from datetime import timedelta
-        
+
         today = timezone.now().date()
         start_date = today - timedelta(days=30)  # 30 jours passés
         end_date = today + timedelta(days=14)    # 14 jours futurs
-        
+
         operations_calendrier = Operation.objects.filter(
             user=request.user,
             date_prevue__isnull=False,
             date_prevue__gte=start_date,
             date_prevue__lte=end_date
         ).filter(
-            # Seulement les statuts qui nécessitent attention
-            statut__in=['planifie', 'a_planifier']
+            # ✅ NOUVEAU : Seulement à partir de "planifie"
+            statut__in=['planifie', 'realise', 'paye']
         ).select_related('client').order_by('date_prevue')
-        
-        # ✅ TABLEAU : opérations à planifier (remplace prochaines_operations)
-        operations_a_planifier = Operation.objects.filter(
-            user=request.user,
-            statut__in=['en_attente_devis', 'a_planifier']
-        ).select_related('client').order_by('-date_creation')[:5]
-        
-        # ✅ FORMATER avec logique d'alerte pour le calendrier
+
+        # ✅ FORMATER avec la nouvelle logique de couleurs
         calendar_events = []
         for op in operations_calendrier:
             is_past = op.date_prevue < timezone.now()
             
+            # ✅ NOUVELLE LOGIQUE DE COULEURS
             if op.statut == 'planifie':
-                if is_past:
-                    color_class = 'event-attention'  # Rouge clignotant
-                    status_text = "À valider"
-                else:
-                    color_class = 'event-planifie'   # Vert
-                    status_text = op.get_statut_display()
-            elif op.statut == 'a_planifier':
-                color_class = 'event-pending'        # Gris
-                status_text = "À replanifier"
+                color_class = 'event-planifie'  # Gris
+                status_text = "Planifié"
+            elif op.statut == 'realise':
+                color_class = 'event-realise'   # Bleu
+                status_text = "Réalisé"
+            elif op.statut == 'paye':
+                color_class = 'event-paye'      # Vert
+                status_text = "Payé"
             else:
                 color_class = 'event-default'
                 status_text = op.get_statut_display()
@@ -103,9 +96,9 @@ def dashboard(request):
                 'statut_display': status_text,
                 'color_class': color_class,
                 'is_past': is_past,
-                'commentaires': op.commentaires or ''  # ← AJOUTÉ
+                'commentaires': op.commentaires or ''
             })
-        
+
         context = {
             'nb_clients': nb_clients,
             'nb_operations': nb_operations,
@@ -113,7 +106,6 @@ def dashboard(request):
             'nb_a_planifier': nb_a_planifier,
             'nb_realise': nb_realise,
             'ca_mois': ca_mois,
-            'operations_a_planifier': operations_a_planifier,  # ← Changé
             'calendar_events_json': json.dumps(calendar_events),
             'calendar_events': calendar_events,
         }
@@ -549,7 +541,7 @@ def operation_detail(request, operation_id):
                     print(f"❌ ERREUR: {e}")
                     messages.error(request, "Date invalide")
             
-            return redirect('dashboard')
+            return redirect('operation_detail', operation_id=operation.id) 
 
         # VALIDATION DE LA RÉALISATION
         elif action == 'valider_realisation':
@@ -579,7 +571,7 @@ def operation_detail(request, operation_id):
                 except ValueError:
                     messages.error(request, "Date invalide")
             
-            return redirect('dashboard')
+            return redirect('operation_detail', operation_id=operation.id)
         
         # CORRECTION DES DATES DE RÉALISATION
         elif action == 'corriger_dates_realisation':
@@ -769,7 +761,7 @@ def operation_detail(request, operation_id):
             )
             
             messages.success(request, "✅ Commentaire enregistré")
-            return redirect('dashboard')  # ← Retour au dashboard
+            return redirect('operation_detail', operation_id=operation.id)
                 
         
 
