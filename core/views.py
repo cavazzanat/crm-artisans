@@ -173,7 +173,7 @@ def operations_list(request):
     # ========================================
     operations_realises = Operation.objects.filter(
         user=request.user,
-        statut='realise'
+        statut__in=['realise', 'paye']  # ← Réalisé OU Payé
     ).prefetch_related('echeances', 'interventions')
 
     ca_en_attente_total = 0
