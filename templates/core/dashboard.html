@@ -139,85 +139,113 @@
     }
 
 /* ========================================
-   KPI - STYLE CARDS (VERSION PROPRE)
+   KPI - VERSION COMPACTE ET ÉLÉGANTE
    ======================================== */
-.kpi-grid{
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+.kpi-grid {
+  display: flex;
+  gap: 0.75rem;
   margin-bottom: 2rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
 }
 
 .kpi-card {
   background: white;
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1.25rem;
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
   box-shadow: var(--shadow);
   transition: all 0.2s ease;
+  min-width: 160px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0,0,0,.1);
+  border-color: var(--primary);
 }
 
 .kpi-card.alert {
   border: 2px solid var(--danger);
-  background: rgba(239,68,68,.02);
+  background: linear-gradient(135deg, rgba(239,68,68,.03), rgba(239,68,68,.01));
 }
 
 .kpi-card.warning {
   border: 2px solid var(--warning);
-  background: rgba(245,158,11,.02);
+  background: linear-gradient(135deg, rgba(245,158,11,.03), rgba(245,158,11,.01));
 }
 
-@keyframes pulse-border {
+@keyframes pulse-glow {
   0%, 100% { 
-    border-color: var(--danger);
     box-shadow: 0 0 0 0 rgba(239,68,68,.4);
   }
   50% { 
-    border-color: rgba(239,68,68,.6);
     box-shadow: 0 0 0 4px rgba(239,68,68,0);
   }
 }
 
 .kpi-card.alert {
-  animation: pulse-border 2s ease-in-out infinite;
-}
-
-.kpi-icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
-  display: grid;
-  place-items: center;
-  margin-bottom: 1rem;
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .kpi-label {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
-  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .kpi-value {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: 800;
   line-height: 1;
-  margin-bottom: 0.5rem;
   color: var(--text);
+}
+
+.kpi-card.alert .kpi-value {
+  color: var(--danger);
+}
+
+.kpi-card.warning .kpi-value {
+  color: var(--warning);
 }
 
 .kpi-subtitle {
   color: var(--muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
+  margin-top: auto;
 }
 
+.kpi-subtitle a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.kpi-subtitle a:hover {
+  text-decoration: underline;
+}
+
+/* Responsive - scroll horizontal sur mobile */
+@media (max-width: 768px) {
+  .kpi-grid {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+  }
+  
+  .kpi-card {
+    min-width: 140px;
+  }
+}
     /* ========================================
        SECTIONS (STYLE UNIFIÉ)
        ======================================== */
@@ -922,98 +950,58 @@
     <h1 class="page-title">Tableau de bord</h1>
     <p class="subtitle">Vue d'ensemble de vos performances et planning</p>
 
-    <!-- KPI -->
-    <div class="kpi-grid">
-      <!-- Clients -->
-      <div class="kpi-card">
-        <div class="kpi-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-        </div>
-        <div class="kpi-label">Clients</div>
-        <div class="kpi-value">{{ nb_clients }}</div>
-        <div class="kpi-subtitle">Actifs</div>
-      </div>
-
-      <!-- CA du mois -->
-      <div class="kpi-card">
-        <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981, #059669);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-        </div>
-        <div class="kpi-label">CA du mois</div>
-        <div class="kpi-value">{{ ca_mois|floatformat:0 }} €</div>
-        <div class="kpi-subtitle">Encaissé</div>
-      </div>
-
-      <!-- Devis en attente -->
-      <div class="kpi-card">
-        <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
-          </svg>
-        </div>
-        <div class="kpi-label">Devis attente</div>
-        <div class="kpi-value">{{ nb_en_attente_devis }}</div>
-        <div class="kpi-subtitle">À traiter</div>
-      </div>
-
-      <!-- À planifier -->
-      <div class="kpi-card">
-        <div class="kpi-icon" style="background: linear-gradient(135deg, #3b82f6, #2563eb);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-            <line x1="16" y1="2" x2="16" y2="6"/>
-            <line x1="8" y1="2" x2="8" y2="6"/>
-            <line x1="3" y1="10" x2="21" y2="10"/>
-          </svg>
-        </div>
-        <div class="kpi-label">À planifier</div>
-        <div class="kpi-value">{{ nb_a_planifier }}</div>
-        <div class="kpi-subtitle">Interventions</div>
-      </div>
-
-      <!-- Paiements en retard -->
-      {% if nb_paiements_retard > 0 %}
-      <div class="kpi-card alert">
-        <div class="kpi-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 9v4M12 17h0M12 3l9 18H3L12 3z"/>
-          </svg>
-        </div>
-        <div class="kpi-label" style="color: var(--danger);">🚨 Retards</div>
-        <div class="kpi-value" style="color: var(--danger);">{{ nb_paiements_retard }}</div>
-        <div class="kpi-subtitle" style="color: var(--danger); font-weight: 600;">
-          <a href="{% url 'operations' %}?filtre=retards" style="color: var(--danger); text-decoration: underline;">
-            À relancer →
-          </a>
-        </div>
-      </div>
-      {% endif %}
-
-      <!-- Paiements non planifiés -->
-      {% if nb_operations_sans_paiement > 0 %}
-      <div class="kpi-card warning">
-        <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 8v4M12 16h0"/>
-          </svg>
-        </div>
-        <div class="kpi-label" style="color: var(--warning);">⚠️ Non planifiés</div>
-        <div class="kpi-value" style="color: var(--warning);">{{ nb_operations_sans_paiement }}</div>
-        <div class="kpi-subtitle" style="color: var(--warning); font-weight: 600;">
-          <a href="{% url 'operations' %}?filtre=non_planifies" style="color: var(--warning); text-decoration: underline;">
-            À enregistrer →
-          </a>
-        </div>
-      </div>
-      {% endif %}
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <!-- Clients -->
+    <div class="kpi-card">
+      <div class="kpi-label">👥 Clients</div>
+      <div class="kpi-value">{{ nb_clients }}</div>
+      <div class="kpi-subtitle">Actifs</div>
     </div>
+
+    <!-- CA du mois -->
+    <div class="kpi-card">
+      <div class="kpi-label">💰 CA du mois</div>
+      <div class="kpi-value">{{ ca_mois|floatformat:0 }} €</div>
+      <div class="kpi-subtitle">Encaissé</div>
+    </div>
+
+    <!-- Devis en attente -->
+    <div class="kpi-card">
+      <div class="kpi-label">📄 Devis</div>
+      <div class="kpi-value">{{ nb_en_attente_devis }}</div>
+      <div class="kpi-subtitle">En attente</div>
+    </div>
+
+    <!-- À planifier -->
+    <div class="kpi-card">
+      <div class="kpi-label">📅 À planifier</div>
+      <div class="kpi-value">{{ nb_a_planifier }}</div>
+      <div class="kpi-subtitle">Interventions</div>
+    </div>
+
+    <!-- Paiements en retard -->
+    {% if nb_paiements_retard > 0 %}
+    <div class="kpi-card alert">
+      <div class="kpi-label">🚨 Retards</div>
+      <div class="kpi-value">{{ nb_paiements_retard }}</div>
+      <div class="kpi-subtitle">
+        <a href="{% url 'operations' %}?filtre=retards">À relancer →</a>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Paiements non planifiés -->
+    {% if nb_operations_sans_paiement > 0 %}
+    <div class="kpi-card warning">
+      <div class="kpi-label">⚠️ Non planifiés</div>
+      <div class="kpi-value">{{ nb_operations_sans_paiement }}</div>
+      <div class="kpi-subtitle">
+        <a href="{% url 'operations' %}?filtre=non_planifies">À enregistrer →</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
 
     <!-- PLANNING -->
     <section class="section">
