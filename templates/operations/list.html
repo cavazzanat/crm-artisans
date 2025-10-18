@@ -470,7 +470,7 @@
         <a href="{% url 'clients' %}">Clients</a>
       </nav>
       <div class="user">
-        <span>Connecté·e : {{ user.username }}</span>
+        <span>{{ user.username }}</span>
         <form method="post" action="{% url 'logout' %}">
           {% csrf_token %}
           <button type="submit" title="Se déconnecter">Déconnexion</button>

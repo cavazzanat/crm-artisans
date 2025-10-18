@@ -115,8 +115,12 @@
             <a href="{% url 'operations' %}">Opérations</a>
             <a href="{% url 'clients' %}" class="active">Clients</a>
         </nav>
-        <div class="user-info">
-            Connecté : {{ user.username }}
+        <div class="user">
+            <span>{{ user.username }}</span>
+            <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">Déconnexion</button>
+            </form>
         </div>
     </header>
 
