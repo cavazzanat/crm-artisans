@@ -199,7 +199,10 @@ def operations_list(request):
         )['total'] or 0
         
         reste = montant_total - montant_paye
-        ca_en_attente_total += reste
+        
+        # ⚠️ IMPORTANT : Ne compter que si reste > 0
+        if reste > 0:
+            ca_en_attente_total += reste
         
         # Vérifier retards
         retards = op.echeances.filter(
@@ -231,12 +234,15 @@ def operations_list(request):
 
     ca_ok = ca_en_attente_total - ca_retard - ca_non_planifies
 
-    # CA Prévisionnel
+    # CA Prévisionnel (opérations planifiées)
     operations_planifiees = Operation.objects.filter(
         user=request.user,
         statut='planifie'
     )
     ca_previsionnel = sum(op.montant_total for op in operations_planifiees)
+    
+    # ✅ NOUVEAU : CA TOTAL EN COURS
+    ca_total_en_cours = ca_previsionnel + ca_en_attente_total
     
     # Pourcentage
     if ca_en_attente_total > 0:
@@ -257,10 +263,8 @@ def operations_list(request):
     
     # Appliquer le filtre
     if filtre == 'retards':
-        # ✅ FILTRER d'abord les opérations avec retards
         operations = operations.filter(id__in=operations_avec_retards_ids)
         
-        # ✅ PUIS enrichir avec les infos de retard
         for op in operations:
             premier_retard = op.echeances.filter(
                 paye=False,
@@ -270,12 +274,10 @@ def operations_list(request):
             if premier_retard:
                 op.premier_retard = premier_retard
                 op.jours_retard = (timezone.now().date() - premier_retard.date_echeance).days
-
     
     elif filtre == 'non_planifies':
         operations = operations.filter(id__in=operations_sans_echeances_ids)
         
-        # ✅ Enrichir avec les montants à planifier
         for op in operations:
             total_planifie = op.echeances.aggregate(
                 total=Sum('montant')
@@ -284,10 +286,9 @@ def operations_list(request):
             op.reste_a_planifier = op.montant_total - total_planifie
     
     elif filtre == 'toutes':
-        pass  # Toutes les opérations
+        pass
     
     else:
-        # Filtres de statut classiques
         operations = operations.filter(statut=filtre)
     
     # Recherche
@@ -329,6 +330,7 @@ def operations_list(request):
         'ca_retard': ca_retard,
         'ca_non_planifies': ca_non_planifies,
         'ca_previsionnel': ca_previsionnel,
+        'ca_total_en_cours': ca_total_en_cours,  # ✅ AJOUTÉ
         'pct_ok': pct_ok,
         
         # Compteurs filtres
