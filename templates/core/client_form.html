@@ -187,11 +187,11 @@ CLIENT_FORM_TEMPLATE = '''
             <a href="{% url 'operations' %}">Opérations</a>
             <a href="{% url 'clients' %}" class="active">Clients</a>
         </nav>
-        <div class="user-info">
-            Connecté : {{ user.username }} | 
-            <form method="post" action="{% url 'logout' %}" style="display: inline; margin: 0;">
-                {% csrf_token %}
-                <button type="submit" style="background: none; border: none; color: #333; cursor: pointer; font-size: 0.9rem; text-decoration: underline;">Déconnexion</button>
+        <div class="user">
+            <span>{{ user.username }}</span>
+            <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit">Déconnexion</button>
             </form>
         </div>
     </header>

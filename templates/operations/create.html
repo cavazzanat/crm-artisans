@@ -267,6 +267,10 @@
       </nav>
       <div class="user">
         <span>{{ user.username }}</span>
+        <form method="post" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button type="submit">Déconnexion</button>
+        </form>
       </div>
     </div>
   </header>
