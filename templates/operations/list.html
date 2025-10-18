@@ -328,6 +328,129 @@
         } 
       }
     }
+
+    .finance-overview {
+      background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(139,92,246,.15));
+      border: 2px solid rgba(99,102,241,.3);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .finance-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .finance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .finance-item {
+      background: rgba(15,23,42,.5);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem;
+    }
+    
+    .finance-item.highlight {
+      border-color: var(--success);
+    }
+    
+    .finance-item.alert {
+      border-color: var(--danger);
+      background: rgba(239,68,68,.1);
+    }
+    
+    .finance-item.warning {
+      border-color: var(--warning);
+      background: rgba(245,158,11,.1);
+    }
+    
+    .finance-label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+    }
+    
+    .finance-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+    
+    .finance-subtitle {
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: rgba(148,163,184,.2);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--success), var(--primary));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+    
+    /* Filtres avec badges */
+    .filter-badge {
+      background: rgba(99,102,241,.2);
+      color: white;
+      padding: 0.15rem 0.5rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-left: 0.35rem;
+    }
+    
+    .filter-badge.alert {
+      background: rgba(239,68,68,.3);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .filter-badge.warning {
+      background: rgba(245,158,11,.3);
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
+    /* Mode clair */
+    @media (prefers-color-scheme: light) {
+      .finance-overview {
+        background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(139,92,246,.08));
+        border-color: rgba(99,102,241,.2);
+      }
+      
+      .finance-item {
+        background: rgba(248,250,252,.8);
+      }
+      
+      .finance-item.alert {
+        background: rgba(239,68,68,.05);
+      }
+      
+      .finance-item.warning {
+        background: rgba(245,158,11,.05);
+      }
+    }
   </style>
 </head>
 <body>
@@ -358,132 +481,309 @@
 
   <main class="container">
     <h1 class="page-title">Gestion des opérations</h1>
-    <p class="subtitle">{{ operations|length|default:0 }} opération(s) trouvée(s)</p>
+    <p class="subtitle">{{ nb_total }} opération{{ nb_total|pluralize }} au total</p>
 
-    <!-- Section Filtres Rapides -->
-    <section class="section" aria-labelledby="filters-title">
+    <!-- ✅ VUE D'ENSEMBLE FINANCIÈRE -->
+    {% if ca_en_attente_total > 0 or ca_previsionnel > 0 %}
+    <div class="finance-overview">
+      <div class="finance-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+        Vue d'ensemble financière
+      </div>
+      
+      <div class="finance-grid">
+        <!-- Trésorerie en attente -->
+        <div class="finance-item">
+          <div<div class="finance-label">💰 Trésorerie en attente</div>
+          <div class="finance-value">{{ ca_en_attente_total|floatformat:0 }} €</div>
+          <div class="finance-subtitle">Réalisé non encaissé</div>
+        </div>
+        
+        <!-- CA Prévisionnel -->
+        <div class="finance-item">
+          <div class="finance-label">📈 CA prévisionnel</div>
+          <div class="finance-value">{{ ca_previsionnel|floatformat:0 }} €</div>
+          <div class="finance-subtitle">Opérations planifiées</div>
+        </div>
+      </div>
+      
+      <!-- Barre de progression -->
+      {% if ca_en_attente_total > 0 %}
+      <div style="margin-top: 1rem;">
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {{ pct_ok }}%;"></div>
+        </div>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem;">
+          <span style="color: var(--success);">⏳ {{ ca_ok|floatformat:0 }}€ OK ({{ pct_ok }}%)</span>
+          {% if ca_retard > 0 %}
+          <span style="color: var(--danger);">🚨 {{ ca_retard|floatformat:0 }}€ Retard</span>
+          {% endif %}
+          {% if ca_non_planifies > 0 %}
+          <span style="color: var(--warning);">⚠️ {{ ca_non_planifies|floatformat:0 }}€ Non planifié</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- ✅ FILTRES INTELLIGENTS -->
+    <section class="section">
       <div class="section-header">
-        <h2 class="section-title" id="filters-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M9 12h6m-4 6h2" stroke="currentColor" stroke-width="1.6"/></svg>
+        <h2 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M9 12h6m-4 6h2" stroke="currentColor" stroke-width="1.6"/></svg>
           Filtres rapides
         </h2>
         <div class="toolbar">
-          {% if statut_filtre or ville_filtre or search %}
+          {% if filtre_actif != 'toutes' or recherche %}
             <a href="{% url 'operations' %}" class="btn">Effacer filtres</a>
           {% endif %}
+          <a href="{% url 'operation_create' %}" class="btn primary">+ Nouvelle opération</a>
         </div>
       </div>
       
       <div class="filters-quick">
-        <a href="?statut=en_attente_devis" class="filter-btn {% if statut_filtre == 'en_attente_devis' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2Z" stroke="currentColor" stroke-width="1.6"/></svg>
-          En attente devis
+        <!-- Toutes -->
+        <a href="?filtre=toutes" class="filter-btn {% if filtre_actif == 'toutes' %}active{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke="currentColor" stroke-width="1.6"/></svg>
+          Toutes
+          <span class="filter-badge">{{ nb_total }}</span>
         </a>
-        <a href="?statut=a_planifier" class="filter-btn {% if statut_filtre == 'a_planifier' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.6"/></svg>
-          À planifier
+        
+        <!-- En attente devis -->
+        <a href="?filtre=en_attente_devis" class="filter-btn {% if filtre_actif == 'en_attente_devis' %}active{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.6"/></svg>
+          🟡 Devis
+          <span class="filter-badge">{{ nb_en_attente_devis }}</span>
         </a>
-        <a href="?statut=realise" class="filter-btn {% if statut_filtre == 'realise' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 12v-2" stroke="currentColor" stroke-width="1.6"/></svg>
-          Attente paiement
+        
+        <!-- À planifier -->
+        <a href="?filtre=a_planifier" class="filter-btn {% if filtre_actif == 'a_planifier' %}active{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.6"/></svg>
+          🔵 À planifier
+          <span class="filter-badge">{{ nb_a_planifier }}</span>
         </a>
+        
+        <!-- Planifié -->
+        <a href="?filtre=planifie" class="filter-btn {% if filtre_actif == 'planifie' %}active{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke="currentColor" stroke-width="1.6"/></svg>
+          📅 Planifié
+          <span class="filter-badge">{{ nb_planifie }}</span>
+        </a>
+        
+        <!-- Réalisé -->
+        <a href="?filtre=realise" class="filter-btn {% if filtre_actif == 'realise' %}active{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6"/></svg>
+          🟢 Réalisé
+          <span class="filter-badge">{{ nb_realise }}</span>
+        </a>
+        
+        <!-- 🚨 Retards -->
+        {% if nb_paiements_retard > 0 %}
+        <a href="?filtre=retards" class="filter-btn {% if filtre_actif == 'retards' %}active{% endif %}" style="border-color: var(--danger);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0M12 3l9 18H3L12 3z" stroke="currentColor" stroke-width="1.6"/></svg>
+          🚨 Retards
+          <span class="filter-badge alert">{{ nb_paiements_retard }}</span>
+        </a>
+        {% endif %}
+        
+        <!-- ⚠️ Non planifiés -->
+        {% if nb_operations_sans_paiement > 0 %}
+        <a href="?filtre=non_planifies" class="filter-btn {% if filtre_actif == 'non_planifies' %}active{% endif %}" style="border-color: var(--warning);">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4M12 16h0" stroke="currentColor" stroke-width="1.6"/></svg>
+          ⚠️ Non planifiés
+          <span class="filter-badge warning">{{ nb_operations_sans_paiement }}</span>
+        </a>
+        {% endif %}
+        
+        <!-- Payé -->
+        <a href="?filtre=paye" class="filter-btn {% if filtre_actif == 'paye' %}active{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.6"/></svg>
+          ✅ Payé
+          <span class="filter-badge">{{ nb_paye }}</span>
+        </a>
+        
+        <!-- Refusé -->
+        {% if nb_refuse > 0 %}
+        <a href="?filtre=devis_refuse" class="filter-btn {% if filtre_actif == 'devis_refuse' %}active{% endif %}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="1.6"/></svg>
+          🔴 Refusé
+          <span class="filter-badge">{{ nb_refuse }}</span>
+        </a>
+        {% endif %}
       </div>
 
+      <!-- Recherche -->
       <form method="GET" style="padding:.6rem .4rem 0">
         <div class="search">
           <label class="field">
-            <span class="label">Recherche & filtres</span>
-            <input class="input" type="text" name="search" value="{{ search|default:'' }}" placeholder="Client, opération, ville, téléphone...">
+            <span class="label">Recherche</span>
+            <input class="input" type="text" name="recherche" value="{{ recherche|default:'' }}" placeholder="Client, opération, ville, téléphone...">
           </label>
+          <input type="hidden" name="filtre" value="{{ filtre_actif }}">
           <button type="submit" class="btn primary">Rechercher</button>
-          <a href="{% url 'operations' %}" class="btn">Effacer</a>
+          <a href="{% url 'operations' %}?filtre={{ filtre_actif }}" class="btn">Effacer</a>
         </div>
       </form>
     </section>
 
-    <!-- Liste des opérations -->
-    <section class="section" aria-labelledby="operations-title">
+    <!-- ✅ LISTE DES OPÉRATIONS -->
+    <section class="section">
       <div class="section-header">
-        <h2 class="section-title" id="operations-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10h10M7 14h7M4 6h16v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z" stroke="currentColor" stroke-width="1.6"/></svg>
-          Opérations <span class="badge">{{ total_operations }}</span>
+        <h2 class="section-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 10h10M7 14h7M4 6h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="1.6"/></svg>
+          
+          {% if filtre_actif == 'retards' %}
+            🚨 Paiements en retard
+          {% elif filtre_actif == 'non_planifies' %}
+            ⚠️ Paiements non planifiés
+          {% elif filtre_actif == 'toutes' %}
+            Toutes les opérations
+          {% else %}
+            {{ filtre_actif|title }}
+          {% endif %}
+          
+          <span class="badge">{{ total_operations }}</span>
         </h2>
-        <div class="toolbar" aria-label="Actions rapides">
-          {% if statut_filtre %}<span class="chip status">Statut: {{ statut_filtre }}</span>{% endif %}
-          {% if ville_filtre %}<span class="chip status">Ville: {{ ville_filtre }}</span>{% endif %}
-          <a href="/operations/nouvelle/" class="btn primary">Nouvelle opération</a>
+        <div class="toolbar">
+          <a href="{% url 'operation_create' %}" class="btn primary">+ Nouvelle opération</a>
         </div>
       </div>
 
       {% if operations %}
         <div class="total-count">
-          {{ operations|length }} opération{{ operations|length|pluralize }} trouvée{{ operations|length|pluralize }}
+          {{ total_operations }} opération{{ total_operations|pluralize }} trouvée{{ total_operations|pluralize }}
         </div>
 
+        <!-- ✅ TABLEAU ADAPTÉ AU FILTRE -->
         <div class="table-wrap">
           <table class="table">
             <thead>
               <tr>
-                <th>Id Client</th>
+                <th>ID</th>
                 <th>Date</th>
                 <th>Client / Opération</th>
-                <th>Ville</th>
-                <th>Montant</th>
-                <th>Statut</th>
-                <th>Documents</th>
+                
+                {% if filtre_actif == 'retards' %}
+                  <th>Date échéance</th>
+                  <th>Jours retard</th>
+                  <th>Montant dû</th>
+                {% elif filtre_actif == 'non_planifies' %}
+                  <th>Date réalisation</th>
+                  <th>Montant total</th>
+                {% else %}
+                  <th>Ville</th>
+                  <th>Montant</th>
+                  <th>Statut</th>
+                {% endif %}
+                
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {% for operation in operations %}
-              <tr>
-                <td class="operation-id" data-label="Id">{{ operation.client.id_client }}</td>
-                <td data-label="Date">
+              <tr {% if filtre_actif == 'retards' %}style="background: rgba(239,68,68,.08);"{% elif filtre_actif == 'non_planifies' %}style="background: rgba(245,158,11,.08);"{% endif %}>
+                <td class="operation-id">{{ operation.id_operation }}</td>
+                
+                <td>
                   <div class="nowrap">
                     {% if operation.date_prevue %}
-                      {{ operation.date_prevue|date:"d/m/Y H:i" }}
+                      {{ operation.date_prevue|date:"d/m/Y" }}
                     {% else %}
                       {{ operation.date_creation|date:"d/m/Y" }}
                     {% endif %}
                   </div>
                 </td>
-                <td data-label="Client">
+                
+                <td>
                   <div class="client-name">{{ operation.client.nom }} {{ operation.client.prenom }}</div>
                   <div class="muted">{{ operation.type_prestation|truncatechars:40 }}</div>
                 </td>
-                <td data-label="Ville">{{ operation.client.ville|default:"—" }}</td>
-                <td data-label="Montant">
-                  {% if operation.montant_total %}
-                    {{ operation.montant_total }}€
-                  {% else %}
-                    <span class="muted">—</span>
-                  {% endif %}
-                </td>
-                <td data-label="Statut">
-                  {% if operation.statut == 'en_attente_devis' %}
-                    <span class="chip en-attente">En attente devis</span>
-                  {% elif operation.statut == 'a_planifier' %}
-                    <span class="chip status">À planifier</span>
-                  {% elif operation.statut == 'realise' %}
-                    <span class="chip realise">Attente paiement</span>
-                  {% else %}
-                    <span class="chip">{{ operation.get_statut_display }}</span>
-                  {% endif %}
-                </td>
-                <td data-label="Documents">
-                  <div class="documents">
-                    <a href="#" class="doc-btn" title="Devis">📄</a>
-                    {% if operation.peut_generer_facture %}
-                      <a href="#" class="doc-btn" title="Facture">🧾</a>
+                
+                {% if filtre_actif == 'retards' %}
+                  <!-- ✅ Colonnes spécifiques retards -->
+                  <td>
+                    {% if operation.premier_retard %}
+                      <span class="nowrap">{{ operation.premier_retard.date_echeance|date:"d/m/Y" }}</span>
+                    {% else %}
+                      <span class="muted">—</span>
                     {% endif %}
-                  </div>
-                </td>
-                <td data-label="Actions">
-                  <div class="toolbar">
-                    <a href="/operations/{{ operation.id }}/" class="btn-view" title="Voir les détails">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5C7 5 3.73 8.11 2 12c1.73 3.89 5 7 10 7s8.27-3.11 10-7c-1.73-3.89-5-7-10-7Zm0 11a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z" stroke="currentColor" stroke-width="1.6"/></svg>
+                  </td>
+                  <td>
+                    {% if operation.jours_retard %}
+                      <span style="color: var(--danger); font-weight: 700;">{{ operation.jours_retard }} jour{{ operation.jours_retard|pluralize }}</span>
+                    {% else %}
+                      <span class="muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if operation.premier_retard %}
+                      <strong style="color: var(--danger); font-size: 1.1rem;">{{ operation.premier_retard.montant|floatformat:0 }} €</strong>
+                    {% else %}
+                      <span class="muted">—</span>
+                    {% endif %}
+                  </td>
+                  
+                {% elif filtre_actif == 'non_planifies' %}
+                  <!-- ✅ Colonnes spécifiques non planifiés -->
+                  <td>
+                    {% if operation.date_realisation %}
+                      <span class="nowrap">{{ operation.date_realisation|date:"d/m/Y" }}</span>
+                    {% else %}
+                      <span class="muted">Non renseigné</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <strong style="color: var(--warning); font-size: 1.1rem;">{{ operation.montant_total|floatformat:0 }} €</strong>
+                  </td>
+                  
+                {% else %}
+                  <!-- ✅ Colonnes standard -->
+                  <td>{{ operation.client.ville|default:"—" }}</td>
+                  <td>
+                    {% if operation.montant_total %}
+                      {{ operation.montant_total|floatformat:0 }} €
+                    {% else %}
+                      <span class="muted">—</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if operation.statut == 'en_attente_devis' %}
+                      <span class="chip en-attente">En attente devis</span>
+                    {% elif operation.statut == 'a_planifier' %}
+                      <span class="chip status">À planifier</span>
+                    {% elif operation.statut == 'planifie' %}
+                      <span class="chip status">Planifié</span>
+                    {% elif operation.statut == 'realise' %}
+                      <span class="chip realise">Réalisé</span>
+                    {% elif operation.statut == 'paye' %}
+                      <span class="chip" style="color: var(--success); border-color: var(--success);">Payé</span>
+                    {% else %}
+                      <span class="chip">{{ operation.get_statut_display }}</span>
+                    {% endif %}
+                  </td>
+                {% endif %}
+                
+                <td>
+                  <div class="toolbar" style="gap: .35rem;">
+                    <a href="{% url 'operation_detail' operation.id %}" class="btn-view">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.6"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="1.6"/></svg>
                       Voir
                     </a>
+                    
+                    {% if filtre_actif == 'retards' %}
+                      <a href="tel:{{ operation.client.telephone }}" class="btn" style="font-size: .8rem; padding: .4rem .6rem; background: var(--danger); color: white; border-color: var(--danger);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke="currentColor" stroke-width="1.6"/></svg>
+                        Appeler
+                      </a>
+                    {% elif filtre_actif == 'non_planifies' %}
+                      <a href="{% url 'operation_detail' operation.id %}#paiements" class="btn" style="font-size: .8rem; padding: .4rem .6rem; background: var(--warning); color: white; border-color: var(--warning);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6"/></svg>
+                        Planifier
+                      </a>
+                    {% endif %}
                   </div>
                 </td>
               </tr>
@@ -492,55 +792,39 @@
           </table>
         </div>
       {% else %}
-        <div class="section" style="text-align:center">
-          <p style="color:var(--muted); padding:1rem">Aucune opération ne correspond à votre recherche.</p>
-          <div class="toolbar" style="justify-content:center; padding-bottom:.5rem">
-            <a href="/operations/nouvelle/" class="btn primary">Créer la première opération</a>
+        <div style="text-align:center; padding: 2rem;">
+          <p style="color:var(--muted); margin-bottom: 1rem;">
+            {% if recherche %}
+              Aucune opération ne correspond à votre recherche "{{ recherche }}".
+            {% else %}
+              Aucune opération dans cette catégorie.
+            {% endif %}
+          </p>
+          <div class="toolbar" style="justify-content:center">
+            <a href="{% url 'operation_create' %}" class="btn primary">Créer une opération</a>
+            {% if recherche or filtre_actif != 'toutes' %}
+              <a href="{% url 'operations' %}" class="btn">Voir toutes les opérations</a>
+            {% endif %}
           </div>
         </div>
       {% endif %}
     </section>
-
-    <!-- Pagination -->
-    {% if page_obj %}
-      <section class="section" style="display:flex; justify-content:space-between; align-items:center">
-        <span class="muted">Page {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
-        <div class="toolbar">
-          {% if page_obj.has_previous %}
-            <a class="btn" href="?page={{ page_obj.previous_page_number }}&search={{ search }}">Précédent</a>
-          {% endif %}
-          {% if page_obj.has_next %}
-            <a class="btn" href="?page={{ page_obj.next_page_number }}&search={{ search }}">Suivant</a>
-          {% endif %}
-        </div>
-      </section>
-    {% endif %}
   </main>
 
   <script>
-    // Recherche instantanée (optionnelle)
-    document.querySelector('input[name="search"]').addEventListener('input', function(e) {
-      clearTimeout(this.searchTimeout);
-      this.searchTimeout = setTimeout(() => {
-        if (e.target.value.length > 2 || e.target.value.length === 0) {
-          const form = e.target.closest('form');
-          form.submit();
-        }
-      }, 800);
-    });
+    // Recherche avec délai
+    const searchInput = document.querySelector('input[name="recherche"]');
+    if (searchInput) {
+      let searchTimeout;
+      searchInput.addEventListener('input', function(e) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+          if (e.target.value.length > 2 || e.target.value.length === 0) {
+            e.target.closest('form').submit();
+          }
+        }, 800);
+      });
+    }
   </script>
-{% if messages %}
-{% for message in messages %}
-<div class="alert {{ message.tags }}">
-  {{ message }}
-</div>
-{% endfor %}
-
-<script>
-setTimeout(function() {
-  document.querySelectorAll('.alert').forEach(el => el.remove());
-}, 3000); // 3 secondes
-</script>
-{% endif %}
 </body>
 </html>

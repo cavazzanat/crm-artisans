@@ -20,68 +20,109 @@ import json
 from .models import Client, Operation, Intervention, HistoriqueOperation, Echeance
 from .fix_database import fix_client_constraint
 
+from datetime import timedelta
 
-# Dans core/views.py, remplacez la section du dashboard par :
-# Dans core/views.py, remplacez la section du dashboard par :
-# Dans core/views.py, remplacez la section du dashboard par :
+
 
 @login_required
 def dashboard(request):
+    """Dashboard simplifié : KPI essentiels + Calendrier"""
     fix_client_constraint()
     try:
-        # KPI
+        # ========================================
+        # KPI ESSENTIELS
+        # ========================================
         nb_clients = Client.objects.filter(user=request.user).count()
-        nb_operations = Operation.objects.filter(user=request.user).count()
-        nb_en_attente_devis = Operation.objects.filter(user=request.user, statut='en_attente_devis').count()
-        nb_a_planifier = Operation.objects.filter(user=request.user, statut='a_planifier').count()
-        nb_realise = Operation.objects.filter(user=request.user, statut='realise').count()
         
-        # CA du mois
-        from django.utils import timezone
-        from django.db.models import Sum
+        # CA du mois encaissé
         debut_mois = timezone.now().replace(day=1)
         ca_mois = Operation.objects.filter(
             user=request.user, 
             statut='paye',
             date_creation__gte=debut_mois
         ).aggregate(total=Sum('interventions__montant'))['total'] or 0
-
         
-        # ✅ CALENDRIER : Uniquement les opérations planifiées et suivantes
-        from datetime import timedelta
-
+        # Compteurs opérationnels
+        nb_en_attente_devis = Operation.objects.filter(
+            user=request.user, 
+            statut='en_attente_devis'
+        ).count()
+        
+        nb_a_planifier = Operation.objects.filter(
+            user=request.user, 
+            statut='a_planifier'
+        ).count()
+        
+        # Paiements en retard
+        operations_realises = Operation.objects.filter(
+            user=request.user,
+            statut='realise'
+        ).prefetch_related('echeances')
+        
+        nb_paiements_retard = 0
+        nb_operations_sans_paiement = 0
+        
+        for op in operations_realises:
+            # Retards
+            retards = op.echeances.filter(
+                paye=False,
+                date_echeance__lt=timezone.now().date()
+            )
+            nb_paiements_retard += retards.count()
+            
+            # Non planifiés
+            montant_paye = op.echeances.filter(paye=True).aggregate(
+                total=Sum('montant')
+            )['total'] or 0
+            
+            reste = op.montant_total - montant_paye
+            
+            if not op.echeances.exists() and reste > 0:
+                nb_operations_sans_paiement += 1
+        
+        # ========================================
+        # CALENDRIER
+        # ========================================
         today = timezone.now().date()
-        start_date = today - timedelta(days=30)  # 30 jours passés
-        end_date = today + timedelta(days=14)    # 14 jours futurs
+        start_date = today - timedelta(days=30)
+        end_date = today + timedelta(days=14)
 
         operations_calendrier = Operation.objects.filter(
             user=request.user,
             date_prevue__isnull=False,
             date_prevue__gte=start_date,
-            date_prevue__lte=end_date
-        ).filter(
-            # ✅ NOUVEAU : Seulement à partir de "planifie"
+            date_prevue__lte=end_date,
             statut__in=['planifie', 'realise', 'paye']
         ).select_related('client').order_by('date_prevue')
 
-        # ✅ FORMATER avec la nouvelle logique de couleurs
         calendar_events = []
         for op in operations_calendrier:
             is_past = op.date_prevue < timezone.now()
             
-            # ✅ NOUVELLE LOGIQUE DE COULEURS
             if op.statut == 'planifie':
-                color_class = 'event-planifie'  # Gris
+                color_class = 'event-planifie'
                 status_text = "Planifié"
             elif op.statut == 'realise':
-                color_class = 'event-realise'   # Bleu
+                color_class = 'event-realise'
                 status_text = "Réalisé"
             elif op.statut == 'paye':
-                color_class = 'event-paye'      # Vert
+                color_class = 'event-paye'
                 status_text = "Payé"
             else:
                 color_class = 'event-default'
                 status_text = op.get_statut_display()
+            
+            # Détecter retards paiement
+            paiements_retard_op = op.echeances.filter(
+                paye=False,
+                date_echeance__lt=timezone.now().date()
+            )
+            
+            has_retard = paiements_retard_op.exists()
+            nb_retards_op = paiements_retard_op.count()
+            montant_retard_op = paiements_retard_op.aggregate(
+                total=Sum('montant')
+            )['total'] or 0
             
             calendar_events.append({
                 'id': op.id,
@@ -96,16 +137,22 @@ def dashboard(request):
                 'statut_display': status_text,
                 'color_class': color_class,
                 'is_past': is_past,
-                'commentaires': op.commentaires or ''
+                'commentaires': op.commentaires or '',
+                'has_retard_paiement': has_retard,
+                'nb_retards': nb_retards_op,
+                'montant_retard': float(montant_retard_op)
             })
 
         context = {
+            # KPI essentiels
             'nb_clients': nb_clients,
-            'nb_operations': nb_operations,
+            'ca_mois': ca_mois,
             'nb_en_attente_devis': nb_en_attente_devis,
             'nb_a_planifier': nb_a_planifier,
-            'nb_realise': nb_realise,
-            'ca_mois': ca_mois,
+            'nb_paiements_retard': nb_paiements_retard,
+            'nb_operations_sans_paiement': nb_operations_sans_paiement,
+            
+            # Calendrier
             'calendar_events_json': json.dumps(calendar_events),
             'calendar_events': calendar_events,
         }
@@ -113,28 +160,121 @@ def dashboard(request):
         return render(request, 'core/dashboard.html', context)
         
     except Exception as e:
-        return HttpResponse(f"<h1>CRM Artisans</h1><p>Erreur : {str(e)}</p><p><a href='/admin/'>Admin</a></p>")
-    
+        return HttpResponse(f"<h1>CRM Artisans</h1><p>Erreur : {str(e)}</p>")
+
+
 @login_required
 def operations_list(request):
-    """Page de gestion des opérations avec filtres"""
+    """Page Opérations avec vue financière et filtres intelligents"""
     
-    # Récupérer toutes les opérations de l'utilisateur
-    operations = Operation.objects.filter(user=request.user).select_related('client')
+    # ========================================
+    # CALCULS FINANCIERS
+    # ========================================
+    operations_realises = Operation.objects.filter(
+        user=request.user,
+        statut='realise'
+    ).prefetch_related('echeances', 'interventions')
+    
+    ca_en_attente_total = 0
+    ca_retard = 0
+    nb_paiements_retard = 0
+    ca_non_planifies = 0
+    nb_operations_sans_paiement = 0
+    ca_prevus = 0
+    
+    operations_avec_retards_ids = []
+    operations_sans_echeances_ids = []
+    
+    for op in operations_realises:
+        montant_total = op.montant_total
+        
+        montant_paye = op.echeances.filter(paye=True).aggregate(
+            total=Sum('montant')
+        )['total'] or 0
+        
+        reste = montant_total - montant_paye
+        ca_en_attente_total += reste
+        
+        # Vérifier retards
+        retards = op.echeances.filter(
+            paye=False,
+            date_echeance__lt=timezone.now().date()
+        )
+        
+        if retards.exists():
+            montant_retard = retards.aggregate(total=Sum('montant'))['total'] or 0
+            ca_retard += montant_retard
+            nb_paiements_retard += retards.count()
+            operations_avec_retards_ids.append(op.id)
+        
+        # Vérifier non planifiés
+        if not op.echeances.exists() and reste > 0:
+            ca_non_planifies += reste
+            nb_operations_sans_paiement += 1
+            operations_sans_echeances_ids.append(op.id)
+        
+        # Paiements prévus OK
+        futurs = op.echeances.filter(
+            paye=False,
+            date_echeance__gte=timezone.now().date()
+        )
+        if futurs.exists():
+            ca_prevus += futurs.aggregate(total=Sum('montant'))['total'] or 0
+    
+    ca_ok = ca_en_attente_total - ca_retard - ca_non_planifies
+    
+    # CA Prévisionnel
+    operations_planifiees = Operation.objects.filter(
+        user=request.user,
+        statut='planifie'
+    )
+    ca_previsionnel = sum(op.montant_total for op in operations_planifiees)
+    
+    # Pourcentage
+    if ca_en_attente_total > 0:
+        pct_ok = int((ca_ok / ca_en_attente_total) * 100)
+    else:
+        pct_ok = 0
+    
+    # ========================================
+    # RÉCUPÉRATION & FILTRAGE DES OPÉRATIONS
+    # ========================================
+    operations = Operation.objects.filter(
+        user=request.user
+    ).select_related('client').prefetch_related('interventions', 'echeances')
     
     # Filtres
-    statut_filtre = request.GET.get('statut', '')
-    ville_filtre = request.GET.get('ville', '')
+    filtre = request.GET.get('filtre', 'toutes')
     recherche = request.GET.get('recherche', '')
-    tri = request.GET.get('tri', '-date_creation')
     
-    # Appliquer les filtres
-    if statut_filtre:
-        operations = operations.filter(statut=statut_filtre)
+    # Appliquer le filtre
+    if filtre == 'retards':
+        # ✅ FILTRER d'abord les opérations avec retards
+        operations = operations.filter(id__in=operations_avec_retards_ids)
+        
+        # ✅ PUIS enrichir avec les infos de retard
+        for op in operations:
+            premier_retard = op.echeances.filter(
+                paye=False,
+                date_echeance__lt=timezone.now().date()
+            ).order_by('date_echeance').first()
+            
+            if premier_retard:
+                op.premier_retard = premier_retard
+                op.jours_retard = (timezone.now().date() - premier_retard.date_echeance).days
+
     
-    if ville_filtre:
-        operations = operations.filter(client__ville__icontains=ville_filtre)
+    elif filtre == 'non_planifies':
+        operations = operations.filter(id__in=operations_sans_echeances_ids)
     
+    elif filtre == 'toutes':
+        pass  # Toutes les opérations
+    
+    else:
+        # Filtres de statut classiques
+        operations = operations.filter(statut=filtre)
+    
+    # Recherche
     if recherche:
         operations = operations.filter(
             Q(client__nom__icontains=recherche) |
@@ -142,37 +282,59 @@ def operations_list(request):
             Q(type_prestation__icontains=recherche) |
             Q(client__ville__icontains=recherche) |
             Q(client__telephone__icontains=recherche) |
-            Q(adresse_intervention__icontains=recherche)
+            Q(id_operation__icontains=recherche)
         )
     
-    # Tri
-    if tri == 'date_prochaine_asc':
-        operations = operations.order_by('date_prevue')
-    elif tri == 'date_prochaine_desc':
-        operations = operations.order_by('-date_prevue')
-    else:
-        operations = operations.order_by('-date_creation')
+    # Tri par date de création (plus récent d'abord)
+    operations = operations.order_by('-date_creation')
     
-    # Statistiques pour le titre
-    total_operations = operations.count()
+    # ========================================
+    # COMPTEURS POUR LES FILTRES
+    # ========================================
+    all_operations = Operation.objects.filter(user=request.user)
     
-    # Choix pour les filtres
-    statuts_choices = Operation.STATUTS
-    villes = Client.objects.filter(user=request.user).values_list('ville', flat=True).distinct()
+    nb_total = all_operations.count()
+    nb_en_attente_devis = all_operations.filter(statut='en_attente_devis').count()
+    nb_a_planifier = all_operations.filter(statut='a_planifier').count()
+    nb_planifie = all_operations.filter(statut='planifie').count()
+    nb_realise = all_operations.filter(statut='realise').count()
+    nb_paye = all_operations.filter(statut='paye').count()
+    nb_refuse = all_operations.filter(statut='devis_refuse').count()
     
     context = {
         'operations': operations,
-        'total_operations': total_operations,
-        'statut_filtre': statut_filtre,
-        'ville_filtre': ville_filtre,
+        'total_operations': operations.count(),
+        'filtre_actif': filtre,
         'recherche': recherche,
-        'tri': tri,
-        'statuts_choices': statuts_choices,
-        'villes': villes,
+        
+        # Vue financière
+        'ca_en_attente_total': ca_en_attente_total,
+        'ca_ok': ca_ok,
+        'ca_retard': ca_retard,
+        'ca_non_planifies': ca_non_planifies,
+        'ca_previsionnel': ca_previsionnel,
+        'pct_ok': pct_ok,
+        
+        # Compteurs filtres
+        'nb_total': nb_total,
+        'nb_en_attente_devis': nb_en_attente_devis,
+        'nb_a_planifier': nb_a_planifier,
+        'nb_planifie': nb_planifie,
+        'nb_realise': nb_realise,
+        'nb_paiements_retard': nb_paiements_retard,
+        'nb_operations_sans_paiement': nb_operations_sans_paiement,
+        'nb_paye': nb_paye,
+        'nb_refuse': nb_refuse,
     }
     
     return render(request, 'operations/list.html', context)
 
+
+# ========================================
+# AUTRES VUES (inchangées)
+# ========================================
+# ... Gardez toutes vos autres vues existantes
+# (operation_detail, operation_create, etc.)
 @login_required
 def operation_detail(request, operation_id):
     """Fiche détaillée d'une opération avec gestion complète"""
