@@ -484,7 +484,7 @@
     <p class="subtitle">{{ nb_total }} opération{{ nb_total|pluralize }} au total</p>
 
   <!-- ✅ VUE D'ENSEMBLE FINANCIÈRE -->
-  {% if ca_en_attente_total > 0 or ca_previsionnel > 0 %}
+  {% if ca_en_attente_total > 0 or ca_previsionnel > 0 or ca_encaisse > 0 %}
   <div class="finance-overview">
     <div class="finance-title">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -496,9 +496,9 @@
     <div class="finance-grid">
       <!-- ✅ NOUVEAU : CA en cours -->
       <div class="finance-item highlight">
-        <div class="finance-label">🚀 CA en cours</div>
-        <div class="finance-value">{{ ca_total_en_cours|floatformat:0 }} €</div>
-        <div class="finance-subtitle">Opérations planifiées + réalisées</div>
+        <div class="finance-label">✅ CA encaissé</div>
+        <div class="finance-value">{{ ca_encaisse|floatformat:0 }} €</div>
+        <div class="finance-subtitle">Paiements confirmés</div>
       </div>
       
       <!-- Trésorerie en attente -->
