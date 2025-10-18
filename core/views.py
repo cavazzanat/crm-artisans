@@ -174,21 +174,26 @@ def operations_list(request):
         user=request.user,
         statut='realise'
     ).prefetch_related('echeances', 'interventions')
-    
+
     ca_en_attente_total = 0
     ca_retard = 0
     nb_paiements_retard = 0
     ca_non_planifies = 0
     nb_operations_sans_paiement = 0
     ca_prevus = 0
-    
+
     operations_avec_retards_ids = []
     operations_sans_echeances_ids = []
-    
+
     for op in operations_realises:
         montant_total = op.montant_total
         
         montant_paye = op.echeances.filter(paye=True).aggregate(
+            total=Sum('montant')
+        )['total'] or 0
+        
+        # ✅ CALCUL DU TOTAL PLANIFIÉ (payé + prévu)
+        total_planifie = op.echeances.aggregate(
             total=Sum('montant')
         )['total'] or 0
         
@@ -207,9 +212,11 @@ def operations_list(request):
             nb_paiements_retard += retards.count()
             operations_avec_retards_ids.append(op.id)
         
-        # Vérifier non planifiés
-        if not op.echeances.exists() and reste > 0:
-            ca_non_planifies += reste
+        # ✅ CORRECTION : Vérifier si le montant planifié est INFÉRIEUR au montant total
+        reste_a_planifier = montant_total - total_planifie
+        
+        if reste_a_planifier > 0:
+            ca_non_planifies += reste_a_planifier
             nb_operations_sans_paiement += 1
             operations_sans_echeances_ids.append(op.id)
         
@@ -220,9 +227,9 @@ def operations_list(request):
         )
         if futurs.exists():
             ca_prevus += futurs.aggregate(total=Sum('montant'))['total'] or 0
-    
+
     ca_ok = ca_en_attente_total - ca_retard - ca_non_planifies
-    
+
     # CA Prévisionnel
     operations_planifiees = Operation.objects.filter(
         user=request.user,
@@ -266,6 +273,14 @@ def operations_list(request):
     
     elif filtre == 'non_planifies':
         operations = operations.filter(id__in=operations_sans_echeances_ids)
+        
+        # ✅ Enrichir avec les montants à planifier
+        for op in operations:
+            total_planifie = op.echeances.aggregate(
+                total=Sum('montant')
+            )['total'] or 0
+            
+            op.reste_a_planifier = op.montant_total - total_planifie
     
     elif filtre == 'toutes':
         pass  # Toutes les opérations

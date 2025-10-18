@@ -726,18 +726,24 @@
                     {% endif %}
                   </td>
                   
-                {% elif filtre_actif == 'non_planifies' %}
-                  <!-- ✅ Colonnes spécifiques non planifiés -->
-                  <td>
-                    {% if operation.date_realisation %}
-                      <span class="nowrap">{{ operation.date_realisation|date:"d/m/Y" }}</span>
-                    {% else %}
-                      <span class="muted">Non renseigné</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    <strong style="color: var(--warning); font-size: 1.1rem;">{{ operation.montant_total|floatformat:0 }} €</strong>
-                  </td>
+                  {% elif filtre_actif == 'non_planifies' %}
+                    <td>
+                      {% if operation.date_realisation %}
+                        <span class="nowrap">{{ operation.date_realisation|date:"d/m/Y" }}</span>
+                      {% else %}
+                        <span class="muted">Non renseigné</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <div>
+                        <strong style="color: var(--warning); font-size: 1.1rem;">
+                          {{ operation.reste_a_planifier|floatformat:0 }} €
+                        </strong>
+                        <div class="muted" style="font-size: 0.75rem;">
+                          sur {{ operation.montant_total|floatformat:0 }}€ total
+                        </div>
+                      </div>
+                    </td>
                   
                 {% else %}
                   <!-- ✅ Colonnes standard -->
