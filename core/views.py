@@ -173,7 +173,7 @@ def operations_list(request):
     # ========================================
     operations_realises = Operation.objects.filter(
         user=request.user,
-        statut__in=['realise', 'paye']  # ← Réalisé OU Payé
+        statut__in=['realise', 'paye']
     ).prefetch_related('echeances', 'interventions')
 
     ca_en_attente_total = 0
@@ -193,18 +193,17 @@ def operations_list(request):
             total=Sum('montant')
         )['total'] or 0
         
-        # ✅ CALCUL DU TOTAL PLANIFIÉ (payé + prévu)
         total_planifie = op.echeances.aggregate(
             total=Sum('montant')
         )['total'] or 0
         
         reste = montant_total - montant_paye
         
-        # ⚠️ IMPORTANT : Ne compter que si reste > 0
+        # ⚠️ Ne compter que si reste > 0
         if reste > 0:
             ca_en_attente_total += reste
         
-        # Vérifier retards
+        # Retards
         retards = op.echeances.filter(
             paye=False,
             date_echeance__lt=timezone.now().date()
@@ -216,7 +215,7 @@ def operations_list(request):
             nb_paiements_retard += retards.count()
             operations_avec_retards_ids.append(op.id)
         
-        # ✅ CORRECTION : Vérifier si le montant planifié est INFÉRIEUR au montant total
+        # Non planifiés
         reste_a_planifier = montant_total - total_planifie
         
         if reste_a_planifier > 0:
@@ -241,14 +240,18 @@ def operations_list(request):
     )
     ca_previsionnel = sum(op.montant_total for op in operations_planifiees)
     
-    # ✅ NOUVEAU : CA TOTAL EN COURS
-    ca_total_en_cours = ca_previsionnel + ca_en_attente_total
+    # ✅ CA ENCAISSÉ (tous les paiements confirmés)
+    ca_encaisse = Echeance.objects.filter(
+        operation__user=request.user,
+        paye=True
+    ).aggregate(total=Sum('montant'))['total'] or 0
     
     # Pourcentage
     if ca_en_attente_total > 0:
         pct_ok = int((ca_ok / ca_en_attente_total) * 100)
     else:
         pct_ok = 0
+        
     
     # ========================================
     # RÉCUPÉRATION & FILTRAGE DES OPÉRATIONS
@@ -330,8 +333,9 @@ def operations_list(request):
         'ca_retard': ca_retard,
         'ca_non_planifies': ca_non_planifies,
         'ca_previsionnel': ca_previsionnel,
-        'ca_total_en_cours': ca_total_en_cours,  # ✅ AJOUTÉ
+
         'pct_ok': pct_ok,
+        'ca_encaisse': ca_encaisse,
         
         # Compteurs filtres
         'nb_total': nb_total,
