@@ -523,7 +523,7 @@
         <div class="progress-fill" style="width: {{ pct_ok }}%;"></div>
       </div>
       <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem;">
-        <span style="color: var(--success);">⏳ {{ ca_ok|floatformat:0 }}€ OK ({{ pct_ok }}%)</span>
+        <span style="color: var(--success);">⏳ {{ ca_encaisse|floatformat:0 }}€ OK ({{ pct_ok }}%)</span>
         {% if ca_retard > 0 %}
         <span style="color: var(--danger);">🚨 {{ ca_retard|floatformat:0 }}€ Retard</span>
         {% endif %}
