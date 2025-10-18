@@ -952,56 +952,81 @@
 
     <!-- KPI -->
     <div class="kpi-grid">
-      <!-- Clients -->
+      <!-- ✅ Clients - Lien vers page clients -->
       <div class="kpi-card">
         <div class="kpi-label">👥 Clients</div>
         <div class="kpi-value">{{ nb_clients }}</div>
-        <div class="kpi-subtitle">Actifs</div>
+        <div class="kpi-subtitle">
+          <a href="{% url 'clients' %}">Voir la liste →</a>
+        </div>
       </div>
 
-      <!-- CA du mois -->
+      <!-- ✅ CA du mois - Lien vers opérations payées -->
       <div class="kpi-card">
         <div class="kpi-label">💰 CA du mois</div>
         <div class="kpi-value">{{ ca_mois|floatformat:0 }} €</div>
-        <div class="kpi-subtitle">Encaissé</div>
+        <div class="kpi-subtitle">
+          {% if ca_mois > 0 %}
+            <a href="{% url 'operations' %}?filtre=paye">Voir les paiements →</a>
+          {% else %}
+            <span style="color: var(--muted);">Aucun encaissement</span>
+          {% endif %}
+        </div>
       </div>
 
-      <!-- Devis en attente -->
+      <!-- ✅ Devis en attente - Lien vers filtre devis -->
       <div class="kpi-card">
         <div class="kpi-label">📄 Devis</div>
         <div class="kpi-value">{{ nb_en_attente_devis }}</div>
-        <div class="kpi-subtitle">En attente</div>
+        <div class="kpi-subtitle">
+          {% if nb_en_attente_devis > 0 %}
+            <a href="{% url 'operations' %}?filtre=en_attente_devis">Consulter →</a>
+          {% else %}
+            <span style="color: var(--success);">✓ Aucun en attente</span>
+          {% endif %}
+        </div>
       </div>
 
-      <!-- À planifier -->
+      <!-- ✅ À planifier - Lien vers filtre à planifier -->
       <div class="kpi-card">
         <div class="kpi-label">📅 À planifier</div>
         <div class="kpi-value">{{ nb_a_planifier }}</div>
-        <div class="kpi-subtitle">Interventions</div>
+        <div class="kpi-subtitle">
+          {% if nb_a_planifier > 0 %}
+            <a href="{% url 'operations' %}?filtre=a_planifier">Planifier →</a>
+          {% else %}
+            <span style="color: var(--success);">✓ Tout planifié</span>
+          {% endif %}
+        </div>
       </div>
 
-      <!-- Paiements en retard -->
-      {% if nb_paiements_retard > 0 %}
-      <div class="kpi-card alert">
+      <!-- ✅ Paiements en retard - Toujours affiché -->
+      <div class="kpi-card {% if nb_paiements_retard > 0 %}alert{% endif %}">
         <div class="kpi-label">🚨 Retards</div>
         <div class="kpi-value">{{ nb_paiements_retard }}</div>
         <div class="kpi-subtitle">
-          <a href="{% url 'operations' %}?filtre=retards">À relancer →</a>
+          {% if nb_paiements_retard > 0 %}
+            <a href="{% url 'operations' %}?filtre=retards">À relancer →</a>
+          {% else %}
+            <span style="color: var(--success);">✓ Aucun retard</span>
+          {% endif %}
         </div>
       </div>
-      {% endif %}
 
-      <!-- Paiements non planifiés -->
-      {% if nb_operations_sans_paiement > 0 %}
-      <div class="kpi-card warning">
+      <!-- ✅ Paiements non planifiés - Toujours affiché -->
+      <div class="kpi-card {% if nb_operations_sans_paiement > 0 %}warning{% endif %}">
         <div class="kpi-label">⚠️ Non planifiés</div>
         <div class="kpi-value">{{ nb_operations_sans_paiement }}</div>
         <div class="kpi-subtitle">
-          <a href="{% url 'operations' %}?filtre=non_planifies">À enregistrer →</a>
+          {% if nb_operations_sans_paiement > 0 %}
+            <a href="{% url 'operations' %}?filtre=non_planifies">À enregistrer →</a>
+          {% else %}
+            <span style="color: var(--success);">✓ Tout planifié</span>
+          {% endif %}
         </div>
       </div>
-      {% endif %}
     </div>
+
 
     <!-- PLANNING -->
     <section class="section">

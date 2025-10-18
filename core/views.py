@@ -53,7 +53,7 @@ def dashboard(request):
             statut='a_planifier'
         ).count()
         
-        # Paiements en retard
+        # ✅ CORRECTION : Paiements en retard et non planifiés
         operations_realises = Operation.objects.filter(
             user=request.user,
             statut='realise'
@@ -70,18 +70,18 @@ def dashboard(request):
             )
             nb_paiements_retard += retards.count()
             
-            # Non planifiés
-            montant_paye = op.echeances.filter(paye=True).aggregate(
+            # ✅ CORRECTION : Non planifiés (montant planifié < montant total)
+            total_planifie = op.echeances.aggregate(
                 total=Sum('montant')
             )['total'] or 0
             
-            reste = op.montant_total - montant_paye
+            reste_a_planifier = op.montant_total - total_planifie
             
-            if not op.echeances.exists() and reste > 0:
+            if reste_a_planifier > 0:
                 nb_operations_sans_paiement += 1
         
         # ========================================
-        # CALENDRIER
+        # CALENDRIER (inchangé)
         # ========================================
         today = timezone.now().date()
         start_date = today - timedelta(days=30)
