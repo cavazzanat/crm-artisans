@@ -140,116 +140,85 @@
       font-size: .95rem;
     }
 
-    /* ========================================
-       KPI - STYLE CARDS
-       ======================================== */
-    .kpi-grid{
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      margin-bottom: 2rem;
-    }
-    .kpi{
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem;
-      box-shadow: var(--shadow);
-      transition: all 0.2s ease;
-    }
-    .kpi:hover{
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,.1);
-    }
-    .kpi h3{
-      font-size: .8rem;
-      text-transform: uppercase;
-      letter-spacing: .08rem;
-      color: var(--muted);
-      margin: 0 0 .5rem;
-      font-weight: 600;
-    }
-    .kpi .value{
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--text);
-      line-height: 1;
-    }
-    .kpi.success .value{ color: var(--success); }
-    .kpi.primary .value{ color: var(--primary); }
-    .kpi.warning .value{ color: var(--warning); }
+/* ========================================
+   KPI - STYLE CARDS (VERSION PROPRE)
+   ======================================== */
+.kpi-grid{
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin-bottom: 2rem;
+}
 
+.kpi-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
 
-        .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-    
-    .kpi-card {
-      background: linear-gradient(180deg, rgba(2,6,23,.6), rgba(2,6,23,.4));
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      transition: all 0.3s ease;
-    }
-    
-    .kpi-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 15px 35px rgba(2,6,23,.4);
-    }
-    
-    .kpi-card.alert {
-      border: 2px solid var(--danger);
-      animation: pulse-border 2s ease-in-out infinite;
-    }
-    
-    .kpi-card.warning {
-      border: 2px solid var(--warning);
-    }
-    
-    @keyframes pulse-border {
-      0%, 100% { 
-        border-color: var(--danger);
-        box-shadow: 0 0 0 0 rgba(239,68,68,.4);
-      }
-      50% { 
-        border-color: rgba(239,68,68,.6);
-        box-shadow: 0 0 0 6px rgba(239,68,68,0);
-      }
-    }
-    
-    .kpi-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      margin-bottom: 1rem;
-    }
-    
-    .kpi-label {
-      color: var(--muted);
-      font-size: 0.85rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .kpi-value {
-      font-size: 2rem;
-      font-weight: 800;
-      line-height: 1;
-      margin-bottom: 0.5rem;
-    }
-    
-    .kpi-subtitle {
-      color: var(--muted);
-      font-size: 0.75rem;
-    }
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+
+.kpi-card.alert {
+  border: 2px solid var(--danger);
+  background: rgba(239,68,68,.02);
+}
+
+.kpi-card.warning {
+  border: 2px solid var(--warning);
+  background: rgba(245,158,11,.02);
+}
+
+@keyframes pulse-border {
+  0%, 100% { 
+    border-color: var(--danger);
+    box-shadow: 0 0 0 0 rgba(239,68,68,.4);
+  }
+  50% { 
+    border-color: rgba(239,68,68,.6);
+    box-shadow: 0 0 0 4px rgba(239,68,68,0);
+  }
+}
+
+.kpi-card.alert {
+  animation: pulse-border 2s ease-in-out infinite;
+}
+
+.kpi-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 1rem;
+}
+
+.kpi-label {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.kpi-subtitle {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
 
     /* ========================================
        SECTIONS (STYLE UNIFIÉ)
