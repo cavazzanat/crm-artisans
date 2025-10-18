@@ -34,13 +34,14 @@ def dashboard(request):
         # ========================================
         nb_clients = Client.objects.filter(user=request.user).count()
         
-        # CA du mois encaissé
+        # ✅ CORRECTION : CA du mois encaissé (compter les ÉCHÉANCES payées)
         debut_mois = timezone.now().replace(day=1)
-        ca_mois = Operation.objects.filter(
-            user=request.user, 
-            statut='paye',
-            date_creation__gte=debut_mois
-        ).aggregate(total=Sum('interventions__montant'))['total'] or 0
+        
+        ca_mois = Echeance.objects.filter(
+            operation__user=request.user,
+            paye=True,  # ← Seulement les échéances payées
+            date_echeance__gte=debut_mois  # ← Du mois en cours
+        ).aggregate(total=Sum('montant'))['total'] or 0
         
         # Compteurs opérationnels
         nb_en_attente_devis = Operation.objects.filter(
