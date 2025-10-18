@@ -483,51 +483,59 @@
     <h1 class="page-title">Gestion des opérations</h1>
     <p class="subtitle">{{ nb_total }} opération{{ nb_total|pluralize }} au total</p>
 
-    <!-- ✅ VUE D'ENSEMBLE FINANCIÈRE -->
-    {% if ca_en_attente_total > 0 or ca_previsionnel > 0 %}
-    <div class="finance-overview">
-      <div class="finance-title">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
-        Vue d'ensemble financière
+  <!-- ✅ VUE D'ENSEMBLE FINANCIÈRE -->
+  {% if ca_en_attente_total > 0 or ca_previsionnel > 0 %}
+  <div class="finance-overview">
+    <div class="finance-title">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+      </svg>
+      Vue d'ensemble financière
+    </div>
+    
+    <div class="finance-grid">
+      <!-- ✅ NOUVEAU : CA en cours -->
+      <div class="finance-item highlight">
+        <div class="finance-label">🚀 CA en cours</div>
+        <div class="finance-value">{{ ca_total_en_cours|floatformat:0 }} €</div>
+        <div class="finance-subtitle">Opérations planifiées + réalisées</div>
       </div>
       
-      <div class="finance-grid">
-        <!-- Trésorerie en attente -->
-        <div class="finance-item">
-          <div class="finance-label">💰 Trésorerie en attente</div>
-          <div class="finance-value">{{ ca_en_attente_total|floatformat:0 }} €</div>
-          <div class="finance-subtitle">Réalisé non encaissé</div>
-        </div>
-        
-        <!-- CA Prévisionnel -->
-        <div class="finance-item">
-          <div class="finance-label">📈 CA prévisionnel</div>
-          <div class="finance-value">{{ ca_previsionnel|floatformat:0 }} €</div>
-          <div class="finance-subtitle">Opérations planifiées</div>
-        </div>
+      <!-- Trésorerie en attente -->
+      <div class="finance-item">
+        <div class="finance-label">💰 Trésorerie en attente</div>
+        <div class="finance-value">{{ ca_en_attente_total|floatformat:0 }} €</div>
+        <div class="finance-subtitle">Réalisé non encaissé</div>
       </div>
       
-      <!-- Barre de progression -->
-      {% if ca_en_attente_total > 0 %}
-      <div style="margin-top: 1rem;">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width: {{ pct_ok }}%;"></div>
-        </div>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem;">
-          <span style="color: var(--success);">⏳ {{ ca_ok|floatformat:0 }}€ OK ({{ pct_ok }}%)</span>
-          {% if ca_retard > 0 %}
-          <span style="color: var(--danger);">🚨 {{ ca_retard|floatformat:0 }}€ Retard</span>
-          {% endif %}
-          {% if ca_non_planifies > 0 %}
-          <span style="color: var(--warning);">⚠️ {{ ca_non_planifies|floatformat:0 }}€ Non planifié</span>
-          {% endif %}
-        </div>
+      <!-- CA Prévisionnel -->
+      <div class="finance-item">
+        <div class="finance-label">📈 CA prévisionnel</div>
+        <div class="finance-value">{{ ca_previsionnel|floatformat:0 }} €</div>
+        <div class="finance-subtitle">Opérations planifiées</div>
       </div>
-      {% endif %}
+    </div>
+    
+    <!-- Barre de progression -->
+    {% if ca_en_attente_total > 0 %}
+    <div style="margin-top: 1rem;">
+      <div class="progress-bar">
+        <div class="progress-fill" style="width: {{ pct_ok }}%;"></div>
+      </div>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem;">
+        <span style="color: var(--success);">⏳ {{ ca_ok|floatformat:0 }}€ OK ({{ pct_ok }}%)</span>
+        {% if ca_retard > 0 %}
+        <span style="color: var(--danger);">🚨 {{ ca_retard|floatformat:0 }}€ Retard</span>
+        {% endif %}
+        {% if ca_non_planifies > 0 %}
+        <span style="color: var(--warning);">⚠️ {{ ca_non_planifies|floatformat:0 }}€ Non planifié</span>
+        {% endif %}
+      </div>
     </div>
     {% endif %}
+  </div>
+  {% endif %}
+
 
     <!-- ✅ FILTRES INTELLIGENTS -->
     <section class="section">
