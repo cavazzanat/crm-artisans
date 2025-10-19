@@ -1015,13 +1015,13 @@
 
       <!-- ✅ Paiements non planifiés - Toujours affiché -->
       <div class="kpi-card {% if nb_operations_sans_paiement > 0 %}warning{% endif %}">
-        <div class="kpi-label">⚠️ Non planifiés</div>
+        <div class="kpi-label">⚠️ Paiements manquants</div>
         <div class="kpi-value">{{ nb_operations_sans_paiement }}</div>
         <div class="kpi-subtitle">
           {% if nb_operations_sans_paiement > 0 %}
-            <a href="{% url 'operations' %}?filtre=non_planifies">À enregistrer →</a>
+            <a href="{% url 'operations' %}?filtre=non_planifies">À programmer →</a>
           {% else %}
-            <span style="color: var(--success);">✓ Tout planifié</span>
+            <span style="color: var(--success);">✓ Tout progammé</span>
           {% endif %}
         </div>
       </div>
