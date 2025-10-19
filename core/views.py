@@ -88,12 +88,14 @@ def dashboard(request):
         start_date = today - timedelta(days=30)
         end_date = today + timedelta(days=14)
 
+        # ✅ NOUVEAU CODE (inclusif)
         operations_calendrier = Operation.objects.filter(
             user=request.user,
-            date_prevue__isnull=False,
+            date_prevue__isnull=False,  # ← A une date prévue
             date_prevue__gte=start_date,
-            date_prevue__lte=end_date,
-            statut__in=['planifie', 'realise', 'paye']
+            date_prevue__lte=end_date
+        ).exclude(
+            statut__in=['en_attente_devis', 'a_planifier', 'devis_refuse']  # ← Exclure seulement les non-planifiées
         ).select_related('client').order_by('date_prevue')
 
         calendar_events = []
