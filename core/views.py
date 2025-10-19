@@ -82,26 +82,35 @@ def dashboard(request):
                 nb_operations_sans_paiement += 1
         
         # ========================================
-        # CALENDRIER (inchangé)
+        # CALENDRIER
         # ========================================
         today = timezone.now().date()
         start_date = today - timedelta(days=30)
         end_date = today + timedelta(days=14)
 
-        # ✅ NOUVEAU CODE (inclusif)
+        # ✅ CORRECTION : Récupérer les opérations avec date_prevue OU date_realisation
+        from django.db.models import Q
+
         operations_calendrier = Operation.objects.filter(
-            user=request.user,
-            date_prevue__isnull=False,  # ← A une date prévue
-            date_prevue__gte=start_date,
-            date_prevue__lte=end_date
+            user=request.user
+        ).filter(
+            Q(date_prevue__isnull=False, date_prevue__gte=start_date, date_prevue__lte=end_date) |
+            Q(date_realisation__isnull=False, date_realisation__gte=start_date, date_realisation__lte=end_date)
         ).exclude(
-            statut__in=['en_attente_devis', 'a_planifier', 'devis_refuse']  # ← Exclure seulement les non-planifiées
-        ).select_related('client').order_by('date_prevue')
+            statut__in=['en_attente_devis', 'a_planifier', 'devis_refuse']
+        ).select_related('client').order_by('date_prevue', 'date_realisation')
 
         calendar_events = []
         for op in operations_calendrier:
-            is_past = op.date_prevue < timezone.now()
+            # ✅ Utiliser date_prevue en priorité, sinon date_realisation
+            date_affichage = op.date_prevue or op.date_realisation
             
+            if not date_affichage:
+                continue  # Skip si aucune date disponible
+            
+            is_past = date_affichage < timezone.now()
+            
+            # ✅ Code couleur selon le statut
             if op.statut == 'planifie':
                 color_class = 'event-planifie'
                 status_text = "Planifié"
@@ -131,8 +140,8 @@ def dashboard(request):
                 'id': op.id,
                 'client_nom': f"{op.client.nom} {op.client.prenom}",
                 'service': op.type_prestation,
-                'date': op.date_prevue.strftime('%Y-%m-%d'),
-                'time': op.date_prevue.strftime('%H:%M'),
+                'date': date_affichage.strftime('%Y-%m-%d'),
+                'time': date_affichage.strftime('%H:%M'),
                 'address': op.adresse_intervention,
                 'phone': op.client.telephone,
                 'url': f'/operations/{op.id}/',
@@ -145,7 +154,6 @@ def dashboard(request):
                 'nb_retards': nb_retards_op,
                 'montant_retard': float(montant_retard_op)
             })
-
         context = {
             # KPI essentiels
             'nb_clients': nb_clients,
