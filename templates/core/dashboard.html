@@ -1015,7 +1015,7 @@
 
       <!-- ✅ Paiements non planifiés - Toujours affiché -->
       <div class="kpi-card {% if nb_operations_sans_paiement > 0 %}warning{% endif %}">
-        <div class="kpi-label">⚠️ Paiements manquants</div>
+        <div class="kpi-label">⚠️ Paiements non planifiés</div>
         <div class="kpi-value">{{ nb_operations_sans_paiement }}</div>
         <div class="kpi-subtitle">
           {% if nb_operations_sans_paiement > 0 %}

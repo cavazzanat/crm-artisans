@@ -274,10 +274,11 @@ def operations_list(request):
     filtre = request.GET.get('filtre', 'toutes')
     recherche = request.GET.get('recherche', '')
     
-    # Appliquer le filtre
+    # ✅ CORRECTION : Appliquer le filtre avec enrichissement
     if filtre == 'retards':
         operations = operations.filter(id__in=operations_avec_retards_ids)
         
+        # Enrichir avec données de retard
         for op in operations:
             premier_retard = op.echeances.filter(
                 paye=False,
@@ -291,6 +292,7 @@ def operations_list(request):
     elif filtre == 'non_planifies':
         operations = operations.filter(id__in=operations_sans_echeances_ids)
         
+        # Enrichir avec reste à planifier
         for op in operations:
             total_planifie = op.echeances.aggregate(
                 total=Sum('montant')
