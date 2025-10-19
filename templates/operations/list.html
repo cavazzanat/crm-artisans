@@ -451,6 +451,56 @@
         background: rgba(245,158,11,.05);
       }
     }
+
+/* ========================================
+   FILTRES PAR SECTIONS
+   ======================================== */
+.filter-section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.filter-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  margin-bottom: 0.75rem;
+  padding-left: 0.25rem;
+}
+
+.filter-section-header svg {
+  flex-shrink: 0;
+}
+
+.filters-quick {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Mode clair */
+@media (prefers-color-scheme: light) {
+  .filter-section {
+    border-bottom-color: var(--border);
+  }
+  
+  .filter-section-header {
+    color: var(--muted);
+  }
+}
+
   </style>
 </head>
 <body>
@@ -536,8 +586,7 @@
   </div>
   {% endif %}
 
-
-    <!-- ✅ FILTRES INTELLIGENTS -->
+    <!-- ✅ FILTRES INTELLIGENTS PAR SECTIONS -->
     <section class="section">
       <div class="section-header">
         <h2 class="section-title">
@@ -546,96 +595,124 @@
         </h2>
         <div class="toolbar">
           {% if filtre_actif != 'toutes' or recherche %}
-            <a href="{% url 'operations' %}" class="btn">Effacer filtres</a>
+            <a href="{% url 'operations' %}" class="btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="1.6"/></svg>
+              Réinitialiser
+            </a>
           {% endif %}
           <a href="{% url 'operation_create' %}" class="btn primary">+ Nouvelle opération</a>
         </div>
       </div>
-      
-      <div class="filters-quick">
-        <!-- Toutes -->
-        <a href="?filtre=toutes" class="filter-btn {% if filtre_actif == 'toutes' %}active{% endif %}">
+
+      <!-- 📋 SECTION : VUE D'ENSEMBLE -->
+      <div class="filter-section">
+        <div class="filter-section-header">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" stroke="currentColor" stroke-width="1.6"/></svg>
-          Toutes
-          <span class="filter-badge">{{ nb_total }}</span>
-        </a>
-        
-        <!-- En attente devis -->
-        <a href="?filtre=en_attente_devis" class="filter-btn {% if filtre_actif == 'en_attente_devis' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.6"/></svg>
-          🟡 Devis
-          <span class="filter-badge">{{ nb_en_attente_devis }}</span>
-        </a>
-        
-        <!-- À planifier -->
-        <a href="?filtre=a_planifier" class="filter-btn {% if filtre_actif == 'a_planifier' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.6"/></svg>
-          🔵 À planifier
-          <span class="filter-badge">{{ nb_a_planifier }}</span>
-        </a>
-        
-        <!-- Planifié -->
-        <a href="?filtre=planifie" class="filter-btn {% if filtre_actif == 'planifie' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" stroke="currentColor" stroke-width="1.6"/></svg>
-          📅 Planifié
-          <span class="filter-badge">{{ nb_planifie }}</span>
-        </a>
-        
-        <!-- Réalisé -->
-        <a href="?filtre=realise" class="filter-btn {% if filtre_actif == 'realise' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="1.6"/></svg>
-          🟢 Réalisé
-          <span class="filter-badge">{{ nb_realise }}</span>
-        </a>
-        
-        <!-- 🚨 Retards -->
-        {% if nb_paiements_retard > 0 %}
-        <a href="?filtre=retards" class="filter-btn {% if filtre_actif == 'retards' %}active{% endif %}" style="border-color: var(--danger);">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0M12 3l9 18H3L12 3z" stroke="currentColor" stroke-width="1.6"/></svg>
-          🚨 Retards
-          <span class="filter-badge alert">{{ nb_paiements_retard }}</span>
-        </a>
-        {% endif %}
-        
-        <!-- ⚠️ Non planifiés -->
-        {% if nb_operations_sans_paiement > 0 %}
-        <a href="?filtre=non_planifies" class="filter-btn {% if filtre_actif == 'non_planifies' %}active{% endif %}" style="border-color: var(--warning);">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4M12 16h0" stroke="currentColor" stroke-width="1.6"/></svg>
-          ⚠️ Non planifiés
-          <span class="filter-badge warning">{{ nb_operations_sans_paiement }}</span>
-        </a>
-        {% endif %}
-        
-        <!-- Payé -->
-        <a href="?filtre=paye" class="filter-btn {% if filtre_actif == 'paye' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="1.6"/></svg>
-          ✅ Payé
-          <span class="filter-badge">{{ nb_paye }}</span>
-        </a>
-        
-        <!-- Refusé -->
-        {% if nb_refuse > 0 %}
-        <a href="?filtre=devis_refuse" class="filter-btn {% if filtre_actif == 'devis_refuse' %}active{% endif %}">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="1.6"/></svg>
-          🔴 Refusé
-          <span class="filter-badge">{{ nb_refuse }}</span>
-        </a>
-        {% endif %}
+          <span>Vue d'ensemble</span>
+        </div>
+        <div class="filters-quick">
+          <a href="?filtre=toutes" class="filter-btn {% if filtre_actif == 'toutes' %}active{% endif %}">
+            Toutes les opérations
+            <span class="filter-badge">{{ nb_total }}</span>
+          </a>
+        </div>
       </div>
 
-      <!-- Recherche -->
-      <form method="GET" style="padding:.6rem .4rem 0">
-        <div class="search">
-          <label class="field">
-            <span class="label">Recherche</span>
-            <input class="input" type="text" name="recherche" value="{{ recherche|default:'' }}" placeholder="Client, opération, ville, téléphone...">
-          </label>
-          <input type="hidden" name="filtre" value="{{ filtre_actif }}">
-          <button type="submit" class="btn primary">Rechercher</button>
-          <a href="{% url 'operations' %}?filtre={{ filtre_actif }}" class="btn">Effacer</a>
+      <!-- 📄 SECTION : CYCLE DEVIS -->
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Cycle Devis</span>
         </div>
-      </form>
+        <div class="filters-quick">
+          <a href="?filtre=en_attente_devis" class="filter-btn {% if filtre_actif == 'en_attente_devis' %}active{% endif %}">
+            🟡 En attente devis
+            <span class="filter-badge">{{ nb_en_attente_devis }}</span>
+          </a>
+          {% if nb_refuse > 0 %}
+          <a href="?filtre=devis_refuse" class="filter-btn {% if filtre_actif == 'devis_refuse' %}active{% endif %}">
+            🔴 Devis refusés
+            <span class="filter-badge">{{ nb_refuse }}</span>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 🗓️ SECTION : PLANIFICATION & RÉALISATION -->
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Planification & Réalisation</span>
+        </div>
+        <div class="filters-quick">
+          <a href="?filtre=a_planifier" class="filter-btn {% if filtre_actif == 'a_planifier' %}active{% endif %}">
+            🔵 À planifier
+            <span class="filter-badge">{{ nb_a_planifier }}</span>
+          </a>
+          <a href="?filtre=planifie" class="filter-btn {% if filtre_actif == 'planifie' %}active{% endif %}">
+            📅 Planifiées
+            <span class="filter-badge">{{ nb_planifie }}</span>
+          </a>
+          <a href="?filtre=realise" class="filter-btn {% if filtre_actif == 'realise' %}active{% endif %}">
+            🟢 Réalisées
+            <span class="filter-badge">{{ nb_realise }}</span>
+          </a>
+        </div>
+      </div>
+
+      <!-- 💰 SECTION : FINANCES & PAIEMENTS -->
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" stroke="currentColor" stroke-width="2"/></svg>
+          <span>Finances & Paiements</span>
+        </div>
+        <div class="filters-quick">
+          <a href="?filtre=paye" class="filter-btn {% if filtre_actif == 'paye' %}active{% endif %}">
+            ✅ Payées
+            <span class="filter-badge">{{ nb_paye }}</span>
+          </a>
+          
+          {% if nb_paiements_retard > 0 %}
+          <a href="?filtre=retards" class="filter-btn {% if filtre_actif == 'retards' %}active{% endif %}" style="border-color: var(--danger); background: rgba(239,68,68,.1);">
+            🚨 Retards de paiement
+            <span class="filter-badge alert">{{ nb_paiements_retard }}</span>
+          </a>
+          {% endif %}
+          
+          {% if nb_operations_sans_paiement > 0 %}
+          <a href="?filtre=non_planifies" class="filter-btn {% if filtre_actif == 'non_planifies' %}active{% endif %}" style="border-color: var(--warning); background: rgba(245,158,11,.1);">
+            ⚠️ Paiements non planifiés
+            <span class="filter-badge warning">{{ nb_operations_sans_paiement }}</span>
+          </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- 🔍 SECTION : RECHERCHE -->
+      <div class="filter-section">
+        <div class="filter-section-header">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.6"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="1.6"/></svg>
+          <span>Recherche avancée</span>
+        </div>
+        <form method="GET" style="padding:.4rem 0 0">
+          <div class="search">
+            <label class="field">
+              <span class="label">Rechercher</span>
+              <input class="input" type="text" name="recherche" value="{{ recherche|default:'' }}" placeholder="Client, ville, téléphone, ID opération...">
+            </label>
+            <input type="hidden" name="filtre" value="{{ filtre_actif }}">
+            <button type="submit" class="btn primary">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.6"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="1.6"/></svg>
+              Rechercher
+            </button>
+            {% if recherche %}
+            <a href="{% url 'operations' %}?filtre={{ filtre_actif }}" class="btn">Effacer</a>
+            {% endif %}
+          </div>
+        </form>
+      </div>
     </section>
+
 
     <!-- ✅ LISTE DES OPÉRATIONS -->
     <section class="section">
