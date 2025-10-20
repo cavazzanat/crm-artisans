@@ -176,47 +176,109 @@ def dashboard(request):
 
 @login_required
 def operations_list(request):
-    """Page Opérations avec vue financière et filtres intelligents"""
+    """Page Opérations avec filtrage par période + vue financière"""
     
     # ========================================
-    # CALCULS FINANCIERS
+    # GESTION DE LA PÉRIODE
     # ========================================
-    operations_realises = Operation.objects.filter(
+    today = timezone.now().date()
+    
+    # Récupérer les paramètres de période
+    periode = request.GET.get('periode', 'this_month')
+    mois_param = request.GET.get('mois', '')
+    nav = request.GET.get('nav', '')
+    
+    # Calculer les dates de début et fin selon la période
+    if mois_param and nav:
+        # Navigation mensuelle (précédent/suivant)
+        try:
+            date_ref = datetime.strptime(mois_param, '%Y-%m').date()
+            if nav == 'prev':
+                date_ref = date_ref - relativedelta(months=1)
+            elif nav == 'next':
+                date_ref = date_ref + relativedelta(months=1)
+            
+            periode_start = date_ref.replace(day=1)
+            periode_end = (periode_start + relativedelta(months=1)) - timedelta(days=1)
+            periode = 'custom'
+        except:
+            periode_start = today.replace(day=1)
+            periode_end = (periode_start + relativedelta(months=1)) - timedelta(days=1)
+    
+    elif mois_param:
+        # Sélection directe d'un mois
+        try:
+            date_ref = datetime.strptime(mois_param, '%Y-%m').date()
+            periode_start = date_ref.replace(day=1)
+            periode_end = (periode_start + relativedelta(months=1)) - timedelta(days=1)
+            periode = 'custom'
+        except:
+            periode_start = today.replace(day=1)
+            periode_end = (periode_start + relativedelta(months=1)) - timedelta(days=1)
+    
+    elif periode == 'this_month':
+        periode_start = today.replace(day=1)
+        periode_end = (periode_start + relativedelta(months=1)) - timedelta(days=1)
+    
+    elif periode == 'last_month':
+        periode_start = (today.replace(day=1) - relativedelta(months=1))
+        periode_end = today.replace(day=1) - timedelta(days=1)
+    
+    elif periode == 'last_3':
+        periode_start = (today.replace(day=1) - relativedelta(months=2))
+        periode_end = (periode_start + relativedelta(months=3)) - timedelta(days=1)
+    
+    elif periode == 'ytd':  # Year To Date
+        periode_start = today.replace(month=1, day=1)
+        periode_end = today
+    
+    else:
+        periode_start = today.replace(day=1)
+        periode_end = (periode_start + relativedelta(months=1)) - timedelta(days=1)
+    
+    # ========================================
+    # CALCULS FINANCIERS (PÉRIODE)
+    # ========================================
+    operations_periode = Operation.objects.filter(
         user=request.user,
-        statut__in=['realise', 'paye']
-    ).prefetch_related('echeances', 'interventions')
-
+        statut__in=['realise', 'paye'],
+        date_realisation__gte=periode_start,
+        date_realisation__lte=periode_end
+    ).prefetch_related('echeances')
+    
+    ca_encaisse = 0
     ca_en_attente_total = 0
     ca_retard = 0
-    nb_paiements_retard = 0
     ca_non_planifies = 0
+    nb_paiements_retard = 0
     nb_operations_sans_paiement = 0
-    ca_prevus = 0
-
+    
     operations_avec_retards_ids = []
     operations_sans_echeances_ids = []
-
-    for op in operations_realises:
+    
+    for op in operations_periode:
         montant_total = op.montant_total
         
+        # Montants payés
         montant_paye = op.echeances.filter(paye=True).aggregate(
             total=Sum('montant')
         )['total'] or 0
+        ca_encaisse += montant_paye
         
+        # Montants planifiés
         total_planifie = op.echeances.aggregate(
             total=Sum('montant')
         )['total'] or 0
         
         reste = montant_total - montant_paye
         
-        # ⚠️ Ne compter que si reste > 0
         if reste > 0:
             ca_en_attente_total += reste
         
         # Retards
         retards = op.echeances.filter(
             paye=False,
-            date_echeance__lt=timezone.now().date()
+            date_echeance__lt=today
         )
         
         if retards.exists():
@@ -232,67 +294,71 @@ def operations_list(request):
             ca_non_planifies += reste_a_planifier
             nb_operations_sans_paiement += 1
             operations_sans_echeances_ids.append(op.id)
-        
-        # Paiements prévus OK
-        futurs = op.echeances.filter(
-            paye=False,
-            date_echeance__gte=timezone.now().date()
-        )
-        if futurs.exists():
-            ca_prevus += futurs.aggregate(total=Sum('montant'))['total'] or 0
-
-    ca_ok = ca_en_attente_total - ca_retard - ca_non_planifies
-
-    # CA Prévisionnel (opérations planifiées)
-    operations_planifiees = Operation.objects.filter(
-        user=request.user,
-        statut='planifie'
-    )
-    ca_previsionnel = sum(op.montant_total for op in operations_planifiees)
     
-    # ✅ CA ENCAISSÉ (tous les paiements confirmés)
-    ca_encaisse = Echeance.objects.filter(
+    # ✅ CA Prévisionnel 30 jours
+    date_dans_30j = today + timedelta(days=30)
+    operations_previsionnel = Operation.objects.filter(
+        user=request.user,
+        statut='planifie',
+        date_prevue__gte=today,
+        date_prevue__lte=date_dans_30j
+    )
+    ca_previsionnel_30j = sum(op.montant_total for op in operations_previsionnel)
+    
+    # ✅ Variation vs période précédente (pour le KPI)
+    duree = (periode_end - periode_start).days
+    periode_prec_start = periode_start - timedelta(days=duree + 1)
+    periode_prec_end = periode_start - timedelta(days=1)
+    
+    ca_encaisse_prec = Echeance.objects.filter(
         operation__user=request.user,
+        operation__date_realisation__gte=periode_prec_start,
+        operation__date_realisation__lte=periode_prec_end,
         paye=True
     ).aggregate(total=Sum('montant'))['total'] or 0
     
-    # Pourcentage
-    if ca_en_attente_total > 0:
-        pct_ok = int((ca_ok / ca_en_attente_total) * 100)
+    if ca_encaisse_prec > 0:
+        ca_encaisse_var = int(((ca_encaisse - ca_encaisse_prec) / ca_encaisse_prec) * 100)
     else:
-        pct_ok = 0
-        
+        ca_encaisse_var = 0 if ca_encaisse == 0 else 100
     
     # ========================================
-    # RÉCUPÉRATION & FILTRAGE DES OPÉRATIONS
+    # FILTRAGE DES OPÉRATIONS
     # ========================================
     operations = Operation.objects.filter(
         user=request.user
     ).select_related('client').prefetch_related('interventions', 'echeances')
     
-    # Filtres
+    # Filtrer par période (sauf pour certains filtres)
     filtre = request.GET.get('filtre', 'toutes')
+    
+    if filtre not in ['retards', 'non_planifies']:
+        # Pour les filtres standards, on applique la période
+        operations = operations.filter(
+            Q(date_realisation__gte=periode_start, date_realisation__lte=periode_end) |
+            Q(date_prevue__gte=periode_start, date_prevue__lte=periode_end) |
+            Q(date_creation__gte=periode_start, date_creation__lte=periode_end)
+        )
+    
     recherche = request.GET.get('recherche', '')
     
-    # ✅ CORRECTION : Appliquer le filtre avec enrichissement
+    # ✅ ENRICHISSEMENT POUR FILTRES SPÉCIAUX
     if filtre == 'retards':
         operations = operations.filter(id__in=operations_avec_retards_ids)
         
-        # Enrichir avec données de retard
         for op in operations:
             premier_retard = op.echeances.filter(
                 paye=False,
-                date_echeance__lt=timezone.now().date()
+                date_echeance__lt=today
             ).order_by('date_echeance').first()
             
             if premier_retard:
                 op.premier_retard = premier_retard
-                op.jours_retard = (timezone.now().date() - premier_retard.date_echeance).days
+                op.jours_retard = (today - premier_retard.date_echeance).days
     
     elif filtre == 'non_planifies':
         operations = operations.filter(id__in=operations_sans_echeances_ids)
         
-        # Enrichir avec reste à planifier
         for op in operations:
             total_planifie = op.echeances.aggregate(
                 total=Sum('montant')
@@ -317,21 +383,33 @@ def operations_list(request):
             Q(id_operation__icontains=recherche)
         )
     
-    # Tri par date de création (plus récent d'abord)
     operations = operations.order_by('-date_creation')
     
     # ========================================
-    # COMPTEURS POUR LES FILTRES
+    # COMPTEURS (SUR LA PÉRIODE)
     # ========================================
-    all_operations = Operation.objects.filter(user=request.user)
+    all_operations_periode = Operation.objects.filter(
+        user=request.user
+    ).filter(
+        Q(date_realisation__gte=periode_start, date_realisation__lte=periode_end) |
+        Q(date_prevue__gte=periode_start, date_prevue__lte=periode_end) |
+        Q(date_creation__gte=periode_start, date_creation__lte=periode_end)
+    )
     
-    nb_total = all_operations.count()
-    nb_en_attente_devis = all_operations.filter(statut='en_attente_devis').count()
-    nb_a_planifier = all_operations.filter(statut='a_planifier').count()
-    nb_planifie = all_operations.filter(statut='planifie').count()
-    nb_realise = all_operations.filter(statut='realise').count()
-    nb_paye = all_operations.filter(statut='paye').count()
-    nb_refuse = all_operations.filter(statut='devis_refuse').count()
+    nb_total = all_operations_periode.count()
+    nb_en_attente_devis = all_operations_periode.filter(statut='en_attente_devis').count()
+    nb_a_planifier = all_operations_periode.filter(statut='a_planifier').count()
+    nb_planifie = all_operations_periode.filter(statut='planifie').count()
+    nb_realise = all_operations_periode.filter(statut='realise').count()
+    nb_paye = all_operations_periode.filter(statut='paye').count()
+    nb_refuse = all_operations_periode.filter(statut='devis_refuse').count()
+    
+    # Options de cycle pour les boutons
+    cycle_options = [
+        ('toutes', 'Toutes'),
+        ('en_attente_devis', 'Devis'),
+        ('a_planifier', 'À planifier'),
+    ]
     
     context = {
         'operations': operations,
@@ -339,17 +417,20 @@ def operations_list(request):
         'filtre_actif': filtre,
         'recherche': recherche,
         
-        # Vue financière
+        # Période
+        'periode': periode,
+        'periode_start': periode_start,
+        'periode_end': periode_end,
+        
+        # Financier
+        'ca_encaisse': ca_encaisse,
+        'ca_encaisse_var': ca_encaisse_var,
         'ca_en_attente_total': ca_en_attente_total,
-        'ca_ok': ca_ok,
         'ca_retard': ca_retard,
         'ca_non_planifies': ca_non_planifies,
-        'ca_previsionnel': ca_previsionnel,
-
-        'pct_ok': pct_ok,
-        'ca_encaisse': ca_encaisse,
+        'ca_previsionnel_30j': ca_previsionnel_30j,
         
-        # Compteurs filtres
+        # Compteurs
         'nb_total': nb_total,
         'nb_en_attente_devis': nb_en_attente_devis,
         'nb_a_planifier': nb_a_planifier,
@@ -359,11 +440,12 @@ def operations_list(request):
         'nb_operations_sans_paiement': nb_operations_sans_paiement,
         'nb_paye': nb_paye,
         'nb_refuse': nb_refuse,
+        
+        # Options
+        'cycle_options': cycle_options,
     }
     
     return render(request, 'operations/list.html', context)
-
-
 # ========================================
 # AUTRES VUES (inchangées)
 # ========================================

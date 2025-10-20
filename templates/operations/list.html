@@ -2,1071 +2,262 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Opérations – CRM Artisans</title>
   <style>
     :root{
-      --bg: #0b1220;
-      --card: #0f172a;
-      --muted: #94a3b8;
-      --text: #e2e8f0;
-      --primary: #6366f1; /* indigo */
-      --success: #22c55e; /* green */
-      --warning: #f59e0b; /* amber */
-      --danger: #ef4444; /* red */
-      --accent: #8b5cf6; /* violet */
-      --ring: rgba(99,102,241,.35);
-      --border: rgba(148,163,184,.15);
-      --shadow: 0 10px 25px rgba(2,6,23,.3), 0 1px 0 rgba(255,255,255,.03) inset;
-
-      /* Variables pour mode clair */
-      --bg-light: #f8fafc;
-      --card-light: #ffffff;
-      --text-light: #1e293b;
-      --muted-light: #64748b;
-      --border-light: rgba(30,41,59,.12);
-      --shadow-light: 0 10px 25px rgba(30,41,59,.08), 0 1px 0 rgba(255,255,255,.8) inset;
+      color-scheme: light dark;
+      --bg: #0b1220; --card:#0f172a; --text:#e2e8f0; --muted:#94a3b8; --border: rgba(148,163,184,.15);
+      --primary:#6366f1; --accent:#8b5cf6; --success:#22c55e; --warning:#f59e0b; --danger:#ef4444;
+      --ring: rgba(99,102,241,.35); --shadow: 0 10px 25px rgba(2,6,23,.25);
+      --chip-bg: rgba(148,163,184,.06);
     }
-
+    @media (prefers-color-scheme: light){
+      :root{ --bg:#f8fafc; --card:#fff; --text:#0f172a; --muted:#475569; --border: rgba(2,6,23,.12); --chip-bg:#f1f5f9; }
+    }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{
-      margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
-      background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.12), transparent 40%),
-                  radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.12), transparent 40%),
-                  var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
+    body{margin:0;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto; background:var(--bg); color:var(--text); line-height:1.5}
 
-    /* Header (identique Dashboard) */
-    .header{ 
-      position: sticky; top: 0; z-index: 40; 
-      backdrop-filter: saturate(180%) blur(8px); 
-      background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(15,23,42,.65)); 
-      border-bottom: 1px solid var(--border) 
-    }
-    .header-inner{ 
-      max-width:1280px; margin:0 auto; padding:.85rem 1rem; 
-      display:flex; align-items:center; gap:1rem; justify-content:space-between 
-    }
+    /* Header identique */
+    .header{ position: sticky; top: 0; z-index: 40; backdrop-filter: saturate(180%) blur(8px); background: linear-gradient(180deg, rgba(15,23,42,.85), rgba(15,23,42,.65)); border-bottom: 1px solid var(--border) }
+    .header-inner{ max-width:1280px; margin:0 auto; padding:.85rem 1rem; display:flex; align-items:center; gap:1rem; justify-content:space-between }
     .brand{ display:flex; align-items:center; gap:.75rem; font-weight:700; letter-spacing:.2px }
-    .logo{ 
-      width:34px; height:34px; border-radius:10px; 
-      background:linear-gradient(145deg, var(--primary), var(--accent)); 
-      box-shadow: var(--shadow); display:grid; place-items:center 
-    }
+    .logo{ width:34px; height:34px; border-radius:10px; background:linear-gradient(145deg, var(--primary), var(--accent)); box-shadow: var(--shadow); display:grid; place-items:center }
     .logo svg{ width:18px; height:18px; color:white }
     .nav{ display:flex; gap:.25rem; align-items:center }
-    .nav a{ 
-      text-decoration:none; color:var(--muted); padding:.55rem .8rem; 
-      border-radius:10px; border:1px solid transparent 
-    }
+    .nav a{ text-decoration:none; color:var(--muted); padding:.55rem .8rem; border-radius:10px; border:1px solid transparent }
     .nav a:hover{ color:var(--text); background:rgba(148,163,184,.08); border-color:var(--border) }
-    .nav a.active{ 
-      color:white; background:rgba(99,102,241,.18); 
-      border-color: rgba(99,102,241,.35); box-shadow: 0 0 0 2px var(--ring) 
-    }
-    .user{ display:flex; align-items:center; gap:.75rem; color:var(--muted); font-size:.95rem }
-    .user form button{ 
-      background:none; border:none; color:var(--muted); cursor:pointer; 
-      text-decoration:underline; font:inherit 
-    }
+    .nav a.active{ color:white; background:rgba(99,102,241,.18); border-color: rgba(99,102,241,.35); box-shadow: 0 0 0 2px var(--ring) }
 
-    /* Main */
-    .container{ max-width:1280px; margin: 2rem auto; padding: 0 1rem }
-    .page-title{ 
-      font-size: clamp(1.4rem, 2.4vw, 2rem); font-weight:800; 
-      letter-spacing:.2px; margin-bottom:.25rem 
-    }
-    .subtitle{ color:var(--muted); margin:0 0 1.25rem }
+    .container{max-width:1200px;margin:1.25rem auto;padding:0 1rem}
+    .page-title{font-size:clamp(1.4rem,2.2vw,1.9rem);font-weight:800;margin:.25rem 0}
+    .subtitle{color:var(--muted);margin:0 0 1rem}
 
-    /* Cards/sections */
-    .section{ 
-      background: linear-gradient(180deg, rgba(2,6,23,.6), rgba(2,6,23,.4)); 
-      border:1px solid var(--border); border-radius:16px; padding:1rem; 
-      box-shadow: var(--shadow); margin-top:1rem 
-    }
-    .section-header{ 
-      display:flex; align-items:center; justify-content:space-between; gap:1rem; 
-      padding:.4rem .35rem .9rem; border-bottom:1px dashed var(--border) 
-    }
-    .section-title{ display:flex; gap:.6rem; align-items:center; font-size:1.05rem; font-weight:700 }
-    .badge{ 
-      font-size:.75rem; color:var(--muted); padding:.15rem .5rem; 
-      border-radius:999px; border:1px solid var(--border); 
-      background: rgba(148,163,184,.08) 
-    }
+    /* KPI strip (3 essentiels) */
+    .kpi-strip{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem;margin:1rem 0}
+    .kpi{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;box-shadow:var(--shadow);display:grid;gap:.45rem}
+    .kpi h3{margin:0;font-size:.78rem;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+    .kpi .value{font-variant-numeric:tabular-nums;font-size:1.6rem;font-weight:800}
+    .kpi .sub{color:var(--muted);font-size:.8rem}
 
-    /* Toolbar & buttons */
-    .toolbar{ display:flex; gap:.5rem; flex-wrap:wrap }
-    .btn{ 
-      display:inline-flex; align-items:center; gap:.5rem; padding:.55rem .8rem; 
-      border-radius:10px; border:1px solid var(--border); 
-      background:rgba(148,163,184,.07); color:var(--text); 
-      text-decoration:none; cursor:pointer; font:inherit 
-    }
-    .btn:hover{ background:rgba(148,163,184,.12) }
-    .btn.primary{ 
-      background:linear-gradient(180deg, rgba(99,102,241,.18), rgba(99,102,241,.12)); 
-      border-color: rgba(99,102,241,.35); color: white 
-    }
+    /* Filtres compacts */
+    .filters{background:var(--card);padding:.6rem;border:1px solid var(--border);border-radius:12px;margin:1rem 0}
+    .filter-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.8rem;margin-bottom:.75rem}
+    .filter-group{background:rgba(148,163,184,.03);border:1px solid var(--border);border-radius:10px;padding:.75rem}
+    .filter-title{font-size:.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05rem;margin-bottom:.5rem}
+    .filter-chips{display:flex;flex-direction:column;gap:.35rem}
+    .chip{display:flex;align-items:center;justify-content:space-between;padding:.4rem .6rem;border-radius:6px;border:1px solid var(--border);background:rgba(148,163,184,.05);color:var(--text);text-decoration:none;font-size:.85rem;transition:all .2s}
+    .chip:hover{background:rgba(148,163,184,.1);transform:translateX(2px)}
+    .chip.active{background:linear-gradient(90deg,rgba(99,102,241,.18),rgba(99,102,241,.12));border-color:rgba(99,102,241,.35);color:white;font-weight:600}
+    .chip.alert{border-color:var(--danger);background:rgba(239,68,68,.08)}
+    .chip.alert.active{background:linear-gradient(90deg,rgba(239,68,68,.2),rgba(239,68,68,.15));color:white}
+    .chip.warning{border-color:var(--warning);background:rgba(245,158,11,.08)}
+    .chip.warning.active{background:linear-gradient(90deg,rgba(245,158,11,.2),rgba(245,158,11,.15));color:white}
+    .count{background:rgba(148,163,184,.15);padding:.1rem .4rem;border-radius:999px;font-size:.7rem;font-weight:700;min-width:24px;text-align:center}
+    .chip.active .count{background:rgba(255,255,255,.25)}
 
-    /* Search */
-    .search{ display:grid; gap:.8rem; grid-template-columns: 1fr auto auto }
-    .field{ display:grid; gap:.35rem }
-    .label{ color:var(--muted); font-size:.9rem; font-weight:600 }
-    .input{ 
-      width:100%; padding:.65rem .8rem; border-radius:10px; 
-      border:1px solid var(--border); background: rgba(2,6,23,.35); 
-      color: var(--text); font:inherit 
-    }
-    .input::placeholder{ color: rgba(226,232,240,.55) }
-    .input:focus{ 
-      outline:none; box-shadow: 0 0 0 2px var(--ring); 
-      border-color: rgba(99,102,241,.35) 
-    }
+    /* Recherche */
+    .search-bar{display:flex;gap:.5rem;flex-wrap:wrap;padding-top:.75rem;border-top:1px solid var(--border)}
+    .input{padding:.5rem .7rem;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text);flex:1;min-width:200px}
+    .btn{display:inline-flex;align-items:center;gap:.45rem;padding:.5rem .8rem;border-radius:10px;border:1px solid var(--border);background:var(--chip-bg);color:var(--text);text-decoration:none;cursor:pointer;font:inherit}
+    .btn.primary{background:rgba(99,102,241,.18);border-color:rgba(99,102,241,.35);color:#fff}
 
-    /* Filters quick */
-    .filters-quick{ display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom: 1rem }
-    .filter-btn{ 
-      display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; 
-      border-radius:10px; border:1px solid var(--border); 
-      background:rgba(148,163,184,.05); color:var(--text); 
-      text-decoration:none; font-size:.9rem 
-    }
-    .filter-btn:hover{ background:rgba(148,163,184,.1) }
-    .filter-btn.active{ 
-      background:linear-gradient(180deg, rgba(99,102,241,.18), rgba(99,102,241,.12)); 
-      border-color: rgba(99,102,241,.35); color: white 
-    }
+    /* Section liste */
+    .section{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:var(--shadow);margin-top:1rem}
+    .section-h{display:flex;justify-content:space-between;align-items:center;padding:.8rem 1rem;border-bottom:1px dashed var(--border)}
+    .section-h h2{margin:0;font-size:1rem;display:flex;align-items:center;gap:.6rem;font-weight:800}
+    .badge{font-size:.75rem;background:var(--chip-bg);border:1px solid var(--border);border-radius:999px;padding:.15rem .6rem;color:var(--muted)}
 
     /* Table */
-    .table-wrap{ overflow:auto; border-radius:12px; border:1px solid var(--border) }
-    table{ width:100%; border-collapse: collapse; min-width: 1100px }
-    thead th{ 
-      position:sticky; top:0; background: rgba(15,23,42,.9); backdrop-filter: blur(6px); 
-      color:var(--muted); text-transform:uppercase; letter-spacing:.08rem; 
-      font-size:.75rem; text-align:left; padding:.9rem .85rem; 
-      border-bottom:1px solid var(--border) 
+    .table-wrap{overflow:auto;border-radius:0 0 14px 14px}
+    table{width:100%;border-collapse:collapse;min-width:960px}
+    thead th{position:sticky;top:0;background:var(--card);color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-size:.72rem;text-align:left;padding:.7rem .8rem;border-bottom:1px solid var(--border)}
+    tbody td{padding:.7rem .8rem;border-bottom:1px dashed var(--border);vertical-align:top}
+    tbody tr:hover{background:rgba(148,163,184,.06)}
+    .id{color:var(--primary);font-weight:800}
+    .status{display:inline-flex;align-items:center;gap:.35rem;padding:.2rem .5rem;border-radius:999px;border:1px solid var(--border);background:var(--chip-bg);font-size:.78rem}
+    .status.ok{color:var(--success);border-color:rgba(34,197,94,.35)}
+    .status.warn{color:var(--warning);border-color:rgba(245,158,11,.35)}
+    .status.bad{color:var(--danger);border-color:rgba(239,68,68,.35)}
+
+    @media (max-width:760px){
+      .kpi-strip{grid-template-columns:1fr}
+      .filter-grid{grid-template-columns:1fr}
+      thead{display:none}
+      table{display:block}
+      tbody{display:grid;gap:.75rem}
+      tbody tr{display:grid;gap:.45rem;border:1px solid var(--border);border-radius:12px;padding:.85rem;background:var(--card)}
+      tbody td{padding:.15rem 0;border:0}
     }
-    tbody td{ padding:.9rem .85rem; border-bottom:1px dashed var(--border); vertical-align: top }
-    tbody tr:hover{ background: rgba(148,163,184,.05) }
-
-    .operation-id{ font-weight:700; color: var(--primary) }
-    .client-name{ font-weight:600 }
-    .muted{ color: var(--muted) }
-    .nowrap{ white-space:nowrap }
-    .chip{ 
-      display:inline-flex; align-items:center; gap:.35rem; padding:.2rem .55rem; 
-      border-radius:999px; font-size:.78rem; border:1px solid var(--border); 
-      color: var(--muted); background: rgba(148,163,184,.08) 
-    }
-    .chip.status{ color:#60a5fa; border-color: rgba(59,130,246,.35); background: rgba(59,130,246,.08) }
-    .chip.en-attente{ color:#f59e0b; border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.08) }
-    .chip.realise{ color:#22c55e; border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.08) }
-
-    .documents{ display:flex; gap:.3rem }
-    .doc-btn{ 
-      padding:.25rem .5rem; background: rgba(148,163,184,.08); 
-      border:1px solid var(--border); border-radius:6px; 
-      text-decoration:none; color:var(--muted); font-size:.8rem 
-    }
-    .doc-btn:hover{ background: rgba(148,163,184,.12) }
-
-    .btn-view{ 
-      display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .7rem; 
-      border-radius:8px; border:1px solid rgba(99,102,241,.35); 
-      background: rgba(99,102,241,.15); color:white; text-decoration:none; font-size:.8rem 
-    }
-    .btn-view:hover{ box-shadow: 0 0 0 2px var(--ring) }
-
-    .total-count{ margin-bottom: 1rem; color: var(--muted); font-size: .9rem }
-
-    /* Responsive: table -> cartes */
-    @media (max-width: 780px){
-      .search{ grid-template-columns: 1fr; }
-      .filters-quick{ justify-content: center; }
-      .table-wrap{ border:none }
-      table{ display:block }
-      thead{ display:none }
-      tbody{ display:grid; gap:.75rem }
-      tbody tr{ 
-        display:grid; gap:.45rem; border:1px solid var(--border); 
-        border-radius:12px; padding:.85rem; background: rgba(2,6,23,.5) 
-      }
-      tbody td{ padding:.15rem 0; border:none }
-      tbody td[data-label]{ color:var(--muted); font-size:.78rem }
-    }
-
-    /* Light mode - Aligné avec Dashboard */
-    @media (prefers-color-scheme: light){
-      :root{ 
-        --bg: var(--bg-light); 
-        --card: var(--card-light); 
-        --text: var(--text-light); 
-        --muted: var(--muted-light); 
-        --border: var(--border-light); 
-        --shadow: var(--shadow-light);
-      }
-      
-      body{ 
-        background: radial-gradient(1200px 800px at 20% -10%, rgba(99,102,241,.05), transparent 40%), 
-                    radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.05), transparent 40%), 
-                    var(--bg) 
-      }
-      
-      .header{ 
-        background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.8));
-        backdrop-filter: saturate(180%) blur(8px);
-        border-bottom: 1px solid var(--border);
-      }
-      
-      .section{ 
-        background: var(--card); 
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-      }
-      
-      .table-wrap{ 
-        background: var(--card); 
-        border: 1px solid var(--border) 
-      }
-      
-      thead th{ 
-        background: rgba(248,250,252,.95); 
-        backdrop-filter: blur(6px);
-        color: var(--muted) 
-      }
-      
-      .input{ 
-        background: #fff; 
-        border-color: var(--border); 
-        color: var(--text) 
-      }
-      .input::placeholder{ color: rgba(100,116,139,.6) }
-      
-      .nav a{ color: var(--muted) }
-      .nav a:hover{ color: var(--text) }
-      .nav a.active{ 
-        color: var(--primary); 
-        background: rgba(99,102,241,.08); 
-        border-color: rgba(99,102,241,.2) 
-      }
-      
-      .user{ color: var(--muted) }
-      .user form button{ color: var(--muted) }
-      
-      .btn{ 
-        background: rgba(148,163,184,.06); 
-        color: var(--text);
-        border: 1px solid var(--border);
-      }
-      .btn:hover{ background: rgba(148,163,184,.1) }
-      
-      .btn.primary{ 
-        background: rgba(99,102,241,.1); 
-        border-color: rgba(99,102,241,.2);
-        color: var(--primary);
-      }
-      
-      .filter-btn{ 
-        background: rgba(148,163,184,.04); 
-        color: var(--text);
-      }
-      .filter-btn.active{ 
-        background: rgba(99,102,241,.1); 
-        border-color: rgba(99,102,241,.2);
-        color: var(--primary);
-      }
-      
-      .operation-id{ color: var(--primary) }
-      
-      .chip{ 
-        color: var(--muted);
-        border: 1px solid var(--border);
-        background: rgba(148,163,184,.04);
-      }
-      
-      .chip.status{ 
-        color: #2563eb; 
-        border-color: rgba(37,99,235,.25); 
-        background: rgba(37,99,235,.06);
-      }
-      
-      .chip.en-attente{ 
-        color: #d97706; 
-        border-color: rgba(217,119,6,.25); 
-        background: rgba(217,119,6,.06);
-      }
-      
-      .chip.realise{ 
-        color: #16a34a; 
-        border-color: rgba(22,163,74,.25); 
-        background: rgba(22,163,74,.06);
-      }
-      
-      .doc-btn{ 
-        background: rgba(148,163,184,.04); 
-        color: var(--muted);
-      }
-      
-      .btn-view{ 
-        background: rgba(99,102,241,.1); 
-        border-color: rgba(99,102,241,.2);
-        color: var(--primary);
-      }
-      
-      tbody tr{ background: transparent }
-      tbody tr:hover{ background: rgba(148,163,184,.03) }
-      
-      @media (max-width:780px){ 
-        tbody tr{ 
-          background: rgba(248,250,252,.8);
-          border: 1px solid var(--border);
-        } 
-      }
-    }
-
-    .finance-overview {
-      background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(139,92,246,.15));
-      border: 2px solid rgba(99,102,241,.3);
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 1.5rem;
-    }
-    
-    .finance-title {
-      font-size: 1.2rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-    
-    .finance-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-    
-    .finance-item {
-      background: rgba(15,23,42,.5);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1rem;
-    }
-    
-    .finance-item.highlight {
-      border-color: var(--success);
-    }
-    
-    .finance-item.alert {
-      border-color: var(--danger);
-      background: rgba(239,68,68,.1);
-    }
-    
-    .finance-item.warning {
-      border-color: var(--warning);
-      background: rgba(245,158,11,.1);
-    }
-    
-    .finance-label {
-      color: var(--muted);
-      font-size: 0.85rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .finance-value {
-      font-size: 1.5rem;
-      font-weight: 700;
-    }
-    
-    .finance-subtitle {
-      color: var(--muted);
-      font-size: 0.75rem;
-      margin-top: 0.25rem;
-    }
-    
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: rgba(148,163,184,.2);
-      border-radius: 999px;
-      overflow: hidden;
-      margin-bottom: 0.5rem;
-    }
-    
-    .progress-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--success), var(--primary));
-      border-radius: 999px;
-      transition: width 0.3s ease;
-    }
-    
-    /* Filtres avec badges */
-    .filter-badge {
-      background: rgba(99,102,241,.2);
-      color: white;
-      padding: 0.15rem 0.5rem;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      margin-left: 0.35rem;
-    }
-    
-    .filter-badge.alert {
-      background: rgba(239,68,68,.3);
-      animation: pulse 2s ease-in-out infinite;
-    }
-    
-    .filter-badge.warning {
-      background: rgba(245,158,11,.3);
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-    
-    /* Mode clair */
-    @media (prefers-color-scheme: light) {
-      .finance-overview {
-        background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(139,92,246,.08));
-        border-color: rgba(99,102,241,.2);
-      }
-      
-      .finance-item {
-        background: rgba(248,250,252,.8);
-      }
-      
-      .finance-item.alert {
-        background: rgba(239,68,68,.05);
-      }
-      
-      .finance-item.warning {
-        background: rgba(245,158,11,.05);
-      }
-    }
-/* ========================================
-   FILTRES COMPACTS - VERSION 3 COLONNES
-   ======================================== */
-.filter-group-compact {
-  background: rgba(148,163,184,.03);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: .75rem;
-  transition: all 0.2s ease;
-}
-
-.filter-group-compact:hover {
-  border-color: rgba(148,163,184,.25);
-}
-
-.filter-compact-title {
-  font-size: .75rem;
-  font-weight: 700;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: .05rem;
-  margin-bottom: .5rem;
-  padding-left: .15rem;
-}
-
-.filters-compact {
-  display: flex;
-  flex-direction: column;
-  gap: .35rem;
-}
-
-.filter-chip {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: .4rem .6rem;
-  border-radius: 6px;
-  border: 1px solid var(--border);
-  background: rgba(148,163,184,.05);
-  color: var(--text);
-  text-decoration: none;
-  font-size: .85rem;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.filter-chip:hover {
-  background: rgba(148,163,184,.1);
-  transform: translateX(2px);
-  border-color: rgba(148,163,184,.3);
-}
-
-.filter-chip.active {
-  background: linear-gradient(90deg, rgba(99,102,241,.18), rgba(99,102,241,.12));
-  border-color: rgba(99,102,241,.35);
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 0 0 2px rgba(99,102,241,.15);
-}
-
-.filter-chip.active:hover {
-  transform: translateX(0);
-  box-shadow: 0 0 0 3px rgba(99,102,241,.2);
-}
-
-/* Alertes */
-.filter-chip.alert {
-  border-color: var(--danger);
-  background: rgba(239,68,68,.08);
-}
-
-.filter-chip.alert:hover {
-  background: rgba(239,68,68,.12);
-}
-
-.filter-chip.alert.active {
-  background: linear-gradient(90deg, rgba(239,68,68,.2), rgba(239,68,68,.15));
-  border-color: var(--danger);
-  color: white;
-}
-
-.filter-chip.warning {
-  border-color: var(--warning);
-  background: rgba(245,158,11,.08);
-}
-
-.filter-chip.warning:hover {
-  background: rgba(245,158,11,.12);
-}
-
-.filter-chip.warning.active {
-  background: linear-gradient(90deg, rgba(245,158,11,.2), rgba(245,158,11,.15));
-  border-color: var(--warning);
-  color: white;
-}
-
-/* Badge de compteur */
-.chip-badge {
-  background: rgba(148,163,184,.15);
-  padding: .1rem .4rem;
-  border-radius: 999px;
-  font-size: .7rem;
-  font-weight: 700;
-  margin-left: .5rem;
-  min-width: 24px;
-  text-align: center;
-}
-
-.filter-chip.active .chip-badge {
-  background: rgba(255,255,255,.25);
-}
-
-.filter-chip.alert .chip-badge {
-  background: rgba(239,68,68,.2);
-  animation: pulse-badge 2s ease-in-out infinite;
-}
-
-.filter-chip.warning .chip-badge {
-  background: rgba(245,158,11,.2);
-}
-
-@keyframes pulse-badge {
-  0%, 100% { 
-    opacity: 1; 
-    transform: scale(1);
-  }
-  50% { 
-    opacity: 0.7; 
-    transform: scale(1.05);
-  }
-}
-
-/* Mode clair */
-@media (prefers-color-scheme: light) {
-  .filter-group-compact {
-    background: rgba(248,250,252,.8);
-    border-color: rgba(148,163,184,.15);
-  }
-  
-  .filter-group-compact:hover {
-    border-color: rgba(148,163,184,.25);
-    background: rgba(248,250,252,.95);
-  }
-  
-  .filter-chip {
-    background: white;
-    color: var(--text-light);
-  }
-  
-  .filter-chip:hover {
-    background: rgba(248,250,252,.9);
-  }
-  
-  .filter-chip.active {
-    background: rgba(99,102,241,.1);
-    color: var(--primary);
-    border-color: rgba(99,102,241,.25);
-  }
-  
-  .filter-chip.alert {
-    background: rgba(239,68,68,.05);
-    border-color: rgba(239,68,68,.2);
-  }
-  
-  .filter-chip.alert.active {
-    background: rgba(239,68,68,.12);
-    color: var(--danger);
-  }
-  
-  .filter-chip.warning {
-    background: rgba(245,158,11,.05);
-    border-color: rgba(245,158,11,.2);
-  }
-  
-  .filter-chip.warning.active {
-    background: rgba(245,158,11,.12);
-    color: var(--warning);
-  }
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .filter-group-compact {
-    padding: .6rem;
-  }
-  
-  .filter-compact-title {
-    font-size: .7rem;
-    margin-bottom: .4rem;
-  }
-  
-  .filter-chip {
-    font-size: .8rem;
-    padding: .35rem .5rem;
-  }
-  
-  .chip-badge {
-    font-size: .65rem;
-    padding: .08rem .35rem;
-  }
-}
-
-@media (max-width: 480px) {
-  /* Force 1 colonne sur très petits écrans */
-  [style*="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr))"] {
-    grid-template-columns: 1fr !important;
-  }
-}
-
   </style>
 </head>
 <body>
   <header class="header">
     <div class="header-inner">
       <div class="brand">
-        <div class="logo" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 14.5 12 4l8 10.5-8 5.5-8-5.5Z" stroke="currentColor" stroke-width="1.6"/>
-          </svg>
-        </div>
+        <div class="logo"><svg viewBox="0 0 24 24" fill="none"><path d="M4 14.5 12 4l8 10.5-8 5.5-8-5.5Z" stroke="currentColor" stroke-width="1.6"/></svg></div>
         <span>CRM Artisans</span>
       </div>
-      <nav class="nav" aria-label="Navigation principale">
+      <nav class="nav">
         <a href="{% url 'dashboard' %}">Accueil</a>
         <a href="{% url 'operations' %}" class="active">Opérations</a>
         <a href="{% url 'clients' %}">Clients</a>
       </nav>
-      <div class="user">
-        <span>{{ user.username }}</span>
-        <form method="post" action="{% url 'logout' %}">
-          {% csrf_token %}
-          <button type="submit">Déconnexion</button>
-        </form>
-      </div>
+      <div class="muted">{{ user.username }}</div>
     </div>
   </header>
 
   <main class="container">
-    <h1 class="page-title">Gestion des opérations</h1>
-    <p class="subtitle">{{ nb_total }} opération{{ nb_total|pluralize }} au total</p>
+    <h1 class="page-title">Opérations</h1>
+    <p class="subtitle">{{ nb_total }} opération{{ nb_total|pluralize }}</p>
 
-  <!-- ✅ VUE D'ENSEMBLE FINANCIÈRE -->
-  {% if ca_en_attente_total > 0 or ca_previsionnel > 0 or ca_encaisse > 0 %}
-  <div class="finance-overview">
-    <div class="finance-title">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-      </svg>
-      Vue d'ensemble financière
-    </div>
-    
-    <div class="finance-grid">
-      <!-- ✅ NOUVEAU : CA en cours -->
-      <div class="finance-item highlight">
-        <div class="finance-label">✅ CA encaissé</div>
-        <div class="finance-value">{{ ca_encaisse|floatformat:0 }} €</div>
-        <div class="finance-subtitle">Paiements confirmés</div>
-      </div>
-      
-      <!-- Trésorerie en attente -->
-      <div class="finance-item">
-        <div class="finance-label">💰 Trésorerie en attente</div>
-        <div class="finance-value">{{ ca_en_attente_total|floatformat:0 }} €</div>
-        <div class="finance-subtitle">Réalisé non encaissé</div>
-      </div>
-      
-      <!-- CA Prévisionnel -->
-      <div class="finance-item">
-        <div class="finance-label">📈 CA prévisionnel</div>
-        <div class="finance-value">{{ ca_previsionnel|floatformat:0 }} €</div>
-        <div class="finance-subtitle">Opérations planifiées</div>
-      </div>
-    </div>
-    
-    <!-- Barre de progression -->
-    {% if ca_en_attente_total > 0 %}
-    <div style="margin-top: 1rem;">
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: {{ pct_ok }}%;"></div>
-      </div>
-      <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.85rem;">
-        <span style="color: var(--success);">⏳ {{ ca_encaisse|floatformat:0 }}€ OK ({{ pct_ok }}%)</span>
-        {% if ca_retard > 0 %}
-        <span style="color: var(--danger);">🚨 {{ ca_retard|floatformat:0 }}€ Retard</span>
-        {% endif %}
-        {% if ca_non_planifies > 0 %}
-        <span style="color: var(--warning);">⚠️ {{ ca_non_planifies|floatformat:0 }}€ Non planifié</span>
-        {% endif %}
-      </div>
-    </div>
-    {% endif %}
-  </div>
-  {% endif %}
+    <!-- KPI -->
+    <section class="kpi-strip">
+      <article class="kpi">
+        <h3>CA encaissé</h3>
+        <div class="value">{{ ca_encaisse|floatformat:0 }} €</div>
+        <div class="sub">Paiements confirmés</div>
+      </article>
+      <article class="kpi">
+        <h3>Encours</h3>
+        <div class="value">{{ ca_en_attente_total|floatformat:0 }} €</div>
+        <div class="sub">dont retard : <strong>{{ ca_retard|floatformat:0 }} €</strong></div>
+      </article>
+      <article class="kpi">
+        <h3>Prévisionnel</h3>
+        <div class="value">{{ ca_previsionnel|floatformat:0 }} €</div>
+        <div class="sub">Opérations planifiées</div>
+      </article>
+    </section>
 
-  <!-- ✅ FILTRES COMPACTS PAR COLONNES -->
-  <section class="section">
-    <div class="section-header">
-      <h2 class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M9 12h6m-4 6h2" stroke="currentColor" stroke-width="1.6"/></svg>
-        Filtres
-      </h2>
-      <div class="toolbar">
-        {% if filtre_actif != 'toutes' or recherche %}
-          <a href="{% url 'operations' %}" class="btn" style="font-size:.85rem; padding:.4rem .65rem">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="1.6"/></svg>
-            Réinitialiser
-          </a>
-        {% endif %}
+    <!-- Filtres compacts -->
+    <form method="GET" class="filters">
+      <div class="filter-grid">
+        <!-- Cycle -->
+        <div class="filter-group">
+          <div class="filter-title">🔄 Cycle</div>
+          <div class="filter-chips">
+            <a href="?filtre=toutes" class="chip {% if filtre_actif == 'toutes' %}active{% endif %}">
+              <span>Toutes</span><span class="count">{{ nb_total }}</span>
+            </a>
+            <a href="?filtre=en_attente_devis" class="chip {% if filtre_actif == 'en_attente_devis' %}active{% endif %}">
+              <span>🟡 Devis</span><span class="count">{{ nb_en_attente_devis }}</span>
+            </a>
+            <a href="?filtre=a_planifier" class="chip {% if filtre_actif == 'a_planifier' %}active{% endif %}">
+              <span>🔵 À planifier</span><span class="count">{{ nb_a_planifier }}</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- État -->
+        <div class="filter-group">
+          <div class="filter-title">📋 État</div>
+          <div class="filter-chips">
+            <a href="?filtre=planifie" class="chip {% if filtre_actif == 'planifie' %}active{% endif %}">
+              <span>📅 Planifiées</span><span class="count">{{ nb_planifie }}</span>
+            </a>
+            <a href="?filtre=realise" class="chip {% if filtre_actif == 'realise' %}active{% endif %}">
+              <span>🟢 Réalisées</span><span class="count">{{ nb_realise }}</span>
+            </a>
+            <a href="?filtre=paye" class="chip {% if filtre_actif == 'paye' %}active{% endif %}">
+              <span>✅ Payées</span><span class="count">{{ nb_paye }}</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Alertes -->
+        <div class="filter-group">
+          <div class="filter-title">💰 Alertes</div>
+          <div class="filter-chips">
+            {% if nb_paiements_retard > 0 %}
+            <a href="?filtre=retards" class="chip alert {% if filtre_actif == 'retards' %}active{% endif %}">
+              <span>🚨 Retards</span><span class="count">{{ nb_paiements_retard }}</span>
+            </a>
+            {% endif %}
+            {% if nb_operations_sans_paiement > 0 %}
+            <a href="?filtre=non_planifies" class="chip warning {% if filtre_actif == 'non_planifies' %}active{% endif %}">
+              <span>⚠️ Non planifiés</span><span class="count">{{ nb_operations_sans_paiement }}</span>
+            </a>
+            {% endif %}
+            {% if nb_paiements_retard == 0 and nb_operations_sans_paiement == 0 %}
+            <div style="color:var(--success);font-size:.85rem;padding:.5rem;text-align:center">✅ Aucune alerte</div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Recherche -->
+      <div class="search-bar">
+        <input type="text" name="recherche" value="{{ recherche|default:'' }}" placeholder="Client, ville, téléphone…" class="input">
+        <input type="hidden" name="filtre" value="{{ filtre_actif }}">
+        <button class="btn" type="submit">Rechercher</button>
+        {% if recherche %}<a class="btn" href="?filtre={{ filtre_actif }}">Effacer</a>{% endif %}
         <a href="{% url 'operation_create' %}" class="btn primary">+ Nouvelle</a>
       </div>
-    </div>
-
-    <!-- ✅ GRILLE 3 COLONNES -->
-    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; padding:.5rem 0">
-      
-      <!-- ═══════════════════════════════════════
-          COLONNE 1 : CYCLE OPÉRATIONNEL
-          ═══════════════════════════════════════ -->
-      <div class="filter-group-compact">
-        <div class="filter-compact-title">🔄 Cycle opérationnel</div>
-        <div class="filters-compact">
-          <a href="?filtre=toutes" class="filter-chip {% if filtre_actif == 'toutes' %}active{% endif %}">
-            <span>Toutes les opérations</span>
-            <span class="chip-badge">{{ nb_total }}</span>
-          </a>
-          <a href="?filtre=en_attente_devis" class="filter-chip {% if filtre_actif == 'en_attente_devis' %}active{% endif %}">
-            <span>🟡 En attente devis</span>
-            <span class="chip-badge">{{ nb_en_attente_devis }}</span>
-          </a>
-          <a href="?filtre=a_planifier" class="filter-chip {% if filtre_actif == 'a_planifier' %}active{% endif %}">
-            <span>🔵 À planifier</span>
-            <span class="chip-badge">{{ nb_a_planifier }}</span>
-          </a>
-          {% if nb_refuse > 0 %}
-          <a href="?filtre=devis_refuse" class="filter-chip {% if filtre_actif == 'devis_refuse' %}active{% endif %}">
-            <span>🔴 Devis refusés</span>
-            <span class="chip-badge">{{ nb_refuse }}</span>
-          </a>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- ═══════════════════════════════════════
-          COLONNE 2 : ÉTAT DES INTERVENTIONS
-          ═══════════════════════════════════════ -->
-      <div class="filter-group-compact">
-        <div class="filter-compact-title">📋 État des interventions</div>
-        <div class="filters-compact">
-          <a href="?filtre=planifie" class="filter-chip {% if filtre_actif == 'planifie' %}active{% endif %}">
-            <span>📅 Planifiées</span>
-            <span class="chip-badge">{{ nb_planifie }}</span>
-          </a>
-          <a href="?filtre=realise" class="filter-chip {% if filtre_actif == 'realise' %}active{% endif %}">
-            <span>🟢 Réalisées</span>
-            <span class="chip-badge">{{ nb_realise }}</span>
-          </a>
-          <a href="?filtre=paye" class="filter-chip {% if filtre_actif == 'paye' %}active{% endif %}">
-            <span>✅ Payées</span>
-            <span class="chip-badge">{{ nb_paye }}</span>
-          </a>
-        </div>
-      </div>
-
-      <!-- ═══════════════════════════════════════
-          COLONNE 3 : ALERTES FINANCIÈRES
-          ═══════════════════════════════════════ -->
-      <div class="filter-group-compact">
-        <div class="filter-compact-title">💰 Alertes financières</div>
-        <div class="filters-compact">
-          {% if nb_paiements_retard > 0 %}
-          <a href="?filtre=retards" class="filter-chip alert {% if filtre_actif == 'retards' %}active{% endif %}">
-            <span>🚨 Retards de paiement</span>
-            <span class="chip-badge">{{ nb_paiements_retard }}</span>
-          </a>
-          {% endif %}
-          
-          {% if nb_operations_sans_paiement > 0 %}
-          <a href="?filtre=non_planifies" class="filter-chip warning {% if filtre_actif == 'non_planifies' %}active{% endif %}">
-            <span>⚠️ Paiements non planifiés</span>
-            <span class="chip-badge">{{ nb_operations_sans_paiement }}</span>
-          </a>
-          {% endif %}
-          
-          {% if nb_paiements_retard == 0 and nb_operations_sans_paiement == 0 %}
-          <div style="color:var(--success); font-size:.85rem; padding:.5rem .6rem; text-align:center; background:rgba(34,197,94,.08); border-radius:6px; border:1px solid rgba(34,197,94,.2)">
-            ✅ Aucune alerte financière
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-
-    <!-- ✅ RECHERCHE INLINE -->
-    <form method="GET" style="margin-top:.75rem; padding-top:.75rem; border-top:1px solid var(--border)">
-      <div style="display:flex; gap:.5rem; align-items:end; flex-wrap:wrap">
-        <label class="field" style="flex:1; min-width:200px">
-          <span class="label" style="font-size:.8rem">🔍 Recherche rapide</span>
-          <input class="input" type="text" name="recherche" value="{{ recherche|default:'' }}" placeholder="Client, ville, téléphone, ID opération..." style="padding:.5rem .7rem; font-size:.9rem">
-        </label>
-        <input type="hidden" name="filtre" value="{{ filtre_actif }}">
-        <button type="submit" class="btn primary" style="padding:.5rem .85rem; font-size:.9rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="currentColor" stroke-width="1.6"/><path d="m21 21-4.35-4.35" stroke="currentColor" stroke-width="1.6"/></svg>
-          Rechercher
-        </button>
-        {% if recherche %}
-        <a href="{% url 'operations' %}?filtre={{ filtre_actif }}" class="btn" style="padding:.5rem .85rem; font-size:.9rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 18L18 6M6 6l12 12" stroke="currentColor" stroke-width="1.6"/></svg>
-          Effacer
-        </a>
-        {% endif %}
-      </div>
     </form>
-  </section>
 
-    <!-- ✅ LISTE DES OPÉRATIONS -->
+    <!-- Liste -->
     <section class="section">
-      <div class="section-header">
-        <h2 class="section-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M7 10h10M7 14h7M4 6h16v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6z" stroke="currentColor" stroke-width="1.6"/></svg>
-          
-          {% if filtre_actif == 'retards' %}
-            🚨 Paiements en retard
-          {% elif filtre_actif == 'non_planifies' %}
-            ⚠️ Paiements non planifiés
-          {% elif filtre_actif == 'toutes' %}
-            Toutes les opérations
-          {% else %}
-            {{ filtre_actif|title }}
-          {% endif %}
-          
+      <div class="section-h">
+        <h2>
+          {% if filtre_actif == 'retards' %}🚨 Retards{% elif filtre_actif == 'non_planifies' %}⚠️ Non planifiés{% else %}{{ filtre_actif|title }}{% endif %}
           <span class="badge">{{ total_operations }}</span>
         </h2>
-        <div class="toolbar">
-          <a href="{% url 'operation_create' %}" class="btn primary">+ Nouvelle opération</a>
-        </div>
       </div>
 
       {% if operations %}
-        <div class="total-count">
-          {{ total_operations }} opération{{ total_operations|pluralize }} trouvée{{ total_operations|pluralize }}
-        </div>
-
-        <!-- ✅ TABLEAU ADAPTÉ AU FILTRE -->
-        <div class="table-wrap">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Client / Opération</th>
-                
-                {% if filtre_actif == 'retards' %}
-                  <th>Date échéance</th>
-                  <th>Jours retard</th>
-                  <th>Montant dû</th>
-                {% elif filtre_actif == 'non_planifies' %}
-                  <th>Date réalisation</th>
-                  <th>Montant total</th>
-                {% else %}
-                  <th>Ville</th>
-                  <th>Montant</th>
-                  <th>Statut</th>
-                {% endif %}
-                
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for operation in operations %}
-              <tr {% if filtre_actif == 'retards' %}style="background: rgba(239,68,68,.08);"{% elif filtre_actif == 'non_planifies' %}style="background: rgba(245,158,11,.08);"{% endif %}>
-                <td class="operation-id">{{ operation.id_operation }}</td>
-                
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th><th>Date</th><th>Client / Opération</th>
+              {% if filtre_actif == 'retards' %}
+                <th>Échéance</th><th>Retard</th><th>Montant</th>
+              {% elif filtre_actif == 'non_planifies' %}
+                <th>Réalisation</th><th>Total</th>
+              {% else %}
+                <th>Ville</th><th>Montant</th><th>Statut</th>
+              {% endif %}
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for operation in operations %}
+            <tr>
+              <td class="id">{{ operation.id_operation }}</td>
+              <td>{% if operation.date_prevue %}{{ operation.date_prevue|date:"d/m/Y" }}{% else %}{{ operation.date_creation|date:"d/m/Y" }}{% endif %}</td>
+              <td>
+                <div style="font-weight:700">{{ operation.client.nom }} {{ operation.client.prenom }}</div>
+                <div style="color:var(--muted);font-size:.85rem">{{ operation.type_prestation|truncatechars:50 }}</div>
+              </td>
+              {% if filtre_actif == 'retards' %}
+                <td>{% if operation.premier_retard %}{{ operation.premier_retard.date_echeance|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                <td>{% if operation.jours_retard %}<strong class="status bad">{{ operation.jours_retard }} j</strong>{% else %}—{% endif %}</td>
+                <td>{% if operation.premier_retard %}<strong>{{ operation.premier_retard.montant|floatformat:0 }} €</strong>{% else %}—{% endif %}</td>
+              {% elif filtre_actif == 'non_planifies' %}
+                <td>{% if operation.date_realisation %}{{ operation.date_realisation|date:"d/m/Y" }}{% else %}—{% endif %}</td>
+                <td><strong class="status warn">{{ operation.reste_a_planifier|floatformat:0 }} €</strong></td>
+              {% else %}
+                <td>{{ operation.client.ville|default:"—" }}</td>
+                <td>{% if operation.montant_total %}{{ operation.montant_total|floatformat:0 }} €{% else %}—{% endif %}</td>
                 <td>
-                  <div class="nowrap">
-                    {% if operation.date_prevue %}
-                      {{ operation.date_prevue|date:"d/m/Y" }}
-                    {% else %}
-                      {{ operation.date_creation|date:"d/m/Y" }}
-                    {% endif %}
-                  </div>
+                  {% if operation.statut == 'planifie' %}<span class="status">Planifié</span>
+                  {% elif operation.statut == 'realise' %}<span class="status ok">Réalisé</span>
+                  {% elif operation.statut == 'paye' %}<span class="status ok">Payé</span>
+                  {% else %}<span class="status">{{ operation.get_statut_display }}</span>{% endif %}
                 </td>
-                
-                <td>
-                  <div class="client-name">{{ operation.client.nom }} {{ operation.client.prenom }}</div>
-                  <div class="muted">{{ operation.type_prestation|truncatechars:40 }}</div>
-                </td>
-                
-                {% if filtre_actif == 'retards' %}
-                  <!-- ✅ Colonnes spécifiques retards -->
-                  <td>
-                    {% if operation.premier_retard %}
-                      <span class="nowrap">{{ operation.premier_retard.date_echeance|date:"d/m/Y" }}</span>
-                    {% else %}
-                      <span class="muted">—</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {% if operation.jours_retard %}
-                      <span style="color: var(--danger); font-weight: 700;">{{ operation.jours_retard }} jour{{ operation.jours_retard|pluralize }}</span>
-                    {% else %}
-                      <span class="muted">—</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {% if operation.premier_retard %}
-                      <strong style="color: var(--danger); font-size: 1.1rem;">{{ operation.premier_retard.montant|floatformat:0 }} €</strong>
-                    {% else %}
-                      <span class="muted">—</span>
-                    {% endif %}
-                  </td>
-                  
-                  {% elif filtre_actif == 'non_planifies' %}
-                    <td>
-                      {% if operation.date_realisation %}
-                        <span class="nowrap">{{ operation.date_realisation|date:"d/m/Y" }}</span>
-                      {% else %}
-                        <span class="muted">Non renseigné</span>
-                      {% endif %}
-                    </td>
-                    <td>
-                      <div>
-                        <strong style="color: var(--warning); font-size: 1.1rem;">
-                          {{ operation.reste_a_planifier|floatformat:0 }} €
-                        </strong>
-                        <div class="muted" style="font-size: 0.75rem;">
-                          sur {{ operation.montant_total|floatformat:0 }}€ total
-                        </div>
-                      </div>
-                    </td>
-                  
-                {% else %}
-                  <!-- ✅ Colonnes standard -->
-                  <td>{{ operation.client.ville|default:"—" }}</td>
-                  <td>
-                    {% if operation.montant_total %}
-                      {{ operation.montant_total|floatformat:0 }} €
-                    {% else %}
-                      <span class="muted">—</span>
-                    {% endif %}
-                  </td>
-                  <td>
-                    {% if operation.statut == 'en_attente_devis' %}
-                      <span class="chip en-attente">En attente devis</span>
-                    {% elif operation.statut == 'a_planifier' %}
-                      <span class="chip status">À planifier</span>
-                    {% elif operation.statut == 'planifie' %}
-                      <span class="chip status">Planifié</span>
-                    {% elif operation.statut == 'realise' %}
-                      <span class="chip realise">Réalisé</span>
-                    {% elif operation.statut == 'paye' %}
-                      <span class="chip" style="color: var(--success); border-color: var(--success);">Payé</span>
-                    {% else %}
-                      <span class="chip">{{ operation.get_statut_display }}</span>
-                    {% endif %}
-                  </td>
-                {% endif %}
-                
-                <td>
-                  <div class="toolbar" style="gap: .35rem;">
-                    <a href="{% url 'operation_detail' operation.id %}" class="btn-view">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="1.6"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke="currentColor" stroke-width="1.6"/></svg>
-                      Voir
-                    </a>
-                    
-                    {% if filtre_actif == 'retards' %}
-                      <a href="tel:{{ operation.client.telephone }}" class="btn" style="font-size: .8rem; padding: .4rem .6rem; background: var(--danger); color: white; border-color: var(--danger);">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" stroke="currentColor" stroke-width="1.6"/></svg>
-                        Appeler
-                      </a>
-                    {% elif filtre_actif == 'non_planifies' %}
-                      <a href="{% url 'operation_detail' operation.id %}#paiements" class="btn" style="font-size: .8rem; padding: .4rem .6rem; background: var(--warning); color: white; border-color: var(--warning);">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.6"/></svg>
-                        Planifier
-                      </a>
-                    {% endif %}
-                  </div>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+              {% endif %}
+              <td><a href="{% url 'operation_detail' operation.id %}" class="btn">Voir</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
       {% else %}
-        <div style="text-align:center; padding: 2rem;">
-          <p style="color:var(--muted); margin-bottom: 1rem;">
-            {% if recherche %}
-              Aucune opération ne correspond à votre recherche "{{ recherche }}".
-            {% else %}
-              Aucune opération dans cette catégorie.
-            {% endif %}
-          </p>
-          <div class="toolbar" style="justify-content:center">
-            <a href="{% url 'operation_create' %}" class="btn primary">Créer une opération</a>
-            {% if recherche or filtre_actif != 'toutes' %}
-              <a href="{% url 'operations' %}" class="btn">Voir toutes les opérations</a>
-            {% endif %}
-          </div>
-        </div>
+        <div style="text-align:center;padding:2rem"><p style="color:var(--muted)">Aucune opération.</p></div>
       {% endif %}
     </section>
   </main>
-
-  <script>
-    // Recherche avec délai
-    const searchInput = document.querySelector('input[name="recherche"]');
-    if (searchInput) {
-      let searchTimeout;
-      searchInput.addEventListener('input', function(e) {
-        clearTimeout(searchTimeout);
-        searchTimeout = setTimeout(() => {
-          if (e.target.value.length > 2 || e.target.value.length === 0) {
-            e.target.closest('form').submit();
-          }
-        }, 800);
-      });
-    }
-  </script>
 </body>
 </html>
