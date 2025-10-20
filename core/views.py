@@ -334,15 +334,7 @@ def operations_list(request):
     
     # Filtrer par période (sauf pour certains filtres)
     filtre = request.GET.get('filtre', 'toutes')
-    
-    if filtre not in ['retards', 'non_planifies']:
-        # Pour les filtres standards, on applique la période
-        operations = operations.filter(
-            Q(date_realisation__gte=periode_start, date_realisation__lte=periode_end) |
-            Q(date_prevue__gte=periode_start, date_prevue__lte=periode_end) |
-            Q(date_creation__gte=periode_start, date_creation__lte=periode_end)
-        )
-    
+
     recherche = request.GET.get('recherche', '')
     
     # ✅ ENRICHISSEMENT POUR FILTRES SPÉCIAUX
