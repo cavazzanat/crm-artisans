@@ -298,7 +298,9 @@ def operations_list(request):
             nb_operations_sans_paiement += 1
             operations_sans_echeances_ids.append(op.id)
     
-    # ✅ CA Prévisionnel 30 jours
+    # Dans views.py, fonction operations_list, ligne ~180 environ
+
+    # ✅ CA Prévisionnel 30 jours - CORRECTION
     date_dans_30j = today + timedelta(days=30)
     operations_previsionnel = Operation.objects.filter(
         user=request.user,
@@ -306,7 +308,7 @@ def operations_list(request):
         date_prevue__gte=today,
         date_prevue__lte=date_dans_30j
     )
-    ca_previsionnel_30j = sum(op.montant_total for op in operations_previsionnel)
+    ca_previsionnel_30j = sum(op.montant_total for op in operations_previsionnel if op.montant_total)  # ← Filtre les None
     
     # ✅ Variation vs période précédente (pour le KPI)
     duree = (periode_end - periode_start).days
