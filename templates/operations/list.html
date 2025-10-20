@@ -140,13 +140,90 @@
     }
 
     /* ========================================
-       KPI STRIP
+       SECTION FINANCIÈRE
        ======================================== */
+    .finance-section{
+      background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(139,92,246,.08));
+      border: 2px solid rgba(99,102,241,.2);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .finance-header{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .finance-title{
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .period-selector{
+      display: flex;
+      gap: .5rem;
+      align-items: center;
+      background: white;
+      padding: .4rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .period-nav{
+      display: flex;
+      background: rgba(148,163,184,.06);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .period-nav button{
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--text);
+      padding: .4rem .6rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: .85rem;
+    }
+    .period-nav button:hover{
+      background: rgba(148,163,184,.1);
+    }
+    .period-nav input[type="month"]{
+      border: none;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      padding: .4rem .6rem;
+      font-size: .85rem;
+      min-width: 120px;
+    }
+    .period-preset{
+      padding: .4rem .8rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .period-preset:hover{
+      background: #4f46e5;
+      transform: translateY(-1px);
+    }
+
+    /* KPI STRIP */
     .kpi-strip{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: .8rem;
-      margin-bottom: 2rem;
     }
     .kpi{
       background: white;
@@ -194,14 +271,14 @@
     .trend.down{ color: var(--danger) }
 
     /* ========================================
-       BARRE DE PÉRIODE & FILTRES
+       FILTRES OPÉRATIONS (SÉPARÉS)
        ======================================== */
-    .filters{
+    .filters-operations{
       display: flex;
       gap: .5rem;
       flex-wrap: wrap;
       align-items: center;
-      margin: 1rem 0;
+      margin: 2rem 0 1rem;
       background: white;
       padding: .8rem;
       border: 1px solid var(--border);
@@ -215,7 +292,7 @@
       border-radius: 10px;
       overflow: hidden;
     }
-    .seg button, .seg a{
+    .seg a{
       appearance: none;
       border: 0;
       background: transparent;
@@ -226,10 +303,10 @@
       text-decoration: none;
       transition: all 0.2s ease;
     }
-    .seg button:hover, .seg a:hover{
+    .seg a:hover{
       background: rgba(148,163,184,.1);
     }
-    .seg [aria-pressed="true"], .seg .active{
+    .seg .active{
       background: rgba(99,102,241,.18);
       color: white;
       box-shadow: 0 0 0 2px var(--ring) inset;
@@ -422,7 +499,9 @@
        ======================================== */
     @media (max-width:760px){
       .kpi-strip{ grid-template-columns: 1fr }
-      .filters{ flex-direction: column; align-items: stretch }
+      .finance-header{ flex-direction: column; align-items: stretch }
+      .period-selector{ flex-direction: column }
+      .filters-operations{ flex-direction: column; align-items: stretch }
       thead{ display: none }
       table{ display: block }
       tbody{ display: grid; gap: .75rem; padding: 1rem }
@@ -440,7 +519,7 @@
 </head>
 <body>
   <!-- ========================================
-       HEADER (IDENTIQUE AU DASHBOARD)
+       HEADER
        ======================================== -->
   <header class="header">
     <div class="header-inner">
@@ -472,69 +551,81 @@
        ======================================== -->
   <main class="container">
     <h1 class="page-title">Gestion des opérations</h1>
-    <p class="subtitle">{{ periode_start|date:"d/m/Y" }} → {{ periode_end|date:"d/m/Y" }} · {{ nb_total }} opération{{ nb_total|pluralize }}</p>
+    <p class="subtitle">{{ nb_total }} opération{{ nb_total|pluralize }} au total</p>
 
     <!-- ========================================
-         KPI ESSENTIELS
+         SECTION FINANCIÈRE AVEC FILTRES PÉRIODE
          ======================================== -->
-    <section class="kpi-strip">
-      <article class="kpi">
-        <h3>CA encaissé</h3>
-        <div class="value">{{ ca_encaisse|floatformat:0 }} €</div>
-        <div class="sub">
-          <span class="trend {% if ca_encaisse_var > 0 %}up{% elif ca_encaisse_var < 0 %}down{% endif %}">
-            {% if ca_encaisse_var > 0 %}▲{% elif ca_encaisse_var < 0 %}▼{% else %}—{% endif %} 
-            {{ ca_encaisse_var|default:"0" }}%
-          </span> vs période précédente
-        </div>
-      </article>
-      
-      <article class="kpi">
-        <h3>Encours à encaisser</h3>
-        <div class="value">{{ ca_en_attente_total|floatformat:0 }} €</div>
-        <div class="sub">dont en retard : <strong>{{ ca_retard|floatformat:0 }} €</strong></div>
-      </article>
-      
-      <article class="kpi">
-        <h3>Prévisionnel (30j)</h3>
-        <div class="value">{{ ca_previsionnel_30j|default:0|floatformat:0 }} €</div>
-        <div class="sub">opérations planifiées à venir</div>
-      </article>
+    <section class="finance-section">
+      <div class="finance-header">
+        <h2 class="finance-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+          Vue financière
+          <span style="font-size:.85rem; color:var(--muted); font-weight:400">
+            · {{ periode_start|date:"d/m/Y" }} → {{ periode_end|date:"d/m/Y" }}
+          </span>
+        </h2>
+        
+        <form method="GET" class="period-selector" id="periodForm">
+          <div class="period-nav">
+            <button name="nav" value="prev" type="submit" title="Mois précédent">◀︎</button>
+            <input type="month" name="mois" value="{{ periode_start|date:'Y-m' }}" />
+            <button name="nav" value="next" type="submit" title="Mois suivant">▶︎</button>
+          </div>
+          <button name="periode" value="ytd" type="submit" class="period-preset">
+            Depuis début année
+          </button>
+        </form>
+      </div>
+
+      <!-- KPI -->
+      <div class="kpi-strip">
+        <article class="kpi">
+          <h3>CA encaissé</h3>
+          <div class="value">{{ ca_encaisse|floatformat:0 }} €</div>
+          <div class="sub">
+            <span class="trend {% if ca_encaisse_var > 0 %}up{% elif ca_encaisse_var < 0 %}down{% endif %}">
+              {% if ca_encaisse_var > 0 %}▲{% elif ca_encaisse_var < 0 %}▼{% else %}—{% endif %} 
+              {{ ca_encaisse_var|default:"0" }}%
+            </span> vs période précédente
+          </div>
+        </article>
+        
+        <article class="kpi">
+          <h3>Encours à encaisser</h3>
+          <div class="value">{{ ca_en_attente_total|floatformat:0 }} €</div>
+          <div class="sub">dont en retard : <strong>{{ ca_retard|floatformat:0 }} €</strong></div>
+        </article>
+        
+        <article class="kpi">
+          <h3>Prévisionnel (30j)</h3>
+          <div class="value">{{ ca_previsionnel_30j|default:0|floatformat:0 }} €</div>
+          <div class="sub">opérations planifiées à venir</div>
+        </article>
+      </div>
     </section>
 
     <!-- ========================================
-     BARRE PÉRIODE + FILTRES
-     ======================================== -->
-    <form method="GET" class="filters" id="filtersForm">
-      <!-- Navigation mensuelle -->
-      <div class="seg">
-        <button class="prev" name="nav" value="prev" type="submit" title="Mois précédent">◀︎</button>
-        <input type="month" name="mois" value="{{ periode_start|date:'Y-m' }}" class="input" style="width:auto; border:none; background:transparent" />
-        <button class="next" name="nav" value="next" type="submit" title="Mois suivant">▶︎</button>
-      </div>
-
-      <!-- Preset : Depuis début année uniquement -->
-      <div class="seg">
-        <button name="periode" value="ytd" type="submit" class="{% if periode == 'ytd' %}active{% endif %}">
-          Depuis début année
-        </button>
-      </div>
-
+         FILTRES OPÉRATIONS (INDÉPENDANTS)
+         ======================================== -->
+    <form method="GET" class="filters-operations">
       <!-- Cycle -->
       <div class="seg">
-        <a href="?periode={{ periode }}&mois={{ periode_start|date:'Y-m' }}&filtre=toutes" {% if filtre_actif == 'toutes' %}class="active"{% endif %}>Toutes</a>
-        <a href="?periode={{ periode }}&mois={{ periode_start|date:'Y-m' }}&filtre=en_attente_devis" {% if filtre_actif == 'en_attente_devis' %}class="active"{% endif %}>Devis</a>
-        <a href="?periode={{ periode }}&mois={{ periode_start|date:'Y-m' }}&filtre=a_planifier" {% if filtre_actif == 'a_planifier' %}class="active"{% endif %}>À planifier</a>
+        <a href="?filtre=toutes" class="{% if filtre_actif == 'toutes' %}active{% endif %}">Toutes</a>
+        <a href="?filtre=en_attente_devis" class="{% if filtre_actif == 'en_attente_devis' %}active{% endif %}">Devis</a>
+        <a href="?filtre=a_planifier" class="{% if filtre_actif == 'a_planifier' %}active{% endif %}">À planifier</a>
       </div>
 
-      <!-- États clés / alertes -->
-      <a href="?periode={{ periode }}&mois={{ periode_start|date:'Y-m' }}&filtre=planifie" class="chip">
+      <!-- États clés -->
+      <a href="?filtre=planifie" class="chip">
         Planifiées <span class="count">{{ nb_planifie }}</span>
       </a>
-      <a href="?periode={{ periode }}&mois={{ periode_start|date:'Y-m' }}&filtre=realise" class="chip">
+      <a href="?filtre=realise" class="chip">
         Réalisées <span class="count">{{ nb_realise }}</span>
       </a>
-      <a href="?periode={{ periode }}&mois={{ periode_start|date:'Y-m' }}&filtre=paye" class="chip">
+      <a href="?filtre=paye" class="chip">
         Payées <span class="count">{{ nb_paye }}</span>
       </a>
       
@@ -552,9 +643,10 @@
 
       <!-- Recherche -->
       <input type="text" name="recherche" value="{{ recherche|default:'' }}" placeholder="Client, ville, téléphone, ID…" class="input" style="flex:1; min-width:220px">
+      <input type="hidden" name="filtre" value="{{ filtre_actif }}">
       <button class="btn" type="submit">Rechercher</button>
       {% if recherche %}
-        <a class="btn" href="{% url 'operations' %}?periode={{ periode }}&mois={{ periode_start|date:'Y-m' }}&filtre={{ filtre_actif }}">Effacer</a>
+        <a class="btn" href="{% url 'operations' %}?filtre={{ filtre_actif }}">Effacer</a>
       {% endif %}
       <a href="{% url 'operation_create' %}" class="btn primary">+ Nouvelle</a>
     </form>
@@ -714,7 +806,7 @@
             {% if recherche %}
               Aucune opération ne correspond à votre recherche "{{ recherche }}".
             {% else %}
-              Aucune opération dans cette catégorie pour cette période.
+              Aucune opération dans cette catégorie.
             {% endif %}
           </p>
           <div style="display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap">
@@ -727,58 +819,51 @@
       {% endif %}
     </section>
   </main>
-<!-- ========================================
-     JAVASCRIPT
-     ======================================== -->
-<script>
-  // Navigation mois précédent/suivant + autosubmit
-  (function(){
-    const form = document.getElementById('filtersForm');
-    const monthInput = form.querySelector('input[name=mois]');
-    const prev = form.querySelector('button.prev');
-    const next = form.querySelector('button.next');
-    
-    function shiftMonth(delta){
-      if(!monthInput.value) {
-        // Si pas de valeur, prendre le mois actuel
-        const now = new Date();
-        monthInput.value = now.toISOString().slice(0,7);
+
+  <!-- ========================================
+       JAVASCRIPT
+       ======================================== -->
+  <script>
+    // Navigation mois pour la section financière uniquement
+    (function(){
+      const form = document.getElementById('periodForm');
+      const monthInput = form.querySelector('input[name=mois]');
+      const prev = form.querySelector('button[name="nav"][value="prev"]');
+      const next = form.querySelector('button[name="nav"][value="next"]');
+      
+      function shiftMonth(delta){
+        if(!monthInput.value) {
+          const now = new Date();
+          monthInput.value = now.toISOString().slice(0,7);
+        }
+        
+        const [year, month] = monthInput.value.split('-').map(Number);
+        const date = new Date(year, month - 1, 1);
+        date.setMonth(date.getMonth() + delta);
+        
+        const newYear = date.getFullYear();
+        const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+        monthInput.value = `${newYear}-${newMonth}`;
+        
+        form.submit();
       }
       
-      // Parser la date correctement
-      const [year, month] = monthInput.value.split('-').map(Number);
-      const date = new Date(year, month - 1, 1); // month-1 car janvier = 0 en JS
+      prev.addEventListener('click', function(e){ 
+        e.preventDefault(); 
+        e.stopPropagation();
+        shiftMonth(-1); 
+      });
       
-      // Ajouter/retirer le delta
-      date.setMonth(date.getMonth() + delta);
+      next.addEventListener('click', function(e){ 
+        e.preventDefault(); 
+        e.stopPropagation();
+        shiftMonth(1); 
+      });
       
-      // Reformater en YYYY-MM
-      const newYear = date.getFullYear();
-      const newMonth = String(date.getMonth() + 1).padStart(2, '0');
-      monthInput.value = `${newYear}-${newMonth}`;
-      
-      // Soumettre le formulaire
-      form.submit();
-    }
-    
-    // Empêcher le comportement par défaut et appeler shiftMonth
-    prev.addEventListener('click', function(e){ 
-      e.preventDefault(); 
-      e.stopPropagation();
-      shiftMonth(-1); 
-    });
-    
-    next.addEventListener('click', function(e){ 
-      e.preventDefault(); 
-      e.stopPropagation();
-      shiftMonth(1); 
-    });
-    
-    // Soumettre quand on change le mois manuellement
-    monthInput.addEventListener('change', function(){ 
-      form.submit(); 
-    });
-  })();
-</script>
+      monthInput.addEventListener('change', function(){ 
+        form.submit(); 
+      });
+    })();
+  </script>
 </body>
 </html>
