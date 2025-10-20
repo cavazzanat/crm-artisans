@@ -16,6 +16,9 @@ from django.utils import timezone
 import io
 import sys
 import json
+from datetime import datetime, timedelta
+from dateutil.relativedelta import relativedelta
+from django.utils import timezone
 
 from .models import Client, Operation, Intervention, HistoriqueOperation, Echeance
 from .fix_database import fix_client_constraint
