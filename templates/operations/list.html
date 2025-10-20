@@ -503,22 +503,21 @@
     </section>
 
     <!-- ========================================
-         BARRE PÉRIODE + FILTRES
-         ======================================== -->
+     BARRE PÉRIODE + FILTRES
+     ======================================== -->
     <form method="GET" class="filters" id="filtersForm">
       <!-- Navigation mensuelle -->
       <div class="seg">
-        <button class="prev" name="nav" value="prev" type="submit">◀︎</button>
+        <button class="prev" name="nav" value="prev" type="submit" title="Mois précédent">◀︎</button>
         <input type="month" name="mois" value="{{ periode_start|date:'Y-m' }}" class="input" style="width:auto; border:none; background:transparent" />
-        <button class="next" name="nav" value="next" type="submit">▶︎</button>
+        <button class="next" name="nav" value="next" type="submit" title="Mois suivant">▶︎</button>
       </div>
 
-      <!-- Presets rapides -->
+      <!-- Preset : Depuis début année uniquement -->
       <div class="seg">
-        <button name="periode" value="this_month" type="submit" class="{% if periode == 'this_month' %}active{% endif %}">Mois courant</button>
-        <button name="periode" value="last_month" type="submit" class="{% if periode == 'last_month' %}active{% endif %}">M-1</button>
-        <button name="periode" value="last_3" type="submit" class="{% if periode == 'last_3' %}active{% endif %}">3 derniers mois</button>
-        <button name="periode" value="ytd" type="submit" class="{% if periode == 'ytd' %}active{% endif %}">YTD</button>
+        <button name="periode" value="ytd" type="submit" class="{% if periode == 'ytd' %}active{% endif %}">
+          Depuis début année
+        </button>
       </div>
 
       <!-- Cycle -->
@@ -728,38 +727,58 @@
       {% endif %}
     </section>
   </main>
-
-  <!-- ========================================
-       JAVASCRIPT
-       ======================================== -->
-  <script>
-    // Navigation mois précédent/suivant + autosubmit
-    (function(){
-      const form = document.getElementById('filtersForm');
-      const month = form.querySelector('input[name=mois]');
-      const prev = form.querySelector('button.prev');
-      const next = form.querySelector('button.next');
-      
-      function shiftMonth(delta){
-        if(!month.value) return;
-        const d = new Date(month.value+"-01T00:00:00");
-        d.setMonth(d.getMonth()+delta);
-        month.value = d.toISOString().slice(0,7);
-        form.submit();
+<!-- ========================================
+     JAVASCRIPT
+     ======================================== -->
+<script>
+  // Navigation mois précédent/suivant + autosubmit
+  (function(){
+    const form = document.getElementById('filtersForm');
+    const monthInput = form.querySelector('input[name=mois]');
+    const prev = form.querySelector('button.prev');
+    const next = form.querySelector('button.next');
+    
+    function shiftMonth(delta){
+      if(!monthInput.value) {
+        // Si pas de valeur, prendre le mois actuel
+        const now = new Date();
+        monthInput.value = now.toISOString().slice(0,7);
       }
       
-      prev.addEventListener('click', function(e){ 
-        e.preventDefault(); 
-        shiftMonth(-1); 
-      });
+      // Parser la date correctement
+      const [year, month] = monthInput.value.split('-').map(Number);
+      const date = new Date(year, month - 1, 1); // month-1 car janvier = 0 en JS
       
-      next.addEventListener('click', function(e){ 
-        e.preventDefault(); 
-        shiftMonth(1); 
-      });
+      // Ajouter/retirer le delta
+      date.setMonth(date.getMonth() + delta);
       
-      month.addEventListener('change', ()=> form.submit());
-    })();
-  </script>
+      // Reformater en YYYY-MM
+      const newYear = date.getFullYear();
+      const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+      monthInput.value = `${newYear}-${newMonth}`;
+      
+      // Soumettre le formulaire
+      form.submit();
+    }
+    
+    // Empêcher le comportement par défaut et appeler shiftMonth
+    prev.addEventListener('click', function(e){ 
+      e.preventDefault(); 
+      e.stopPropagation();
+      shiftMonth(-1); 
+    });
+    
+    next.addEventListener('click', function(e){ 
+      e.preventDefault(); 
+      e.stopPropagation();
+      shiftMonth(1); 
+    });
+    
+    // Soumettre quand on change le mois manuellement
+    monthInput.addEventListener('change', function(){ 
+      form.submit(); 
+    });
+  })();
+</script>
 </body>
 </html>
