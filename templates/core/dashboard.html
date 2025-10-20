@@ -878,6 +878,64 @@
   font-style: italic;
   font-size: .85rem;
 }
+/* KPI strip */
+.kpi-strip{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:.8rem;
+  margin:1rem 0;
+}
+.kpi{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:1rem 1.25rem;
+  box-shadow:var(--shadow);
+  display:grid;
+  gap:.35rem;
+}
+.kpi h3{
+  margin:0;
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.kpi .value{
+  font-size:1.8rem;
+  font-weight:800;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.kpi .sub{ color:var(--muted); font-size:.8rem }
+.kpi .pill{
+  display:inline-flex; align-items:center; gap:.35rem;
+  font-size:.75rem; border:1px solid var(--border);
+  border-radius:999px; padding:.1rem .5rem;
+}
+.pill.up{ color:var(--success) }
+.pill.down{ color:var(--danger) }
+
+/* Micro-KPI devis */
+.micro-kpis{
+  display:flex; gap:.5rem; flex-wrap:wrap; margin:.4rem 0 1rem;
+}
+.micro-chip{
+  display:inline-flex; align-items:center; gap:.35rem;
+  border:1px solid var(--border); background:var(--card);
+  border-radius:999px; padding:.25rem .55rem; font-size:.8rem;
+}
+.micro-chip strong{ font-variant-numeric:tabular-nums }
+.micro-chip a{ color:inherit; text-decoration:none }
+.micro-chip.bad{ border-color:#fecaca; background:#fff5f5 }
+.micro-chip.good{ border-color:#bbf7d0; background:#f0fdf4 }
+
+/* Responsive */
+@media (max-width:980px){
+  .kpi-strip{ grid-template-columns:1fr; }
+}
+
 
     /* ========================================
        RESPONSIVE
@@ -950,82 +1008,51 @@
     <h1 class="page-title">Tableau de bord</h1>
     <p class="subtitle">Vue d'ensemble de vos performances et planning</p>
 
-    <!-- KPI -->
-    <div class="kpi-grid">
-      <!-- ✅ Clients - Lien vers page clients -->
-      <div class="kpi-card">
-        <div class="kpi-label">👥 Clients</div>
-        <div class="kpi-value">{{ nb_clients }}</div>
-        <div class="kpi-subtitle">
-          <a href="{% url 'clients' %}">Voir la liste →</a>
-        </div>
-      </div>
-
-      <!-- ✅ CA du mois - Lien vers opérations payées -->
-      <div class="kpi-card">
-        <div class="kpi-label">💰 CA du mois</div>
-        <div class="kpi-value">{{ ca_mois|floatformat:0 }} €</div>
-        <div class="kpi-subtitle">
-          {% if ca_mois > 0 %}
-            <a href="{% url 'operations' %}?filtre=paye">Voir les paiements →</a>
-          {% else %}
-            <span style="color: var(--muted);">Aucun encaissement</span>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- ✅ Devis en attente - Lien vers filtre devis -->
-      <div class="kpi-card">
-        <div class="kpi-label">📄 Devis</div>
-        <div class="kpi-value">{{ nb_en_attente_devis }}</div>
-        <div class="kpi-subtitle">
-          {% if nb_en_attente_devis > 0 %}
-            <a href="{% url 'operations' %}?filtre=en_attente_devis">Consulter →</a>
-          {% else %}
-            <span style="color: var(--success);">✓ Aucun en attente</span>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- ✅ À planifier - Lien vers filtre à planifier -->
-      <div class="kpi-card">
-        <div class="kpi-label">📅 À planifier</div>
-        <div class="kpi-value">{{ nb_a_planifier }}</div>
-        <div class="kpi-subtitle">
-          {% if nb_a_planifier > 0 %}
-            <a href="{% url 'operations' %}?filtre=a_planifier">Planifier →</a>
-          {% else %}
-            <span style="color: var(--success);">✓ Tout planifié</span>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- ✅ Paiements en retard - Toujours affiché -->
-      <div class="kpi-card {% if nb_paiements_retard > 0 %}alert{% endif %}">
-        <div class="kpi-label">🚨 Retards</div>
-        <div class="kpi-value">{{ nb_paiements_retard }}</div>
-        <div class="kpi-subtitle">
-          {% if nb_paiements_retard > 0 %}
-            <a href="{% url 'operations' %}?filtre=retards">À relancer →</a>
-          {% else %}
-            <span style="color: var(--success);">✓ Aucun retard</span>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- ✅ Paiements non planifiés - Toujours affiché -->
-      <div class="kpi-card {% if nb_operations_sans_paiement > 0 %}warning{% endif %}">
-        <div class="kpi-label">⚠️ Paiements non planifiés</div>
-        <div class="kpi-value">{{ nb_operations_sans_paiement }}</div>
-        <div class="kpi-subtitle">
-          {% if nb_operations_sans_paiement > 0 %}
-            <a href="{% url 'operations' %}?filtre=non_planifies">À programmer →</a>
-          {% else %}
-            <span style="color: var(--success);">✓ Tout progammé</span>
-          {% endif %}
-        </div>
-      </div>
+  <!-- ===== 3 KPI ESSENTIELS ===== -->
+<section class="kpi-strip" aria-label="Indicateurs clés">
+  <!-- 1) CA encaissé (mois/période) -->
+  <article class="kpi">
+    <h3>CA encaissé (mois)</h3>
+    <div class="value">{{ ca_mois|floatformat:0 }} €</div>
+    <div class="sub">
+      <span class="pill {% if ca_mois_var_pct > 0 %}up{% elif ca_mois_var_pct < 0 %}down{% endif %}">
+        {% if ca_mois_var_pct > 0 %}▲{% elif ca_mois_var_pct < 0 %}▼{% else %}—{% endif %}
+        {{ ca_mois_var_pct|default:0 }}%
+      </span>
+      vs M-1
     </div>
+  </article>
+
+  <!-- 2) Encours à encaisser (dont retard) -->
+  <article class="kpi">
+    <h3>Encours à encaisser</h3>
+    <div class="value">{{ ca_en_attente_total|floatformat:0 }} €</div>
+    <div class="sub">Retard : <strong style="color:var(--danger)">{{ ca_retard_total|floatformat:0 }} €</strong></div>
+  </article>
+
+  <!-- 3) Charge semaine (planifiées) -->
+  <article class="kpi">
+    <h3>Interventions semaine</h3>
+    <div class="value">{{ nb_planifie_semaine }}</div>
+    <div class="sub">Aujourd’hui : <strong>{{ nb_planifie_aujourdhui }}</strong></div>
+  </article>
+</section>
+
+<!-- === Micro-KPI Devis (rapide) === -->
+<div class="micro-kpis">
+  <span class="micro-chip {% if nb_en_attente_devis > 0 %}bad{% endif %}">
+    📄 Devis en attente : <strong>{{ nb_en_attente_devis|default:0 }}</strong>
+    {% if nb_en_attente_devis > 0 %}
+      <a href="{% url 'operations' %}?filtre=en_attente_devis" title="Voir">→</a>
+    {% endif %}
+  </span>
+  <span class="micro-chip">
+    ✅ Acceptés (mois) : <strong>{{ nb_devis_acceptes_mois|default:0 }}</strong>
+  </span>
+  <span class="micro-chip {% if taux_conversion_devis_30j|default:0 >= 40 %}good{% endif %}">
+    🎯 Conversion 30j : <strong>{{ taux_conversion_devis_30j|default:0 }}%</strong>
+  </span>
+</div>
 
 
     <!-- PLANNING -->
