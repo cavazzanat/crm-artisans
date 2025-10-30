@@ -1298,11 +1298,12 @@ def client_detail(request, client_id):
 
 @login_required
 def operation_create(request):
-    """Formulaire de création d'une nouvelle opération"""
+    """Formulaire de création d'une nouvelle opération (Parcours A ou B)"""
+    
     if request.method == 'POST':
-        print("\n" + "="*60)
+        print("\n" + "="*80)
         print("DÉBUT CRÉATION OPÉRATION")
-        print("="*60)
+        print("="*80)
         print(f"User: {request.user.username} (ID: {request.user.id})")
         print(f"\nDonnées POST reçues:")
         for key, value in request.POST.items():
@@ -1310,21 +1311,26 @@ def operation_create(request):
                 print(f"  {key}: '{value}'")
         
         try:
-            # 1. GESTION DU CLIENT (inchangé)
-            client_id = request.POST.get('client_id')
-            client_type = 'nouveau' if not client_id or client_id == '' else 'existant'
+            # ========================================
+            # ÉTAPE 1 : GESTION DU CLIENT
+            # ========================================
+            client_type = request.POST.get('client_type', 'existant')
             
-            print(f"\n{'─'*60}")
+            print(f"\n{'─'*80}")
             print("ÉTAPE 1: GESTION DU CLIENT")
-            print(f"{'─'*60}")
+            print(f"{'─'*80}")
             print(f"Type: {client_type}")
-            print(f"ID reçu: '{client_id}'")
             
-            if client_type == 'existant' and client_id:
+            if client_type == 'existant':
+                client_id = request.POST.get('client_id')
+                if not client_id:
+                    messages.error(request, "⚠️ Veuillez sélectionner un client")
+                    return redirect('operation_create')
+                
                 client = get_object_or_404(Client, id=client_id, user=request.user)
-                print(f"✓ Client existant trouvé: {client.nom} {client.prenom} (ID: {client.id})")
-            else:
-                # Nouveau client
+                print(f"✓ Client existant: {client.nom} {client.prenom} (ID: {client.id})")
+                
+            else:  # Nouveau client
                 nom = request.POST.get('nouveau_client_nom', '').strip()
                 prenom = request.POST.get('nouveau_client_prenom', '').strip()
                 telephone = request.POST.get('nouveau_client_telephone', '').strip()
@@ -1339,10 +1345,9 @@ def operation_create(request):
                 
                 if not (nom and prenom and telephone):
                     print("✗ ERREUR: Champs obligatoires manquants")
-                    messages.error(request, "Nom, prénom et téléphone sont obligatoires pour un nouveau client")
+                    messages.error(request, "⚠️ Nom, prénom et téléphone sont obligatoires pour un nouveau client")
                     clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
-                    context = {'clients': clients, 'statuts_choices': Operation.STATUTS}
-                    return render(request, 'operations/create.html', context)
+                    return render(request, 'operations/create.html', {'clients': clients})
                 
                 client = Client.objects.create(
                     user=request.user,
@@ -1355,243 +1360,282 @@ def operation_create(request):
                 )
                 print(f"✓ Nouveau client créé: {client.nom} {client.prenom} (ID: {client.id})")
             
-            # 2. INFORMATIONS OPÉRATION (inchangé)
+            # ========================================
+            # ÉTAPE 2 : INFORMATIONS OPÉRATION
+            # ========================================
             type_prestation = request.POST.get('type_prestation', '').strip()
             adresse_intervention = request.POST.get('adresse_intervention', '').strip()
-            statut = request.POST.get('statut', 'en_attente_devis')
+            commentaires = request.POST.get('commentaires', '').strip()
             
-            print(f"\n{'─'*60}")
+            print(f"\n{'─'*80}")
             print("ÉTAPE 2: INFORMATIONS OPÉRATION")
-            print(f"{'─'*60}")
+            print(f"{'─'*80}")
             print(f"Type prestation: '{type_prestation}'")
             print(f"Adresse intervention: '{adresse_intervention}'")
-            print(f"Statut: '{statut}'")
+            print(f"Commentaires: '{commentaires}'")
             
             if not type_prestation:
                 print("✗ ERREUR: Type de prestation manquant")
-                messages.error(request, "Le type de prestation est obligatoire")
+                messages.error(request, "⚠️ Le type de prestation est obligatoire")
                 clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
-                context = {'clients': clients, 'statuts_choices': Operation.STATUTS}
-                return render(request, 'operations/create.html', context)
+                return render(request, 'operations/create.html', {'clients': clients})
             
-            # 3. GESTION DES DATES
-            from datetime import datetime
-            date_prevue_complete = None
-            date_realisation_complete = None
-            date_paiement_complete = None
-            
-            date_prevue_str = request.POST.get('date_prevue', '')
-            date_realisation_str = request.POST.get('date_realisation', '')
-            date_paiement_str = request.POST.get('date_paiement', '')
-            
-            print(f"\n{'─'*60}")
-            print("ÉTAPE 3: TRAITEMENT DES DATES")
-            print(f"{'─'*60}")
-            print(f"date_prevue reçue: '{date_prevue_str}'")
-            print(f"date_realisation reçue: '{date_realisation_str}'")
-            print(f"date_paiement reçue: '{date_paiement_str}'")
-            
-            if statut == 'planifie' and date_prevue_str:
-                try:
-                    date_prevue_complete = datetime.fromisoformat(date_prevue_str.replace('T', ' '))
-                    print(f"✓ date_prevue convertie: {date_prevue_complete}")
-                except ValueError as e:
-                    print(f"✗ Erreur conversion date_prevue: {e}")
-            
-            elif statut == 'realise' and date_realisation_str:
-                try:
-                    date_realisation_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
-                    print(f"✓ date_realisation convertie: {date_realisation_complete}")
-                except ValueError as e:
-                    print(f"✗ Erreur conversion date_realisation: {e}")
-            
-            elif statut == 'paye':
-                if date_realisation_str:
-                    try:
-                        date_realisation_complete = datetime.fromisoformat(date_realisation_str.replace('T', ' '))
-                        print(f"✓ date_realisation convertie: {date_realisation_complete}")
-                    except ValueError as e:
-                        print(f"✗ Erreur conversion date_realisation: {e}")
-                        
-                if date_paiement_str:
-                    try:
-                        date_paiement_complete = datetime.fromisoformat(date_paiement_str.replace('T', ' '))
-                        print(f"✓ date_paiement convertie: {date_paiement_complete}")
-                    except ValueError as e:
-                        print(f"✗ Erreur conversion date_paiement: {e}")
-            
-            # 4. CRÉATION DE L'OPÉRATION
-            print(f"\n{'─'*60}")
-            print("ÉTAPE 4: CRÉATION DANS LA BASE DE DONNÉES")
-            print(f"{'─'*60}")
-            
+            # Adresse par défaut = adresse client
             adresse_finale = adresse_intervention or f"{client.adresse}, {client.ville}"
             print(f"Adresse finale: '{adresse_finale}'")
-            print(f"Tentative de création...")
             
-            operation = Operation.objects.create(
-                user=request.user,
-                client=client,
-                type_prestation=type_prestation,
-                adresse_intervention=adresse_finale,
-                date_prevue=date_prevue_complete,
-                date_realisation=date_realisation_complete,
-                date_paiement=date_paiement_complete,
-                statut=statut
-            )
+            # ========================================
+            # ÉTAPE 3 : TYPE D'OPÉRATION (DEVIS OU DIRECTE)
+            # ========================================
+            operation_type = request.POST.get('operation_type', 'devis')
             
-            print(f"✓✓✓ OPÉRATION CRÉÉE AVEC SUCCÈS")
-            print(f"    ID: {operation.id}")
-            print(f"    Code: {operation.id_operation}")
+            print(f"\n{'─'*80}")
+            print("ÉTAPE 3: TYPE D'OPÉRATION")
+            print(f"{'─'*80}")
+            print(f"Type: {operation_type}")
             
-            # 5. INTERVENTIONS (IMPORTANT: avant la gestion du devis/paiement)
-            descriptions = request.POST.getlist('description[]')
-            montants = request.POST.getlist('montant[]')
-            
-            print(f"\n{'─'*60}")
-            print("ÉTAPE 5: CRÉATION DES INTERVENTIONS")
-            print(f"{'─'*60}")
-            print(f"Nombre de lignes reçues: {len(descriptions)}")
-            
-            interventions_creees = 0
-            for i, (description, montant) in enumerate(zip(descriptions, montants)):
-                desc_clean = description.strip()
-                mont_clean = montant.strip()
+            # ========================================
+            # PARCOURS A : AVEC DEVIS
+            # ========================================
+            if operation_type == 'devis':
+                print(f"\n{'─'*80}")
+                print("PARCOURS A : CRÉATION AVEC DEVIS")
+                print(f"{'─'*80}")
                 
-                if desc_clean and mont_clean:
-                    try:
-                        intervention = Intervention.objects.create(
-                            operation=operation,
-                            description=desc_clean,
-                            montant=Decimal(mont_clean),
-                            ordre=i + 1
-                        )
-                        interventions_creees += 1
-                        print(f"  ✓ Ligne {i+1}: {desc_clean} - {mont_clean}€")
-                    except ValueError as e:
-                        print(f"  ✗ Erreur montant ligne {i+1}: {e}")
-                else:
-                    print(f"  ⊘ Ligne {i+1} ignorée (vide)")
-            
-            print(f"Total interventions créées: {interventions_creees}")
-            
-            # ✅ 6. GESTION DU DEVIS (si créé lors de la création)
-            print(f"\n{'─'*60}")
-            print("ÉTAPE 6: GESTION DU DEVIS")
-            print(f"{'─'*60}")
-            
-            devis_cree = request.POST.get('devis_cree') == 'true'
-            print(f"Devis créé: {devis_cree}")
-            
-            if devis_cree:
-                operation.devis_cree = True
+                operation = Operation.objects.create(
+                    user=request.user,
+                    client=client,
+                    type_prestation=type_prestation,
+                    adresse_intervention=adresse_finale,
+                    commentaires=commentaires,
+                    avec_devis=True,
+                    statut='en_attente_devis'
+                )
                 
-                devis_date_envoi_str = request.POST.get('devis_date_envoi', '')
-                if devis_date_envoi_str:
-                    try:
-                        operation.devis_date_envoi = datetime.strptime(devis_date_envoi_str, '%Y-%m-%d').date()
-                        print(f"✓ Date envoi devis: {operation.devis_date_envoi}")
-                    except ValueError as e:
-                        print(f"✗ Erreur date envoi devis: {e}")
+                print(f"✓ Opération créée (DEVIS)")
+                print(f"  ID: {operation.id}")
+                print(f"  Code: {operation.id_operation}")
+                print(f"  avec_devis: True")
+                print(f"  statut: en_attente_devis")
                 
-                devis_statut = request.POST.get('devis_statut', '')
-                if devis_statut:
-                    operation.devis_statut = devis_statut
-                    print(f"✓ Statut devis: {devis_statut}")
-                
-                operation.save()
-                
+                # Historique
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=f"Devis créé - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'Non défini'}",
+                    action="Opération créée (avec devis)",
                     utilisateur=request.user
                 )
-            
-            # ✅ 7. GESTION AUTOMATIQUE DU PAIEMENT SI STATUT = PAYÉ
-            print(f"\n{'─'*60}")
-            print("ÉTAPE 7: GESTION AUTOMATIQUE DU PAIEMENT")
-            print(f"{'─'*60}")
-            
-            if statut == 'paye':
-                # Calculer le montant total des interventions
-                montant_total = operation.montant_total
-                print(f"Montant total des interventions: {montant_total}€")
                 
-                if montant_total > 0:
-                    # Créer une échéance automatique pour le montant total
-                    date_paiement_final = date_paiement_complete or timezone.now()
-                    
-                    Echeance.objects.create(
-                        operation=operation,
-                        numero=1,
-                        montant=montant_total,
-                        date_echeance=date_paiement_final.date() if hasattr(date_paiement_final, 'date') else date_paiement_final,
-                        paye=True,  # ← IMPORTANT: marqué comme payé
-                        ordre=1
-                    )
-                    
-                    print(f"✓ Échéance automatique créée: {montant_total}€ (payée)")
-                    
+                if client_type == 'nouveau':
                     HistoriqueOperation.objects.create(
                         operation=operation,
-                        action=f"💰 Paiement comptant enregistré: {montant_total}€ le {date_paiement_final.strftime('%d/%m/%Y')}",
+                        action=f"Client {client.nom} {client.prenom} créé automatiquement",
                         utilisateur=request.user
                     )
-                else:
-                    print("⚠ Aucune intervention = pas d'échéance créée")
+                
+                print(f"\n{'='*80}")
+                print("✓✓✓ SUCCÈS - PARCOURS A TERMINÉ")
+                print(f"{'='*80}\n")
+                
+                messages.success(request, f"✅ Opération {operation.id_operation} créée avec succès ! Vous pouvez maintenant ajouter les lignes du devis.")
+                return redirect('operation_detail', operation_id=operation.id)
             
-            elif statut == 'realise':
-                print("Statut 'réalisé' - Pas de paiement automatique")
-            
-            elif statut == 'planifie':
-                print("Statut 'planifié' - Pas de paiement automatique")
-            
-            # 8. HISTORIQUE INITIAL
-            HistoriqueOperation.objects.create(
-                operation=operation,
-                action="Opération créée",
-                utilisateur=request.user
-            )
-            print(f"✓ Historique initial créé")
-            
-            print(f"\n{'='*60}")
-            print("✓✓✓ SUCCÈS COMPLET - OPÉRATION ENREGISTRÉE")
-            print(f"{'='*60}\n")
-            
-            messages.success(request, f"Opération {operation.id_operation} créée avec succès")
-            return redirect('operation_detail', operation_id=operation.id)
+            # ========================================
+            # PARCOURS B : SANS DEVIS (OPÉRATION DIRECTE)
+            # ========================================
+            else:
+                print(f"\n{'─'*80}")
+                print("PARCOURS B : CRÉATION OPÉRATION DIRECTE")
+                print(f"{'─'*80}")
+                
+                statut_initial = request.POST.get('statut_initial', 'a_planifier')
+                print(f"Statut initial: {statut_initial}")
+                
+                # Gestion des dates
+                from datetime import datetime
+                date_intervention_str = request.POST.get('date_intervention', '')
+                
+                date_prevue = None
+                date_realisation = None
+                date_paiement = None
+                
+                print(f"\n{'─'*80}")
+                print("TRAITEMENT DES DATES")
+                print(f"{'─'*80}")
+                print(f"date_intervention reçue: '{date_intervention_str}'")
+                
+                if date_intervention_str:
+                    try:
+                        date_intervention = datetime.fromisoformat(date_intervention_str.replace('T', ' '))
+                        
+                        if statut_initial == 'planifie':
+                            date_prevue = date_intervention
+                            print(f"✓ date_prevue = {date_prevue}")
+                        elif statut_initial == 'realise':
+                            date_realisation = date_intervention
+                            print(f"✓ date_realisation = {date_realisation}")
+                        elif statut_initial == 'paye':
+                            date_realisation = date_intervention
+                            date_paiement = date_intervention  # Par défaut même date
+                            print(f"✓ date_realisation = {date_realisation}")
+                            print(f"✓ date_paiement = {date_paiement}")
+                    except ValueError as e:
+                        print(f"✗ Erreur conversion date: {e}")
+                        messages.error(request, f"⚠️ Format de date invalide: {e}")
+                        clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
+                        return render(request, 'operations/create.html', {'clients': clients})
+                
+                # Création opération
+                print(f"\n{'─'*80}")
+                print("CRÉATION OPÉRATION")
+                print(f"{'─'*80}")
+                
+                operation = Operation.objects.create(
+                    user=request.user,
+                    client=client,
+                    type_prestation=type_prestation,
+                    adresse_intervention=adresse_finale,
+                    commentaires=commentaires,
+                    avec_devis=False,
+                    statut=statut_initial,
+                    date_prevue=date_prevue,
+                    date_realisation=date_realisation,
+                    date_paiement=date_paiement
+                )
+                
+                print(f"✓ Opération créée (DIRECTE)")
+                print(f"  ID: {operation.id}")
+                print(f"  Code: {operation.id_operation}")
+                print(f"  avec_devis: False")
+                print(f"  statut: {statut_initial}")
+                print(f"  date_prevue: {date_prevue}")
+                print(f"  date_realisation: {date_realisation}")
+                print(f"  date_paiement: {date_paiement}")
+                
+                # ========================================
+                # CRÉATION DES LIGNES D'INTERVENTION
+                # ========================================
+                descriptions = request.POST.getlist('description[]')
+                montants = request.POST.getlist('montant[]')
+                
+                print(f"\n{'─'*80}")
+                print("CRÉATION DES INTERVENTIONS")
+                print(f"{'─'*80}")
+                print(f"Nombre de lignes reçues: {len(descriptions)}")
+                
+                interventions_creees = 0
+                for i, (description, montant) in enumerate(zip(descriptions, montants)):
+                    desc_clean = description.strip()
+                    mont_clean = montant.strip()
+                    
+                    if desc_clean and mont_clean:
+                        try:
+                            intervention = Intervention.objects.create(
+                                operation=operation,
+                                description=desc_clean,
+                                montant=Decimal(mont_clean),
+                                ordre=i + 1
+                            )
+                            interventions_creees += 1
+                            print(f"  ✓ Ligne {i+1}: {desc_clean} - {mont_clean}€")
+                        except (ValueError, TypeError) as e:
+                            print(f"  ✗ Erreur montant ligne {i+1}: {e}")
+                    else:
+                        print(f"  ⊘ Ligne {i+1} ignorée (vide)")
+                
+                print(f"Total interventions créées: {interventions_creees}")
+                
+                # ========================================
+                # GESTION AUTOMATIQUE PAIEMENT SI PAYÉ
+                # ========================================
+                if statut_initial == 'paye' and interventions_creees > 0:
+                    print(f"\n{'─'*80}")
+                    print("GESTION AUTOMATIQUE PAIEMENT (STATUT = PAYÉ)")
+                    print(f"{'─'*80}")
+                    
+                    montant_total = operation.montant_total
+                    print(f"Montant total: {montant_total}€")
+                    
+                    if montant_total > 0:
+                        Echeance.objects.create(
+                            operation=operation,
+                            numero=1,
+                            montant=montant_total,
+                            date_echeance=date_paiement.date() if date_paiement else timezone.now().date(),
+                            paye=True,
+                            ordre=1
+                        )
+                        print(f"✓ Échéance automatique créée: {montant_total}€ (payée)")
+                        
+                        HistoriqueOperation.objects.create(
+                            operation=operation,
+                            action=f"💰 Paiement comptant enregistré: {montant_total}€",
+                            utilisateur=request.user
+                        )
+                
+                # ========================================
+                # HISTORIQUE
+                # ========================================
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"Opération créée (directe) - Statut: {operation.get_statut_display()}",
+                    utilisateur=request.user
+                )
+                
+                if client_type == 'nouveau':
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"Client {client.nom} {client.prenom} créé automatiquement",
+                        utilisateur=request.user
+                    )
+                
+                if interventions_creees > 0:
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"{interventions_creees} ligne(s) d'intervention ajoutée(s)",
+                        utilisateur=request.user
+                    )
+                
+                print(f"\n{'='*80}")
+                print("✓✓✓ SUCCÈS - PARCOURS B TERMINÉ")
+                print(f"{'='*80}\n")
+                
+                messages.success(request, f"✅ Opération {operation.id_operation} créée avec succès (statut: {operation.get_statut_display()})")
+                return redirect('operation_detail', operation_id=operation.id)
             
         except Exception as e:
-            print(f"\n{'='*60}")
+            print(f"\n{'='*80}")
             print("✗✗✗ ERREUR CRITIQUE")
-            print(f"{'='*60}")
+            print(f"{'='*80}")
             print(f"Type d'erreur: {type(e).__name__}")
             print(f"Message: {str(e)}")
             print(f"\nTraceback complet:")
             import traceback
             traceback.print_exc()
-            print(f"{'='*60}\n")
+            print(f"{'='*80}\n")
             
-            messages.error(request, f"Erreur lors de la création : {str(e)}")
+            messages.error(request, f"❌ Erreur lors de la création : {str(e)}")
             clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
-            context = {'clients': clients, 'statuts_choices': Operation.STATUTS}
-            return render(request, 'operations/create.html', context)
+            return render(request, 'operations/create.html', {'clients': clients})
     
-    # GET - Formulaire vide
+    # ========================================
+    # GET - AFFICHAGE FORMULAIRE
+    # ========================================
     clients = Client.objects.filter(user=request.user).order_by('nom', 'prenom')
-
+    
     # Exclure 'devis_refuse' du formulaire de création
     statuts_disponibles = [
         (value, label) 
         for value, label in Operation.STATUTS 
-        if value != 'devis_refuse'
+        if value != 'devis_refuse' and value != 'en_attente_devis'
     ]
-
+    
     context = {
         'clients': clients,
         'statuts_choices': statuts_disponibles,
     }
+    
     return render(request, 'operations/create.html', context)
+
 
 @login_required
 def client_create(request):

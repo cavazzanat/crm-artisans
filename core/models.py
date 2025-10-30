@@ -1,3 +1,7 @@
+# ================================
+# core/models.py - Version avec devis/facture
+# ================================
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
@@ -55,6 +59,9 @@ class Operation(models.Model):
         ('deja_realise', 'Déjà réalisé'),
     ]
     
+    # ========================================
+    # INFORMATIONS DE BASE
+    # ========================================
     planning_mode = models.CharField(
         max_length=20,
         choices=PLANNING_MODE_CHOICES,
@@ -93,11 +100,34 @@ class Operation(models.Model):
     )
     
     # ========================================
-    # CHAMPS POUR LE DEVIS
+    # NOUVEAU : CHAMPS POUR LE DEVIS
     # ========================================
-    devis_cree = models.BooleanField(default=False, verbose_name="Devis créé")
-    devis_date_envoi = models.DateField(null=True, blank=True, verbose_name="Date envoi devis")
-    devis_date_reponse = models.DateField(null=True, blank=True, verbose_name="Date réponse client") 
+    avec_devis = models.BooleanField(
+        default=False,
+        verbose_name="Opération avec devis"
+    )
+    
+    numero_devis = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name="Numéro de devis",
+        help_text="Format: DEV-2025-001"
+    )
+    
+    devis_date_envoi = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date d'envoi du devis"
+    )
+    
+    devis_date_reponse = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date de réponse du client"
+    )
+    
     devis_statut = models.CharField(
         max_length=20,
         choices=[
@@ -109,6 +139,61 @@ class Operation(models.Model):
         null=True,
         blank=True,
         verbose_name="Statut du devis"
+    )
+    
+    devis_notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Notes du devis",
+        help_text="Notes qui apparaîtront sur le PDF du devis"
+    )
+    
+    devis_validite_jours = models.IntegerField(
+        default=30,
+        verbose_name="Validité du devis (jours)",
+        help_text="Nombre de jours de validité du devis"
+    )
+    
+    devis_historique_numeros = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Historique des numéros de devis",
+        help_text="Liste JSON des anciens numéros de devis (en cas de refus et nouveau devis)"
+    )
+    
+    # ========================================
+    # ANCIEN : CHAMPS POUR LE DEVIS (À SUPPRIMER APRÈS MIGRATION)
+    # ========================================
+    devis_cree = models.BooleanField(default=False, verbose_name="Devis créé")
+    
+    # ========================================
+    # NOUVEAU : CHAMPS POUR LA FACTURE
+    # ========================================
+    facture_generee = models.BooleanField(
+        default=False,
+        verbose_name="Facture générée"
+    )
+    
+    numero_facture = models.CharField(
+        max_length=20,
+        null=True,
+        blank=True,
+        unique=True,
+        verbose_name="Numéro de facture",
+        help_text="Format: FAC-2025-001"
+    )
+    
+    facture_date_emission = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date d'émission de la facture"
+    )
+    
+    facture_notes = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Notes de la facture",
+        help_text="Notes qui apparaîtront sur le PDF de la facture"
     )
     
     # ========================================
@@ -131,6 +216,7 @@ class Operation(models.Model):
         return f"{self.id_operation} - {self.type_prestation}"
     
     def save(self, *args, **kwargs):
+        # Générer l'ID opération
         if not self.id_operation:
             import uuid
             unique_suffix = str(uuid.uuid4())[:6].upper()
@@ -144,13 +230,88 @@ class Operation(models.Model):
         
         super().save(*args, **kwargs)
     
+    # ========================================
+    # PROPERTIES EXISTANTES
+    # ========================================
     @property
     def montant_total(self):
+        """Calcule le montant total de l'opération (somme des lignes d'intervention)"""
         return sum(intervention.montant for intervention in self.interventions.all())
+    
+    # ========================================
+    # NOUVELLES PROPERTIES POUR DEVIS/FACTURE
+    # ========================================
+    @property
+    def peut_generer_devis(self):
+        """
+        Vérifie si on peut générer un devis PDF.
+        
+        Conditions :
+        - avec_devis = True
+        - statut = EN_ATTENTE_DEVIS
+        - Au moins 1 ligne d'intervention
+        - Pas encore de numéro de devis
+        """
+        return (
+            self.avec_devis == True 
+            and self.statut == 'en_attente_devis' 
+            and self.interventions.exists()
+            and not self.numero_devis
+        )
     
     @property
     def peut_generer_facture(self):
-        return self.statut in ['realise', 'paye']    
+        """
+        Vérifie si on peut générer une facture PDF.
+        
+        Conditions :
+        - statut in [REALISE, PAYE]
+        - facture_generee = False
+        - Au moins 1 ligne d'intervention
+        """
+        return (
+            self.statut in ['realise', 'paye'] 
+            and self.facture_generee == False
+            and self.interventions.exists()
+        )
+    
+    @property
+    def peut_creer_nouveau_devis(self):
+        """
+        Vérifie si on peut créer un nouveau devis après un refus.
+        
+        Conditions :
+        - avec_devis = True
+        - devis_statut = 'refuse'
+        """
+        return (
+            self.avec_devis == True 
+            and self.devis_statut == 'refuse'
+        )
+    
+    @property
+    def devis_date_limite(self):
+        """
+        Calcule la date limite de validité du devis.
+        
+        Retourne None si pas de date d'envoi.
+        """
+        if self.devis_date_envoi and self.devis_validite_jours:
+            from datetime import timedelta
+            return self.devis_date_envoi + timedelta(days=self.devis_validite_jours)
+        return None
+    
+    @property
+    def delai_reponse_client(self):
+        """
+        Calcule le délai de réponse du client en jours.
+        
+        Retourne None si pas de date de réponse ou d'envoi.
+        """
+        if self.devis_date_envoi and self.devis_date_reponse:
+            return (self.devis_date_reponse - self.devis_date_envoi).days
+        return None
+
 
 # MODÈLE SÉPARÉ pour les échéances (pas à l'intérieur de Operation!)
 class Echeance(models.Model):
@@ -158,7 +319,7 @@ class Echeance(models.Model):
     numero = models.IntegerField(verbose_name="Numéro d'échéance")
     montant = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Montant")
     date_echeance = models.DateField(verbose_name="Date d'échéance")
-    paye = models.BooleanField(default=False, verbose_name="Payé")  # ← AJOUTEZ cette ligne
+    paye = models.BooleanField(default=False, verbose_name="Payé")
     ordre = models.IntegerField(default=1)
     
     class Meta:
