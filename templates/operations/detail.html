@@ -682,34 +682,42 @@
       <div class="section-body">
         
         <!-- ═══════════════════════════════════════
-            MODE CRÉATION : Lignes + Envoi fusionnés
-            ═══════════════════════════════════════ -->
-        {% if operation.statut == 'en_attente_devis' %}
+        MODE CRÉATION : Layout vertical clair
+        ═══════════════════════════════════════ -->
+    {% if operation.statut == 'en_attente_devis' %}
+      
+      <div style="display: grid; gap: 2rem;">
+        
+        <!-- ========================================
+            SECTION 1 : GESTION DES LIGNES
+            ======================================== -->
+        <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 1.5rem;">
           
-          <!-- Étape 1 : Lignes du devis (TOUJOURS VISIBLE) -->
-          <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
-              <div style="background: #3b82f6; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">1</div>
-              <div style="flex: 1;">
-                <h3 style="margin: 0; color: #1e40af; font-size: 1.2rem;">Lignes du devis</h3>
-                <p style="margin: 0.25rem 0 0 0; color: #1e40af; font-size: 0.9rem;">Ajoutez vos prestations et fournitures</p>
-              </div>
-              {% if interventions %}
-              <div style="text-align: right;">
-                <div style="font-size: 0.85rem; color: #1e40af; font-weight: 600;">Total actuel</div>
-                <div style="font-size: 1.5rem; color: #1e40af; font-weight: 700;">{{ montant_total }} €</div>
-              </div>
-              {% endif %}
+          <!-- En-tête Section 1 -->
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(59,130,246,0.2);">
+            <div style="background: #3b82f6; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">1</div>
+            <div style="flex: 1;">
+              <h3 style="margin: 0; color: #1e40af; font-size: 1.2rem;">📋 Lignes du devis</h3>
+              <p style="margin: 0.25rem 0 0 0; color: #1e40af; font-size: 0.9rem;">Ajoutez et modifiez vos prestations</p>
             </div>
-            
-            <!-- Table des lignes -->
             {% if interventions %}
-            <div class="table-wrap" style="margin-top: 1rem; margin-bottom: 1.5rem;">
+            <div style="text-align: right; background: white; padding: 0.75rem 1.25rem; border-radius: 10px; border: 2px solid #3b82f6;">
+              <div style="font-size: 0.75rem; color: #1e40af; font-weight: 600; text-transform: uppercase;">Total actuel</div>
+              <div style="font-size: 1.8rem; color: #1e40af; font-weight: 700; line-height: 1;">{{ montant_total }} €</div>
+            </div>
+            {% endif %}
+          </div>
+          
+          <!-- Tableau des lignes existantes -->
+          {% if interventions %}
+          <div style="background: white; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+            <h4 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.95rem; font-weight: 600;">📊 Lignes enregistrées ({{ interventions.count }})</h4>
+            <div class="table-wrap">
               <table>
                 <thead>
                   <tr>
                     <th>Description</th>
-                    <th style="width:120px">Montant (€)</th>
+                    <th style="width:120px">Montant</th>
                     <th style="width:100px">Actions</th>
                   </tr>
                 </thead>
@@ -717,7 +725,7 @@
                   {% for intervention in interventions %}
                   <tr>
                     <td>{{ intervention.description }}</td>
-                    <td><strong>{{ intervention.montant }}</strong></td>
+                    <td><strong>{{ intervention.montant }} €</strong></td>
                     <td>
                       <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette ligne ?')">
                         {% csrf_token %}
@@ -731,124 +739,148 @@
                 </tbody>
                 <tfoot>
                   <tr style="background: #dbeafe; font-weight:700;">
-                    <td><strong>MONTANT TOTAL</strong></td>
-                    <td><strong style="font-size: 1.2rem; color: #1e40af;">{{ montant_total }} €</strong></td>
-                    <td></td>
+                    <td><strong>SOUS-TOTAL</strong></td>
+                    <td colspan="2"><strong style="font-size: 1.1rem; color: #1e40af;">{{ montant_total }} €</strong></td>
                   </tr>
                 </tfoot>
               </table>
             </div>
-            {% endif %}
-            
-            <!-- Formulaire ajout ligne (TOUJOURS VISIBLE) -->
-            <div style="{% if interventions %}border-top:2px dashed #93c5fd; padding-top:1.5rem;{% endif %}">
-              <h4 style="margin-bottom:1rem; color:#1e40af; font-size:1rem; display: flex; align-items: center; gap: 0.5rem;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-                {% if interventions %}Ajouter une autre ligne{% else %}Ajouter votre première ligne{% endif %}
-              </h4>
-              
-              <form method="POST" action="" id="form-ajout-ligne-devis">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="add_intervention">
-                <div style="display:flex; gap:1rem; align-items:end; flex-wrap:wrap">
-                  <div style="flex:1; min-width:250px">
-                    <label for="description-devis" style="display:block; margin-bottom:.5rem; color:#1e40af; font-size:.9rem; font-weight:600">Description</label>
-                    <input type="text" 
-                          id="description-devis" 
-                          name="description" 
-                          class="input" 
-                          placeholder="Ex: Main d'œuvre, Fournitures, Déplacement..." 
-                          autocomplete="off"
-                          required>
-                  </div>
-                  <div style="flex:0 0 150px">
-                    <label for="montant-devis" style="display:block; margin-bottom:.5rem; color:#1e40af; font-size:.9rem; font-weight:600">Montant (€)</label>
-                    <input type="number" 
-                          id="montant-devis" 
-                          name="montant" 
-                          class="input" 
-                          placeholder="0.00" 
-                          step="0.01" 
-                          min="0.01"
-                          autocomplete="off"
-                          required>
-                  </div>
-                  <button type="submit" class="btn success" id="btn-ajouter-ligne">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-                    Ajouter
-                  </button>
-                </div>
-              </form>
-              
-              {% if not interventions %}
-              <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(59,130,246,0.1); border-radius: 8px; font-size: 0.9rem; color: #1e40af;">
-                💡 <strong>Astuce :</strong> Ajoutez toutes vos lignes avant de passer à l'étape 2 (envoi au client).
-              </div>
-              {% endif %}
-            </div>
           </div>
+          {% endif %}
           
-          <!-- Étape 2 : Envoi au client (visible seulement si lignes présentes) -->
-          {% if interventions %}
-          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #22c55e; border-radius: 12px; padding: 1.5rem;">
-            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-              <div style="background: #22c55e; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">2</div>
-              <div style="flex: 1;">
-                <h3 style="margin: 0; color: #15803d; font-size: 1.2rem;">Envoi au client</h3>
-                <p style="margin: 0.25rem 0 0 0; color: #15803d; font-size: 0.9rem;">Votre devis est prêt à être envoyé</p>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 0.85rem; color: #15803d; font-weight: 600;">Montant total</div>
-                <div style="font-size: 1.8rem; color: #15803d; font-weight: 700;">{{ montant_total }} €</div>
-              </div>
-            </div>
+          <!-- Formulaire d'ajout (TOUJOURS visible et bien séparé) -->
+          <div style="background: rgba(59,130,246,0.05); border: 2px dashed #3b82f6; border-radius: 10px; padding: 1.5rem;">
+            <h4 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5"/></svg>
+              {% if interventions %}➕ Ajouter une autre ligne{% else %}➕ Ajouter votre première ligne{% endif %}
+            </h4>
             
-            <!-- Info : possibilité d'ajouter encore des lignes -->
-            <div style="margin-bottom: 1.5rem; padding: 0.75rem; background: rgba(34,197,94,0.1); border-radius: 8px; font-size: 0.9rem; color: #15803d;">
-              💡 Vous pouvez encore <strong>ajouter des lignes</strong> dans la section ci-dessus avant d'envoyer le devis.
-            </div>
-            
-            <form method="POST">
+            <form method="POST" id="form-ajout-ligne-devis">
               {% csrf_token %}
-              <input type="hidden" name="action" value="marquer_devis_envoye">
+              <input type="hidden" name="action" value="add_intervention">
               
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                <div style="grid-column: 1 / -1;">
-                  <label style="display:block; margin-bottom:.5rem; color:#15803d; font-size:.9rem; font-weight:600">
-                    📄 Notes du devis (optionnel)
-                  </label>
-                  <textarea name="devis_notes" class="input" rows="2" placeholder="Ex: Devis valable sous réserve de disponibilité des pièces">{{ operation.devis_notes|default:'' }}</textarea>
+              <div style="display: grid; grid-template-columns: 1fr 180px auto; gap: 1rem; align-items: end;">
+                <div>
+                  <label for="description-devis" style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">📝 Description</label>
+                  <input type="text" 
+                        id="description-devis" 
+                        name="description" 
+                        class="input" 
+                        placeholder="Ex: Main d'œuvre pose chaudière" 
+                        autocomplete="off"
+                        style="font-size: 0.95rem;"
+                        required>
                 </div>
                 
                 <div>
-                  <label style="display:block; margin-bottom:.5rem; color:#15803d; font-size:.9rem; font-weight:600">
-                    📅 Date d'envoi
-                  </label>
-                  <input type="date" name="devis_date_envoi" class="input" value="{{ now|date:'Y-m-d' }}" required>
+                  <label for="montant-devis" style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">💰 Montant (€)</label>
+                  <input type="number" 
+                        id="montant-devis" 
+                        name="montant" 
+                        class="input" 
+                        placeholder="0.00" 
+                        step="0.01" 
+                        min="0.01"
+                        autocomplete="off"
+                        style="font-size: 0.95rem; text-align: right;"
+                        required>
                 </div>
                 
-                <div>
-                  <label style="display:block; margin-bottom:.5rem; color:#15803d; font-size:.9rem; font-weight:600">
-                    ⏰ Validité (jours)
-                  </label>
-                  <input type="number" name="devis_validite_jours" class="input" value="{{ operation.devis_validite_jours|default:30 }}" min="1" max="365">
-                </div>
-              </div>
-              
-              <div style="display:flex; gap:1rem; flex-wrap:wrap">
-                <button type="button" class="btn primary" style="flex:1; opacity: 0.5;" disabled title="Génération PDF - Phase 4">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 21h10a2 2 0 0 0 2-2V9.414a1 1 0 0 0-.293-.707l-5.414-5.414A1 1 0 0 0 12.586 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.6"/></svg>
-                  Générer PDF (Phase 4)
-                </button>
-                
-                <button type="submit" class="btn success" style="flex:1">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                  ✉️ Marquer comme envoyé au client
+                <button type="submit" class="btn success" id="btn-ajouter-ligne" style="padding: 0.75rem 1.5rem; font-weight: 600; white-space: nowrap;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.5"/></svg>
+                  Ajouter
                 </button>
               </div>
             </form>
+            
+            {% if not interventions %}
+            <div style="margin-top: 1rem; padding: 0.75rem; background: white; border-radius: 8px; font-size: 0.9rem; color: #1e40af; border: 1px solid rgba(59,130,246,0.2);">
+              💡 <strong>Astuce :</strong> Ajoutez toutes vos lignes avant de passer à l'étape 2.
+            </div>
+            {% endif %}
           </div>
-          {% endif %}
+          
+        </div>
+        
+        <!-- ========================================
+            SECTION 2 : ENVOI AU CLIENT
+            ======================================== -->
+        {% if interventions %}
+        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #22c55e; border-radius: 12px; padding: 1.5rem;">
+          
+          <!-- En-tête Section 2 -->
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid rgba(34,197,94,0.2);">
+            <div style="background: #22c55e; color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2rem; flex-shrink: 0;">2</div>
+            <div style="flex: 1;">
+              <h3 style="margin: 0; color: #15803d; font-size: 1.2rem;">✅ Valider et envoyer</h3>
+              <p style="margin: 0.25rem 0 0 0; color: #15803d; font-size: 0.9rem;">Le devis est prêt, vous pouvez l'envoyer au client</p>
+            </div>
+            <div style="text-align: right; background: white; padding: 0.75rem 1.25rem; border-radius: 10px; border: 2px solid #22c55e;">
+              <div style="font-size: 0.75rem; color: #15803d; font-weight: 600; text-transform: uppercase;">Montant total</div>
+              <div style="font-size: 1.8rem; color: #15803d; font-weight: 700; line-height: 1;">{{ montant_total }} €</div>
+            </div>
+          </div>
+          
+          <!-- Rappel -->
+          <div style="margin-bottom: 1.5rem; padding: 0.75rem 1rem; background: rgba(34,197,94,0.1); border-left: 4px solid #22c55e; border-radius: 6px; font-size: 0.9rem; color: #15803d;">
+            <strong>ℹ️ Rappel :</strong> Vous pouvez encore modifier les lignes dans la section ci-dessus avant d'envoyer le devis.
+          </div>
+          
+          <!-- Formulaire d'envoi -->
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="marquer_devis_envoye">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+              <div style="grid-column: 1 / -1;">
+                <label style="display:block; margin-bottom:.5rem; color:#15803d; font-size:.9rem; font-weight:600">
+                  📄 Notes du devis (optionnel)
+                </label>
+                <textarea name="devis_notes" class="input" rows="2" placeholder="Ex: Devis valable sous réserve de disponibilité des pièces">{{ operation.devis_notes|default:'' }}</textarea>
+              </div>
+              
+              <div>
+                <label style="display:block; margin-bottom:.5rem; color:#15803d; font-size:.9rem; font-weight:600">
+                  📅 Date d'envoi
+                </label>
+                <input type="date" name="devis_date_envoi" class="input" value="{{ now|date:'Y-m-d' }}" required>
+              </div>
+              
+              <div>
+                <label style="display:block; margin-bottom:.5rem; color:#15803d; font-size:.9rem; font-weight:600">
+                  ⏰ Validité (jours)
+                </label>
+                <input type="number" name="devis_validite_jours" class="input" value="{{ operation.devis_validite_jours|default:30 }}" min="1" max="365">
+              </div>
+            </div>
+            
+            <div style="display:flex; gap:1rem; flex-wrap:wrap">
+              <button type="button" class="btn primary" style="flex:1; opacity: 0.5;" disabled title="Génération PDF - Phase 4">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M7 21h10a2 2 0 0 0 2-2V9.414a1 1 0 0 0-.293-.707l-5.414-5.414A1 1 0 0 0 12.586 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.6"/></svg>
+                Générer PDF (Phase 4)
+              </button>
+              
+              <button type="submit" class="btn success" style="flex:1; font-weight: 600; font-size: 1rem; padding: 0.75rem 1rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="1.8"/></svg>
+                📋 Générer le devis
+              </button>
+            </div>
+          </form>
+          
+        </div>
+        {% else %}
+        <!-- Message si aucune ligne -->
+        <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 1.5rem; text-align: center;">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+          <h3 style="margin: 0 0 0.5rem 0; color: #92400e; font-size: 1.1rem;">Section 2 verrouillée</h3>
+          <p style="margin: 0; color: #92400e; font-size: 0.95rem;">Ajoutez au moins une ligne dans la section 1 pour déverrouiller l'envoi du devis.</p>
+        </div>
+        {% endif %}
+        
+      </div>
+      
+    {% elif operation.devis_statut == 'en_attente' or operation.devis_statut == 'relance' %}
+
 
         <!-- ═══════════════════════════════════════
             MODE ENVOYÉ : États C, D, E, F
