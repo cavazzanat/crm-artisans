@@ -456,72 +456,217 @@ def operation_detail(request, operation_id):
     if request.method == 'POST':
         action = request.POST.get('action')
         
-        # GESTION DU STATUT DU DEVIS
-        if action == 'update_devis_status':
-            devis_cree = request.POST.get('devis_cree') == 'oui'
+        # ========================================
+        # NOUVELLES ACTIONS DEVIS (PHASE 3)
+        # ========================================
+
+        # ═══════════════════════════════════════
+        # ACTION : MARQUER DEVIS COMME ENVOYÉ
+        # ═══════════════════════════════════════
+        if action == 'marquer_devis_envoye':
+            from datetime import datetime
             
-            if devis_cree:
-                # Devis créé - traitement normal
-                devis_date_envoi = request.POST.get('devis_date_envoi', '')
-                devis_date_reponse = request.POST.get('devis_date_reponse', '')
-                devis_statut = request.POST.get('devis_statut', '')
+            devis_date_envoi_str = request.POST.get('devis_date_envoi', '')
+            devis_notes = request.POST.get('devis_notes', '').strip()
+            devis_validite_jours = request.POST.get('devis_validite_jours', '30')
+            
+            try:
+                # Générer le numéro de devis
+                annee_courante = datetime.now().year
                 
-                operation.devis_cree = True
+                # Trouver le dernier numéro de l'année
+                derniers_devis = Operation.objects.filter(
+                    user=request.user,
+                    numero_devis__startswith=f'DEVIS-{annee_courante}-'
+                ).order_by('-numero_devis')
                 
-                from datetime import datetime
+                if derniers_devis.exists():
+                    # Extraire le numéro du dernier devis (ex: DEVIS-2025-00042 → 42)
+                    dernier_numero_str = derniers_devis.first().numero_devis.split('-')[-1]
+                    dernier_numero = int(dernier_numero_str)
+                    nouveau_numero = dernier_numero + 1
+                else:
+                    nouveau_numero = 1
                 
-                if devis_date_envoi:
-                    try:
-                        operation.devis_date_envoi = datetime.fromisoformat(devis_date_envoi).date()
-                    except ValueError:
-                        pass
+                # Format avec zéro padding (ex: DEVIS-2025-00001)
+                operation.numero_devis = f'DEVIS-{annee_courante}-{nouveau_numero:05d}'
                 
-                if devis_date_reponse:
-                    try:
-                        operation.devis_date_reponse = datetime.fromisoformat(devis_date_reponse).date()
-                    except ValueError:
-                        pass
-                        
-                if devis_statut:
-                    operation.devis_statut = devis_statut
+                # Enregistrer les données
+                if devis_date_envoi_str:
+                    operation.devis_date_envoi = datetime.strptime(devis_date_envoi_str, '%Y-%m-%d').date()
+                else:
+                    operation.devis_date_envoi = datetime.now().date()
                 
-                    # Synchroniser le statut de l'opération
-                    if devis_statut == 'refuse':
-                        operation.statut = 'devis_refuse'
-                    elif devis_statut == 'accepte':
-                        if operation.statut == 'en_attente_devis':
-                            operation.statut = 'a_planifier'
+                operation.devis_notes = devis_notes
+                
+                try:
+                    operation.devis_validite_jours = int(devis_validite_jours)
+                except ValueError:
+                    operation.devis_validite_jours = 30
+                
+                operation.devis_statut = 'en_attente'
+                
+                # Archiver dans l'historique des numéros
+                if operation.devis_historique_numeros:
+                    operation.devis_historique_numeros += f",{operation.numero_devis}"
+                else:
+                    operation.devis_historique_numeros = operation.numero_devis
                 
                 operation.save()
                 
-                historique_message = f"Devis mis à jour - Statut: {operation.get_devis_statut_display() if operation.devis_statut else 'N/A'}"
-                
-                if operation.devis_date_envoi and operation.devis_date_reponse:
-                    delai = (operation.devis_date_reponse - operation.devis_date_envoi).days
-                    historique_message += f" - Délai de réponse: {delai} jour{'s' if delai > 1 else ''}"
-                
+                # Historique
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=historique_message,
+                    action=f"📄 Devis {operation.numero_devis} créé et envoyé au client - Montant : {operation.montant_total}€ - Validité : {operation.devis_validite_jours} jours",
                     utilisateur=request.user
                 )
                 
-                messages.success(request, "✅ Statut du devis enregistré")
-            
-            else:
-                # ✅ Pas de devis - annulation simple
-                operation.devis_cree = False
-                operation.save()
+                messages.success(request, f"✅ Devis {operation.numero_devis} marqué comme envoyé !")
                 
-                HistoriqueOperation.objects.create(
-                    operation=operation,
-                    action="Devis marqué comme non créé",
-                    utilisateur=request.user
-                )
-                
-                messages.info(request, "ℹ️ Enregistré : Aucun devis créé")
+            except Exception as e:
+                messages.error(request, f"❌ Erreur lors de la création du devis : {str(e)}")
             
             return redirect('operation_detail', operation_id=operation.id)
+
+        # ═══════════════════════════════════════
+        # ACTION : ACCEPTER LE DEVIS
+        # ═══════════════════════════════════════
+        elif action == 'accepter_devis':
+            from datetime import datetime
+            
+            date_reponse_str = request.POST.get('date_reponse', '')
+            
+            try:
+                if date_reponse_str:
+                    operation.devis_date_reponse = datetime.strptime(date_reponse_str, '%Y-%m-%d').date()
+                else:
+                    operation.devis_date_reponse = datetime.now().date()
+                
+                operation.devis_statut = 'accepte'
+                
+                # Changer automatiquement le statut de l'opération
+                if operation.statut == 'en_attente_devis':
+                    operation.statut = 'a_planifier'
+                
+                operation.save()
+                
+                # Calculer le délai de réponse
+                if operation.devis_date_envoi and operation.devis_date_reponse:
+                    delai = (operation.devis_date_reponse - operation.devis_date_envoi).days
+                    delai_texte = f" - Délai de réponse : {delai} jour{'s' if delai > 1 else ''}"
+                else:
+                    delai_texte = ""
+                
+                # Historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"✅ Devis {operation.numero_devis} accepté par le client{delai_texte} - Statut passé à 'À planifier'",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, f"✅ Devis {operation.numero_devis} accepté ! L'opération est maintenant à planifier.")
+                
+            except Exception as e:
+                messages.error(request, f"❌ Erreur : {str(e)}")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+
+        # ═══════════════════════════════════════
+        # ACTION : REFUSER LE DEVIS
+        # ═══════════════════════════════════════
+        elif action == 'refuser_devis':
+            from datetime import datetime
+            
+            date_reponse_str = request.POST.get('date_reponse', '')
+            
+            try:
+                if date_reponse_str:
+                    operation.devis_date_reponse = datetime.strptime(date_reponse_str, '%Y-%m-%d').date()
+                else:
+                    operation.devis_date_reponse = datetime.now().date()
+                
+                operation.devis_statut = 'refuse'
+                operation.statut = 'devis_refuse'
+                
+                operation.save()
+                
+                # Historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"❌ Devis {operation.numero_devis} refusé par le client - Montant : {operation.montant_total}€ - Opération annulée",
+                    utilisateur=request.user
+                )
+                
+                messages.warning(request, f"❌ Devis {operation.numero_devis} marqué comme refusé. L'opération est annulée.")
+                
+            except Exception as e:
+                messages.error(request, f"❌ Erreur : {str(e)}")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+
+        # ═══════════════════════════════════════
+        # ACTION : RELANCER LE DEVIS
+        # ═══════════════════════════════════════
+        elif action == 'relancer_devis':
+            try:
+                operation.devis_statut = 'relance'
+                operation.save()
+                
+                # Historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"🔔 Relance du devis {operation.numero_devis} - En attente de réponse client",
+                    utilisateur=request.user
+                )
+                
+                messages.info(request, f"🔔 Devis {operation.numero_devis} marqué pour relance.")
+                
+            except Exception as e:
+                messages.error(request, f"❌ Erreur : {str(e)}")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+
+        # ═══════════════════════════════════════
+        # ACTION : CRÉER UN NOUVEAU DEVIS (après refus)
+        # ═══════════════════════════════════════
+        elif action == 'creer_nouveau_devis':
+            try:
+                ancien_numero = operation.numero_devis
+                ancien_montant = operation.montant_total
+                
+                # Archiver l'ancien numéro dans l'historique
+                if operation.devis_historique_numeros:
+                    if ancien_numero not in operation.devis_historique_numeros:
+                        operation.devis_historique_numeros += f",{ancien_numero}"
+                else:
+                    operation.devis_historique_numeros = ancien_numero
+                
+                # Réinitialiser pour permettre un nouveau devis
+                operation.numero_devis = None
+                operation.devis_statut = None
+                operation.devis_date_envoi = None
+                operation.devis_date_reponse = None
+                operation.statut = 'en_attente_devis'
+                
+                operation.save()
+                
+                # Historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"🔄 Nouveau devis créé suite au refus de {ancien_numero} ({ancien_montant}€) - Les lignes peuvent être modifiées",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, f"✅ Nouveau devis créé ! L'ancien devis {ancien_numero} a été archivé. Vous pouvez maintenant modifier les lignes.")
+                
+            except Exception as e:
+                messages.error(request, f"❌ Erreur : {str(e)}")
+            
+            return redirect('operation_detail', operation_id=operation.id)
+
+        # ========================================
+        # FIN NOUVELLES ACTIONS DEVIS
+        # ========================================
         
         # GESTION DES ÉCHÉANCES
         elif action == 'add_echeance':
@@ -686,11 +831,6 @@ def operation_detail(request, operation_id):
                         except ValueError:
                             pass
                         
-                print(f"DEBUG: date_paiement_comptant reçu = '{date_paiement_comptant}'")
-                print(f"DEBUG: mode_paiement = '{mode_paiement}'")
-                print(f"DEBUG: statut avant save = '{operation.statut}'")
-                print(f"DEBUG: date_paiement avant save = '{operation.date_paiement}'")
-                
                 operation.save()
                 
                 HistoriqueOperation.objects.create(
@@ -1114,6 +1254,12 @@ def operation_detail(request, operation_id):
         'echeances_json': echeances_json,
         'now': timezone.now(),
     }
+    
+    # ✅ AJOUT POUR LA SECTION DEVIS
+    context.update({
+        'peut_creer_nouveau_devis': operation.peut_creer_nouveau_devis if hasattr(operation, 'peut_creer_nouveau_devis') else False,
+        'peut_generer_devis': operation.peut_generer_devis if hasattr(operation, 'peut_generer_devis') else False,
+    })
 
     return render(request, 'operations/detail.html', context)
 
