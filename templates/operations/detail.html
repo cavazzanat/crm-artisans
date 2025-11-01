@@ -783,6 +783,8 @@
             </button>
           </form>
 
+
+
           {% if not interventions %}
           <div class="alert info" style="margin-top: 1rem;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
@@ -874,17 +876,23 @@
             </button>
           </div>
 
-          <!-- ============================
-              ÉTAPE 2 : ENREGISTRER L'ENVOI
-              ============================ -->
-          <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #bfdbfe;">
-            <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-              <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">2</span>
-              Enregistrer la date d'envoi au client
-            </h5>
-            <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
-              💡 Une fois le devis envoyé au client (email, courrier, etc.), enregistrez la date d'envoi.
-            </p>
+        <!-- ============================
+            ÉTAPE 2 : ENREGISTRER L'ENVOI
+            ============================ -->
+        <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #bfdbfe;">
+          <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">2</span>
+            Enregistrer la date d'envoi au client
+          </h5>
+          <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
+            💡 Une fois le devis envoyé au client (email, courrier, etc.), enregistrez la date d'envoi.
+          </p>
+          
+          {% if not operation.devis_date_envoi %}
+          <!-- Formulaire d'enregistrement de la date -->
+          <form method="POST" id="form-enregistrer-date-envoi">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="enregistrer_date_envoi">
             
             <div style="display: grid; gap: 1rem;">
               <div>
@@ -892,31 +900,61 @@
                   📅 Date d'envoi au client <span style="color: #ef4444;">*</span>
                 </label>
                 <input type="date" 
-                      id="devis-date-envoi-input" 
+                      id="devis-date-envoi-temp" 
+                      name="devis_date_envoi"
                       class="input" 
-                      value="{{ operation.devis_date_envoi|date:'Y-m-d'|default:'' }}"
+                      value="{{ now|date:'Y-m-d' }}"
                       style="background: white;"
                       required>
                 <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem;">
-                  ℹ️ Date à laquelle vous avez envoyé le devis au client
-                </small>
-              </div>
-              
-              <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
-                  ⏳ Validité du devis
-                </label>
-                <input type="text" 
-                      class="input" 
-                      value="{{ operation.devis_validite_jours|default:30 }} jours" 
-                      readonly 
-                      style="background: #dbeafe; cursor: not-allowed; color: #1e40af; font-weight: 600;">
-                <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem;">
-                  💡 Le client a {{ operation.devis_validite_jours|default:30 }} jours pour répondre
+                  ℹ️ Date à laquelle vous envoyez le devis au client
                 </small>
               </div>
             </div>
+            
+            <button type="submit" class="btn success" style="width: 100%; margin-top: 1rem; padding: 0.85rem; font-weight: 600;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m5 12 4 4 10-10"/>
+              </svg>
+              ✅ Valider la date d'envoi
+            </button>
+          </form>
+          
+          {% else %}
+          <!-- Date déjà enregistrée -->
+          <div style="display: grid; gap: 1rem;">
+            <div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; padding: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
+                  <path d="m5 12 4 4 10-10"/>
+                </svg>
+                <strong style="color: #22c55e; font-size: 0.95rem;">Date d'envoi enregistrée</strong>
+              </div>
+              <div style="color: #065f46; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">
+                📅 {{ operation.devis_date_envoi|date:"d/m/Y" }}
+              </div>
+              
+              <!-- Calcul de l'expiration -->
+              {% if date_expiration_devis %}
+              <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(34,197,94,0.2);">
+                <div style="font-size: 0.85rem; color: #065f46;">
+                  ⏳ Validité : {{ operation.devis_validite_jours }} jours
+                </div>
+                <div style="font-size: 0.85rem; {% if devis_expire %}color: #ef4444;{% else %}color: #065f46;{% endif %} margin-top: 0.25rem;">
+                  📅 Date d'expiration : {{ date_expiration_devis|date:"d/m/Y" }}
+                  
+                  {% if devis_expire %}
+                  <br><strong style="color: #ef4444;">⚠️ Devis expiré !</strong>
+                  {% else %}
+                  <br><span style="color: #22c55e;">✅ Devis valide</span>
+                  {% endif %}
+                </div>
+              </div>
+              {% endif %}
+            </div>
           </div>
+          {% endif %}
+        </div>
 
           <!-- ============================
               ÉTAPE 3 : RÉPONSE DU CLIENT

@@ -514,6 +514,35 @@ def operation_detail(request, operation_id):
                 messages.error(request, f"❌ Erreur lors de la génération du devis : {str(e)}")
             
             return redirect('operation_detail', operation_id=operation.id)
+        
+        # ═══════════════════════════════════════
+        # ACTION : ENREGISTRER DATE ENVOI
+        # ═══════════════════════════════════════
+        elif action == 'enregistrer_date_envoi':
+            from datetime import datetime
+            
+            date_envoi_str = request.POST.get('devis_date_envoi', '')
+            
+            try:
+                if date_envoi_str:
+                    operation.devis_date_envoi = datetime.strptime(date_envoi_str, '%Y-%m-%d').date()
+                    operation.save()
+                    
+                    # Historique
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"📅 Date d'envoi du devis {operation.numero_devis} enregistrée : {operation.devis_date_envoi.strftime('%d/%m/%Y')}",
+                        utilisateur=request.user
+                    )
+                    
+                    messages.success(request, f"✅ Date d'envoi enregistrée : {operation.devis_date_envoi.strftime('%d/%m/%Y')}")
+                else:
+                    messages.error(request, "⚠️ Veuillez renseigner une date")
+                    
+            except Exception as e:
+                messages.error(request, f"❌ Erreur : {str(e)}")
+            
+            return redirect('operation_detail', operation_id=operation.id)
 
 
         # ═══════════════════════════════════════
@@ -1224,6 +1253,15 @@ def operation_detail(request, operation_id):
         } for e in echeances
     ])
 
+    # ✅ CALCUL DATE EXPIRATION DEVIS
+    date_expiration_devis = None
+    devis_expire = False
+
+    if operation.devis_date_envoi and operation.devis_validite_jours:
+        from datetime import timedelta
+        date_expiration_devis = operation.devis_date_envoi + timedelta(days=operation.devis_validite_jours)
+        devis_expire = date_expiration_devis < timezone.now().date()
+
     context = {
         'operation': operation,
         'interventions': interventions,
@@ -1241,6 +1279,12 @@ def operation_detail(request, operation_id):
         'lignes_json': lignes_json,
         'echeances_json': echeances_json,
         'now': timezone.now(),
+        'peut_creer_nouveau_devis': operation.peut_creer_nouveau_devis if hasattr(operation, 'peut_creer_nouveau_devis') else False,
+        'peut_generer_devis': operation.peut_generer_devis if hasattr(operation, 'peut_generer_devis') else False,
+        
+        # ✅ NOUVEAU : Variables pour l'expiration du devis
+        'date_expiration_devis': date_expiration_devis,
+        'devis_expire': devis_expire,
     }
     
     # ✅ AJOUT POUR LA SECTION DEVIS
