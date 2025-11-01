@@ -462,9 +462,18 @@ def operation_detail(request, operation_id):
         if action == 'generer_devis':
             from datetime import datetime
             
+                # ✅ AJOUT : Vérifier qu'il y a au moins une ligne
+            if not operation.interventions.exists():
+                messages.warning(request, "⚠️ Attention : Vous générez un devis sans lignes.")
+            
+            
             devis_notes = request.POST.get('devis_notes', '').strip()
             devis_validite_jours = request.POST.get('devis_validite_jours', '30')
             
+                # ✅ AJOUT : Debug pour voir ce qui est reçu
+            print(f"DEBUG - Notes reçues: '{devis_notes}'")
+            print(f"DEBUG - Validité reçue: '{devis_validite_jours}'")
+                        
             try:
                 # Générer le numéro de devis
                 annee_courante = datetime.now().year
@@ -484,8 +493,11 @@ def operation_detail(request, operation_id):
                 
                 # Format avec zéro padding (ex: DEVIS-2025-00001)
                 operation.numero_devis = f'DEVIS-{annee_courante}-{nouveau_numero:05d}'
+                
+                # ✅ SAUVEGARDER LES NOTES
                 operation.devis_notes = devis_notes
                 
+                # ✅ SAUVEGARDER LA VALIDITÉ
                 try:
                     operation.devis_validite_jours = int(devis_validite_jours)
                 except ValueError:
@@ -499,7 +511,7 @@ def operation_detail(request, operation_id):
                 else:
                     operation.devis_historique_numeros = operation.numero_devis
                 
-                operation.save()
+                operation.save()  # ← IMPORTANT : Cette ligne doit venir APRÈS avoir modifié les champs
                 
                 # Historique
                 HistoriqueOperation.objects.create(
