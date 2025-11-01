@@ -895,19 +895,31 @@
               <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
                 📅 Date d'envoi au client <span style="color: #ef4444;">*</span>
               </label>
-              <input type="date" 
-                    id="devis-date-envoi-temp" 
-                    name="devis_date_envoi"
-                    class="input" 
-                    value="{{ now|date:'Y-m-d' }}"
-                    style="background: white;"
-                    required>
+              
+              <div style="position: relative;">
+                <input type="date" 
+                      id="devis-date-envoi-temp" 
+                      name="devis_date_envoi"
+                      class="input" 
+                      value="{{ now|date:'Y-m-d' }}"
+                      style="background: white;"
+                      required>
+                
+                <!-- ✅ NOUVEAU : Alerte date passée -->
+                <div id="alerte-date-passee" style="display: none; margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+                    <path d="M12 9v4m0 4h0M12 3l9 18H3L12 3z"/>
+                  </svg>
+                  <span style="color: #991b1b; font-size: 0.85rem; font-weight: 600;">⚠️ Attention : date dans le passé</span>
+                </div>
+              </div>
+              
               <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem;">
                 ℹ️ Date à laquelle vous envoyez le devis au client
               </small>
             </div>
             
-            <!-- ✅ NOUVEAU : Rappel de la validité -->
+            <!-- ✅ RAPPEL : Rappel de la validité -->
             <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 1rem;">
               <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2">
@@ -925,18 +937,30 @@
             </div>
           </div>
 
-          <!-- Script pour calculer la date d'expiration en temps réel -->
+          <!-- Script pour calculer la date d'expiration + vérifier si date passée -->
           <script>
           (function() {
             const dateInput = document.getElementById('devis-date-envoi-temp');
             const expirationPreview = document.getElementById('date-expiration-preview');
+            const alertePassee = document.getElementById('alerte-date-passee');
             const validiteJours = {{ operation.devis_validite_jours|default:30 }};
             
-            function updateExpirationPreview() {
+            function updateAll() {
               if (!dateInput.value) return;
               
-              const dateEnvoi = new Date(dateInput.value);
-              const dateExpiration = new Date(dateEnvoi);
+              const dateSelectionnee = new Date(dateInput.value);
+              const aujourd hui = new Date();
+              aujourd hui.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour comparer seulement la date
+              
+              // ✅ VÉRIFIER SI DATE PASSÉE
+              if (dateSelectionnee < aujourd hui) {
+                alertePassee.style.display = 'flex';
+              } else {
+                alertePassee.style.display = 'none';
+              }
+              
+              // ✅ CALCULER DATE EXPIRATION
+              const dateExpiration = new Date(dateSelectionnee);
               dateExpiration.setDate(dateExpiration.getDate() + validiteJours);
               
               const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
@@ -944,12 +968,15 @@
             }
             
             // Calculer au chargement
-            updateExpirationPreview();
+            updateAll();
             
             // Recalculer quand la date change
-            dateInput.addEventListener('change', updateExpirationPreview);
+            dateInput.addEventListener('change', updateAll);
+            dateInput.addEventListener('input', updateAll); // Pour la mise à jour en temps réel
           })();
           </script>  
+
+
             <button type="submit" class="btn success" style="width: 100%; margin-top: 1rem; padding: 0.85rem; font-weight: 600;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m5 12 4 4 10-10"/>
