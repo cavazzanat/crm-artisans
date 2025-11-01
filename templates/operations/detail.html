@@ -890,6 +890,10 @@
           
           {% if not operation.devis_date_envoi %}
           <!-- Formulaire d'enregistrement de la date -->
+          <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="enregistrer_date_envoi">
+            
           <div style="display: grid; gap: 1rem;">
             <div>
               <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
