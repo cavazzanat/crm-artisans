@@ -937,7 +937,8 @@
             </div>
           </div>
 
-          <!-- Script pour calculer la date d'expiration + vérifier si date passée -->
+
+          <!-- Script pour calculer la date d'expiration + vérifier si date passée (UNIQUEMENT à la création) -->
           <script>
           (function() {
             const dateInput = document.getElementById('devis-date-envoi-temp');
@@ -945,15 +946,20 @@
             const alertePassee = document.getElementById('alerte-date-passee');
             const validiteJours = {{ operation.devis_validite_jours|default:30 }};
             
+            // ✅ VÉRIFIER SI LA DATE EST DÉJÀ ENREGISTRÉE EN BASE
+            const dateDejaEnregistree = {% if operation.devis_date_envoi %}true{% else %}false{% endif %};
+            
             function updateAll() {
               if (!dateInput.value) return;
               
               const dateSelectionnee = new Date(dateInput.value);
-              const aujourd hui = new Date();
-              aujourd hui.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour comparer seulement la date
+              const aujourdhui = new Date();
+              aujourdhui.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour comparer seulement la date
               
-              // ✅ VÉRIFIER SI DATE PASSÉE
-              if (dateSelectionnee < aujourd hui) {
+              // ✅ AFFICHER L'ALERTE UNIQUEMENT SI :
+              // 1. La date n'est PAS déjà enregistrée en base (première saisie)
+              // 2. ET la date sélectionnée est dans le passé
+              if (!dateDejaEnregistree && dateSelectionnee < aujourdhui) {
                 alertePassee.style.display = 'flex';
               } else {
                 alertePassee.style.display = 'none';
@@ -974,7 +980,7 @@
             dateInput.addEventListener('change', updateAll);
             dateInput.addEventListener('input', updateAll); // Pour la mise à jour en temps réel
           })();
-          </script>  
+          </script>
 
 
             <button type="submit" class="btn success" style="width: 100%; margin-top: 1rem; padding: 0.85rem; font-weight: 600;">
