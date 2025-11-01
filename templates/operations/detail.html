@@ -1028,84 +1028,83 @@
         </div>
 
           <!-- ============================
-              ÉTAPE 3 : RÉPONSE DU CLIENT
-              ============================ -->
-          <div style="background: white; border-radius: 10px; padding: 1.5rem; border: 1px solid #bfdbfe;">
-            <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-              <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">3</span>
-              Enregistrer la réponse du client
-            </h5>
-            <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
-              💡 Une fois que le client a répondu, cliquez sur le bouton correspondant.
-            </p>
+            ÉTAPE 3 : RÉPONSE DU CLIENT
+            ============================ -->
+        <div style="background: white; border-radius: 10px; padding: 1.5rem; border: 1px solid #bfdbfe;">
+          <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">3</span>
+            Enregistrer la réponse du client
+          </h5>
+          <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
+            💡 Une fois que le client a répondu, cliquez sur le bouton correspondant.
+          </p>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <!-- ✅ BOUTON ACCEPTÉ -->
+            <form method="POST" onsubmit="return validateDateEnvoi('accepter')">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="accepter_devis">
+              <button type="submit" class="btn success" style="width: 100%; padding: 1rem; font-weight: 600; font-size: 0.95rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="m5 12 4 4 10-10"/>
+                </svg>
+                ✅ Accepté par le client
+              </button>
+            </form>
             
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-              <form method="POST" onsubmit="return validateAndSubmit('accepter')">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="accepter_devis">
-                <input type="hidden" name="devis_date_envoi" id="date-envoi-accepter">
-                <button type="submit" class="btn success" style="width: 100%; padding: 0.85rem; font-weight: 600;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="m5 12 4 4 10-10"/>
-                  </svg>
-                  ✅ Accepté
-                </button>
-              </form>
-              
-              <form method="POST" onsubmit="return validateAndSubmit('refuser')">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="refuser_devis">
-                <input type="hidden" name="devis_date_envoi" id="date-envoi-refuser">
-                <button type="submit" class="btn danger" style="width: 100%; padding: 0.85rem; font-weight: 600;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18 6 6 18M6 6l12 12"/>
-                  </svg>
-                  ❌ Refusé
-                </button>
-              </form>
-              
-              <form method="POST" onsubmit="return validateAndSubmit('relancer')">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="relancer_devis">
-                <input type="hidden" name="devis_date_envoi" id="date-envoi-relancer">
-                <button type="submit" class="btn" style="width: 100%; padding: 0.85rem; font-weight: 600; background: var(--warning); color: white; border-color: var(--warning);">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/>
-                  </svg>
-                  🔔 Relancer
-                </button>
-              </form>
-            </div>
+            <!-- ❌ BOUTON REFUSÉ -->
+            <form method="POST" onsubmit="return validateDateEnvoi('refuser')">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="refuser_devis">
+              <button type="submit" class="btn danger" style="width: 100%; padding: 1rem; font-weight: 600; font-size: 0.95rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 6 6 18M6 6l12 12"/>
+                </svg>
+                ❌ Refusé par le client
+              </button>
+            </form>
+          </div>
+          
+          <!-- ℹ️ INFO CLIENT NE RÉPOND PAS -->
+          <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <small style="color: #64748b; font-size: 0.85rem; display: block;">
+              💬 <strong>Le client ne répond pas ?</strong><br>
+              Relancez-le par téléphone ou email. Si le devis est abandonné, cliquez sur "❌ Refusé".
+            </small>
           </div>
         </div>
+        </div>
 
-        <script>
-        // ✅ NOUVELLE FONCTION DE VALIDATION UNIFIÉE
-        function validateAndSubmit(action) {
-          const dateInput = document.getElementById('devis-date-envoi-input');
-          const dateValue = dateInput.value;
-          
-          if (!dateValue) {
-            showToast('⚠️ Veuillez renseigner la date d\'envoi avant de valider', 'warning');
-            dateInput.focus();
-            dateInput.style.border = '2px solid var(--danger)';
-            setTimeout(() => {
-              dateInput.style.border = '';
-            }, 2000);
+          <script>
+          // ✅ VALIDATION SIMPLIFIÉE (2 boutons seulement)
+          function validateDateEnvoi(action) {
+            {% if not operation.devis_date_envoi %}
+            // ⚠️ Si pas de date d'envoi, bloquer
+            showToast('⚠️ Veuillez d\'abord enregistrer la date d\'envoi du devis', 'warning');
+            
+            // Scroll vers le formulaire de date d'envoi
+            const dateEnvoiSection = document.querySelector('[name="devis_date_envoi"]');
+            if (dateEnvoiSection) {
+              dateEnvoiSection.closest('.info-card, div').scrollIntoView({ behavior: 'smooth', block: 'center' });
+              dateEnvoiSection.focus();
+              dateEnvoiSection.style.border = '2px solid var(--danger)';
+              setTimeout(() => {
+                dateEnvoiSection.style.border = '';
+              }, 2000);
+            }
+            
             return false;
+            {% endif %}
+            
+            // Confirmation pour refus
+            if (action === 'refuser') {
+              return confirm('⚠️ Confirmer le refus du devis ?\n\nVous pourrez créer un nouveau devis modifié juste après.');
+            }
+            
+            return true;
           }
-          
-          // Copier la date dans le champ caché du formulaire correspondant
-          document.getElementById('date-envoi-' + action).value = dateValue;
-          
-          // Confirmation pour refus
-          if (action === 'refuser') {
-            return confirm('⚠️ Êtes-vous sûr de vouloir marquer ce devis comme refusé ?');
-          }
-          
-          return true;
-        }
-        </script>
+          </script>
+
         </div>
         
         <!-- ═══════════════════════════════════════════════
@@ -1135,30 +1134,70 @@
             ÉTAT 4 : DEVIS REFUSÉ
             ═══════════════════════════════════════════════ -->
         {% elif operation.devis_statut == 'refuse' %}
-        
-        <div class="alert danger" style="margin-bottom: 1rem;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
-          <div>
-            <strong>❌ Devis {{ operation.numero_devis }} refusé par le client</strong><br>
-            Montant : {{ montant_total }} € • Date de refus : {{ operation.devis_date_reponse|date:"d/m/Y" }}
+
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 2rem;">
+          
+          <!-- Alerte refus -->
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="width: 48px; height: 48px; background: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                <path d="M18 6 6 18M6 6l12 12"/>
+              </svg>
+            </div>
+            <div>
+              <h3 style="margin: 0; color: #92400e; font-size: 1.2rem; font-weight: 700;">
+                Devis {{ operation.numero_devis }} refusé
+              </h3>
+              <p style="margin: 0.25rem 0 0 0; color: #92400e; font-size: 0.9rem;">
+                Montant : {{ montant_total }} € • Date de refus : {{ operation.devis_date_reponse|date:"d/m/Y" }}
+              </p>
+            </div>
           </div>
+          
+          <!-- Options -->
+          <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem;">
+            <h4 style="margin: 0 0 1rem 0; color: #92400e; font-size: 1rem; font-weight: 600;">
+              🔄 Que souhaitez-vous faire ?
+            </h4>
+            
+            <div style="display: grid; gap: 1rem;">
+              <!-- Option 1 : Créer nouveau devis -->
+              {% if operation.peut_creer_nouveau_devis %}
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="creer_nouveau_devis">
+                <button type="submit" class="btn primary" style="width: 100%; padding: 1rem; justify-content: center;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                  📝 Créer un nouveau devis modifié
+                </button>
+              </form>
+              <small style="color: #92400e; font-size: 0.85rem; text-align: center; display: block; margin-top: -0.5rem;">
+                💡 Vous pourrez modifier les lignes et le montant
+              </small>
+              {% endif %}
+              
+              <!-- Option 2 : Abandonner -->
+              <a href="{% url 'operations' %}" class="btn" style="width: 100%; padding: 1rem; justify-content: center; text-decoration: none;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Retour aux opérations (abandonner)
+              </a>
+            </div>
+          </div>
+          
+          <!-- Archive ancien devis -->
+          {% if operation.devis_historique_numeros %}
+          <div style="background: rgba(255,255,255,0.5); border-radius: 8px; padding: 1rem;">
+            <small style="color: #92400e; font-size: 0.85rem;">
+              📦 <strong>Historique :</strong> {{ operation.devis_historique_numeros }}
+            </small>
+          </div>
+          {% endif %}
         </div>
-        
-        {% if operation.peut_creer_nouveau_devis %}
-        <div style="background: #fef3c7; border: 2px solid #f59e0b; border-radius: 10px; padding: 1.5rem;">
-          <h4 style="margin: 0 0 1rem 0; color: #92400e; font-size: 1rem; font-weight: 600;">🔄 Créer un nouveau devis ?</h4>
-          <p style="margin: 0 0 1rem 0; color: #92400e; font-size: 0.9rem;">
-            Vous pouvez créer un nouveau devis modifié. L'ancien sera archivé.
-          </p>
-          <form method="POST">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="creer_nouveau_devis">
-            <button type="submit" class="btn primary" style="width: 100%; padding: 0.85rem;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-              📝 Créer un nouveau devis
-            </button>
-          </form>
-        </div>
+
         {% endif %}
         
         {% endif %}
