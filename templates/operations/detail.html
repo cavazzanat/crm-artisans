@@ -1036,46 +1036,6 @@
         }
         </script>
         </div>
-
-<script>
-// ✅ SYNCHRONISATION Notes + Validité AVANT envoi
-document.addEventListener('DOMContentLoaded', function() {
-  const formGenererDevis = document.getElementById('form-generer-devis');
-  
-  if (formGenererDevis) {
-    formGenererDevis.addEventListener('submit', function(e) {
-      console.log('📤 Formulaire soumis - Synchronisation en cours...');
-      
-      // 1️⃣ Copier les NOTES
-      const notesTemp = document.getElementById('devis-notes-temp');
-      const notesHidden = document.getElementById('devis-notes-hidden');
-      
-      if (notesTemp && notesHidden) {
-        notesHidden.value = notesTemp.value;
-        console.log('✅ Notes copiées:', notesTemp.value);
-      } else {
-        console.error('❌ Champs notes introuvables !');
-      }
-      
-      // 2️⃣ Copier la VALIDITÉ
-      const validiteTemp = document.getElementById('devis-validite-temp');
-      const validiteHidden = document.getElementById('devis-validite-hidden');
-      
-      if (validiteTemp && validiteHidden) {
-        validiteHidden.value = validiteTemp.value;
-        console.log('✅ Validité copiée:', validiteTemp.value);
-      } else {
-        console.error('❌ Champs validité introuvables !');
-      }
-      
-      // ✅ Laisser le formulaire se soumettre normalement
-      return true;
-    });
-  } else {
-    console.error('❌ Formulaire form-generer-devis introuvable !');
-  }
-});
-</script>
         
         <!-- ═══════════════════════════════════════════════
             ÉTAT 3 : DEVIS ACCEPTÉ (lecture seule)
@@ -1139,6 +1099,52 @@ document.addEventListener('DOMContentLoaded', function() {
     <!-- ========================================
         FIN SECTION DEVIS
         ======================================== -->
+
+<!-- ✅ SCRIPT DE SYNCHRONISATION (DÉPLACÉ ICI POUR ÊTRE SÛR QU'IL S'EXÉCUTE) -->
+<script>
+(function() {
+  // Attendre que tout le DOM soit chargé
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initSyncDevis);
+  } else {
+    initSyncDevis();
+  }
+  
+  function initSyncDevis() {
+    const formGenererDevis = document.getElementById('form-generer-devis');
+    
+    if (formGenererDevis) {
+      console.log('✅ Formulaire trouvé, installation du listener...');
+      
+      formGenererDevis.addEventListener('submit', function(e) {
+        console.log('📤 Formulaire soumis - Synchronisation en cours...');
+        
+        // 1️⃣ Copier les NOTES
+        const notesTemp = document.getElementById('devis-notes-temp');
+        const notesHidden = document.getElementById('devis-notes-hidden');
+        
+        if (notesTemp && notesHidden) {
+          notesHidden.value = notesTemp.value;
+          console.log('✅ Notes copiées:', notesTemp.value);
+        }
+        
+        // 2️⃣ Copier la VALIDITÉ
+        const validiteTemp = document.getElementById('devis-validite-temp');
+        const validiteHidden = document.getElementById('devis-validite-hidden');
+        
+        if (validiteTemp && validiteHidden) {
+          validiteHidden.value = validiteTemp.value;
+          console.log('✅ Validité copiée:', validiteTemp.value);
+        }
+      });
+      
+      console.log('✅ Listener installé avec succès');
+    } else {
+      console.log('ℹ️ Formulaire form-generer-devis non présent dans cette page (normal si devis déjà généré)');
+    }
+  }
+})();
+</script>
 
     <!-- ========================================
         LIGNES DU DEVIS (visible seulement si devis envoyé OU pas de devis)
