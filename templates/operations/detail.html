@@ -772,7 +772,7 @@
           </div>
           
           <!-- Bouton Générer le devis -->
-          <form method="POST" id="form-generer-devis">
+          <form method="POST" id="form-generer-devis" onsubmit="return validateDevisGeneration()">
             {% csrf_token %}
             <input type="hidden" name="action" value="generer_devis">
             <input type="hidden" name="devis_notes" id="devis-notes-hidden">
@@ -842,93 +842,202 @@
             {% endif %}
           </div>
           
-          <!-- Section Date -->
-          <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #3b82f6; border-radius: 10px; padding: 1.5rem; margin-bottom: 2rem;">
-            <h4 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 700;">📅 Section Date ici :</h4>
+          <!-- ═══════════════════════════════════════════════
+            SECTION GESTION DU DEVIS - VERSION CLAIRE
+            ═══════════════════════════════════════════════ -->
+        <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
+          
+          <!-- En-tête -->
+          <h4 style="margin: 0 0 1.5rem 0; color: #1e40af; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+            </svg>
+            Gestion du devis
+          </h4>
+
+          <!-- ============================
+              ÉTAPE 1 : TÉLÉCHARGER LE PDF
+              ============================ -->
+          <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #bfdbfe;">
+            <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+              <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">1</span>
+              Télécharger le devis PDF
+            </h5>
+            <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
+              💡 Téléchargez le devis au format PDF pour l'envoyer à votre client.
+            </p>
+            <button type="button" class="btn primary" style="width: 100%; padding: 0.85rem;" onclick="alert('⚠️ Fonctionnalité PDF en cours de développement (Phase 4)')">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+              </svg>
+              📥 Télécharger le PDF
+            </button>
+          </div>
+
+          <!-- ============================
+              ÉTAPE 2 : ENREGISTRER L'ENVOI
+              ============================ -->
+          <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #bfdbfe;">
+            <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+              <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">2</span>
+              Enregistrer la date d'envoi au client
+            </h5>
+            <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
+              💡 Une fois le devis envoyé au client (email, courrier, etc.), enregistrez la date d'envoi.
+            </p>
             
-            <div style="display: grid; gap: 1rem; margin-bottom: 1rem;">
+            <div style="display: grid; gap: 1rem;">
               <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">Date d'envoi</label>
+                <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
+                  📅 Date d'envoi au client <span style="color: #ef4444;">*</span>
+                </label>
                 <input type="date" 
                       id="devis-date-envoi-input" 
                       class="input" 
                       value="{{ operation.devis_date_envoi|date:'Y-m-d'|default:'' }}"
-                      style="background: white;">
+                      style="background: white;"
+                      required>
+                <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem;">
+                  ℹ️ Date à laquelle vous avez envoyé le devis au client
+                </small>
               </div>
               
               <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">Nb de jours avant réception :</label>
+                <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
+                  ⏳ Validité du devis
+                </label>
                 <input type="text" 
                       class="input" 
                       value="{{ operation.devis_validite_jours|default:30 }} jours" 
                       readonly 
                       style="background: #dbeafe; cursor: not-allowed; color: #1e40af; font-weight: 600;">
                 <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem;">
-                  💡 Calculé automatiquement selon la validité du devis
+                  💡 Le client a {{ operation.devis_validite_jours|default:30 }} jours pour répondre
                 </small>
               </div>
             </div>
           </div>
-          
-          <!-- Devis accepté ou non ? -->
-          <div style="background: #f8fafc; border: 2px solid var(--border); border-radius: 10px; padding: 1.5rem;">
-            <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 700;">Devis accepté ou non ?</h4>
+
+          <!-- ============================
+              ÉTAPE 3 : RÉPONSE DU CLIENT
+              ============================ -->
+          <div style="background: white; border-radius: 10px; padding: 1.5rem; border: 1px solid #bfdbfe;">
+            <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
+              <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">3</span>
+              Enregistrer la réponse du client
+            </h5>
+            <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
+              💡 Une fois que le client a répondu, cliquez sur le bouton correspondant.
+            </p>
             
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-              <form method="POST">
+              <form method="POST" onsubmit="return validateAndSubmit('accepter')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="accepter_devis">
                 <input type="hidden" name="devis_date_envoi" id="date-envoi-accepter">
-                <button type="submit" class="btn success" style="width: 100%; padding: 0.85rem; font-weight: 600;" onclick="return validateDateEnvoi('accepter')">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                  ✅ Accepter
+                <button type="submit" class="btn success" style="width: 100%; padding: 0.85rem; font-weight: 600;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="m5 12 4 4 10-10"/>
+                  </svg>
+                  ✅ Accepté
                 </button>
               </form>
               
-              <form method="POST">
+              <form method="POST" onsubmit="return validateAndSubmit('refuser')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="refuser_devis">
                 <input type="hidden" name="devis_date_envoi" id="date-envoi-refuser">
-                <button type="submit" class="btn danger" style="width: 100%; padding: 0.85rem; font-weight: 600;" onclick="return validateDateEnvoi('refuser')">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
-                  ❌ Refuser
+                <button type="submit" class="btn danger" style="width: 100%; padding: 0.85rem; font-weight: 600;">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M18 6 6 18M6 6l12 12"/>
+                  </svg>
+                  ❌ Refusé
                 </button>
               </form>
               
-              <form method="POST">
+              <form method="POST" onsubmit="return validateAndSubmit('relancer')">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="relancer_devis">
                 <input type="hidden" name="devis_date_envoi" id="date-envoi-relancer">
-                <button type="submit" class="btn" style="width: 100%; padding: 0.85rem; font-weight: 600; background: var(--warning); color: white; border-color: var(--warning);" onclick="return validateDateEnvoi('relancer')">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9" stroke="currentColor" stroke-width="1.6"/></svg>
+                <button type="submit" class="btn" style="width: 100%; padding: 0.85rem; font-weight: 600; background: var(--warning); color: white; border-color: var(--warning);">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0 1 18 14.158V11a6.002 6.002 0 0 0-4-5.659V5a2 2 0 1 0-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 1 1-6 0v-1m6 0H9"/>
+                  </svg>
                   🔔 Relancer
                 </button>
               </form>
             </div>
           </div>
-          
-          <script>
-          function validateDateEnvoi(action) {
-            const dateInput = document.getElementById('devis-date-envoi-input');
-            const dateValue = dateInput.value;
-            
-            if (!dateValue) {
-              showToast('⚠️ Veuillez renseigner la date d\'envoi avant de valider', 'warning');
-              dateInput.focus();
-              dateInput.style.border = '2px solid var(--danger)';
-              setTimeout(() => {
-                dateInput.style.border = '';
-              }, 2000);
-              return false;
-            }
-            
-            // Copier la date dans le champ caché du formulaire correspondant
-            document.getElementById('date-envoi-' + action).value = dateValue;
-            return true;
-          }
-          </script>
-          
         </div>
+
+        <script>
+        // ✅ NOUVELLE FONCTION DE VALIDATION UNIFIÉE
+        function validateAndSubmit(action) {
+          const dateInput = document.getElementById('devis-date-envoi-input');
+          const dateValue = dateInput.value;
+          
+          if (!dateValue) {
+            showToast('⚠️ Veuillez renseigner la date d\'envoi avant de valider', 'warning');
+            dateInput.focus();
+            dateInput.style.border = '2px solid var(--danger)';
+            setTimeout(() => {
+              dateInput.style.border = '';
+            }, 2000);
+            return false;
+          }
+          
+          // Copier la date dans le champ caché du formulaire correspondant
+          document.getElementById('date-envoi-' + action).value = dateValue;
+          
+          // Confirmation pour refus
+          if (action === 'refuser') {
+            return confirm('⚠️ Êtes-vous sûr de vouloir marquer ce devis comme refusé ?');
+          }
+          
+          return true;
+        }
+        </script>
+        </div>
+
+<script>
+// ✅ SYNCHRONISATION Notes + Validité AVANT envoi
+document.addEventListener('DOMContentLoaded', function() {
+  const formGenererDevis = document.getElementById('form-generer-devis');
+  
+  if (formGenererDevis) {
+    formGenererDevis.addEventListener('submit', function(e) {
+      console.log('📤 Formulaire soumis - Synchronisation en cours...');
+      
+      // 1️⃣ Copier les NOTES
+      const notesTemp = document.getElementById('devis-notes-temp');
+      const notesHidden = document.getElementById('devis-notes-hidden');
+      
+      if (notesTemp && notesHidden) {
+        notesHidden.value = notesTemp.value;
+        console.log('✅ Notes copiées:', notesTemp.value);
+      } else {
+        console.error('❌ Champs notes introuvables !');
+      }
+      
+      // 2️⃣ Copier la VALIDITÉ
+      const validiteTemp = document.getElementById('devis-validite-temp');
+      const validiteHidden = document.getElementById('devis-validite-hidden');
+      
+      if (validiteTemp && validiteHidden) {
+        validiteHidden.value = validiteTemp.value;
+        console.log('✅ Validité copiée:', validiteTemp.value);
+      } else {
+        console.error('❌ Champs validité introuvables !');
+      }
+      
+      // ✅ Laisser le formulaire se soumettre normalement
+      return true;
+    });
+  } else {
+    console.error('❌ Formulaire form-generer-devis introuvable !');
+  }
+});
+</script>
         
         <!-- ═══════════════════════════════════════════════
             ÉTAT 3 : DEVIS ACCEPTÉ (lecture seule)
@@ -2222,6 +2331,21 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+</script>
+
+<script>
+function validateDevisGeneration() {
+  const interventionsCount = {{ interventions.count|default:0 }};
+  
+  if (interventionsCount === 0) {
+    const confirmer = confirm('⚠️ ATTENTION : Vous allez générer un devis SANS lignes.\n\n' +
+                              '💡 Conseil : Ajoutez des lignes avant de l\'envoyer au client.\n\n' +
+                              'Continuer quand même ?');
+    return confirmer;
+  }
+  
+  return true;
+}
 </script>
 </body>
 </html>
