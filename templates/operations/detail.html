@@ -890,28 +890,66 @@
           
           {% if not operation.devis_date_envoi %}
           <!-- Formulaire d'enregistrement de la date -->
-          <form method="POST" id="form-enregistrer-date-envoi">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="enregistrer_date_envoi">
-            
-            <div style="display: grid; gap: 1rem;">
-              <div>
-                <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
-                  📅 Date d'envoi au client <span style="color: #ef4444;">*</span>
-                </label>
-                <input type="date" 
-                      id="devis-date-envoi-temp" 
-                      name="devis_date_envoi"
-                      class="input" 
-                      value="{{ now|date:'Y-m-d' }}"
-                      style="background: white;"
-                      required>
-                <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem;">
-                  ℹ️ Date à laquelle vous envoyez le devis au client
-                </small>
-              </div>
+          <div style="display: grid; gap: 1rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
+                📅 Date d'envoi au client <span style="color: #ef4444;">*</span>
+              </label>
+              <input type="date" 
+                    id="devis-date-envoi-temp" 
+                    name="devis_date_envoi"
+                    class="input" 
+                    value="{{ now|date:'Y-m-d' }}"
+                    style="background: white;"
+                    required>
+              <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem;">
+                ℹ️ Date à laquelle vous envoyez le devis au client
+              </small>
             </div>
             
+            <!-- ✅ NOUVEAU : Rappel de la validité -->
+            <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 1rem;">
+              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+                <strong style="color: #1e40af; font-size: 0.9rem;">Rappel - Validité du devis</strong>
+              </div>
+              <p style="margin: 0; color: #1e40af; font-size: 0.95rem;">
+                ⏳ Ce devis est valable <strong>{{ operation.devis_validite_jours|default:30 }} jours</strong>
+              </p>
+              <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem; opacity: 0.8;">
+                💡 Le client aura jusqu'au <strong id="date-expiration-preview">...</strong> pour répondre
+              </small>
+            </div>
+          </div>
+
+          <!-- Script pour calculer la date d'expiration en temps réel -->
+          <script>
+          (function() {
+            const dateInput = document.getElementById('devis-date-envoi-temp');
+            const expirationPreview = document.getElementById('date-expiration-preview');
+            const validiteJours = {{ operation.devis_validite_jours|default:30 }};
+            
+            function updateExpirationPreview() {
+              if (!dateInput.value) return;
+              
+              const dateEnvoi = new Date(dateInput.value);
+              const dateExpiration = new Date(dateEnvoi);
+              dateExpiration.setDate(dateExpiration.getDate() + validiteJours);
+              
+              const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+              expirationPreview.textContent = dateExpiration.toLocaleDateString('fr-FR', options);
+            }
+            
+            // Calculer au chargement
+            updateExpirationPreview();
+            
+            // Recalculer quand la date change
+            dateInput.addEventListener('change', updateExpirationPreview);
+          })();
+          </script>  
             <button type="submit" class="btn success" style="width: 100%; margin-top: 1rem; padding: 0.85rem; font-weight: 600;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="m5 12 4 4 10-10"/>
