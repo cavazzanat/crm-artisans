@@ -455,18 +455,13 @@ def operation_detail(request, operation_id):
     
     if request.method == 'POST':
         action = request.POST.get('action')
-        
-        # ========================================
-        # NOUVELLES ACTIONS DEVIS (PHASE 3)
-        # ========================================
 
         # ═══════════════════════════════════════
-        # ACTION : MARQUER DEVIS COMME ENVOYÉ
+        # ACTION : GÉNÉRER LE DEVIS
         # ═══════════════════════════════════════
-        if action == 'marquer_devis_envoye':
+        if action == 'generer_devis':
             from datetime import datetime
             
-            devis_date_envoi_str = request.POST.get('devis_date_envoi', '')
             devis_notes = request.POST.get('devis_notes', '').strip()
             devis_validite_jours = request.POST.get('devis_validite_jours', '30')
             
@@ -481,7 +476,6 @@ def operation_detail(request, operation_id):
                 ).order_by('-numero_devis')
                 
                 if derniers_devis.exists():
-                    # Extraire le numéro du dernier devis (ex: DEVIS-2025-00042 → 42)
                     dernier_numero_str = derniers_devis.first().numero_devis.split('-')[-1]
                     dernier_numero = int(dernier_numero_str)
                     nouveau_numero = dernier_numero + 1
@@ -490,13 +484,6 @@ def operation_detail(request, operation_id):
                 
                 # Format avec zéro padding (ex: DEVIS-2025-00001)
                 operation.numero_devis = f'DEVIS-{annee_courante}-{nouveau_numero:05d}'
-                
-                # Enregistrer les données
-                if devis_date_envoi_str:
-                    operation.devis_date_envoi = datetime.strptime(devis_date_envoi_str, '%Y-%m-%d').date()
-                else:
-                    operation.devis_date_envoi = datetime.now().date()
-                
                 operation.devis_notes = devis_notes
                 
                 try:
@@ -517,16 +504,17 @@ def operation_detail(request, operation_id):
                 # Historique
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=f"📄 Devis {operation.numero_devis} créé et envoyé au client - Montant : {operation.montant_total}€ - Validité : {operation.devis_validite_jours} jours",
+                    action=f"📄 Devis {operation.numero_devis} généré - Montant : {operation.montant_total}€ - Validité : {operation.devis_validite_jours} jours",
                     utilisateur=request.user
                 )
                 
-                messages.success(request, f"✅ Devis {operation.numero_devis} marqué comme envoyé !")
+                messages.success(request, f"✅ Devis {operation.numero_devis} généré avec succès ! Renseignez la date d'envoi pour valider.")
                 
             except Exception as e:
-                messages.error(request, f"❌ Erreur lors de la création du devis : {str(e)}")
+                messages.error(request, f"❌ Erreur lors de la génération du devis : {str(e)}")
             
             return redirect('operation_detail', operation_id=operation.id)
+
 
         # ═══════════════════════════════════════
         # ACTION : ACCEPTER LE DEVIS
