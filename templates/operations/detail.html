@@ -722,9 +722,14 @@
             <!-- Formulaire "+ Ajouter une ligne" -->
             <div style="{% if interventions %}border-top: 2px dashed var(--border); padding-top: 1.5rem;{% endif %}">
               <h5 style="margin: 0 0 0.75rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">+ Ajouter une ligne</h5>
-              <form method="POST">
+              <form method="POST" onsubmit="syncNotesValidite()">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="add_intervention">
+                
+                <!-- ✅ NOUVEAUX CHAMPS CACHÉS : Notes et Validité -->
+                <input type="hidden" name="devis_notes_temp" id="hidden-notes">
+                <input type="hidden" name="devis_validite_temp" id="hidden-validite">
+                
                 <div style="display: grid; grid-template-columns: 1fr 150px 100px; gap: 0.75rem; align-items: center;">
                   <input type="text" 
                         name="description" 
@@ -820,14 +825,27 @@
                   <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Montant</th>
                 </tr>
               </thead>
-              <tbody>
-                {% for intervention in interventions %}
-                <tr style="border-bottom: 1px solid var(--border);">
-                  <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.montant }} €</td>
-                </tr>
-                {% endfor %}
-              </tbody>
+                <tbody>
+                  {% for intervention in interventions %}
+                  <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
+                    <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.montant }} €</td>
+                    <td style="padding: 0.75rem 0.5rem; text-align: center;">
+                      <form method="POST" style="display:inline" onsubmit="syncNotesValidite(); return confirm('Supprimer cette ligne ?')">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="delete_intervention">
+                        <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
+                        
+                        <!-- ✅ NOUVEAUX CHAMPS CACHÉS -->
+                        <input type="hidden" name="devis_notes_temp" id="hidden-notes-del-{{ intervention.id }}">
+                        <input type="hidden" name="devis_validite_temp" id="hidden-validite-del-{{ intervention.id }}">
+                        
+                        <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="syncNotesValiditeForDelete({{ intervention.id }})">×</button>
+                      </form>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
               <tfoot>
                 <tr style="border-top: 2px solid var(--border);">
                   <td style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem;">MONTANT TOTAL</td>
@@ -1222,39 +1240,40 @@
     initSyncDevis();
   }
   
-  function initSyncDevis() {
-    const formGenererDevis = document.getElementById('form-generer-devis');
+function initSyncDevis() {
+  const formGenererDevis = document.getElementById('form-generer-devis');
+  
+  if (formGenererDevis) {
+    console.log('✅ Formulaire trouvé, installation du listener...');
     
-    if (formGenererDevis) {
-      console.log('✅ Formulaire trouvé, installation du listener...');
+    formGenererDevis.addEventListener('submit', function(e) {
+      console.log('📤 Formulaire soumis - Synchronisation en cours...');
       
-      formGenererDevis.addEventListener('submit', function(e) {
-        console.log('📤 Formulaire soumis - Synchronisation en cours...');
-        
-        // 1️⃣ Copier les NOTES
-        const notesTemp = document.getElementById('devis-notes-temp');
-        const notesHidden = document.getElementById('devis-notes-hidden');
-        
-        if (notesTemp && notesHidden) {
-          notesHidden.value = notesTemp.value;
-          console.log('✅ Notes copiées:', notesTemp.value);
-        }
-        
-        // 2️⃣ Copier la VALIDITÉ
-        const validiteTemp = document.getElementById('devis-validite-temp');
-        const validiteHidden = document.getElementById('devis-validite-hidden');
-        
-        if (validiteTemp && validiteHidden) {
-          validiteHidden.value = validiteTemp.value;
-          console.log('✅ Validité copiée:', validiteTemp.value);
-        }
-      });
+      // ✅ SYNCHRONISATION FINALE (par sécurité)
+      syncNotesValidite();
       
-      console.log('✅ Listener installé avec succès');
-    } else {
-      console.log('ℹ️ Formulaire form-generer-devis non présent dans cette page (normal si devis déjà généré)');
-    }
+      // 1️⃣ Copier les NOTES
+      const notesTemp = document.getElementById('devis-notes-temp');
+      const notesHidden = document.getElementById('devis-notes-hidden');
+      
+      if (notesTemp && notesHidden) {
+        notesHidden.value = notesTemp.value;
+        console.log('✅ Notes copiées:', notesTemp.value);
+      }
+      
+      // 2️⃣ Copier la VALIDITÉ
+      const validiteTemp = document.getElementById('devis-validite-temp');
+      const validiteHidden = document.getElementById('devis-validite-hidden');
+      
+      if (validiteTemp && validiteHidden) {
+        validiteHidden.value = validiteTemp.value;
+        console.log('✅ Validité copiée:', validiteTemp.value);
+      }
+    });
+    
+    console.log('✅ Listener installé avec succès');
   }
+}
 })();
 </script>
 
@@ -2487,6 +2506,60 @@ style.textContent = `
 `;
 document.head.appendChild(style);
 
+</script>
+
+<script>
+// ========================================
+// SYNCHRONISATION NOTES & VALIDITÉ
+// ========================================
+
+function syncNotesValidite() {
+  const notes = document.getElementById('devis-notes-temp')?.value || '';
+  const validite = document.getElementById('devis-validite-temp')?.value || 30;
+  
+  // Synchroniser avec les champs cachés du formulaire d'ajout
+  const hiddenNotes = document.getElementById('hidden-notes');
+  const hiddenValidite = document.getElementById('hidden-validite');
+  
+  if (hiddenNotes) hiddenNotes.value = notes;
+  if (hiddenValidite) hiddenValidite.value = validite;
+  
+  console.log('✅ Sync avant soumission:', { notes, validite });
+}
+
+function syncNotesValiditeForDelete(interventionId) {
+  const notes = document.getElementById('devis-notes-temp')?.value || '';
+  const validite = document.getElementById('devis-validite-temp')?.value || 30;
+  
+  // Synchroniser avec les champs cachés du formulaire de suppression
+  const hiddenNotes = document.getElementById(`hidden-notes-del-${interventionId}`);
+  const hiddenValidite = document.getElementById(`hidden-validite-del-${interventionId}`);
+  
+  if (hiddenNotes) hiddenNotes.value = notes;
+  if (hiddenValidite) hiddenValidite.value = validite;
+}
+
+// ========================================
+// SCROLL AUTOMATIQUE VERS LA SECTION DEVIS
+// ========================================
+
+window.addEventListener('DOMContentLoaded', function() {
+  // Si un message de succès pour ligne ajoutée/supprimée, scroller vers le devis
+  const messages = document.getElementById('django-messages');
+  if (messages) {
+    const hasLineMessage = Array.from(messages.querySelectorAll('[data-message]'))
+      .some(msg => msg.dataset.message.includes('Ligne'));
+    
+    if (hasLineMessage) {
+      const devisSection = document.getElementById('section-devis');
+      if (devisSection) {
+        setTimeout(() => {
+          devisSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    }
+  }
+});
 </script>
 
 <script>

@@ -871,15 +871,21 @@ def operation_detail(request, operation_id):
                 messages.success(request, f"Statut mis à jour : {operation.get_statut_display()}")
                 return redirect('operation_detail', operation_id=operation.id)
 
+        # ========================================
         # GESTION DES INTERVENTIONS
+        # ========================================
         elif action == 'add_intervention':
             description = request.POST.get('description', '').strip()
             montant_str = request.POST.get('montant', '').strip()
             
+            # ✅ NOUVEAU : Récupérer notes et validité
+            devis_notes_temp = request.POST.get('devis_notes_temp')
+            devis_validite_temp = request.POST.get('devis_validite_temp')
+            
             if description and montant_str:
                 try:
-                    from decimal import Decimal  # ✅ AJOUT
-                    montant = Decimal(montant_str)  # ✅ CORRECTION
+                    from decimal import Decimal
+                    montant = Decimal(montant_str)
                     
                     dernier_ordre = operation.interventions.aggregate(
                         max_ordre=Max('ordre')
@@ -891,6 +897,16 @@ def operation_detail(request, operation_id):
                         montant=montant,
                         ordre=dernier_ordre + 1
                     )
+                    
+                    # ✅ NOUVEAU : Sauvegarder notes et validité AVANT le redirect
+                    if not operation.numero_devis and operation.avec_devis:
+                        if devis_notes_temp is not None:
+                            operation.devis_notes = devis_notes_temp
+                        if devis_validite_temp is not None:
+                            operation.devis_validite_jours = int(devis_validite_temp)
+                        
+                        operation.save(update_fields=['devis_notes', 'devis_validite_jours'])
+                        print(f"✅ Notes/Validité sauvegardées: notes='{operation.devis_notes}', validité={operation.devis_validite_jours}")
                     
                     HistoriqueOperation.objects.create(
                         operation=operation,
@@ -922,9 +938,15 @@ def operation_detail(request, operation_id):
             
             messages.success(request, "Commentaires enregistrés avec succès")
             return redirect('operation_detail', operation_id=operation.id)
+        
 
         elif action == 'delete_intervention':
             intervention_id = request.POST.get('intervention_id')
+            
+            # ✅ NOUVEAU : Récupérer notes et validité
+            devis_notes_temp = request.POST.get('devis_notes_temp')
+            devis_validite_temp = request.POST.get('devis_validite_temp')
+            
             try:
                 intervention = Intervention.objects.get(
                     id=intervention_id, 
@@ -932,6 +954,16 @@ def operation_detail(request, operation_id):
                 )
                 description = intervention.description
                 intervention.delete()
+                
+                # ✅ NOUVEAU : Sauvegarder notes et validité AVANT le redirect
+                if not operation.numero_devis and operation.avec_devis:
+                    if devis_notes_temp is not None:
+                        operation.devis_notes = devis_notes_temp
+                    if devis_validite_temp is not None:
+                        operation.devis_validite_jours = int(devis_validite_temp)
+                    
+                    operation.save(update_fields=['devis_notes', 'devis_validite_jours'])
+                    print(f"✅ Notes/Validité sauvegardées après suppression: notes='{operation.devis_notes}', validité={operation.devis_validite_jours}")
                 
                 HistoriqueOperation.objects.create(
                     operation=operation,
