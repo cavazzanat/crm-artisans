@@ -1130,28 +1130,98 @@
         </div>
         
         <!-- ═══════════════════════════════════════════════
-            ÉTAT 3 : DEVIS ACCEPTÉ (lecture seule)
+            ÉTAT 3 : DEVIS ACCEPTÉ (RESTE OUVERT)
             ═══════════════════════════════════════════════ -->
         {% elif operation.devis_statut == 'accepte' %}
         
-        <div class="alert success" style="margin-bottom: 1rem;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-          <div>
-            <strong>✅ Devis {{ operation.numero_devis }} accepté par le client !</strong><br>
-            Montant : {{ montant_total }} € • Envoyé le {{ operation.devis_date_envoi|date:"d/m/Y" }}
+        <div style="border: 2px solid var(--success); border-radius: 12px; padding: 2rem; background: white;">
+          
+          <!-- En-tête avec badge accepté -->
+          <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+            <h3 style="margin: 0; color: var(--success); font-size: 1.3rem; font-weight: 700;">
+              Devis N° {{ operation.numero_devis }}
+            </h3>
+            <div style="background: var(--success); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="m5 12 4 4 10-10"/>
+              </svg>
+              Accepté le {{ operation.devis_date_reponse|date:"d/m/Y" }}
+            </div>
           </div>
-        </div>
-        
-        <div class="info-card" style="background: #f0fdf4; border-color: #a7f3d0;">
-          <div class="label" style="color: var(--success);">🔒 Montant verrouillé</div>
-          <div class="value" style="font-size:1.5rem; font-weight:700; color:var(--success)">
-            {{ montant_total }} €
+          
+          <!-- Lignes du devis (lecture seule) -->
+          <div style="margin-bottom: 2rem;">
+            <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 600;">Lignes du devis</h4>
+            <table style="width: 100%; border-collapse: collapse;">
+              <thead>
+                <tr style="border-bottom: 2px solid var(--border);">
+                  <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Description</th>
+                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Montant</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for intervention in interventions %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                  <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.montant }} €</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+              <tfoot>
+                <tr style="border-top: 2px solid var(--border); background: #f0fdf4;">
+                  <td style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem; color: var(--success);">MONTANT TOTAL 🔒</td>
+                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--success);">{{ montant_total }} €</td>
+                </tr>
+              </tfoot>
+            </table>
+            
+            {% if operation.devis_notes %}
+            <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
+              <strong style="font-size: 0.85rem; color: var(--muted);">📝 Notes :</strong>
+              <p style="margin: 0.5rem 0 0 0; color: var(--text); font-size: 0.9rem;">{{ operation.devis_notes }}</p>
+            </div>
+            {% endif %}
           </div>
-          <small style="display:block; margin-top:0.5rem; color: var(--success); font-size:0.85rem">
-            Le statut est passé automatiquement à "À planifier"
-          </small>
+          
+          <!-- Informations acceptation -->
+          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid var(--success); border-radius: 10px; padding: 1.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+              
+              <div>
+                <div style="color: var(--success); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">📅 Date d'envoi</div>
+                <div style="color: #065f46; font-size: 1rem; font-weight: 700;">{{ operation.devis_date_envoi|date:"d/m/Y" }}</div>
+              </div>
+              
+              <div>
+                <div style="color: var(--success); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">✅ Date d'acceptation</div>
+                <div style="color: #065f46; font-size: 1rem; font-weight: 700;">{{ operation.devis_date_reponse|date:"d/m/Y" }}</div>
+              </div>
+              
+              {% if operation.devis_date_envoi and operation.devis_date_reponse %}
+              <div>
+                <div style="color: var(--success); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">⏱️ Délai de réponse</div>
+                <div style="color: #065f46; font-size: 1rem; font-weight: 700;">
+                  {% widthratio operation.devis_date_reponse|date:"U" 1 1 as date_reponse_unix %}
+                  {% widthratio operation.devis_date_envoi|date:"U" 1 1 as date_envoi_unix %}
+                  {% widthratio date_reponse_unix|add:"-"|add:date_envoi_unix 86400 1 as delai_jours %}
+                  {{ delai_jours }} jour{{ delai_jours|pluralize }}
+                </div>
+              </div>
+              {% endif %}
+              
+              <div>
+                <div style="color: var(--success); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">🔒 Statut</div>
+                <div style="color: #065f46; font-size: 1rem; font-weight: 700;">Montant verrouillé</div>
+              </div>
+              
+            </div>
+            
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(34,197,94,0.2); color: #065f46; font-size: 0.85rem;">
+              ℹ️ Le statut de l'opération est passé automatiquement à <strong>"À planifier"</strong>
+            </div>
+          </div>
+          
         </div>
-        
         <!-- ═══════════════════════════════════════════════
             ÉTAT 4 : DEVIS REFUSÉ
             ═══════════════════════════════════════════════ -->
@@ -1279,8 +1349,9 @@ function initSyncDevis() {
 
     <!-- ========================================
         LIGNES DU DEVIS (visible seulement si devis envoyé OU pas de devis)
+        ⚠️ MASQUÉ si le devis est accepté (pour éviter le doublon)
         ======================================== -->
-    {% if not operation.avec_devis or operation.statut != 'en_attente_devis' %}
+    {% if operation.devis_statut != 'accepte' and (not operation.avec_devis or operation.statut != 'en_attente_devis') %}
     <section class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <h2 class="section-title">
@@ -2368,12 +2439,20 @@ if (modePaiementSelect) {
       
       let shouldOpen = false;
       
+      // ✅ NOUVEAU : Logique d'ouverture des sections selon le statut
+      const devisStatut = '{{ operation.devis_statut }}';
+      
       switch(statut) {
         case 'en_attente_devis':
-          shouldOpen = title.includes('Devis');  // ← NOUVEAU TITRE (plus court)
+          shouldOpen = title.includes('Devis');
           break;
         case 'a_planifier':
-          shouldOpen = title.includes('Devis / Opération - Lignes') || title.includes('Planification');
+          // ✅ Si devis accepté, ouvrir la section Devis + Planification
+          if (devisStatut === 'accepte') {
+            shouldOpen = title.includes('Devis') || title.includes('Planification');
+          } else {
+            shouldOpen = title.includes('Planification');
+          }
           break;
         case 'planifie':
           shouldOpen = title.includes('Planification');
@@ -2385,7 +2464,7 @@ if (modePaiementSelect) {
           shouldOpen = title.includes('Paiement');
           break;
         case 'devis_refuse':
-          shouldOpen = title.includes('Devis');  // ← Idem
+          shouldOpen = title.includes('Devis');
           break;
         default:
           shouldOpen = title.includes('Informations générales');

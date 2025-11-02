@@ -563,40 +563,31 @@ def operation_detail(request, operation_id):
         elif action == 'accepter_devis':
             from datetime import datetime
             
-            date_reponse_str = request.POST.get('date_reponse', '')
+            # ✅ NOUVEAU : Date automatique = aujourd'hui
+            operation.devis_date_reponse = datetime.now().date()
+            operation.devis_statut = 'accepte'
             
-            try:
-                if date_reponse_str:
-                    operation.devis_date_reponse = datetime.strptime(date_reponse_str, '%Y-%m-%d').date()
-                else:
-                    operation.devis_date_reponse = datetime.now().date()
-                
-                operation.devis_statut = 'accepte'
-                
-                # Changer automatiquement le statut de l'opération
-                if operation.statut == 'en_attente_devis':
-                    operation.statut = 'a_planifier'
-                
-                operation.save()
-                
-                # Calculer le délai de réponse
-                if operation.devis_date_envoi and operation.devis_date_reponse:
-                    delai = (operation.devis_date_reponse - operation.devis_date_envoi).days
-                    delai_texte = f" - Délai de réponse : {delai} jour{'s' if delai > 1 else ''}"
-                else:
-                    delai_texte = ""
-                
-                # Historique
-                HistoriqueOperation.objects.create(
-                    operation=operation,
-                    action=f"✅ Devis {operation.numero_devis} accepté par le client{delai_texte} - Statut passé à 'À planifier'",
-                    utilisateur=request.user
-                )
-                
-                messages.success(request, f"✅ Devis {operation.numero_devis} accepté ! L'opération est maintenant à planifier.")
-                
-            except Exception as e:
-                messages.error(request, f"❌ Erreur : {str(e)}")
+            # Changer automatiquement le statut de l'opération
+            if operation.statut == 'en_attente_devis':
+                operation.statut = 'a_planifier'
+            
+            operation.save()
+            
+            # Calculer le délai de réponse
+            if operation.devis_date_envoi and operation.devis_date_reponse:
+                delai = (operation.devis_date_reponse - operation.devis_date_envoi).days
+                delai_texte = f" - Délai de réponse : {delai} jour{'s' if delai > 1 else ''}"
+            else:
+                delai_texte = ""
+            
+            # Historique
+            HistoriqueOperation.objects.create(
+                operation=operation,
+                action=f"✅ Devis {operation.numero_devis} accepté par le client{delai_texte} - Date d'acceptation : {operation.devis_date_reponse.strftime('%d/%m/%Y')} - Statut passé à 'À planifier'",
+                utilisateur=request.user
+            )
+            
+            messages.success(request, f"✅ Devis {operation.numero_devis} accepté le {operation.devis_date_reponse.strftime('%d/%m/%Y')} ! L'opération est maintenant à planifier.")
             
             return redirect('operation_detail', operation_id=operation.id)
 
