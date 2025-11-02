@@ -1651,6 +1651,257 @@ function initSyncDevis() {
           </div>
         </section>
 
+        <!-- ========================================
+    SECTION FACTURE
+    ======================================== -->
+{% if operation.statut == 'realise' or operation.statut == 'paye' %}
+<section class="section" id="section-facture">
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2 class="section-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+      Facture
+      
+      {% if operation.facture_generee %}
+        {% if operation.statut == 'paye' %}
+          <span class="section-badge complete">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+            {{ operation.numero_facture }}
+          </span>
+        {% else %}
+          <span class="section-badge pending">⏳ En attente paiement</span>
+        {% endif %}
+      {% else %}
+        <span class="section-badge pending">⚠️ Non générée</span>
+      {% endif %}
+    </h2>
+    <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+  
+  <div class="section-body">
+    
+    {% if not operation.facture_generee %}
+    <!-- ═══════════════════════════════════════════════
+        ÉTAT A : FACTURE NON GÉNÉRÉE
+        ═══════════════════════════════════════════════ -->
+    
+    <div style="border: 2px solid var(--warning); border-radius: 12px; padding: 2rem; background: white;">
+      
+      <!-- Message info -->
+      <div class="alert success" style="margin-bottom: 2rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <div>
+          <strong>✅ Intervention réalisée</strong>
+          {% if operation.date_realisation %}
+            <br>Date de réalisation : <strong>{{ operation.date_realisation|date:"d/m/Y à H:i" }}</strong>
+          {% endif %}
+          <br>
+          <small style="opacity: 0.8;">Vous pouvez maintenant générer la facture pour ce client.</small>
+        </div>
+      </div>
+      
+      <!-- Informations facture -->
+      <div style="margin-bottom: 2rem;">
+        <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 600;">
+          Informations de la facture
+        </h4>
+        
+        <div class="info-grid" style="margin-bottom: 1.5rem;">
+          <div class="info-card">
+            <div class="label">📅 Date d'émission</div>
+            <div class="value">
+              <input type="date" 
+                    id="facture-date-emission-temp" 
+                    class="input" 
+                    value="{{ now|date:'Y-m-d' }}"
+                    style="margin: 0;">
+              <small style="display: block; margin-top: 0.5rem; color: var(--muted); font-size: 0.85rem;">
+                💡 Date qui apparaîtra sur la facture
+              </small>
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="label">💰 Montant total</div>
+            <div class="value" style="font-size: 1.5rem; color: var(--primary); font-weight: 700;">
+              {{ montant_total }} €
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notes facture -->
+        <div>
+          <label style="display: block; margin-bottom: 0.5rem; color: var(--text); font-size: 0.9rem; font-weight: 600;">
+            📝 Notes sur la facture (optionnel) :
+          </label>
+          <textarea id="facture-notes-temp" 
+                    class="input" 
+                    rows="3" 
+                    placeholder="Ex: Règlement sous 30 jours, Paiement échelonné convenu..."
+                    style="resize: vertical;">{{ operation.facture_notes|default:'' }}</textarea>
+          <small style="display: block; margin-top: 0.5rem; color: var(--muted); font-size: 0.85rem;">
+            ℹ️ Ces notes apparaîtront en bas de la facture
+          </small>
+        </div>
+      </div>
+      
+      <!-- Bouton générer -->
+      <form method="POST" id="form-generer-facture">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="generer_facture">
+        <input type="hidden" name="facture_date_emission" id="facture-date-hidden">
+        <input type="hidden" name="facture_notes" id="facture-notes-hidden">
+        
+        <button type="submit" 
+                class="btn primary" 
+                style="width: 100%; padding: 1rem; font-size: 1.05rem; font-weight: 600;"
+                onclick="syncFactureData()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          📄 Générer la facture PDF
+        </button>
+      </form>
+      
+      <!-- Info Phase 4 -->
+      <div class="alert info" style="margin-top: 1rem;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+        <div>
+          <strong>💡 Fonctionnalité en développement</strong><br>
+          La génération PDF sera disponible en Phase 4. Pour l'instant, ce bouton prépare les données.
+        </div>
+      </div>
+      
+    </div>
+    
+    {% else %}
+    <!-- ═══════════════════════════════════════════════
+        ÉTAT B : FACTURE GÉNÉRÉE
+        ═══════════════════════════════════════════════ -->
+    
+    <div style="border: 2px solid var(--success); border-radius: 12px; padding: 2rem; background: white;">
+      
+      <!-- En-tête avec badge -->
+      <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+        <h3 style="margin: 0; color: var(--success); font-size: 1.3rem; font-weight: 700;">
+          Facture N° {{ operation.numero_facture }}
+        </h3>
+        <div style="background: {% if operation.statut == 'paye' %}var(--success){% else %}var(--primary){% endif %}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
+          {% if operation.statut == 'paye' %}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="m5 12 4 4 10-10"/>
+            </svg>
+            Soldée
+          {% else %}
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 8v4l3 3"/>
+            </svg>
+            En attente de paiement
+          {% endif %}
+        </div>
+      </div>
+      
+      <!-- Informations facture -->
+      <div style="margin-bottom: 2rem;">
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="label">📄 Numéro de facture</div>
+            <div class="value" style="font-size: 1.1rem; font-weight: 700; color: var(--success);">
+              {{ operation.numero_facture }}
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="label">📅 Date d'émission</div>
+            <div class="value" style="font-weight: 600;">
+              {{ operation.facture_date_emission|date:"d/m/Y" }}
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="label">💰 Montant total</div>
+            <div class="value" style="font-size: 1.3rem; font-weight: 700; color: var(--primary);">
+              {{ montant_total }} €
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="label">✅ Statut du paiement</div>
+            <div class="value" style="font-weight: 600; color: {% if operation.statut == 'paye' %}var(--success){% else %}var(--warning){% endif %};">
+              {% if operation.statut == 'paye' %}
+                ✅ Facture soldée
+              {% else %}
+                ⏳ En attente de paiement
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        
+        <!-- Notes si présentes -->
+        {% if operation.facture_notes %}
+        <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
+          <strong style="font-size: 0.85rem; color: var(--muted);">📝 Notes :</strong>
+          <p style="margin: 0.5rem 0 0 0; color: var(--text); font-size: 0.9rem;">{{ operation.facture_notes }}</p>
+        </div>
+        {% endif %}
+      </div>
+      
+      <!-- Actions -->
+      <div style="display: grid; gap: 1rem;">
+        <!-- Télécharger PDF -->
+        <button type="button" 
+                class="btn primary" 
+                style="width: 100%; padding: 0.85rem;"
+                onclick="alert('⚠️ Fonctionnalité PDF en cours de développement (Phase 4)')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+          </svg>
+          📥 Télécharger le PDF
+        </button>
+        
+        <!-- Régénérer (en cas d'erreur) -->
+        <details style="border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; background: #f8fafc;">
+          <summary style="cursor: pointer; font-weight: 600; color: var(--muted); font-size: 0.9rem; list-style: none; display: flex; align-items: center; gap: 0.5rem;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+              <path d="M12 16v-4m0-4h0"/>
+            </svg>
+            Régénérer la facture (si erreur)
+          </summary>
+          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+            <p style="margin: 0 0 0.75rem 0; color: var(--muted); font-size: 0.85rem;">
+              ⚠️ <strong>Attention :</strong> Cela va remplacer la facture existante par une nouvelle avec les mêmes informations.
+            </p>
+            <form method="POST" onsubmit="return confirm('⚠️ Régénérer la facture ?\n\nL\'ancienne sera remplacée. Cette action est irréversible.')">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="regenerer_facture">
+              <button type="submit" class="btn danger" style="width: 100%;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+                </svg>
+                🔄 Régénérer la facture
+              </button>
+            </form>
+          </div>
+        </details>
+      </div>
+      
+    </div>
+    
+    {% endif %}
+    
+  </div>
+</section>
+{% endif %}
+
 
         <!-- ========================================
             PAIEMENT - VERSION SIMPLIFIÉE
@@ -2458,7 +2709,7 @@ if (modePaiementSelect) {
           shouldOpen = title.includes('Planification');
           break;
         case 'realise':
-          shouldOpen = title.includes('Paiement');
+          shouldOpen = title.includes('Facture') || title.includes('Paiement');
           break;
         case 'paye':
           shouldOpen = title.includes('Paiement');
@@ -2616,6 +2867,26 @@ function syncNotesValiditeForDelete(interventionId) {
   
   if (hiddenNotes) hiddenNotes.value = notes;
   if (hiddenValidite) hiddenValidite.value = validite;
+}
+
+// ========================================
+// SYNCHRONISATION DONNÉES FACTURE
+// ========================================
+
+function syncFactureData() {
+  const dateEmission = document.getElementById('facture-date-emission-temp')?.value;
+  const notes = document.getElementById('facture-notes-temp')?.value || '';
+  
+  // Synchroniser avec les champs cachés
+  const hiddenDate = document.getElementById('facture-date-hidden');
+  const hiddenNotes = document.getElementById('facture-notes-hidden');
+  
+  if (hiddenDate) hiddenDate.value = dateEmission;
+  if (hiddenNotes) hiddenNotes.value = notes;
+  
+  console.log('✅ Données facture synchronisées:', { dateEmission, notes });
+  
+  return true; // Permet la soumission du formulaire
 }
 
 // ========================================
