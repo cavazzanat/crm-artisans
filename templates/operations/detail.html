@@ -1351,7 +1351,7 @@ function initSyncDevis() {
         LIGNES DU DEVIS (visible seulement si devis envoyé OU pas de devis)
         ⚠️ MASQUÉ si le devis est accepté (pour éviter le doublon)
         ======================================== -->
-    {% if operation.devis_statut != 'accepte' and (not operation.avec_devis or operation.statut != 'en_attente_devis') %}
+    {% if operation.devis_statut != 'accepte' %}
     <section class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <h2 class="section-title">
