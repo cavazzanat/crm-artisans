@@ -27,6 +27,8 @@ urlpatterns = [
     path('operations/<int:operation_id>/modifier/', views.operation_edit, name='operation_edit'),
 
     path('run-migration/', views.run_migration, name='run_migration'),
+    
+    path('profil/', views.profil_entreprise, name='profil_entreprise'),  
 
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
     path('register/', views.register, name='register'),

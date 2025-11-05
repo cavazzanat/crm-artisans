@@ -19,6 +19,7 @@ import json
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from django.utils import timezone
+from .models import Client, Operation, Intervention, HistoriqueOperation, Echeance, ProfilEntreprise
 
 from .models import Client, Operation, Intervention, HistoriqueOperation, Echeance
 from .fix_database import fix_client_constraint
@@ -1961,7 +1962,73 @@ def client_edit(request, client_id):
         
         # Rediriger vers la même page pour rafraîchir
         return redirect('client_detail', client_id=client.id)
+
+@login_required
+def profil_entreprise(request):
+    """Page de profil de l'entreprise"""
     
+    # Récupérer ou créer le profil
+    profil, created = ProfilEntreprise.objects.get_or_create(user=request.user)
+    
+    if request.method == 'POST':
+        # Récupérer tous les champs du formulaire
+        profil.nom_entreprise = request.POST.get('nom_entreprise', '').strip()
+        profil.forme_juridique = request.POST.get('forme_juridique', '')
+        profil.adresse = request.POST.get('adresse', '').strip()
+        profil.code_postal = request.POST.get('code_postal', '').strip()
+        profil.ville = request.POST.get('ville', '').strip()
+        profil.siret = request.POST.get('siret', '').strip()
+        profil.rcs = request.POST.get('rcs', '').strip()
+        profil.code_ape = request.POST.get('code_ape', '').strip()
+        
+        capital_social_str = request.POST.get('capital_social', '').strip()
+        if capital_social_str:
+            try:
+                profil.capital_social = Decimal(capital_social_str)
+            except:
+                profil.capital_social = None
+        else:
+            profil.capital_social = None
+        
+        profil.tva_intracommunautaire = request.POST.get('tva_intracommunautaire', '').strip()
+        profil.telephone = request.POST.get('telephone', '').strip()
+        profil.email = request.POST.get('email', '').strip()
+        profil.site_web = request.POST.get('site_web', '').strip()
+        
+        profil.assurance_decennale_nom = request.POST.get('assurance_decennale_nom', '').strip()
+        profil.assurance_decennale_numero = request.POST.get('assurance_decennale_numero', '').strip()
+        
+        assurance_validite_str = request.POST.get('assurance_decennale_validite', '')
+        if assurance_validite_str:
+            try:
+                from datetime import datetime
+                profil.assurance_decennale_validite = datetime.strptime(assurance_validite_str, '%Y-%m-%d').date()
+            except:
+                profil.assurance_decennale_validite = None
+        else:
+            profil.assurance_decennale_validite = None
+        
+        profil.qualifications = request.POST.get('qualifications', '').strip()
+        profil.iban = request.POST.get('iban', '').strip()
+        profil.bic = request.POST.get('bic', '').strip()
+        profil.mentions_legales_devis = request.POST.get('mentions_legales_devis', '').strip()
+        
+        # Gestion du logo
+        if 'logo' in request.FILES:
+            profil.logo = request.FILES['logo']
+        
+        profil.save()
+        
+        messages.success(request, "✅ Profil entreprise mis à jour avec succès !")
+        return redirect('profil_entreprise')
+    
+    context = {
+        'profil': profil,
+        'formes_juridiques': ProfilEntreprise.FORMES_JURIDIQUES,
+    }
+    
+    return render(request, 'core/profil.html', context)
+
     # Dans views.py
 @login_required
 def operation_edit(request, operation_id):

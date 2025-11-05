@@ -468,3 +468,144 @@ class HistoriqueOperation(models.Model):
     
     def __str__(self):
         return f"{self.operation.id_operation} - {self.action}"
+    
+class ProfilEntreprise(models.Model):
+    """Profil de l'entreprise pour générer les devis/factures"""
+    
+    FORMES_JURIDIQUES = [
+        ('auto_entrepreneur', 'Auto-entrepreneur / Micro-entreprise'),
+        ('eurl', 'EURL'),
+        ('sarl', 'SARL'),
+        ('sas', 'SAS'),
+        ('sasu', 'SASU'),
+        ('ei', 'Entreprise Individuelle'),
+        ('autre', 'Autre'),
+    ]
+    
+    user = models.OneToOneField(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='profil_entreprise'
+    )
+    
+    # ========================================
+    # IDENTIFICATION ENTREPRISE (Obligatoire)
+    # ========================================
+    nom_entreprise = models.CharField(
+        max_length=200, 
+        blank=True,
+        verbose_name="Nom de l'entreprise / Raison sociale"
+    )
+    forme_juridique = models.CharField(
+        max_length=50,
+        choices=FORMES_JURIDIQUES,
+        blank=True,
+        verbose_name="Forme juridique"
+    )
+    
+    adresse = models.TextField(blank=True, verbose_name="Adresse du siège social")
+    code_postal = models.CharField(max_length=10, blank=True, verbose_name="Code postal")
+    ville = models.CharField(max_length=100, blank=True, verbose_name="Ville")
+    
+    siret = models.CharField(max_length=14, blank=True, verbose_name="N° SIRET")
+    rcs = models.CharField(
+        max_length=100, 
+        blank=True, 
+        verbose_name="N° RCS + Ville", 
+        help_text="Ex: RCS Paris 123 456 789"
+    )
+    code_ape = models.CharField(max_length=10, blank=True, verbose_name="Code APE/NAF")
+    capital_social = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        null=True, 
+        blank=True, 
+        verbose_name="Capital social (€)"
+    )
+    tva_intracommunautaire = models.CharField(
+        max_length=20, 
+        blank=True, 
+        verbose_name="N° TVA intracommunautaire"
+    )
+    
+    # ========================================
+    # COORDONNÉES PROFESSIONNELLES
+    # ========================================
+    telephone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone professionnel")
+    email = models.EmailField(blank=True, verbose_name="Email professionnel")
+    site_web = models.URLField(blank=True, verbose_name="Site web")
+    
+    # ========================================
+    # ASSURANCES (Obligatoire bâtiment)
+    # ========================================
+    assurance_decennale_nom = models.CharField(
+        max_length=200, 
+        blank=True, 
+        verbose_name="Nom de l'assureur"
+    )
+    assurance_decennale_numero = models.CharField(
+        max_length=100, 
+        blank=True, 
+        verbose_name="N° de police"
+    )
+    assurance_decennale_validite = models.DateField(
+        null=True, 
+        blank=True, 
+        verbose_name="Date de validité"
+    )
+    
+    # ========================================
+    # QUALIFICATIONS (Optionnel)
+    # ========================================
+    qualifications = models.TextField(
+        blank=True, 
+        verbose_name="Qualifications / Certifications", 
+        help_text="Ex: RGE, Qualibat, etc."
+    )
+    
+    # ========================================
+    # BRANDING (Optionnel)
+    # ========================================
+    logo = models.ImageField(
+        upload_to='logos/', 
+        blank=True, 
+        null=True, 
+        verbose_name="Logo de l'entreprise"
+    )
+    
+    # ========================================
+    # FACTURATION (Optionnel mais utile)
+    # ========================================
+    iban = models.CharField(max_length=34, blank=True, verbose_name="IBAN")
+    bic = models.CharField(max_length=11, blank=True, verbose_name="BIC/SWIFT")
+    
+    # ========================================
+    # MENTIONS LÉGALES PERSONNALISÉES
+    # ========================================
+    mentions_legales_devis = models.TextField(
+        blank=True,
+        verbose_name="Mentions légales sur le devis",
+        help_text="Texte qui apparaîtra en bas du devis (conditions de paiement, pénalités de retard, etc.)"
+    )
+    
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Profil entreprise"
+        verbose_name_plural = "Profils entreprise"
+    
+    def __str__(self):
+        return f"{self.nom_entreprise or 'Profil'} - {self.user.username}"
+    
+    @property
+    def est_complet(self):
+        """Vérifie si le profil contient les informations minimales"""
+        champs_obligatoires = [
+            self.nom_entreprise,
+            self.adresse,
+            self.siret,
+            self.telephone,
+            self.email,
+        ]
+        return all(champs_obligatoires)
