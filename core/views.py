@@ -863,54 +863,63 @@ def operation_detail(request, operation_id):
                 return redirect('operation_detail', operation_id=operation.id)
 
         # ========================================
-        # GESTION DES INTERVENTIONS
-        # ========================================
         elif action == 'add_intervention':
             description = request.POST.get('description', '').strip()
-            montant_str = request.POST.get('montant', '').strip()
+            quantite_str = request.POST.get('quantite', '1').strip()
+            unite = request.POST.get('unite', 'forfait')
+            prix_unitaire_str = request.POST.get('prix_unitaire_ht', '').strip()
+            taux_tva_str = request.POST.get('taux_tva', '10').strip()
             
-            # ✅ NOUVEAU : Récupérer notes et validité
             devis_notes_temp = request.POST.get('devis_notes_temp')
             devis_validite_temp = request.POST.get('devis_validite_temp')
             
-            if description and montant_str:
+            if description and prix_unitaire_str:
                 try:
                     from decimal import Decimal
-                    montant = Decimal(montant_str)
+                    
+                    quantite = Decimal(quantite_str)
+                    prix_unitaire_ht = Decimal(prix_unitaire_str)
+                    taux_tva = Decimal(taux_tva_str)
                     
                     dernier_ordre = operation.interventions.aggregate(
                         max_ordre=Max('ordre')
                     )['max_ordre'] or 0
                     
-                    Intervention.objects.create(
+                    # Le montant HT sera calculé automatiquement dans save()
+                    intervention = Intervention.objects.create(
                         operation=operation,
                         description=description,
-                        montant=montant,
+                        quantite=quantite,
+                        unite=unite,
+                        prix_unitaire_ht=prix_unitaire_ht,
+                        taux_tva=taux_tva,
                         ordre=dernier_ordre + 1
                     )
                     
-                    # ✅ NOUVEAU : Sauvegarder notes et validité AVANT le redirect
+                    # Sauvegarder notes/validité si création de devis
                     if not operation.numero_devis and operation.avec_devis:
                         if devis_notes_temp is not None:
                             operation.devis_notes = devis_notes_temp
                         if devis_validite_temp is not None:
                             operation.devis_validite_jours = int(devis_validite_temp)
-                        
                         operation.save(update_fields=['devis_notes', 'devis_validite_jours'])
-                        print(f"✅ Notes/Validité sauvegardées: notes='{operation.devis_notes}', validité={operation.devis_validite_jours}")
                     
+                    # Historique avec détails
                     HistoriqueOperation.objects.create(
                         operation=operation,
-                        action=f"Intervention ajoutée : {description} ({montant}€)",
+                        action=f"Ligne ajoutée : {description} - {quantite} × {prix_unitaire_ht}€ HT = {intervention.montant}€ HT + TVA {taux_tva}% = {intervention.montant_ttc}€ TTC",
                         utilisateur=request.user
                     )
                     
-                    messages.success(request, "Intervention ajoutée avec succès")
+                    messages.success(
+                        request, 
+                        f"✅ Ligne ajoutée : {intervention.montant}€ HT + TVA = {intervention.montant_ttc}€ TTC"
+                    )
                     
-                except ValueError:
-                    messages.error(request, "Montant invalide")
+                except ValueError as e:
+                    messages.error(request, f"Données invalides : {str(e)}")
             else:
-                messages.error(request, "Description et montant obligatoires")
+                messages.error(request, "Description et prix unitaire HT obligatoires")
             
             return redirect('operation_detail', operation_id=operation.id)
         
@@ -1727,14 +1736,10 @@ def operation_create(request):
                 # ========================================
                 # CRÉATION DES LIGNES D'INTERVENTION
                 # ========================================
+                # CRÉATION DES LIGNES D'INTERVENTION
                 descriptions = request.POST.getlist('description[]')
                 montants = request.POST.getlist('montant[]')
-                
-                print(f"\n{'─'*80}")
-                print("CRÉATION DES INTERVENTIONS")
-                print(f"{'─'*80}")
-                print(f"Nombre de lignes reçues: {len(descriptions)}")
-                
+
                 interventions_creees = 0
                 for i, (description, montant) in enumerate(zip(descriptions, montants)):
                     desc_clean = description.strip()
@@ -1742,20 +1747,19 @@ def operation_create(request):
                     
                     if desc_clean and mont_clean:
                         try:
+                            # ✅ NOUVEAU FORMAT : montant saisi = prix unitaire HT
                             intervention = Intervention.objects.create(
                                 operation=operation,
                                 description=desc_clean,
-                                montant=Decimal(mont_clean),
+                                quantite=Decimal('1'),
+                                unite='forfait',
+                                prix_unitaire_ht=Decimal(mont_clean),  # ← Le montant saisi = PU HT
+                                taux_tva=Decimal('10'),
                                 ordre=i + 1
                             )
                             interventions_creees += 1
-                            print(f"  ✓ Ligne {i+1}: {desc_clean} - {mont_clean}€")
                         except (ValueError, TypeError) as e:
                             print(f"  ✗ Erreur montant ligne {i+1}: {e}")
-                    else:
-                        print(f"  ⊘ Ligne {i+1} ignorée (vide)")
-                
-                print(f"Total interventions créées: {interventions_creees}")
                 
                 # ========================================
                 # GESTION AUTOMATIQUE PAIEMENT SI PAYÉ

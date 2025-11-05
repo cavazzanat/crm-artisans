@@ -6,6 +6,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
+from django.db.models import Sum  # ← AJOUTER cette ligne
 
 class Client(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -236,8 +237,33 @@ class Operation(models.Model):
     @property
     def montant_total(self):
         """Calcule le montant total de l'opération (somme des lignes d'intervention)"""
-        return sum(intervention.montant for intervention in self.interventions.all())
+        return self.total_ttc
     
+    # ========================================
+    # NOUVELLES PROPERTIES POUR HT/TVA/TTC
+    # ========================================
+    @property
+    def sous_total_ht(self):
+        """Sous-total HT (somme des lignes HT)"""
+        from decimal import Decimal
+        total = self.interventions.aggregate(
+            total=Sum('montant')
+        )['total']
+        return total if total is not None else Decimal('0.00')
+    
+    @property
+    def total_tva(self):
+        """Total de la TVA (somme des TVA de chaque ligne)"""
+        from decimal import Decimal
+        total_tva = Decimal('0.00')
+        for intervention in self.interventions.all():
+            total_tva += intervention.montant_tva
+        return total_tva
+    
+    @property
+    def total_ttc(self):
+        """Total TTC (HT + TVA) = CE QUE LE CLIENT PAIE"""
+        return self.sous_total_ht + self.total_tva
     # ========================================
     # NOUVELLES PROPERTIES POUR DEVIS/FACTURE
     # ========================================
@@ -343,16 +369,92 @@ class Echeance(models.Model):
 
 
 class Intervention(models.Model):
-    operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='interventions')
-    description = models.CharField(max_length=200)
-    montant = models.DecimalField(max_digits=10, decimal_places=2)
+    """Ligne d'intervention ou de devis"""
+    
+    UNITES_CHOICES = [
+        ('unite', 'Unité'),
+        ('forfait', 'Forfait'),
+        ('heure', 'Heure'),
+        ('jour', 'Jour'),
+        ('m2', 'm²'),
+        ('ml', 'Mètre linéaire'),
+    ]
+    
+    operation = models.ForeignKey(
+        Operation, 
+        on_delete=models.CASCADE, 
+        related_name='interventions'
+    )
+    description = models.TextField()  # ✅ CHANGÉ : pas de limite
+    
+    # ========================================
+    # NOUVEAUX CHAMPS
+    # ========================================
+    quantite = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2, 
+        default=1,
+        help_text="Quantité (ex: 2, 1.5, 10)"
+    )
+    unite = models.CharField(
+        max_length=20,
+        choices=UNITES_CHOICES,
+        default='forfait',
+        help_text="Unité de mesure"
+    )
+    prix_unitaire_ht = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        null=True,  # ✅ TEMPORAIRE : pour la migration
+        blank=True,
+        help_text="Prix unitaire HT en euros"
+    )
+    taux_tva = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=10.0,
+        help_text="Taux de TVA en %"
+    )
+    
+    # ========================================
+    # CHAMP EXISTANT (devient le total HT)
+    # ========================================
+    montant = models.DecimalField(
+        max_digits=10, 
+        decimal_places=2,
+        help_text="Total HT de la ligne (quantité × prix unitaire HT)"
+    )
+    
     ordre = models.PositiveIntegerField(default=1)
     
     class Meta:
         ordering = ['ordre']
     
     def __str__(self):
-        return f"{self.description} - {self.montant}€"
+        return f"{self.description} - {self.montant}€ HT"
+    
+    # ========================================
+    # PROPERTIES POUR LES CALCULS
+    # ========================================
+    @property
+    def montant_tva(self):
+        """Montant de la TVA pour cette ligne"""
+        from decimal import Decimal
+        return (self.montant * self.taux_tva) / Decimal('100')
+    
+    @property
+    def montant_ttc(self):
+        """Total TTC de cette ligne"""
+        return self.montant + self.montant_tva
+    
+    def save(self, *args, **kwargs):
+        """Calcul automatique du montant HT lors de la sauvegarde"""
+        # ✅ SEULEMENT si prix_unitaire_ht est renseigné (nouvelle ligne)
+        if self.prix_unitaire_ht is not None:
+            from decimal import Decimal
+            self.montant = self.quantite * self.prix_unitaire_ht
+        # Sinon, garder le montant existant (ancienne ligne migrée)
+        super().save(*args, **kwargs)
 
 
 class HistoriqueOperation(models.Model):
