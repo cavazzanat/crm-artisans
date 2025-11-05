@@ -328,10 +328,13 @@
             <li><a href="{% url 'profil' %}" class="active">Profil</a></li>
         </ul>
         
-        <div class="navbar-user">
-            <span>{{ user.username }}</span>
-            <a href="{% 'logout' %}" style="color: var(--danger); text-decoration: none;">Déconnexion</a>
-        </div>
+            <div class="user">
+                <span>{{ user.username }}</span>
+                <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">Déconnexion</button>
+                </form>
+            </div>
     </nav>
 
     <!-- ========================================
