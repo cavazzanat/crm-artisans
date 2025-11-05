@@ -566,13 +566,7 @@ class ProfilEntreprise(models.Model):
     # ========================================
     # BRANDING (Optionnel)
     # ========================================
-    logo = models.ImageField(
-        upload_to='logos/', 
-        blank=True, 
-        null=True, 
-        verbose_name="Logo de l'entreprise"
-    )
-    
+
     # ========================================
     # FACTURATION (Optionnel mais utile)
     # ========================================
