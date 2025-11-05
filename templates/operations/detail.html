@@ -689,7 +689,11 @@
               <thead>
                 <tr style="border-bottom: 2px solid var(--border);">
                   <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Description</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">Montant</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">Qté</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 100px;">Unité</th>
+                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">PU HT</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">TVA</th>
+                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">Total HT</th>
                   <th style="width: 80px;"></th>
                 </tr>
               </thead>
@@ -697,7 +701,11 @@
                 {% for intervention in interventions %}
                 <tr style="border-bottom: 1px solid var(--border);">
                   <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.montant }} €</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.quantite|floatformat:"-2" }}</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.get_unite_display }}</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.prix_unitaire_ht|floatformat:2 }} €</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.taux_tva|floatformat:0 }}%</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600; color: var(--primary);">{{ intervention.montant|floatformat:2 }} €</td>
                   <td style="padding: 0.75rem 0.5rem; text-align: center;">
                     <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette ligne ?')">
                       {% csrf_token %}
@@ -710,9 +718,19 @@
                 {% endfor %}
               </tbody>
               <tfoot>
-                <tr style="border-top: 2px solid var(--border);">
-                  <td style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem;">MONTANT TOTAL</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary);">{{ montant_total }} €</td>
+                <tr style="border-top: 2px solid var(--border); background: #f8fafc;">
+                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 0.95rem; text-align: right;">Sous-total HT</td>
+                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.1rem; font-weight: 700; color: var(--text);">{{ operation.sous_total_ht|floatformat:2 }} €</td>
+                  <td></td>
+                </tr>
+                <tr style="background: #f8fafc;">
+                  <td colspan="5" style="padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.9rem; text-align: right;">TVA (10%)</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-size: 1rem; font-weight: 600; color: var(--muted);">{{ operation.total_tva|floatformat:2 }} €</td>
+                  <td></td>
+                </tr>
+                <tr style="border-top: 2px solid var(--primary); background: #eef2ff;">
+                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem; text-align: right;">TOTAL TTC</td>
+                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary);">{{ operation.total_ttc|floatformat:2 }} €</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -730,22 +748,67 @@
                 <input type="hidden" name="devis_notes_temp" id="hidden-notes">
                 <input type="hidden" name="devis_validite_temp" id="hidden-validite">
                 
-                <div style="display: grid; grid-template-columns: 1fr 150px 100px; gap: 0.75rem; align-items: center;">
+                <!-- Ligne 1 : Description -->
+                <div style="margin-bottom: 0.75rem;">
                   <input type="text" 
                         name="description" 
                         class="input" 
-                        placeholder="Description" 
+                        placeholder="Description de la prestation" 
                         style="margin: 0;"
                         required>
-                  <input type="number" 
-                        name="montant" 
-                        class="input" 
-                        placeholder="Montant" 
-                        step="0.01" 
-                        min="0.01"
-                        style="margin: 0; text-align: right;"
-                        required>
-                  <button type="submit" class="btn success" style="width: 100%; margin: 0; white-space: nowrap;">Ajouter</button>
+                </div>
+                
+                <!-- Ligne 2 : Quantité, Unité, Prix unitaire HT, TVA -->
+                <div style="display: grid; grid-template-columns: 100px 150px 150px 100px 100px; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
+                  <div>
+                    <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Quantité</label>
+                    <input type="number" 
+                          name="quantite" 
+                          class="input" 
+                          value="1" 
+                          step="0.01" 
+                          min="0.01"
+                          style="margin: 0; text-align: center;"
+                          required>
+                  </div>
+                  
+                  <div>
+                    <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Unité</label>
+                    <select name="unite" class="select" style="margin: 0;">
+                      <option value="unite">Unité</option>
+                      <option value="forfait" selected>Forfait</option>
+                      <option value="heure">Heure</option>
+                      <option value="jour">Jour</option>
+                      <option value="m2">m²</option>
+                      <option value="ml">Mètre linéaire</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Prix unitaire HT (€)</label>
+                    <input type="number" 
+                          name="prix_unitaire_ht" 
+                          class="input" 
+                          placeholder="0.00" 
+                          step="0.01" 
+                          min="0.01"
+                          style="margin: 0; text-align: right;"
+                          required>
+                  </div>
+                  
+                  <div>
+                    <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">TVA (%)</label>
+                    <input type="number" 
+                          name="taux_tva" 
+                          class="input" 
+                          value="10" 
+                          step="0.01" 
+                          min="0"
+                          style="margin: 0; text-align: center;"
+                          required>
+                  </div>
+                  
+                  <button type="submit" class="btn success" style="width: 100%; margin: 0; margin-top: 1.5rem; white-space: nowrap;">Ajouter</button>
                 </div>
               </form>
             </div>
@@ -822,38 +885,57 @@
               <thead>
                 <tr style="border-bottom: 2px solid var(--border);">
                   <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Description</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Montant</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">Qté</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 100px;">Unité</th>
+                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">PU HT</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">TVA</th>
+                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">Total HT</th>
+                  <th style="width: 80px;"></th>
                 </tr>
               </thead>
-                <tbody>
-                  {% for intervention in interventions %}
-                  <tr style="border-bottom: 1px solid var(--border);">
-                    <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
-                    <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.montant }} €</td>
-                    <td style="padding: 0.75rem 0.5rem; text-align: center;">
-                      <form method="POST" style="display:inline" onsubmit="syncNotesValidite(); return confirm('Supprimer cette ligne ?')">
-                        {% csrf_token %}
-                        <input type="hidden" name="action" value="delete_intervention">
-                        <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
-                        
-                        <!-- ✅ NOUVEAUX CHAMPS CACHÉS -->
-                        <input type="hidden" name="devis_notes_temp" id="hidden-notes-del-{{ intervention.id }}">
-                        <input type="hidden" name="devis_validite_temp" id="hidden-validite-del-{{ intervention.id }}">
-                        
-                        <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="syncNotesValiditeForDelete({{ intervention.id }})">×</button>
-                      </form>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
+              <tbody>
+                {% for intervention in interventions %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                  <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.quantite|floatformat:"-2" }}</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.get_unite_display }}</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.prix_unitaire_ht|floatformat:2 }} €</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.taux_tva|floatformat:0 }}%</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600; color: var(--primary);">{{ intervention.montant|floatformat:2 }} €</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">
+                    <form method="POST" style="display:inline" onsubmit="syncNotesValidite(); return confirm('Supprimer cette ligne ?')">
+                      {% csrf_token %}
+                      <input type="hidden" name="action" value="delete_intervention">
+                      <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
+                      
+                      <!-- ✅ NOUVEAUX CHAMPS CACHÉS -->
+                      <input type="hidden" name="devis_notes_temp" id="hidden-notes-del-{{ intervention.id }}">
+                      <input type="hidden" name="devis_validite_temp" id="hidden-validite-del-{{ intervention.id }}">
+                      
+                      <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="syncNotesValiditeForDelete({{ intervention.id }})">×</button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
               <tfoot>
-                <tr style="border-top: 2px solid var(--border);">
-                  <td style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem;">MONTANT TOTAL</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary);">{{ montant_total }} €</td>
+                <tr style="border-top: 2px solid var(--border); background: #f8fafc;">
+                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 0.95rem; text-align: right;">Sous-total HT</td>
+                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.1rem; font-weight: 700; color: var(--text);">{{ operation.sous_total_ht|floatformat:2 }} €</td>
+                  <td></td>
+                </tr>
+                <tr style="background: #f8fafc;">
+                  <td colspan="5" style="padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.9rem; text-align: right;">TVA (10%)</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-size: 1rem; font-weight: 600; color: var(--muted);">{{ operation.total_tva|floatformat:2 }} €</td>
+                  <td></td>
+                </tr>
+                <tr style="border-top: 2px solid var(--primary); background: #eef2ff;">
+                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem; text-align: right;">TOTAL TTC</td>
+                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary);">{{ operation.total_ttc|floatformat:2 }} €</td>
+                  <td></td>
                 </tr>
               </tfoot>
-            </table>
-            
+            </table>  
             {% if operation.devis_notes %}
             <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
               <strong style="font-size: 0.85rem; color: var(--muted);">📝 Notes :</strong>
@@ -1156,25 +1238,41 @@
               <thead>
                 <tr style="border-bottom: 2px solid var(--border);">
                   <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Description</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Montant</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">Qté</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 100px;">Unité</th>
+                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">PU HT</th>
+                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">TVA</th>
+                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">Total HT</th>
                 </tr>
               </thead>
               <tbody>
                 {% for intervention in interventions %}
                 <tr style="border-bottom: 1px solid var(--border);">
                   <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.montant }} €</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.quantite|floatformat:"-2" }}</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.get_unite_display }}</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.prix_unitaire_ht|floatformat:2 }} €</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.taux_tva|floatformat:0 }}%</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600; color: var(--primary);">{{ intervention.montant|floatformat:2 }} €</td>
                 </tr>
                 {% endfor %}
               </tbody>
               <tfoot>
-                <tr style="border-top: 2px solid var(--border); background: #f0fdf4;">
-                  <td style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem; color: var(--success);">MONTANT TOTAL 🔒</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--success);">{{ montant_total }} €</td>
+                <tr style="border-top: 2px solid var(--border); background: #f8fafc;">
+                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 0.95rem; text-align: right;">Sous-total HT</td>
+                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.1rem; font-weight: 700; color: var(--text);">{{ operation.sous_total_ht|floatformat:2 }} €</td>
+                </tr>
+                <tr style="background: #f8fafc;">
+                  <td colspan="5" style="padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.9rem; text-align: right;">TVA (10%)</td>
+                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-size: 1rem; font-weight: 600; color: var(--muted);">{{ operation.total_tva|floatformat:2 }} €</td>
+                </tr>
+                <tr style="border-top: 2px solid var(--primary); background: #eef2ff;">
+                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem; text-align: right;">TOTAL TTC</td>
+                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary);">{{ operation.total_ttc|floatformat:2 }} €</td>
                 </tr>
               </tfoot>
             </table>
-            
+
             {% if operation.devis_notes %}
             <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
               <strong style="font-size: 0.85rem; color: var(--muted);">📝 Notes :</strong>
