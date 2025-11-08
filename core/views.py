@@ -422,8 +422,7 @@ def operations_list(request):
     # ========================================
     # NOUVEAUX COMPTEURS DEVIS (KPI)
     # ========================================
-    from django.utils import timezone
-    from datetime import timedelta
+
     
     # 1️⃣ BROUILLON : Devis commencé mais pas généré
     nb_devis_brouillon = Operation.objects.filter(
