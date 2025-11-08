@@ -773,6 +773,83 @@
     </section>
 
     <!-- ========================================
+         SECTION SUIVI DES DEVIS (CLIQUABLE)
+    ======================================== -->
+    <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+      <h3 style="margin: 0 0 1.5rem 0; color: var(--text); font-size: 1.1rem; font-weight: 600; border-bottom: 2px solid var(--border); padding-bottom: 0.75rem;">
+        📊 Suivi des devis
+      </h3>
+      
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+        
+        <!-- 1️⃣ BROUILLON -->
+        <a href="?filtre=brouillon" style="text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(251,191,36,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+          <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 1rem; cursor: pointer; height: 100%;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1.25rem;">📝</span>
+              <span style="font-size: 0.75rem; color: #92400e; font-weight: 600; text-transform: uppercase;">Brouillon</span>
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #92400e;">
+              {{ nb_devis_brouillon }}
+            </div>
+            <div style="font-size: 0.8rem; color: #92400e; margin-top: 0.25rem;">
+              Non généré{{ nb_devis_brouillon|pluralize }}
+            </div>
+          </div>
+        </a>
+        
+        <!-- 2️⃣ GÉNÉRÉ MAIS NON ENVOYÉ -->
+        <a href="?filtre=genere_non_envoye" style="text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+          <div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 1rem; cursor: pointer; height: 100%;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1.25rem;">📄</span>
+              <span style="font-size: 0.75rem; color: #1e40af; font-weight: 600; text-transform: uppercase;">Généré</span>
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">
+              {{ nb_devis_genere_non_envoye }}
+            </div>
+            <div style="font-size: 0.8rem; color: #1e40af; margin-top: 0.25rem;">
+              Non envoyé{{ nb_devis_genere_non_envoye|pluralize }}
+            </div>
+          </div>
+        </a>
+        
+        <!-- 3️⃣ EN ATTENTE -->
+        <a href="?filtre=devis_en_attente" style="text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(99,102,241,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+          <div style="background: #e0e7ff; border: 1px solid #6366f1; border-radius: 8px; padding: 1rem; cursor: pointer; height: 100%;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1.25rem;">⏳</span>
+              <span style="font-size: 0.75rem; color: #4338ca; font-weight: 600; text-transform: uppercase;">En attente</span>
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #4338ca;">
+              {{ nb_devis_en_attente }}
+            </div>
+            <div style="font-size: 0.8rem; color: #4338ca; margin-top: 0.25rem;">
+              Réponse attendue
+            </div>
+          </div>
+        </a>
+        
+        <!-- 4️⃣ EXPIRÉ -->
+        <a href="?filtre=expire" style="text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239,68,68,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+          <div style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 8px; padding: 1rem; cursor: pointer; height: 100%;">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1.25rem;">⚠️</span>
+              <span style="font-size: 0.75rem; color: #991b1b; font-weight: 600; text-transform: uppercase;">Expiré</span>
+            </div>
+            <div style="font-size: 1.75rem; font-weight: 700; color: #991b1b;">
+              {{ nb_devis_expire }}
+            </div>
+            <div style="font-size: 0.8rem; color: #991b1b; margin-top: 0.25rem;">
+              À relancer
+            </div>
+          </div>
+        </a>
+        
+      </div>
+    </div>
+
+    <!-- ========================================
          FILTRES FIXES
          ======================================== -->
     <div class="filters-wrapper">
@@ -791,6 +868,30 @@
       </div>
 
       <div class="filters-content">
+
+        <!-- Statuts des devis -->
+        <div class="filter-section">
+          <span class="filter-label">📄 Statuts des devis</span>
+          <div class="filter-group">
+            <a href="?filtre=brouillon" class="filter-btn warning {% if filtre_actif == 'brouillon' %}active{% endif %}">
+              📝 Brouillon
+              <span class="filter-badge">{{ nb_devis_brouillon }}</span>
+            </a>
+            <a href="?filtre=genere_non_envoye" class="filter-btn {% if filtre_actif == 'genere_non_envoye' %}active{% endif %}">
+              📄 Généré non envoyé
+              <span class="filter-badge">{{ nb_devis_genere_non_envoye }}</span>
+            </a>
+            <a href="?filtre=devis_en_attente" class="filter-btn {% if filtre_actif == 'devis_en_attente' %}active{% endif %}">
+              ⏳ En attente réponse
+              <span class="filter-badge">{{ nb_devis_en_attente }}</span>
+            </a>
+            <a href="?filtre=expire" class="filter-btn alert {% if filtre_actif == 'expire' %}active{% endif %}">
+              ⚠️ Expiré
+              <span class="filter-badge">{{ nb_devis_expire }}</span>
+            </a>
+          </div>
+        </div>
+
         <!-- Cycle de vie -->
         <div class="filter-section">
           <span class="filter-label">📋 Cycle de vie</span>
@@ -882,7 +983,15 @@
     <section class="section">
       <div class="section-h">
         <h2>
-          {% if filtre_actif == 'retards' %}
+          {% if filtre_actif == 'brouillon' %}
+            📝 Devis en brouillon
+          {% elif filtre_actif == 'genere_non_envoye' %}
+            📄 Devis générés non envoyés
+          {% elif filtre_actif == 'devis_en_attente' %}
+            ⏳ Devis en attente de réponse
+          {% elif filtre_actif == 'expire' %}
+            ⚠️ Devis expirés
+          {% elif filtre_actif == 'retards' %}
             🚨 Paiements en retard
           {% elif filtre_actif == 'non_planifies' %}
             ⚠️ Paiements non planifiés
