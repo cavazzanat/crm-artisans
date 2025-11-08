@@ -340,6 +340,23 @@ def operations_list(request):
 
     recherche = request.GET.get('recherche', '')
     
+    # Filtrage selon le filtre actif
+    if filtre == 'brouillon':
+        operations = operations.filter(avec_devis=True, numero_devis__isnull=True)
+
+    elif filtre == 'genere_non_envoye':
+        operations = operations.filter(numero_devis__isnull=False, devis_date_envoi__isnull=True)
+
+    elif filtre == 'devis_en_attente':
+        operations = operations.filter(devis_date_envoi__isnull=False, devis_statut='en_attente')
+
+    elif filtre == 'expire':
+        operations_expire_ids = []
+        for op in operations.filter(devis_date_envoi__isnull=False, devis_statut='en_attente'):
+            if op.est_expire:
+                operations_expire_ids.append(op.id)
+        operations = operations.filter(id__in=operations_expire_ids)
+    
     # ✅ ENRICHISSEMENT POUR FILTRES SPÉCIAUX
     if filtre == 'retards':
         operations = operations.filter(id__in=operations_avec_retards_ids)
@@ -402,6 +419,48 @@ def operations_list(request):
     nb_paye = all_operations_periode.filter(statut='paye').count()
     nb_refuse = all_operations_periode.filter(statut='devis_refuse').count()
     
+    # ========================================
+    # NOUVEAUX COMPTEURS DEVIS (KPI)
+    # ========================================
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    # 1️⃣ BROUILLON : Devis commencé mais pas généré
+    nb_devis_brouillon = Operation.objects.filter(
+        user=request.user,
+        avec_devis=True,
+        numero_devis__isnull=True
+    ).count()
+    
+    # 2️⃣ GÉNÉRÉ MAIS NON ENVOYÉ
+    nb_devis_genere_non_envoye = Operation.objects.filter(
+        user=request.user,
+        numero_devis__isnull=False,
+        devis_date_envoi__isnull=True
+    ).count()
+    
+    # 3️⃣ EN ATTENTE
+    nb_devis_en_attente = Operation.objects.filter(
+        user=request.user,
+        devis_date_envoi__isnull=False,
+        devis_statut='en_attente'
+    ).count()
+    
+    # 4️⃣ EXPIRÉ
+    # On doit calculer manuellement car c'est une propriété
+    operations_avec_devis = Operation.objects.filter(
+        user=request.user,
+        devis_date_envoi__isnull=False,
+        devis_statut='en_attente'
+    )
+    
+    nb_devis_expire = 0
+    today = timezone.now().date()
+    
+    for op in operations_avec_devis:
+        if op.devis_date_limite and op.devis_date_limite < today:
+            nb_devis_expire += 1
+    
     # Options de cycle pour les boutons
     cycle_options = [
         ('toutes', 'Toutes'),
@@ -438,6 +497,12 @@ def operations_list(request):
         'nb_operations_sans_paiement': nb_operations_sans_paiement,
         'nb_paye': nb_paye,
         'nb_refuse': nb_refuse,
+        
+        # ✅ NOUVEAUX COMPTEURS DEVIS
+        'nb_devis_brouillon': nb_devis_brouillon,
+        'nb_devis_genere_non_envoye': nb_devis_genere_non_envoye,
+        'nb_devis_en_attente': nb_devis_en_attente,
+        'nb_devis_expire': nb_devis_expire,
         
         # Options
         'cycle_options': cycle_options,

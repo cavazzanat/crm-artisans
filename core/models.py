@@ -337,6 +337,64 @@ class Operation(models.Model):
         if self.devis_date_envoi and self.devis_date_reponse:
             return (self.devis_date_reponse - self.devis_date_envoi).days
         return None
+    
+    @property
+    def est_brouillon(self):
+        """
+        Vérifie si le devis est en brouillon (commencé mais pas généré).
+        
+        Conditions :
+        - avec_devis = True
+        - Pas encore de numéro de devis
+        """
+        return self.avec_devis and not self.numero_devis
+
+    @property
+    def est_genere_non_envoye(self):
+        """
+        Vérifie si le devis est généré mais pas encore envoyé.
+        
+        Conditions :
+        - Numéro de devis existe
+        - Pas de date d'envoi
+        """
+        return self.numero_devis and not self.devis_date_envoi
+
+    @property
+    def est_en_attente_reponse(self):
+        """
+        Vérifie si le devis est en attente de réponse client.
+        
+        Conditions :
+        - Date d'envoi existe
+        - Statut = 'en_attente'
+        """
+        return (
+            self.devis_date_envoi 
+            and self.devis_statut == 'en_attente'
+        )
+
+    @property
+    def est_expire(self):
+        """
+        Vérifie si le devis a dépassé sa date limite de validité.
+        
+        Conditions :
+        - Date d'envoi existe
+        - Date limite dépassée
+        - Statut = 'en_attente' (pas encore accepté/refusé)
+        """
+        if not self.devis_date_envoi or not self.devis_validite_jours:
+            return False
+        
+        from django.utils import timezone
+        date_limite = self.devis_date_limite
+        
+        return (
+            date_limite 
+            and date_limite < timezone.now().date()
+            and self.devis_statut == 'en_attente'
+        )
 
 
 # MODÈLE SÉPARÉ pour les échéances (pas à l'intérieur de Operation!)
