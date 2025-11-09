@@ -355,8 +355,6 @@ def operations_list(request):
 
     elif filtre == 'expire':
         # ✅ CORRECTION : Utiliser la méthode correcte avec date_limite
-        from django.utils import timezone
-        from datetime import timedelta
         
         operations_expire_ids = []
         operations_candidats = operations.filter(
