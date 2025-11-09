@@ -354,7 +354,7 @@ def operations_list(request):
         operations = operations.filter(devis_date_envoi__isnull=False, devis_statut='en_attente')
 
     elif filtre == 'expire':
-        # ✅ CORRECTION : Utiliser la méthode correcte avec date_limite
+        # ✅ CORRECTION : Utiliser la méthode correcte avec date_limit
         
         operations_expire_ids = []
         operations_candidats = operations.filter(
@@ -542,39 +542,35 @@ def operation_detail(request, operation_id):
         # ACTION : GÉNÉRER LE DEVIS
         # ═══════════════════════════════════════
         if action == 'generer_devis':
+
             from datetime import datetime
             
-                # ✅ AJOUT : Vérifier qu'il y a au moins une ligne
+            # ✅ Vérifier qu'il y a au moins une ligne
             if not operation.interventions.exists():
                 messages.warning(request, "⚠️ Attention : Vous générez un devis sans lignes.")
-            
             
             devis_notes = request.POST.get('devis_notes', '').strip()
             devis_validite_jours = request.POST.get('devis_validite_jours', '30')
             
-                # ✅ AJOUT : Debug pour voir ce qui est reçu
             print(f"DEBUG - Notes reçues: '{devis_notes}'")
             print(f"DEBUG - Validité reçue: '{devis_validite_jours}'")
-                        
+            
             try:
-                # Générer le numéro de devis
+                # ✅ GÉNÉRATION AVEC COMPTEUR PAR UTILISATEUR
                 annee_courante = datetime.now().year
                 
-                # Trouver le dernier numéro de l'année
-                derniers_devis = Operation.objects.filter(
+                # Compter les devis de CET utilisateur pour CETTE année
+                nombre_devis_user = Operation.objects.filter(
                     user=request.user,
-                    numero_devis__startswith=f'DEVIS-{annee_courante}-'
-                ).order_by('-numero_devis')
+                    numero_devis__startswith=f'DEVIS-{annee_courante}-U{request.user.id}-'
+                ).count()
                 
-                if derniers_devis.exists():
-                    dernier_numero_str = derniers_devis.first().numero_devis.split('-')[-1]
-                    dernier_numero = int(dernier_numero_str)
-                    nouveau_numero = dernier_numero + 1
-                else:
-                    nouveau_numero = 1
+                nouveau_numero = nombre_devis_user + 1
                 
-                # Format avec zéro padding (ex: DEVIS-2025-00001)
-                operation.numero_devis = f'DEVIS-{annee_courante}-{nouveau_numero:05d}'
+                # Format : DEVIS-2025-U1-00001 (User ID 1, devis n°1)
+                nouveau_numero_devis = f'DEVIS-{annee_courante}-U{request.user.id}-{nouveau_numero:05d}'
+                
+                operation.numero_devis = nouveau_numero_devis
                 
                 # ✅ SAUVEGARDER LES NOTES
                 operation.devis_notes = devis_notes
@@ -593,7 +589,7 @@ def operation_detail(request, operation_id):
                 else:
                     operation.devis_historique_numeros = operation.numero_devis
                 
-                operation.save()  # ← IMPORTANT : Cette ligne doit venir APRÈS avoir modifié les champs
+                operation.save()
                 
                 # Historique
                 HistoriqueOperation.objects.create(
@@ -608,7 +604,6 @@ def operation_detail(request, operation_id):
                 messages.error(request, f"❌ Erreur lors de la génération du devis : {str(e)}")
             
             return redirect('operation_detail', operation_id=operation.id)
-        
         # ═══════════════════════════════════════
         # ACTION : ENREGISTRER DATE ENVOI
         # ═══════════════════════════════════════
