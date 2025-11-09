@@ -342,23 +342,41 @@ def operations_list(request):
     
     # Filtrage selon le filtre actif
     if filtre == 'brouillon':
+        # ✅ UTILISER LA PROPRIÉTÉ du modèle
         operations = operations.filter(avec_devis=True, numero_devis__isnull=True)
 
     elif filtre == 'genere_non_envoye':
+        # ✅ UTILISER LA PROPRIÉTÉ du modèle
         operations = operations.filter(numero_devis__isnull=False, devis_date_envoi__isnull=True)
 
     elif filtre == 'devis_en_attente':
+        # ✅ UTILISER LA PROPRIÉTÉ du modèle
         operations = operations.filter(devis_date_envoi__isnull=False, devis_statut='en_attente')
 
     elif filtre == 'expire':
+        # ✅ CORRECTION : Utiliser la méthode correcte avec date_limite
+        from django.utils import timezone
+        from datetime import timedelta
+        
         operations_expire_ids = []
-        for op in operations.filter(devis_date_envoi__isnull=False, devis_statut='en_attente'):
-            if op.est_expire:
+        operations_candidats = operations.filter(
+            devis_date_envoi__isnull=False,
+            devis_statut='en_attente',
+            devis_validite_jours__isnull=False
+        )
+        
+        for op in operations_candidats:
+            # Calculer la date limite
+            date_limite = op.devis_date_envoi + timedelta(days=op.devis_validite_jours)
+            
+            # Vérifier si expiré
+            if date_limite < timezone.now().date():
                 operations_expire_ids.append(op.id)
+        
         operations = operations.filter(id__in=operations_expire_ids)
-    
+
     # ✅ ENRICHISSEMENT POUR FILTRES SPÉCIAUX
-    if filtre == 'retards':
+    elif filtre == 'retards':
         operations = operations.filter(id__in=operations_avec_retards_ids)
         
         for op in operations:
@@ -370,7 +388,7 @@ def operations_list(request):
             if premier_retard:
                 op.premier_retard = premier_retard
                 op.jours_retard = (today - premier_retard.date_echeance).days
-    
+
     elif filtre == 'non_planifies':
         operations = operations.filter(id__in=operations_sans_echeances_ids)
         
@@ -380,11 +398,12 @@ def operations_list(request):
             )['total'] or 0
             
             op.reste_a_planifier = op.montant_total - total_planifie
-    
+
     elif filtre == 'toutes':
         pass
-    
+
     else:
+        # Pour les autres filtres standards (statut)
         operations = operations.filter(statut=filtre)
     
     # Recherche
