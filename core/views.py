@@ -435,47 +435,52 @@ def operations_list(request):
     nb_realise = all_operations_periode.filter(statut='realise').count()
     nb_paye = all_operations_periode.filter(statut='paye').count()
     nb_refuse = all_operations_periode.filter(statut='devis_refuse').count()
-    
+
     # ========================================
     # NOUVEAUX COMPTEURS DEVIS (KPI)
     # ========================================
 
-    
     # 1️⃣ BROUILLON : Devis commencé mais pas généré
     nb_devis_brouillon = Operation.objects.filter(
         user=request.user,
         avec_devis=True,
         numero_devis__isnull=True
     ).count()
-    
+
     # 2️⃣ GÉNÉRÉ MAIS NON ENVOYÉ
     nb_devis_genere_non_envoye = Operation.objects.filter(
         user=request.user,
         numero_devis__isnull=False,
         devis_date_envoi__isnull=True
     ).count()
-    
-    # 3️⃣ EN ATTENTE
+
+    # ✅ 3️⃣ CALCULER D'ABORD LES EXPIRÉS (avant de les utiliser)
+    operations_avec_devis = Operation.objects.filter(
+        user=request.user,
+        devis_date_envoi__isnull=False,
+        devis_statut='en_attente',
+        devis_validite_jours__isnull=False
+    )
+
+    operations_expire_ids = []
+    today = timezone.now().date()
+
+    for op in operations_avec_devis:
+        if op.devis_validite_jours:
+            date_limite = op.devis_date_envoi + timedelta(days=op.devis_validite_jours)
+            if date_limite < today:
+                operations_expire_ids.append(op.id)
+
+    nb_devis_expire = len(operations_expire_ids)
+
+    # ✅ 4️⃣ MAINTENANT on peut calculer EN ATTENTE (en excluant les expirés)
     nb_devis_en_attente = Operation.objects.filter(
         user=request.user,
         devis_date_envoi__isnull=False,
         devis_statut='en_attente'
+    ).exclude(
+        id__in=operations_expire_ids  # ← Maintenant operations_expire_ids existe déjà !
     ).count()
-    
-    # 4️⃣ EXPIRÉ
-    # On doit calculer manuellement car c'est une propriété
-    operations_avec_devis = Operation.objects.filter(
-        user=request.user,
-        devis_date_envoi__isnull=False,
-        devis_statut='en_attente'
-    )
-    
-    nb_devis_expire = 0
-    today = timezone.now().date()
-    
-    for op in operations_avec_devis:
-        if op.devis_date_limite and op.devis_date_limite < today:
-            nb_devis_expire += 1
     
     # Options de cycle pour les boutons
     cycle_options = [
