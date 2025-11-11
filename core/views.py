@@ -24,8 +24,6 @@ from .models import Client, Operation, Intervention, HistoriqueOperation, Echean
 from .models import Client, Operation, Intervention, HistoriqueOperation, Echeance
 from .fix_database import fix_client_constraint
 
-from datetime import timedelta
-
 import re  # ← AJOUTER CETTE LIGNE
 
 
@@ -625,7 +623,7 @@ def operation_detail(request, operation_id):
         # ACTION : ENREGISTRER DATE ENVOI
         # ═══════════════════════════════════════
         elif action == 'enregistrer_date_envoi':
-            from datetime import datetime
+            
             
             date_envoi_str = request.POST.get('devis_date_envoi', '')
             
@@ -655,7 +653,7 @@ def operation_detail(request, operation_id):
         # ACTION : ACCEPTER LE DEVIS
         # ═══════════════════════════════════════
         elif action == 'accepter_devis':
-            from datetime import datetime
+            
             
             # ✅ NOUVEAU : Date automatique = aujourd'hui
             operation.devis_date_reponse = datetime.now().date()
@@ -689,7 +687,7 @@ def operation_detail(request, operation_id):
         # ACTION : REFUSER LE DEVIS
         # ═══════════════════════════════════════
         elif action == 'refuser_devis':
-            from datetime import datetime
+            
             
             date_reponse_str = request.POST.get('date_reponse', '')
             
@@ -790,7 +788,7 @@ def operation_detail(request, operation_id):
 
             if montant_str and date_echeance_str:
                 try:
-                    from datetime import datetime
+
                     from decimal import Decimal  # ✅ AJOUT
                     
                     montant = Decimal(montant_str)  # ✅ CORRECTION
@@ -883,7 +881,7 @@ def operation_detail(request, operation_id):
                 
                 # Si paiement comptant avec date, marquer comme payé
                 if mode_paiement == 'comptant' and date_paiement_comptant:
-                    from datetime import datetime
+                    
                     try:
                         # Convertir la date en datetime (avec l'heure à minuit)
                         date_obj = datetime.strptime(date_paiement_comptant, '%Y-%m-%d')
@@ -921,7 +919,7 @@ def operation_detail(request, operation_id):
                 ancien_statut = operation.get_statut_display()
                 operation.statut = nouveau_statut
                 
-                from datetime import datetime
+                
                 
                 if nouveau_statut == 'planifie' and date_prevue_str:
                     try:
@@ -1074,7 +1072,7 @@ def operation_detail(request, operation_id):
         
         # GESTION DE LA PLANIFICATION
         elif action == 'update_planning':
-            from datetime import datetime
+            
             date_prevue_str = request.POST.get('date_prevue', '')
             
             print(f"\n{'='*60}")
@@ -1115,7 +1113,7 @@ def operation_detail(request, operation_id):
 
         # VALIDATION DE LA RÉALISATION
         elif action == 'valider_realisation':
-            from datetime import datetime
+            
             date_realisation_str = request.POST.get('date_realisation', '')
             
             if date_realisation_str:
@@ -1145,7 +1143,7 @@ def operation_detail(request, operation_id):
         
         # CORRECTION DES DATES DE RÉALISATION
         elif action == 'corriger_dates_realisation':
-            from datetime import datetime
+           
             date_realisation_str = request.POST.get('date_realisation', '')
             
             if date_realisation_str:
@@ -1184,7 +1182,7 @@ def operation_detail(request, operation_id):
             
             if montant_str and date_paiement_str:
                 try:
-                    from datetime import datetime
+                    
                     from decimal import Decimal  # ✅ AJOUT
                     
                     montant = Decimal(montant_str)  # ✅ CORRECTION
@@ -1767,7 +1765,7 @@ def operation_create(request):
                 print(f"Statut initial: {statut_initial}")
                 
                 # Gestion des dates
-                from datetime import datetime
+                
                 date_intervention_str = request.POST.get('date_intervention', '')
                 
                 date_prevue = None
@@ -2094,7 +2092,7 @@ def profil_entreprise(request):
         assurance_validite_str = request.POST.get('assurance_decennale_validite', '')
         if assurance_validite_str:
             try:
-                from datetime import datetime
+                
                 profil.assurance_decennale_validite = datetime.strptime(assurance_validite_str, '%Y-%m-%d').date()
             except:
                 profil.assurance_decennale_validite = None
