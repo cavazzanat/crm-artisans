@@ -26,6 +26,8 @@ from .fix_database import fix_client_constraint
 
 from datetime import timedelta
 
+import re  # ← AJOUTER CETTE LIGNE
+
 
 
 @login_required
