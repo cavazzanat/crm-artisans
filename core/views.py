@@ -550,9 +550,6 @@ def operation_detail(request, operation_id):
         # ACTION : GÉNÉRER LE DEVIS (VERSION CORRIGÉE)
         # ═══════════════════════════════════════
         if action == 'generer_devis':
-            from datetime import datetime
-            from django.db.models import Max
-            import re
             
             # ✅ Vérifier qu'il y a au moins une ligne
             if not operation.interventions.exists():
