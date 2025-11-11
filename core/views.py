@@ -546,9 +546,13 @@ def operation_detail(request, operation_id):
         # ═══════════════════════════════════════
         # ACTION : GÉNÉRER LE DEVIS
         # ═══════════════════════════════════════
+        # ═══════════════════════════════════════
+        # ACTION : GÉNÉRER LE DEVIS (VERSION CORRIGÉE)
+        # ═══════════════════════════════════════
         if action == 'generer_devis':
-
             from datetime import datetime
+            from django.db.models import Max
+            import re
             
             # ✅ Vérifier qu'il y a au moins une ligne
             if not operation.interventions.exists():
@@ -557,23 +561,32 @@ def operation_detail(request, operation_id):
             devis_notes = request.POST.get('devis_notes', '').strip()
             devis_validite_jours = request.POST.get('devis_validite_jours', '30')
             
-            print(f"DEBUG - Notes reçues: '{devis_notes}'")
-            print(f"DEBUG - Validité reçue: '{devis_validite_jours}'")
-            
             try:
-                # ✅ GÉNÉRATION AVEC COMPTEUR PAR UTILISATEUR
+                # ✅ GÉNÉRATION AVEC MAX() POUR ÉVITER LES DOUBLONS
                 annee_courante = datetime.now().year
+                prefix = f'DEVIS-{annee_courante}-U{request.user.id}-'
                 
-                # Compter les devis de CET utilisateur pour CETTE année
-                nombre_devis_user = Operation.objects.filter(
+                # Récupérer tous les devis existants de cet utilisateur pour cette année
+                derniers_devis = Operation.objects.filter(
                     user=request.user,
-                    numero_devis__startswith=f'DEVIS-{annee_courante}-U{request.user.id}-'
-                ).count()
+                    numero_devis__startswith=prefix
+                ).values_list('numero_devis', flat=True)
                 
-                nouveau_numero = nombre_devis_user + 1
+                # Extraire le numéro le plus élevé
+                max_numero = 0
+                for devis in derniers_devis:
+                    # Extraire le numéro à la fin (ex: DEVIS-2025-U12-00003 → 3)
+                    match = re.search(r'-(\d+)$', devis)
+                    if match:
+                        numero = int(match.group(1))
+                        if numero > max_numero:
+                            max_numero = numero
                 
-                # Format : DEVIS-2025-U1-00001 (User ID 1, devis n°1)
-                nouveau_numero_devis = f'DEVIS-{annee_courante}-U{request.user.id}-{nouveau_numero:05d}'
+                # Nouveau numéro = max + 1
+                nouveau_numero = max_numero + 1
+                
+                # Format : DEVIS-2025-U12-00001
+                nouveau_numero_devis = f'{prefix}{nouveau_numero:05d}'
                 
                 operation.numero_devis = nouveau_numero_devis
                 
