@@ -350,8 +350,26 @@ def operations_list(request):
         operations = operations.filter(numero_devis__isnull=False, devis_date_envoi__isnull=True)
 
     elif filtre == 'devis_en_attente':
-        # ✅ UTILISER LA PROPRIÉTÉ du modèle
-        operations = operations.filter(devis_date_envoi__isnull=False, devis_statut='en_attente')
+        # ✅ Devis envoyés + en attente MAIS non expirés
+        operations_en_attente_ids = []
+        operations_candidats = operations.filter(
+            devis_date_envoi__isnull=False, 
+            devis_statut='en_attente'
+        )
+        
+        for op in operations_candidats:
+            # Vérifier si expiré
+            if op.devis_validite_jours:
+                date_limite = op.devis_date_envoi + timedelta(days=op.devis_validite_jours)
+                
+                # ✅ SEULEMENT si NON expiré
+                if date_limite >= timezone.now().date():
+                    operations_en_attente_ids.append(op.id)
+            else:
+                # Pas de date de validité = toujours valide
+                operations_en_attente_ids.append(op.id)
+        
+        operations = operations.filter(id__in=operations_en_attente_ids)
 
     elif filtre == 'expire':
         # ✅ CORRECTION : Utiliser la méthode correcte avec date_limit
