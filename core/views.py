@@ -2132,7 +2132,7 @@ def profil_entreprise(request):
         profil.save()
         
         messages.success(request, "✅ Profil entreprise mis à jour avec succès !")
-        return redirect('profil_entreprise')
+        return redirect('profil')
     
     context = {
         'profil': profil,
