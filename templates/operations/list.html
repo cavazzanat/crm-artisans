@@ -509,6 +509,7 @@
 
     /* RESPONSIVE */
     @media (max-width:760px){
+      .subtitle{ margin-bottom: 1.25rem }
       .filters-header{ flex-direction: column; align-items: stretch; gap: .75rem }
       .filter-group{ gap: .35rem }
       .filter-btn{ flex: 1; justify-content: center; min-width: 0; font-size: .8rem; padding: .5rem .7rem }
@@ -561,6 +562,39 @@
   <main class="container">
     <h1 class="page-title">Gestion des opérations</h1>
     <p class="subtitle">{{ nb_total }} opération{{ nb_total|pluralize }} au total</p>
+
+    <!-- MINI KPI FINANCIERS -->
+    <div style="display: flex; gap: .75rem; margin-bottom: 2rem; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 180px; background: white; border: 1px solid var(--border); border-radius: 10px; padding: .85rem 1rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: .75rem;">
+        <div style="width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, rgba(34,197,94,.15), rgba(34,197,94,.05)); display: grid; place-items: center; font-size: 1.25rem;">
+          💰
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: .7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .15rem;">CA Encaissé</div>
+          <div style="font-size: 1.35rem; font-weight: 800; color: var(--text);">{{ ca_encaisse|floatformat:0 }} €</div>
+        </div>
+      </div>
+
+      <div style="flex: 1; min-width: 180px; background: white; border: 1px solid var(--border); border-radius: 10px; padding: .85rem 1rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: .75rem;">
+        <div style="width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, rgba(245,158,11,.15), rgba(245,158,11,.05)); display: grid; place-items: center; font-size: 1.25rem;">
+          ⏳
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: .7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .15rem;">À Encaisser</div>
+          <div style="font-size: 1.35rem; font-weight: 800; color: var(--text);">{{ ca_en_attente_total|floatformat:0 }} €</div>
+        </div>
+      </div>
+
+      <div style="flex: 1; min-width: 180px; background: white; border: 1px solid var(--border); border-radius: 10px; padding: .85rem 1rem; box-shadow: var(--shadow); display: flex; align-items: center; gap: .75rem;">
+        <div style="width: 40px; height: 40px; border-radius: 8px; background: linear-gradient(135deg, rgba(99,102,241,.15), rgba(99,102,241,.05)); display: grid; place-items: center; font-size: 1.25rem;">
+          📈
+        </div>
+        <div style="flex: 1;">
+          <div style="font-size: .7rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .15rem;">Prévisionnel 30j</div>
+          <div style="font-size: 1.35rem; font-weight: 800; color: var(--text);">{{ ca_previsionnel_30j|default:0|floatformat:0 }} €</div>
+        </div>
+      </div>
+    </div>
 
     <!-- FILTRES ORGANISÉS -->
     <div class="filters-wrapper">
