@@ -653,6 +653,11 @@
               ⏰ Planifiées
               <span class="filter-badge">{{ nb_planifie }}</span>
             </a>
+            <!-- ✅ NOUVEAU BOUTON : À TRAITER -->
+            <a href="?filtre=a_traiter" class="filter-btn warning {% if filtre_actif == 'a_traiter' %}active{% endif %}">
+              🟠 À traiter
+              <span class="filter-badge">{{ nb_a_traiter }}</span>
+            </a>
             <a href="?filtre=realise" class="filter-btn {% if filtre_actif == 'realise' %}active{% endif %}">
               ✅ Réalisées
               <span class="filter-badge">{{ nb_realise }}</span>
@@ -730,6 +735,8 @@
             ⏳ Devis en attente de réponse
           {% elif filtre_actif == 'expire' %}
             ⚠️ Devis expirés
+          {% elif filtre_actif == 'a_traiter' %}
+            🟠 Interventions à traiter
           {% elif filtre_actif == 'retards' %}
             🚨 Paiements en retard
           {% elif filtre_actif == 'non_planifies' %}

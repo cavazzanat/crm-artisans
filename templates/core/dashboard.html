@@ -464,6 +464,17 @@
   background: rgba(148,163,184,.25);
 }
 
+/* 🟠 NOUVEAU : Orange : À traiter (passé non validé) */
+.event-item.event-a-traiter{
+  background: rgba(245,158,11,.15);
+  border-color: rgba(245,158,11,.3);
+  color: #92400e;
+  animation: pulse-attention 2s ease-in-out infinite;
+}
+.event-item.event-a-traiter:hover{
+  background: rgba(245,158,11,.25);
+}
+
 /* 🔵 Bleu : Réalisé */
 .event-item.event-realise{
   background: rgba(59,130,246,.15);
@@ -1055,6 +1066,11 @@
         <div style="display:flex; align-items:center; gap:.4rem">
           <span style="width:12px; height:12px; border-radius:50%; background:#94a3b8"></span>
           <span style="font-size:.85rem; color:var(--text)">Planifié</span>
+
+        <!-- 🆕 NOUVEAU : Pastille orange -->
+        <div style="display:flex; align-items:center; gap:.4rem">
+          <span style="width:12px; height:12px; border-radius:50%; background:#f59e0b"></span>
+          <span style="font-size:.85rem; color:var(--text)">À traiter</span>
         </div>
         <div style="display:flex; align-items:center; gap:.4rem">
           <span style="width:12px; height:12px; border-radius:50%; background:#3b82f6"></span>

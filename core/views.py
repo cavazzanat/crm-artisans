@@ -116,11 +116,16 @@ def dashboard(request):
                 continue  # Skip si aucune date disponible
             
             is_past = date_affichage < timezone.now()
-            
-            # ✅ Code couleur selon le statut
+                    
+            # ✅ CODE COULEUR SELON LE STATUT ET LA DATE
             if op.statut == 'planifie':
-                color_class = 'event-planifie'
-                status_text = "Planifié"
+                # Si la date est passée → À traiter (orange)
+                if is_past:
+                    color_class = 'event-a-traiter'
+                    status_text = "À traiter"
+                else:
+                    color_class = 'event-planifie'
+                    status_text = "Planifié"
             elif op.statut == 'realise':
                 color_class = 'event-realise'
                 status_text = "Réalisé"
@@ -394,6 +399,13 @@ def operations_list(request):
         
         operations = operations.filter(id__in=operations_expire_ids)
 
+    elif filtre == 'a_traiter':
+        # Opérations planifiées dont la date est passée
+        operations = operations.filter(
+            statut='planifie',
+            date_prevue__lt=timezone.now()  # Date dans le passé
+        )
+
     # ✅ ENRICHISSEMENT POUR FILTRES SPÉCIAUX
     elif filtre == 'retards':
         operations = operations.filter(id__in=operations_avec_retards_ids)
@@ -456,6 +468,13 @@ def operations_list(request):
     nb_realise = all_operations_periode.filter(statut='realise').count()
     nb_paye = all_operations_periode.filter(statut='paye').count()
     nb_refuse = all_operations_periode.filter(statut='devis_refuse').count()
+
+    # ✅ NOUVEAU : Compteur "À traiter"
+    nb_a_traiter = Operation.objects.filter(
+        user=request.user,
+        statut='planifie',
+        date_prevue__lt=timezone.now()
+    ).count()
 
     # ========================================
     # NOUVEAUX COMPTEURS DEVIS (KPI)
@@ -534,6 +553,7 @@ def operations_list(request):
         'nb_en_attente_devis': nb_en_attente_devis,
         'nb_a_planifier': nb_a_planifier,
         'nb_planifie': nb_planifie,
+        'nb_a_traiter': nb_a_traiter, 
         'nb_realise': nb_realise,
         'nb_paiements_retard': nb_paiements_retard,
         'nb_operations_sans_paiement': nb_operations_sans_paiement,
