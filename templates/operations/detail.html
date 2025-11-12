@@ -1480,20 +1480,16 @@ function initSyncDevis() {
 })();
 </script>
 
-    <!-- ========================================
-        LIGNES DU DEVIS (visible seulement si devis envoyé OU pas de devis)
-        ⚠️ MASQUÉ si le devis est accepté (pour éviter le doublon)
-        ======================================== -->
-    {% if operation.devis_statut != 'accepte' %}
+<!-- ========================================
+    LIGNES D'INTERVENTION
+    ⚠️ Affichée UNIQUEMENT pour les opérations SANS DEVIS (parcours direct)
+    ======================================== -->
+    {% if not operation.avec_devis %}
     <section class="section">
       <div class="section-header" onclick="toggleSection(this)">
         <h2 class="section-title">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8ZM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="1.6"/></svg>
-          {% if operation.avec_devis %}
-            📋 Lignes du devis
-          {% else %}
-            🔧 Lignes d'intervention
-          {% endif %}
+          🔧 Lignes d'intervention
           
           {% if interventions %}
           <span class="section-badge complete">
@@ -1509,13 +1505,13 @@ function initSyncDevis() {
       </div>
       
       <div class="section-body">
-        <!-- Verrouillage si devis accepté -->
-        {% if operation.devis_statut == 'accepte' %}
+        <!-- Verrouillage si déjà payé/réalisé (optionnel) -->
+        {% if operation.statut == 'paye' %}
         <div class="alert info" style="margin-bottom: 1rem;">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.6"/><path d="M12 11V7a2 2 0 1 1 4 0v4m-8 0V7a2 2 0 0 1 2-2" stroke="currentColor" stroke-width="1.6"/></svg>
           <div>
             <strong>🔒 Montant verrouillé</strong><br>
-            Le devis a été accepté, les lignes ne peuvent plus être modifiées.
+            L'opération est payée, les lignes ne peuvent plus être modifiées.
           </div>
         </div>
         {% endif %}
@@ -1527,7 +1523,7 @@ function initSyncDevis() {
               <tr>
                 <th>Description</th>
                 <th style="width:120px">Montant (€)</th>
-                {% if operation.devis_statut != 'accepte' %}
+                {% if operation.statut != 'paye' %}
                 <th style="width:100px">Actions</th>
                 {% endif %}
               </tr>
@@ -1537,7 +1533,7 @@ function initSyncDevis() {
               <tr>
                 <td>{{ intervention.description }}</td>
                 <td><strong>{{ intervention.montant }}</strong></td>
-                {% if operation.devis_statut != 'accepte' %}
+                {% if operation.statut != 'paye' %}
                 <td>
                   <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette ligne ?')">
                     {% csrf_token %}
@@ -1554,7 +1550,7 @@ function initSyncDevis() {
               <tr class="total-row">
                 <td><strong>TOTAL</strong></td>
                 <td><strong>{{ montant_total }} €</strong></td>
-                {% if operation.devis_statut != 'accepte' %}
+                {% if operation.statut != 'paye' %}
                 <td></td>
                 {% endif %}
               </tr>
@@ -1562,11 +1558,11 @@ function initSyncDevis() {
           </table>
         </div>
         {% else %}
-        <div class="alert info">Aucune ligne</div>
+        <div class="alert info">Aucune ligne d'intervention</div>
         {% endif %}
 
         <!-- Formulaire ajout (masqué si verrouillé) -->
-        {% if operation.devis_statut != 'accepte' %}
+        {% if operation.statut != 'paye' %}
         <div style="margin-top:1.5rem; padding-top:1.5rem; border-top:1px solid var(--border)">
           <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem">Ajouter une ligne</h4>
           <form method="POST">
@@ -1592,7 +1588,6 @@ function initSyncDevis() {
       </div>
     </section>
     {% endif %}
-
 
         <!-- ========================================
             PLANIFICATION - AVEC AFFICHAGE CONDITIONNEL
