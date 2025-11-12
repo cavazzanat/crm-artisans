@@ -1103,31 +1103,56 @@
                   {% endif %}
                 </td>
                 <td>
-                  {# ✅ NOUVEAU : Afficher l'état du devis si on filtre sur un statut de devis #}
-                  {% if filtre_actif == 'brouillon' %}
-                    <span class="status warn">📝 Brouillon</span>
-                  {% elif filtre_actif == 'genere_non_envoye' %}
-                    <span class="status" style="color:#3b82f6; border-color:rgba(59,130,246,.3); background:rgba(59,130,246,.1)">📄 Généré</span>
-                  {% elif filtre_actif == 'devis_en_attente' %}
-                    <span class="status" style="color:#6366f1; border-color:rgba(99,102,241,.3); background:rgba(99,102,241,.1)">⏳ En attente client</span>
-                  {% elif filtre_actif == 'expire' %}
-                    <span class="status bad">⚠️ Expiré</span>
+                {% if operation.avec_devis %}
+                  {# ========================================
+                    OPÉRATION AVEC DEVIS : Afficher l'état du devis
+                    ======================================== #}
                   
-                  {# ✅ Sinon afficher le statut global de l'opération #}
-                  {% elif operation.statut == 'en_attente_devis' %}
-                    <span class="status warn">En attente devis</span>
-                  {% elif operation.statut == 'a_planifier' %}
-                    <span class="status">À planifier</span>
+                  {% if not operation.numero_devis %}
+                    {# Brouillon : devis pas encore généré #}
+                    <span class="status warn">📝 Brouillon</span>
+                    
+                  {% elif operation.devis_statut == 'accepte' %}
+                    {# Devis accepté #}
+                    <span class="status ok">✅ Accepté</span>
+                    
+                  {% elif operation.devis_statut == 'refuse' %}
+                    {# Devis refusé #}
+                    <span class="status bad">❌ Refusé</span>
+                    
+                  {% elif not operation.devis_date_envoi %}
+                    {# Généré mais pas encore envoyé #}
+                    <span class="status" style="color:#3b82f6; border-color:rgba(59,130,246,.3); background:rgba(59,130,246,.1)">
+                      📄 Généré
+                    </span>
+                    
+                  {% else %}
+                    {# Envoyé au client : en attente #}
+                    <span class="status" style="color:#6366f1; border-color:rgba(99,102,241,.3); background:rgba(99,102,241,.1)">
+                      ⏳ En attente
+                    </span>
+                  {% endif %}
+                  
+                {% else %}
+                  {# ========================================
+                    OPÉRATION SANS DEVIS : Afficher le statut normal
+                    ======================================== #}
+                  
+                  {% if operation.statut == 'a_planifier' %}
+                    <span class="status">📅 À planifier</span>
                   {% elif operation.statut == 'planifie' %}
-                    <span class="status">Planifié</span>
+                    <span class="status">⏰ Planifié</span>
                   {% elif operation.statut == 'realise' %}
-                    <span class="status ok">Réalisé</span>
+                    <span class="status ok">✅ Réalisé</span>
                   {% elif operation.statut == 'paye' %}
-                    <span class="status ok">Payé</span>
+                    <span class="status ok">💰 Payé</span>
+                  {% elif operation.statut == 'devis_refuse' %}
+                    <span class="status bad">❌ Annulé</span>
                   {% else %}
                     <span class="status">{{ operation.get_statut_display }}</span>
                   {% endif %}
-                </td>
+                {% endif %}
+              </td>
               {% endif %}
               
               <td>
