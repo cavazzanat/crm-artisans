@@ -9,9 +9,6 @@
   <link rel="icon" type="image/png" href="{% static 'core/image/favicon.png' %}">
   
   <style>
-    /* ========================================
-       VARIABLES - IDENTIQUES AU DASHBOARD
-       ======================================== */
     :root{
       --bg: #f8fafc;
       --card: #ffffff;
@@ -38,9 +35,7 @@
       padding-bottom: 3rem;
     }
 
-    /* ========================================
-       HEADER (IDENTIQUE AU DASHBOARD)
-       ======================================== */
+    /* HEADER */
     .header{
       position: sticky;
       top: 0;
@@ -119,9 +114,7 @@
     }
     .user form button:hover{ color: var(--text); }
 
-    /* ========================================
-       LAYOUT PRINCIPAL
-       ======================================== */
+    /* LAYOUT */
     .container{
       max-width: 1280px;
       margin: 2rem auto;
@@ -135,150 +128,17 @@
     }
     .subtitle{
       color: var(--muted);
-      margin-bottom: 1.75rem;
+      margin-bottom: 2rem;
       font-size: .95rem;
     }
 
-    /* ========================================
-       SECTION FINANCIÈRE
-       ======================================== */
-    .finance-section{
-      background: linear-gradient(135deg, rgba(99,102,241,.08), rgba(139,92,246,.08));
-      border: 2px solid rgba(99,102,241,.2);
-      border-radius: 16px;
-      padding: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    .finance-header{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-      gap: 1rem;
-    }
-    .finance-title{
-      font-size: 1.2rem;
-      font-weight: 800;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-    }
-    .period-selector{
-      display: flex;
-      gap: .5rem;
-      align-items: center;
-      background: white;
-      padding: .4rem;
-      border-radius: 10px;
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-    }
-    .period-nav{
-      display: flex;
-      background: rgba(148,163,184,.06);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .period-nav button{
-      appearance: none;
-      border: 0;
-      background: transparent;
-      color: var(--text);
-      padding: .4rem .6rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: .85rem;
-    }
-    .period-nav button:hover{
-      background: rgba(148,163,184,.1);
-    }
-    .period-nav input[type="month"]{
-      border: none;
-      background: transparent;
-      color: var(--text);
-      font: inherit;
-      padding: .4rem .6rem;
-      font-size: .85rem;
-      min-width: 120px;
-    }
-    .period-preset{
-      padding: .4rem .8rem;
-      background: var(--primary);
-      color: white;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-size: .85rem;
-      font-weight: 600;
-      transition: all 0.2s ease;
-    }
-    .period-preset:hover{
-      background: #4f46e5;
-      transform: translateY(-1px);
-    }
-
-    /* KPI STRIP */
-    .kpi-strip{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: .8rem;
-    }
-    .kpi{
-      background: white;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      padding: 1rem;
-      box-shadow: var(--shadow);
-      display: grid;
-      gap: .45rem;
-      transition: all 0.2s ease;
-    }
-    .kpi:hover{
-      box-shadow: 0 4px 12px rgba(99,102,241,.15);
-      border-color: var(--primary);
-    }
-    .kpi h3{
-      margin: 0;
-      font-size: .78rem;
-      color: var(--muted);
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-    }
-    .kpi .value{
-      font-variant-numeric: tabular-nums;
-      font-size: 1.6rem;
-      font-weight: 800;
-      color: var(--text);
-    }
-    .kpi .sub{
-      color: var(--muted);
-      font-size: .8rem;
-    }
-    .trend{
-      display: inline-flex;
-      align-items: center;
-      gap: .35rem;
-      font-size: .75rem;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      padding: .1rem .45rem;
-      background: rgba(148,163,184,.06);
-    }
-    .trend.up{ color: var(--success) }
-    .trend.down{ color: var(--danger) }
-
-    /* ========================================
-       FILTRES FIXES
-       ======================================== */
+    /* FILTRES ORGANISÉS */
     .filters-wrapper {
       background: white;
       border: 1px solid var(--border);
       border-radius: 12px;
       box-shadow: var(--shadow);
-      margin: 2rem 0 1.5rem;
+      margin-bottom: 1.5rem;
       overflow: hidden;
     }
 
@@ -514,15 +374,12 @@
       border-top: 1px solid var(--border);
     }
 
-    /* ========================================
-       SECTION LISTE
-       ======================================== */
+    /* SECTION LISTE */
     .section{
       background: white;
       border: 1px solid var(--border);
       border-radius: 14px;
       box-shadow: var(--shadow);
-      margin-top: 1.5rem;
       overflow: hidden;
     }
     .section-h{
@@ -552,9 +409,7 @@
       font-weight: 600;
     }
 
-    /* ========================================
-       BOUTONS GÉNÉRIQUES
-       ======================================== */
+    /* BOUTONS */
     .btn{
       display: inline-flex;
       align-items: center;
@@ -581,9 +436,7 @@
     }
     .btn.primary:hover{ background: #4f46e5; }
 
-    /* ========================================
-       TABLE
-       ======================================== */
+    /* TABLE */
     .table-wrap{
       overflow: auto;
     }
@@ -654,13 +507,8 @@
       background: rgba(239,68,68,.1);
     }
 
-    /* ========================================
-       RESPONSIVE
-       ======================================== */
+    /* RESPONSIVE */
     @media (max-width:760px){
-      .kpi-strip{ grid-template-columns: 1fr }
-      .finance-header{ flex-direction: column; align-items: stretch }
-      .period-selector{ flex-direction: column }
       .filters-header{ flex-direction: column; align-items: stretch; gap: .75rem }
       .filter-group{ gap: .35rem }
       .filter-btn{ flex: 1; justify-content: center; min-width: 0; font-size: .8rem; padding: .5rem .7rem }
@@ -682,9 +530,7 @@
   </style>
 </head>
 <body>
-  <!-- ========================================
-       HEADER
-       ======================================== -->
+  <!-- HEADER -->
   <header class="header">
     <div class="header-inner">
       <div class="brand">
@@ -711,147 +557,12 @@
     </div>
   </header>
 
-  <!-- ========================================
-       MAIN CONTENT
-       ======================================== -->
+  <!-- MAIN -->
   <main class="container">
     <h1 class="page-title">Gestion des opérations</h1>
     <p class="subtitle">{{ nb_total }} opération{{ nb_total|pluralize }} au total</p>
 
-    <!-- ========================================
-         SECTION FINANCIÈRE AVEC FILTRES PÉRIODE
-         ======================================== -->
-    <section class="finance-section">
-      <div class="finance-header">
-        <h2 class="finance-title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-          </svg>
-          Vue financière
-          <span style="font-size:.85rem; color:var(--muted); font-weight:400">
-            · {{ periode_start|date:"d/m/Y" }} → {{ periode_end|date:"d/m/Y" }}
-          </span>
-        </h2>
-        
-        <form method="GET" class="period-selector" id="periodForm">
-          <div class="period-nav">
-            <button name="nav" value="prev" type="submit" title="Mois précédent">◀︎</button>
-            <input type="month" name="mois" value="{{ periode_start|date:'Y-m' }}" />
-            <button name="nav" value="next" type="submit" title="Mois suivant">▶︎</button>
-          </div>
-          <button name="periode" value="ytd" type="submit" class="period-preset">
-            Depuis début année
-          </button>
-        </form>
-      </div>
-
-      <!-- KPI -->
-      <div class="kpi-strip">
-        <article class="kpi">
-          <h3>CA encaissé</h3>
-          <div class="value">{{ ca_encaisse|floatformat:0 }} €</div>
-          <div class="sub">
-            <span class="trend {% if ca_encaisse_var > 0 %}up{% elif ca_encaisse_var < 0 %}down{% endif %}">
-              {% if ca_encaisse_var > 0 %}▲{% elif ca_encaisse_var < 0 %}▼{% else %}—{% endif %} 
-              {{ ca_encaisse_var|default:"0" }}%
-            </span> vs période précédente
-          </div>
-        </article>
-        
-        <article class="kpi">
-          <h3>Encours à encaisser</h3>
-          <div class="value">{{ ca_en_attente_total|floatformat:0 }} €</div>
-          <div class="sub">dont en retard : <strong>{{ ca_retard|floatformat:0 }} €</strong></div>
-        </article>
-        
-        <article class="kpi">
-          <h3>Prévisionnel (30j)</h3>
-          <div class="value">{{ ca_previsionnel_30j|default:0|floatformat:0 }} €</div>
-          <div class="sub">opérations planifiées à venir</div>
-        </article>
-      </div>
-    </section>
-
-    <!-- ========================================
-         SECTION SUIVI DES DEVIS (CLIQUABLE)
-    ======================================== -->
-    <div style="background: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-      <h3 style="margin: 0 0 1.5rem 0; color: var(--text); font-size: 1.1rem; font-weight: 600; border-bottom: 2px solid var(--border); padding-bottom: 0.75rem;">
-        📊 Suivi des devis
-      </h3>
-      
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-        
-        <!-- 1️⃣ BROUILLON -->
-        <a href="?filtre=brouillon" style="text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(251,191,36,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-          <div style="background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 1rem; cursor: pointer; height: 100%;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <span style="font-size: 1.25rem;">📝</span>
-              <span style="font-size: 0.75rem; color: #92400e; font-weight: 600; text-transform: uppercase;">Brouillon</span>
-            </div>
-            <div style="font-size: 1.75rem; font-weight: 700; color: #92400e;">
-              {{ nb_devis_brouillon }}
-            </div>
-            <div style="font-size: 0.8rem; color: #92400e; margin-top: 0.25rem;">
-              Non généré{{ nb_devis_brouillon|pluralize }}
-            </div>
-          </div>
-        </a>
-        
-        <!-- 2️⃣ GÉNÉRÉ MAIS NON ENVOYÉ -->
-        <a href="?filtre=genere_non_envoye" style="text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(59,130,246,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-          <div style="background: #dbeafe; border: 1px solid #3b82f6; border-radius: 8px; padding: 1rem; cursor: pointer; height: 100%;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <span style="font-size: 1.25rem;">📄</span>
-              <span style="font-size: 0.75rem; color: #1e40af; font-weight: 600; text-transform: uppercase;">Généré</span>
-            </div>
-            <div style="font-size: 1.75rem; font-weight: 700; color: #1e40af;">
-              {{ nb_devis_genere_non_envoye }}
-            </div>
-            <div style="font-size: 0.8rem; color: #1e40af; margin-top: 0.25rem;">
-              Non envoyé{{ nb_devis_genere_non_envoye|pluralize }}
-            </div>
-          </div>
-        </a>
-        
-        <!-- 3️⃣ EN ATTENTE -->
-        <a href="?filtre=devis_en_attente" style="text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(99,102,241,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-          <div style="background: #e0e7ff; border: 1px solid #6366f1; border-radius: 8px; padding: 1rem; cursor: pointer; height: 100%;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <span style="font-size: 1.25rem;">⏳</span>
-              <span style="font-size: 0.75rem; color: #4338ca; font-weight: 600; text-transform: uppercase;">En attente</span>
-            </div>
-            <div style="font-size: 1.75rem; font-weight: 700; color: #4338ca;">
-              {{ nb_devis_en_attente }}
-            </div>
-            <div style="font-size: 0.8rem; color: #4338ca; margin-top: 0.25rem;">
-              Réponse attendue
-            </div>
-          </div>
-        </a>
-        
-        <!-- 4️⃣ EXPIRÉ -->
-        <a href="?filtre=expire" style="text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(239,68,68,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
-          <div style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 8px; padding: 1rem; cursor: pointer; height: 100%;">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <span style="font-size: 1.25rem;">⚠️</span>
-              <span style="font-size: 0.75rem; color: #991b1b; font-weight: 600; text-transform: uppercase;">Expiré</span>
-            </div>
-            <div style="font-size: 1.75rem; font-weight: 700; color: #991b1b;">
-              {{ nb_devis_expire }}
-            </div>
-            <div style="font-size: 0.8rem; color: #991b1b; margin-top: 0.25rem;">
-              À relancer
-            </div>
-          </div>
-        </a>
-        
-      </div>
-    </div>
-
-    <!-- ========================================
-         FILTRES FIXES
-         ======================================== -->
+    <!-- FILTRES ORGANISÉS -->
     <div class="filters-wrapper">
       <div class="filters-header">
         <div class="filters-title">
@@ -973,9 +684,7 @@
       </div>
     </div>
 
-    <!-- ========================================
-         LISTE DES OPÉRATIONS
-         ======================================== -->
+    <!-- LISTE -->
     <section class="section">
       <div class="section-h">
         <h2>
@@ -1104,31 +813,22 @@
                 </td>
                 <td>
                   {% if operation.avec_devis %}
-                    {# Opération avec devis : afficher l'état du devis #}
-                    
                     {% if not operation.numero_devis %}
                       <span class="status warn">📝 Brouillon</span>
-                      
                     {% elif operation.devis_statut == 'accepte' %}
                       <span class="status ok">✅ Accepté</span>
-                      
                     {% elif operation.devis_statut == 'refuse' %}
                       <span class="status bad">❌ Refusé</span>
-                      
                     {% elif not operation.devis_date_envoi %}
                       <span class="status" style="color:#3b82f6; border-color:rgba(59,130,246,.3); background:rgba(59,130,246,.1)">
                         📄 Généré
                       </span>
-                      
                     {% else %}
                       <span class="status" style="color:#6366f1; border-color:rgba(99,102,241,.3); background:rgba(99,102,241,.1)">
                         ⏳ En attente
                       </span>
                     {% endif %}
-                    
                   {% else %}
-                    {# Opération sans devis : afficher le statut normal #}
-                    
                     {% if operation.statut == 'a_planifier' %}
                       <span class="status">📅 À planifier</span>
                     {% elif operation.statut == 'planifie' %}
@@ -1188,54 +888,9 @@
     </section>
   </main>
 
-  <!-- ========================================
-       JAVASCRIPT
-       ======================================== -->
+  <!-- JS -->
   <script>
-    // Navigation mois pour la section financière uniquement
-    (function(){
-      const form = document.getElementById('periodForm');
-      if (!form) return;
-      
-      const monthInput = form.querySelector('input[name=mois]');
-      const prev = form.querySelector('button[name="nav"][value="prev"]');
-      const next = form.querySelector('button[name="nav"][value="next"]');
-      
-      function shiftMonth(delta){
-        if(!monthInput.value) {
-          const now = new Date();
-          monthInput.value = now.toISOString().slice(0,7);
-        }
-        
-        const [year, month] = monthInput.value.split('-').map(Number);
-        const date = new Date(year, month - 1, 1);
-        date.setMonth(date.getMonth() + delta);
-        
-        const newYear = date.getFullYear();
-        const newMonth = String(date.getMonth() + 1).padStart(2, '0');
-        monthInput.value = `${newYear}-${newMonth}`;
-        
-        form.submit();
-      }
-      
-      prev.addEventListener('click', function(e){ 
-        e.preventDefault(); 
-        e.stopPropagation();
-        shiftMonth(-1); 
-      });
-      
-      next.addEventListener('click', function(e){ 
-        e.preventDefault(); 
-        e.stopPropagation();
-        shiftMonth(1); 
-      });
-      
-      monthInput.addEventListener('change', function(){ 
-        form.submit(); 
-      });
-    })();
-
-    // Raccourci clavier : Ctrl+K pour focus sur recherche
+    // Raccourci clavier Ctrl+K
     document.addEventListener('keydown', function(e) {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
         e.preventDefault();
