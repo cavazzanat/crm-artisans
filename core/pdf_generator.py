@@ -62,10 +62,10 @@ def generer_devis_pdf(operation, profil):
     # ========================================
     
     # Logo (si existe)
-    if profil.logo and os.path.exists(profil.logo.path):
-        logo = Image(profil.logo.path, width=4*cm, height=2*cm)
-        elements.append(logo)
-        elements.append(Spacer(1, 0.5*cm))
+    #if profil.logo and os.path.exists(profil.logo.path):
+    #   logo = Image(profil.logo.path, width=4*cm, height=2*cm)
+    #   elements.append(logo)
+    #   elements.append(Spacer(1, 0.5*cm))
     
     # Informations entreprise
     entreprise_data = [
