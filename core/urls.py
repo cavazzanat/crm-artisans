@@ -29,6 +29,8 @@ urlpatterns = [
     path('run-migration/', views.run_migration, name='run_migration'),
     
     path('profil/', views.profil_entreprise, name='profil'),  
+    
+    path('operations/<int:operation_id>/devis/pdf/', views.telecharger_devis_pdf, name='telecharger_devis_pdf'),
 
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
     path('register/', views.register, name='register'),

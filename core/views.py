@@ -26,6 +26,9 @@ from .fix_database import fix_client_constraint
 
 import re  # ← AJOUTER CETTE LIGNE
 
+from .pdf_generator import generer_devis_pdf
+
+
 
 
 @login_required
@@ -2168,6 +2171,38 @@ def operation_edit(request, operation_id):
                 messages.error(request, f"Erreur : {str(e)}")
         
         return redirect('operation_detail', operation_id=operation.id)
+
+def telecharger_devis_pdf(request, operation_id):
+    """
+    Vue pour télécharger le PDF d'un devis
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    
+    # Vérifier que le devis est généré
+    if not operation.numero_devis:
+        messages.error(request, "❌ Le devis n'a pas encore été généré.")
+        return redirect('operation_detail', operation_id=operation.id)
+    
+    # Récupérer le profil entreprise
+    try:
+        profil = ProfilEntreprise.objects.get(user=request.user)
+    except ProfilEntreprise.DoesNotExist:
+        messages.error(request, "❌ Veuillez d'abord compléter votre profil entreprise.")
+        return redirect('profil')
+    
+    # Vérifier que le profil est complet
+    if not profil.est_complet:
+        messages.error(request, "❌ Votre profil entreprise est incomplet. Complétez-le pour générer des PDF.")
+        return redirect('profil')
+    
+    # Générer le PDF
+    pdf_data = generer_devis_pdf(operation, profil)
+    
+    # Retourner le PDF en téléchargement
+    response = HttpResponse(pdf_data, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="devis_{operation.numero_devis}.pdf"'
+    
+    return response
 
 def register(request):
     if request.method == 'POST':

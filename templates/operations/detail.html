@@ -1003,12 +1003,12 @@
             <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
               💡 Téléchargez le devis au format PDF pour l'envoyer à votre client.
             </p>
-            <button type="button" class="btn primary" style="width: 100%; padding: 0.85rem;" onclick="alert('⚠️ Fonctionnalité PDF en cours de développement (Phase 4)')">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-              </svg>
-              📥 Télécharger le PDF
-            </button>
+              <a href="{% url 'telecharger_devis_pdf' operation.id %}" class="btn primary" style="width: 100%; padding: 0.85rem; text-decoration: none; justify-content: center;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                </svg>
+                📥 Télécharger le PDF
+              </a>
           </div>
 
         <!-- ============================
