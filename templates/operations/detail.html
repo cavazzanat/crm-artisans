@@ -1568,15 +1568,23 @@ function initSyncDevis() {
           <form method="POST">
             {% csrf_token %}
             <input type="hidden" name="action" value="add_intervention">
+            
             <div style="display:flex; gap:1rem; align-items:end; flex-wrap:wrap">
               <div style="flex:1; min-width:250px">
                 <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Description</label>
                 <input type="text" name="description" class="input" placeholder="Ex: Main d'œuvre, Fournitures..." required>
               </div>
+              
               <div style="flex:0 0 150px">
-                <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Montant (€)</label>
-                <input type="number" name="montant" class="input" placeholder="0.00" step="0.01" required>
+                <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">Montant HT (€)</label>
+                <input type="number" name="prix_unitaire_ht" class="input" placeholder="0.00" step="0.01" required>
               </div>
+              
+              <!-- ✅ NOUVEAU : Champs cachés pour quantité, unité et TVA -->
+              <input type="hidden" name="quantite" value="1">
+              <input type="hidden" name="unite" value="forfait">
+              <input type="hidden" name="taux_tva" value="10">
+              
               <button type="submit" class="btn success">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
                 Ajouter
