@@ -252,15 +252,11 @@ def operations_list(request):
     # CALCULS FINANCIERS (PÉRIODE)
     # ========================================
     operations_periode = Operation.objects.filter(
-        user=request.user
-    ).exclude(
-        statut__in=['en_attente_devis', 'devis_refuse']  # ← Exclure seulement devis pas encore validés
-    ).filter(
-        Q(date_realisation__gte=periode_start, date_realisation__lte=periode_end) |
-        Q(date_prevue__gte=periode_start, date_prevue__lte=periode_end) |
-        Q(date_creation__gte=periode_start, date_creation__lte=periode_end) |
-        Q(echeances__date_echeance__gte=periode_start, echeances__date_echeance__lte=periode_end)
-    ).distinct().prefetch_related('echeances')
+        user=request.user,
+        statut__in=['realise', 'paye'],
+        date_realisation__gte=periode_start,
+        date_realisation__lte=periode_end
+    ).prefetch_related('echeances')
     
     ca_encaisse = 0
     ca_en_attente_total = 0
