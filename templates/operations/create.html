@@ -627,41 +627,61 @@
     // ========================================
     // GESTION STATUT OPÉRATION DIRECTE
     // ========================================
-    function updateStatutFields() {
-      const statut = document.getElementById('statut_initial').value;
-      const dateGroup = document.getElementById('date-intervention-group');
-      const lignesGroup = document.getElementById('lignes-intervention-group');
-      const dateInput = document.getElementById('date_intervention');
-      
-      // Cacher tout par défaut
-      dateGroup.classList.add('hidden');
-      lignesGroup.classList.add('hidden');
-      dateInput.required = false;
-      
-      // Afficher selon le statut
-      if (statut === 'planifie') {
-        dateGroup.classList.remove('hidden');
-        dateInput.required = true;
-      } else if (statut === 'realise') {
-        dateGroup.classList.remove('hidden');
-        lignesGroup.classList.remove('hidden');
-        dateInput.required = true;
-        
-        // Ajouter 1 ligne par défaut si vide
-        if (interventionCount === 0) {
-          ajouterIntervention();
-        }
-      } else if (statut === 'paye') {
-        dateGroup.classList.remove('hidden');
-        lignesGroup.classList.remove('hidden');
-        dateInput.required = true;
-        
-        // Ajouter 1 ligne par défaut si vide
-        if (interventionCount === 0) {
-          ajouterIntervention();
-        }
-      }
+function updateStatutFields() {
+  const statut = document.getElementById('statut_initial').value;
+  const dateGroup = document.getElementById('date-intervention-group');
+  const lignesGroup = document.getElementById('lignes-intervention-group');
+  const dateInput = document.getElementById('date_intervention');
+  
+  // Cacher tout par défaut
+  dateGroup.classList.add('hidden');
+  lignesGroup.classList.add('hidden');
+  dateInput.required = false;
+  
+  // ✅ NOUVELLE LOGIQUE : Afficher selon le statut
+  if (statut === 'a_planifier') {
+    // ✅ À planifier : Lignes visibles (optionnelles)
+    lignesGroup.classList.remove('hidden');
+    
+    // Ajouter 1 ligne par défaut si vide
+    if (interventionCount === 0) {
+      ajouterIntervention();
     }
+    
+  } else if (statut === 'planifie') {
+    // ✅ Planifié : Date + Lignes visibles
+    dateGroup.classList.remove('hidden');
+    lignesGroup.classList.remove('hidden');
+    dateInput.required = true;
+    
+    // Ajouter 1 ligne par défaut si vide
+    if (interventionCount === 0) {
+      ajouterIntervention();
+    }
+    
+  } else if (statut === 'realise') {
+    // ✅ Réalisé : Date + Lignes visibles
+    dateGroup.classList.remove('hidden');
+    lignesGroup.classList.remove('hidden');
+    dateInput.required = true;
+    
+    // Ajouter 1 ligne par défaut si vide
+    if (interventionCount === 0) {
+      ajouterIntervention();
+    }
+    
+  } else if (statut === 'paye') {
+    // ✅ Payé : Date + Lignes visibles
+    dateGroup.classList.remove('hidden');
+    lignesGroup.classList.remove('hidden');
+    dateInput.required = true;
+    
+    // Ajouter 1 ligne par défaut si vide
+    if (interventionCount === 0) {
+      ajouterIntervention();
+    }
+  }
+}
 
     // ========================================
     // GESTION LIGNES D'INTERVENTION
