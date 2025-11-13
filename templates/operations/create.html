@@ -677,11 +677,11 @@
       row.innerHTML = `
         <div class="form-group">
           <label>Description</label>
-          <input type="text" name="description[]" class="input" placeholder="Ex: Main d'œuvre, Fournitures...">
+          <input type="text" name="description[]" class="input" placeholder="Ex: Main d'œuvre, Fournitures..." required>
         </div>
         <div class="form-group">
-          <label>Montant (€)</label>
-          <input type="number" name="montant[]" class="input montant-input" step="0.01" placeholder="0.00" onchange="calculerTotal()">
+          <label>Montant HT (€)</label>
+          <input type="number" name="montant[]" class="input montant-input" step="0.01" min="0.01" placeholder="0.00" onchange="calculerTotal()" required>
         </div>
         <button type="button" class="btn danger sm" onclick="supprimerIntervention(${interventionCount})" style="margin-top:1.5rem">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
