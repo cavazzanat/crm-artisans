@@ -1371,6 +1371,78 @@ def operation_detail(request, operation_id):
             
             messages.success(request, "✅ Commentaire enregistré")
             return redirect('operation_detail', operation_id=operation.id)
+        
+        elif action == 'generer_facture_echeance':
+            echeance_id = request.POST.get('echeance_id')
+            
+            try:
+                echeance = Echeance.objects.get(id=echeance_id, operation=operation)
+                
+                if not echeance.paye:
+                    messages.error(request, "❌ Le paiement doit être marqué comme payé avant de générer la facture")
+                    return redirect('operation_detail', operation_id=operation.id)
+                
+                if echeance.facture_generee:
+                    messages.warning(request, f"⚠️ Facture déjà générée : {echeance.numero_facture}")
+                    return redirect('operation_detail', operation_id=operation.id)
+                
+                # ✅ GÉNÉRATION DU NUMÉRO DE FACTURE
+                annee_courante = datetime.now().year
+                prefix = f'FACTURE-{annee_courante}-U{request.user.id}-'
+                
+                dernieres_factures = Echeance.objects.filter(
+                    operation__user=request.user,
+                    facture_generee=True,
+                    numero_facture__startswith=prefix
+                ).values_list('numero_facture', flat=True)
+                
+                max_numero = 0
+                for facture in dernieres_factures:
+                    match = re.search(r'-(\d+)$', facture)
+                    if match:
+                        numero = int(match.group(1))
+                        if numero > max_numero:
+                            max_numero = numero
+                
+                nouveau_numero = max_numero + 1
+                nouveau_numero_facture = f'{prefix}{nouveau_numero:05d}'
+                
+                # ✅ DÉTERMINER LE TYPE DE FACTURE
+                total_echeances = operation.echeances.count()
+                echeances_payees = operation.echeances.filter(paye=True).count()
+                
+                if echeances_payees == 1 and total_echeances == 1:
+                    # Une seule échéance = facture globale
+                    facture_type = 'globale'
+                elif echeance.montant >= operation.montant_total * Decimal('0.9'):
+                    # >= 90% du total = facture de solde
+                    facture_type = 'solde'
+                else:
+                    # Sinon = facture d'acompte
+                    facture_type = 'acompte'
+                
+                # ✅ ENREGISTRER LA FACTURE
+                echeance.facture_generee = True
+                echeance.numero_facture = nouveau_numero_facture
+                echeance.facture_date_emission = timezone.now().date()
+                echeance.facture_type = facture_type
+                echeance.save()
+                
+                # Historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    action=f"📄 Facture {nouveau_numero_facture} générée ({facture_type}) - Montant : {echeance.montant}€",
+                    utilisateur=request.user
+                )
+                
+                messages.success(request, f"✅ Facture {nouveau_numero_facture} générée avec succès !")
+                
+            except Echeance.DoesNotExist:
+                messages.error(request, "❌ Paiement introuvable")
+            except Exception as e:
+                messages.error(request, f"❌ Erreur : {str(e)}")
+            
+            return redirect('operation_detail', operation_id=operation.id)
                 
         
 

@@ -398,6 +398,7 @@ class Operation(models.Model):
 
 
 # MODÈLE SÉPARÉ pour les échéances (pas à l'intérieur de Operation!)
+# MODÈLE SÉPARÉ pour les échéances (pas à l'intérieur de Operation!)
 class Echeance(models.Model):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='echeances')
     numero = models.IntegerField(verbose_name="Numéro d'échéance")
@@ -405,6 +406,34 @@ class Echeance(models.Model):
     date_echeance = models.DateField(verbose_name="Date d'échéance")
     paye = models.BooleanField(default=False, verbose_name="Payé")
     ordre = models.IntegerField(default=1)
+    
+    # ✅ NOUVEAUX CHAMPS FACTURE
+    facture_generee = models.BooleanField(
+        default=False, 
+        verbose_name="Facture générée"
+    )
+    numero_facture = models.CharField(
+        max_length=50, 
+        blank=True, 
+        null=True, 
+        verbose_name="Numéro de facture"
+    )
+    facture_date_emission = models.DateField(
+        blank=True, 
+        null=True, 
+        verbose_name="Date d'émission facture"
+    )
+    facture_type = models.CharField(
+        max_length=20, 
+        blank=True, 
+        null=True,
+        choices=[
+            ('globale', 'Facture globale'),
+            ('acompte', 'Facture d\'acompte'),
+            ('solde', 'Facture de solde'),
+        ],
+        verbose_name="Type de facture"
+    )
     
     class Meta:
         ordering = ['ordre']
@@ -424,6 +453,12 @@ class Echeance(models.Model):
             return 'retard'
         else:
             return 'en_attente'
+    
+    # ✅ NOUVELLE PROPRIÉTÉ
+    @property
+    def peut_generer_facture(self):
+        """Une facture peut être générée si le paiement est marqué comme payé"""
+        return self.paye and not self.facture_generee
 
 
 class Intervention(models.Model):

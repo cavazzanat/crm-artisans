@@ -1787,29 +1787,27 @@ function initSyncDevis() {
           </div>
         </section>
 
-        <!-- ========================================
-    SECTION FACTURE
+<!-- ========================================
+    SECTION PAIEMENT & FACTURATION UNIFIÉE
     ======================================== -->
-{% if operation.statut == 'realise' or operation.statut == 'paye' %}
-<section class="section" id="section-facture">
+{% if operation.devis_statut == 'accepte' or operation.statut == 'realise' or operation.statut == 'paye' %}
+<section class="section">
   <div class="section-header" onclick="toggleSection(this)">
     <h2 class="section-title">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M2 8.5h20M2 12.5h20M6 16.5h8M6 20.5h8M6 4.5h8" stroke="currentColor" stroke-width="1.6"/>
       </svg>
-      Facture
+      💰 Paiements & Facturation
       
-      {% if operation.facture_generee %}
-        {% if operation.statut == 'paye' %}
-          <span class="section-badge complete">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-            {{ operation.numero_facture }}
-          </span>
-        {% else %}
-          <span class="section-badge pending">⏳ En attente paiement</span>
-        {% endif %}
+      {% if operation.statut == 'paye' %}
+      <span class="section-badge complete">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+        Soldé
+      </span>
+      {% elif echeances %}
+      <span class="section-badge pending">{{ total_echeances }} € / {{ montant_total }} €</span>
       {% else %}
-        <span class="section-badge pending">⚠️ Non générée</span>
+      <span class="section-badge disabled">Aucun paiement</span>
       {% endif %}
     </h2>
     <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -1818,485 +1816,324 @@ function initSyncDevis() {
   </div>
   
   <div class="section-body">
-    
-    {% if not operation.facture_generee %}
+
     <!-- ═══════════════════════════════════════════════
-        ÉTAT A : FACTURE NON GÉNÉRÉE
+        RÉCAPITULATIF FINANCIER (IDENTIQUE À L'ANCIEN)
         ═══════════════════════════════════════════════ -->
-    
-    <div style="border: 2px solid var(--warning); border-radius: 12px; padding: 2rem; background: white;">
-      
-      <!-- Message info -->
-      <div class="alert success" style="margin-bottom: 2rem;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        <div>
-          <strong>✅ Intervention réalisée</strong>
-          {% if operation.date_realisation %}
-            <br>Date de réalisation : <strong>{{ operation.date_realisation|date:"d/m/Y à H:i" }}</strong>
-          {% endif %}
-          <br>
-          <small style="opacity: 0.8;">Vous pouvez maintenant générer la facture pour ce client.</small>
+    <div class="payment-box" style="margin-bottom:1.5rem">
+      <div class="info-grid">
+        <div class="info-card">
+          <div class="label">💰 Montant total</div>
+          <div class="value" style="font-size:1.5rem; color:var(--primary); font-weight:700">
+            {{ montant_total }} €
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="label">✅ Payé</div>
+          <div class="value" style="font-size:1.5rem; color:var(--success); font-weight:700">
+            {{ total_echeances|default:0 }} €
+          </div>
+        </div>
+        
+        <div class="info-card">
+          <div class="label">⏳ En attente</div>
+          <div class="value" style="font-size:1.2rem; color:var(--warning); font-weight:600">
+            {{ total_echeances_prevus|default:0 }} €
+          </div>
+          <small style="color:var(--muted); font-size:0.8rem">Prévus non payés</small>
+        </div>
+        
+        <div class="info-card">
+          <div class="label">🎯 Reste à enregistrer</div>
+          <div class="value" style="font-size:1.5rem; font-weight:700; color:{% if reste_a_enregistrer == 0 %}var(--success){% elif reste_a_enregistrer < 0 %}var(--danger){% else %}var(--warning){% endif %}">
+            {{ reste_a_enregistrer|default:montant_total }} €
+          </div>
         </div>
       </div>
       
-      <!-- Informations facture -->
-      <div style="margin-bottom: 2rem;">
-        <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 600;">
-          Informations de la facture
-        </h4>
+      <!-- Alerte si dépassement (IDENTIQUE) -->
+      {% if reste_a_enregistrer < 0 %}
+      <div class="alert danger" style="margin-top:1rem">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="2"/></svg>
+        <div>
+          <strong>⚠️ ATTENTION : Dépassement de {{ reste_a_enregistrer_abs }} € !</strong><br>
+          Total enregistré ({{ total_echeances_tout }} €) > Montant opération ({{ montant_total }} €)
+        </div>
+      </div>
+      {% endif %}
+      
+      {% if reste_a_enregistrer == 0 and reste_a_payer == 0 %}
+      <div class="alert success" style="margin-top:1rem">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+        <div><strong>🎉 Opération soldée !</strong> Tous les paiements ont été reçus.</div>
+      </div>
+      {% elif reste_a_enregistrer == 0 and reste_a_payer > 0 %}
+      <div class="alert info" style="margin-top:1rem">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.6"/></svg>
+        <div><strong>💡 Tous les paiements sont enregistrés</strong> - En attente de validation de {{ total_echeances_prevus }} €</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+        LISTE DES PAIEMENTS (AVEC AJOUT FACTURE)
+        ═══════════════════════════════════════════════ -->
+    {% if echeances %}
+    <div class="payment-box" style="margin-bottom:1.5rem">
+      <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem; display:flex; align-items:center; gap:.5rem">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" stroke="currentColor" stroke-width="1.6"/></svg>
+        Historique des paiements
+      </h4>
+      
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Montant</th>
+              <th>Statut</th>
+              <th>Facture</th> <!-- ✅ NOUVELLE COLONNE -->
+              <th style="width:100px">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for echeance in echeances %}
+            <tr style="{% if echeance.paye %}background: #f0fdf4;{% elif echeance.date_echeance|date:'Y-m-d' < now|date:'Y-m-d' %}background: #fee2e2;{% endif %}">
+              
+              <!-- Date (IDENTIQUE) -->
+              <td>
+                <strong>{{ echeance.date_echeance|date:"d/m/Y" }}</strong>
+                {% if echeance.date_echeance|date:'Y-m-d' < now|date:'Y-m-d' and not echeance.paye %}
+                <br><small style="color:var(--danger)">⚠️ En retard</small>
+                {% endif %}
+              </td>
+              
+              <!-- Montant (IDENTIQUE) -->
+              <td><strong>{{ echeance.montant }} €</strong></td>
+              
+              <!-- Statut (IDENTIQUE) -->
+              <td>
+                {% if echeance.paye %}
+                  <span style="color:var(--success); font-weight:600; display:flex; align-items:center; gap:.3rem">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                    Payé
+                  </span>
+                {% else %}
+                  <span style="color:var(--warning); font-weight:600; display:flex; align-items:center; gap:.3rem">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4" stroke="currentColor" stroke-width="1.6"/></svg>
+                    En attente
+                  </span>
+                {% endif %}
+              </td>
+              
+              <!-- ✅ NOUVELLE COLONNE FACTURE -->
+              <td>
+                {% if echeance.facture_generee %}
+                  <!-- Facture déjà générée -->
+                  <div style="display:flex; align-items:center; gap:.5rem; flex-wrap:wrap">
+                    <span style="color:var(--success); font-weight:600; font-size:.85rem">
+                      📄 {{ echeance.numero_facture }}
+                    </span>
+                    <button type="button" 
+                            class="btn primary sm" 
+                            onclick="alert('📥 Téléchargement PDF - Phase 4')" 
+                            title="Télécharger le PDF"
+                            style="padding:0.2rem 0.4rem">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+                      </svg>
+                    </button>
+                  </div>
+                {% elif echeance.paye %}
+                  <!-- Payé mais pas encore facturé -->
+                  <span style="color:var(--warning); font-size:.85rem">⚠️ Non facturée</span>
+                {% else %}
+                  <!-- Prévu = pas encore de facture -->
+                  <span style="color:var(--muted); font-size:.85rem">—</span>
+                {% endif %}
+              </td>
+              
+              <!-- Actions (IDENTIQUE avec ajout bouton facture) -->
+              <td>
+                <div style="display:flex; gap:.3rem">
+                  
+                  <!-- ✅ Marquer comme payé (IDENTIQUE) -->
+                  {% if not echeance.paye %}
+                  <form method="POST" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="marquer_paye">
+                    <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
+                    <button type="submit" class="btn success sm" title="Marquer comme payé">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
+                    </button>
+                  </form>
+                  {% endif %}
+                  
+                  <!-- ✅ NOUVEAU : Générer facture -->
+                  {% if echeance.paye and not echeance.facture_generee %}
+                  <form method="POST" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="generer_facture_echeance">
+                    <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
+                    <button type="submit" class="btn primary sm" title="Générer la facture">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" stroke="currentColor" stroke-width="1.6"/>
+                      </svg>
+                    </button>
+                  </form>
+                  {% endif %}
+                  
+                  <!-- ✅ Supprimer (IDENTIQUE) -->
+                  <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer ce paiement ?')">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="delete_paiement">
+                    <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
+                    <button type="submit" class="btn danger sm">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
+                    </button>
+                  </form>
+                  
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+          <tfoot>
+            <tr style="background: #eef2ff; font-weight:700">
+              <td><strong>TOTAL PAYÉ</strong></td>
+              <td><strong>{{ total_echeances|default:0 }} €</strong></td>
+              <td colspan="3"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ═══════════════════════════════════════════════
+        FORMULAIRE D'AJOUT DE PAIEMENT (IDENTIQUE)
+        ═══════════════════════════════════════════════ -->
+    <div class="payment-box">
+      <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem; display:flex; align-items:center; gap:.5rem">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+        {% if echeances %}Ajouter un paiement{% else %}Enregistrer le premier paiement{% endif %}
+      </h4>
+      
+      <form method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="add_paiement">
         
-        <div class="info-grid" style="margin-bottom: 1.5rem;">
+        <div class="info-grid" style="margin-bottom:1rem">
           <div class="info-card">
-            <div class="label">📅 Date d'émission</div>
+            <div class="label">💵 Montant (€)</div>
             <div class="value">
-              <input type="date" 
-                    id="facture-date-emission-temp" 
+              <input type="number" 
+                    name="montant" 
                     class="input" 
-                    value="{{ now|date:'Y-m-d' }}"
-                    style="margin: 0;">
-              <small style="display: block; margin-top: 0.5rem; color: var(--muted); font-size: 0.85rem;">
-                💡 Date qui apparaîtra sur la facture
+                    placeholder="Ex: 500" 
+                    step="0.01" 
+                    min="0.01" 
+                    max="{{ max_paiement }}"
+                    required>
+              <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                {% if reste_a_enregistrer > 0 %}
+                  💡 Reste à enregistrer : <strong>{{ reste_a_enregistrer }} €</strong>
+                {% elif reste_a_enregistrer == 0 %}
+                  ✅ Tous les paiements sont enregistrés
+                {% else %}
+                  ⚠️ Dépassement de {{ reste_a_enregistrer_abs }} €
+                {% endif %}
               </small>
             </div>
           </div>
           
           <div class="info-card">
-            <div class="label">💰 Montant total</div>
-            <div class="value" style="font-size: 1.5rem; color: var(--primary); font-weight: 700;">
-              {{ montant_total }} €
+            <div class="label">📅 Date du paiement</div>
+            <div class="value">
+              <input type="date" 
+                    name="date_paiement" 
+                    class="input" 
+                    value="{{ now|date:'Y-m-d' }}"
+                    required>
+              <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                💡 Date prévue ou effective
+              </small>
+            </div>
+          </div>
+          
+          <div class="info-card">
+            <div class="label">✅ Statut</div>
+            <div class="value">
+              <select name="paye" class="select" id="paye-select">
+                <option value="true">Déjà payé</option>
+                <option value="false">Prévu / À venir</option>
+              </select>
+              <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                💡 "Déjà payé" = reçu aujourd'hui<br>
+                "Prévu" = attendu plus tard
+              </small>
             </div>
           </div>
         </div>
         
-        <!-- Notes facture -->
-        <div>
-          <label style="display: block; margin-bottom: 0.5rem; color: var(--text); font-size: 0.9rem; font-weight: 600;">
-            📝 Notes sur la facture (optionnel) :
+        <!-- ✅ NOUVELLE OPTION : Génération auto de facture -->
+        <div id="facture-auto-option" style="display:none; margin-bottom:1rem; padding:1rem; background:#f0f9ff; border:1px solid #bfdbfe; border-radius:8px">
+          <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer">
+            <input type="checkbox" name="generer_facture_auto" value="true" checked>
+            <span style="font-weight:600; color:#1e40af">📄 Générer automatiquement la facture</span>
           </label>
-          <textarea id="facture-notes-temp" 
-                    class="input" 
-                    rows="3" 
-                    placeholder="Ex: Règlement sous 30 jours, Paiement échelonné convenu..."
-                    style="resize: vertical;">{{ operation.facture_notes|default:'' }}</textarea>
-          <small style="display: block; margin-top: 0.5rem; color: var(--muted); font-size: 0.85rem;">
-            ℹ️ Ces notes apparaîtront en bas de la facture
+          <small style="display:block; margin-top:.5rem; color:#1e40af; font-size:.85rem">
+            💡 Gagne du temps en créant la facture directement
           </small>
         </div>
-      </div>
-      
-      <!-- Bouton générer -->
-      <form method="POST" id="form-generer-facture">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="generer_facture">
-        <input type="hidden" name="facture_date_emission" id="facture-date-hidden">
-        <input type="hidden" name="facture_notes" id="facture-notes-hidden">
         
-        <button type="submit" 
-                class="btn primary" 
-                style="width: 100%; padding: 1rem; font-size: 1.05rem; font-weight: 600;"
-                onclick="syncFactureData()">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          📄 Générer la facture PDF
+        <button type="submit" class="btn success" style="width:100%">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+          Enregistrer ce paiement
         </button>
       </form>
-      
-      <!-- Info Phase 4 -->
-      <div class="alert info" style="margin-top: 1rem;">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/>
-        </svg>
-        <div>
-          <strong>💡 Fonctionnalité en développement</strong><br>
-          La génération PDF sera disponible en Phase 4. Pour l'instant, ce bouton prépare les données.
-        </div>
-      </div>
-      
     </div>
     
-    {% else %}
-    <!-- ═══════════════════════════════════════════════
-        ÉTAT B : FACTURE GÉNÉRÉE
-        ═══════════════════════════════════════════════ -->
-    
-    <div style="border: 2px solid var(--success); border-radius: 12px; padding: 2rem; background: white;">
-      
-      <!-- En-tête avec badge -->
-      <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
-        <h3 style="margin: 0; color: var(--success); font-size: 1.3rem; font-weight: 700;">
-          Facture N° {{ operation.numero_facture }}
-        </h3>
-        <div style="background: {% if operation.statut == 'paye' %}var(--success){% else %}var(--primary){% endif %}; color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-          {% if operation.statut == 'paye' %}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="m5 12 4 4 10-10"/>
-            </svg>
-            Soldée
-          {% else %}
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 8v4l3 3"/>
-            </svg>
-            En attente de paiement
-          {% endif %}
-        </div>
+    <!-- Info aide (IDENTIQUE) -->
+    {% if not echeances %}
+    <div class="alert info" style="margin-top:1rem">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+      <div>
+        <strong>💡 Comment ça marche ?</strong><br>
+        • Ajoutez un paiement quand vous voulez<br>
+        • Vous pouvez enregistrer des acomptes, le solde, ou tout en une fois<br>
+        • Marquez "Déjà payé" si c'est reçu, sinon "Prévu"<br>
+        • Quand tout est payé, l'opération passe automatiquement en statut "Payé"
       </div>
-      
-      <!-- Informations facture -->
-      <div style="margin-bottom: 2rem;">
-        <div class="info-grid">
-          <div class="info-card">
-            <div class="label">📄 Numéro de facture</div>
-            <div class="value" style="font-size: 1.1rem; font-weight: 700; color: var(--success);">
-              {{ operation.numero_facture }}
-            </div>
-          </div>
-          
-          <div class="info-card">
-            <div class="label">📅 Date d'émission</div>
-            <div class="value" style="font-weight: 600;">
-              {{ operation.facture_date_emission|date:"d/m/Y" }}
-            </div>
-          </div>
-          
-          <div class="info-card">
-            <div class="label">💰 Montant total</div>
-            <div class="value" style="font-size: 1.3rem; font-weight: 700; color: var(--primary);">
-              {{ montant_total }} €
-            </div>
-          </div>
-          
-          <div class="info-card">
-            <div class="label">✅ Statut du paiement</div>
-            <div class="value" style="font-weight: 600; color: {% if operation.statut == 'paye' %}var(--success){% else %}var(--warning){% endif %};">
-              {% if operation.statut == 'paye' %}
-                ✅ Facture soldée
-              {% else %}
-                ⏳ En attente de paiement
-              {% endif %}
-            </div>
-          </div>
-        </div>
-        
-        <!-- Notes si présentes -->
-        {% if operation.facture_notes %}
-        <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
-          <strong style="font-size: 0.85rem; color: var(--muted);">📝 Notes :</strong>
-          <p style="margin: 0.5rem 0 0 0; color: var(--text); font-size: 0.9rem;">{{ operation.facture_notes }}</p>
-        </div>
-        {% endif %}
-      </div>
-      
-      <!-- Actions -->
-      <div style="display: grid; gap: 1rem;">
-        <!-- Télécharger PDF -->
-        <button type="button" 
-                class="btn primary" 
-                style="width: 100%; padding: 0.85rem;"
-                onclick="alert('⚠️ Fonctionnalité PDF en cours de développement (Phase 4)')">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-          </svg>
-          📥 Télécharger le PDF
-        </button>
-        
-        <!-- Régénérer (en cas d'erreur) -->
-        <details style="border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; background: #f8fafc;">
-          <summary style="cursor: pointer; font-weight: 600; color: var(--muted); font-size: 0.9rem; list-style: none; display: flex; align-items: center; gap: 0.5rem;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-              <path d="M12 16v-4m0-4h0"/>
-            </svg>
-            Régénérer la facture (si erreur)
-          </summary>
-          <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
-            <p style="margin: 0 0 0.75rem 0; color: var(--muted); font-size: 0.85rem;">
-              ⚠️ <strong>Attention :</strong> Cela va remplacer la facture existante par une nouvelle avec les mêmes informations.
-            </p>
-            <form method="POST" onsubmit="return confirm('⚠️ Régénérer la facture ?\n\nL\'ancienne sera remplacée. Cette action est irréversible.')">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="regenerer_facture">
-              <button type="submit" class="btn danger" style="width: 100%;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
-                </svg>
-                🔄 Régénérer la facture
-              </button>
-            </form>
-          </div>
-        </details>
-      </div>
-      
     </div>
-    
     {% endif %}
     
   </div>
 </section>
+
+<!-- ✅ Script pour afficher/masquer l'option facture auto -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const payeSelect = document.getElementById('paye-select');
+  const factureAutoOption = document.getElementById('facture-auto-option');
+  
+  if (payeSelect && factureAutoOption) {
+    payeSelect.addEventListener('change', function() {
+      // Afficher l'option seulement si "Déjà payé"
+      factureAutoOption.style.display = (this.value === 'true') ? 'block' : 'none';
+    });
+    
+    // Vérif initiale
+    if (payeSelect.value === 'true') {
+      factureAutoOption.style.display = 'block';
+    }
+  }
+});
+</script>
+
 {% endif %}
 
-
-        <!-- ========================================
-            PAIEMENT - VERSION SIMPLIFIÉE
-            ======================================== -->
-        {% if operation.devis_statut == 'accepte' or operation.statut == 'realise' or operation.statut == 'paye' %}
-        <section class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            <h2 class="section-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M2 8.5h20M2 12.5h20M6 16.5h8M6 20.5h8M6 4.5h8" stroke="currentColor" stroke-width="1.6"/></svg>
-              Paiement
-              {% if operation.statut == 'paye' %}
-              <span class="section-badge complete">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                Soldé
-              </span>
-              {% elif echeances %}
-              <span class="section-badge pending">{{ total_echeances }} € / {{ montant_total }} €</span>
-              {% else %}
-              <span class="section-badge disabled">Aucun paiement</span>
-              {% endif %}
-            </h2>
-            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          
-          <div class="section-body">
-
-            <!-- ========================================
-                RÉCAPITULATIF FINANCIER AMÉLIORÉ
-                ======================================== -->
-            <div class="payment-box" style="margin-bottom:1.5rem">
-              <div class="info-grid">
-                <div class="info-card">
-                  <div class="label">💰 Montant total</div>
-                  <div class="value" style="font-size:1.5rem; color:var(--primary); font-weight:700">
-                    {{ montant_total }} €
-                  </div>
-                </div>
-                
-                <div class="info-card">
-                  <div class="label">✅ Payé</div>
-                  <div class="value" style="font-size:1.5rem; color:var(--success); font-weight:700">
-                    {{ total_echeances|default:0 }} €
-                  </div>
-                </div>
-                
-                <div class="info-card">
-                  <div class="label">⏳ En attente</div>
-                  <div class="value" style="font-size:1.2rem; color:var(--warning); font-weight:600">
-                    {{ total_echeances_prevus|default:0 }} €
-                  </div>
-                  <small style="color:var(--muted); font-size:0.8rem">Prévus non payés</small>
-                </div>
-                
-                <div class="info-card">
-                  <div class="label">🎯 Reste à enregistrer</div>
-                  <div class="value" style="font-size:1.5rem; font-weight:700; color:{% if reste_a_enregistrer == 0 %}var(--success){% elif reste_a_enregistrer < 0 %}var(--danger){% else %}var(--warning){% endif %}">
-                    {{ reste_a_enregistrer|default:montant_total }} €
-                  </div>
-                </div>
-              </div>
-              
-              <!-- Alerte si dépassement -->
-              {% if reste_a_enregistrer < 0 %}
-              <div class="alert danger" style="margin-top:1rem">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0" stroke="currentColor" stroke-width="2"/></svg>
-                <div>
-                  <strong>⚠️ ATTENTION : Dépassement de {{ reste_a_enregistrer_abs }} € !</strong><br>
-                  Total enregistré ({{ total_echeances_tout }} €) > Montant opération ({{ montant_total }} €)
-                </div>
-              </div>
-              {% endif %}
-              
-              {% if reste_a_enregistrer == 0 and reste_a_payer == 0 %}
-              <div class="alert success" style="margin-top:1rem">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                <div><strong>🎉 Opération soldée !</strong> Tous les paiements ont été reçus.</div>
-              </div>
-              {% elif reste_a_enregistrer == 0 and reste_a_payer > 0 %}
-              <div class="alert info" style="margin-top:1rem">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3" stroke="currentColor" stroke-width="1.6"/></svg>
-                <div><strong>💡 Tous les paiements sont enregistrés</strong> - En attente de validation de {{ total_echeances_prevus }} €</div>
-              </div>
-              {% endif %}
-            </div>
-
-            <!-- ========================================
-                LISTE DES PAIEMENTS
-                ======================================== -->
-            {% if echeances %}
-            <div class="payment-box" style="margin-bottom:1.5rem">
-              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem; display:flex; align-items:center; gap:.5rem">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" stroke="currentColor" stroke-width="1.6"/></svg>
-                Historique des paiements
-              </h4>
-              
-              <div class="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Montant</th>
-                      <th>Statut</th>
-                      <th style="width:100px">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {% for echeance in echeances %}
-                    <tr style="{% if echeance.paye %}background: #f0fdf4;{% elif echeance.date_echeance|date:'Y-m-d' < now|date:'Y-m-d' %}background: #fee2e2;{% endif %}">
-                      <td>
-                        <strong>{{ echeance.date_echeance|date:"d/m/Y" }}</strong>
-                        {% if echeance.date_echeance|date:'Y-m-d' < now|date:'Y-m-d' and not echeance.paye %}
-                        <br><small style="color:var(--danger)">⚠️ En retard</small>
-                        {% endif %}
-                      </td>
-                      <td><strong>{{ echeance.montant }} €</strong></td>
-                      <td>
-                        {% if echeance.paye %}
-                          <span style="color:var(--success); font-weight:600; display:flex; align-items:center; gap:.3rem">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                            Payé
-                          </span>
-                        {% else %}
-                          <span style="color:var(--warning); font-weight:600; display:flex; align-items:center; gap:.3rem">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 8v4" stroke="currentColor" stroke-width="1.6"/></svg>
-                            En attente
-                          </span>
-                        {% endif %}
-                      </td>
-                      <td>
-                        <div style="display:flex; gap:.3rem">
-                          {% if not echeance.paye %}
-                          <form method="POST" style="display:inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="marquer_paye">
-                            <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
-                            <button type="submit" class="btn success sm" title="Marquer comme payé">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                            </button>
-                          </form>
-                          {% endif %}
-                          
-                          <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer ce paiement ?')">
-                            {% csrf_token %}
-                            <input type="hidden" name="action" value="delete_paiement">
-                            <input type="hidden" name="echeance_id" value="{{ echeance.id }}">
-                            <button type="submit" class="btn danger sm">
-                              <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
-                            </button>
-                          </form>
-                        </div>
-                      </td>
-                    </tr>
-                    {% endfor %}
-                  </tbody>
-                  <tfoot>
-                    <tr style="background: #eef2ff; font-weight:700">
-                      <td><strong>TOTAL PAYÉ</strong></td>
-                      <td><strong>{{ total_echeances|default:0 }} €</strong></td>
-                      <td colspan="2"></td>
-                    </tr>
-                  </tfoot>
-                </table>
-              </div>
-            </div>
-            {% endif %}
-
-            <!-- ========================================
-                FORMULAIRE D'AJOUT DE PAIEMENT
-                ======================================== -->
-            <div class="payment-box">
-              <h4 style="margin-bottom:1rem; color:var(--text); font-size:1rem; display:flex; align-items:center; gap:.5rem">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-                {% if echeances %}Ajouter un paiement{% else %}Enregistrer le premier paiement{% endif %}
-              </h4>
-              
-              <form method="POST">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="add_paiement">
-                
-                <div class="info-grid" style="margin-bottom:1rem">
-                  <div class="info-card">
-                    <div class="label">💵 Montant (€)</div>
-                    <div class="value">
-                      <input type="number" 
-                            name="montant" 
-                            class="input" 
-                            placeholder="Ex: 500" 
-                            step="0.01" 
-                            min="0.01" 
-                            max="{{ max_paiement }}"
-                            required>
-                      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
-                        {% if reste_a_enregistrer > 0 %}
-                          💡 Reste à enregistrer : <strong>{{ reste_a_enregistrer }} €</strong>
-                        {% elif reste_a_enregistrer == 0 %}
-                          ✅ Tous les paiements sont enregistrés
-                        {% else %}
-                          ⚠️ Dépassement de {{ reste_a_enregistrer_abs }} €
-                        {% endif %}
-                      </small>
-                    </div>
-                  </div>
-                  
-                  <div class="info-card">
-                    <div class="label">📅 Date du paiement</div>
-                    <div class="value">
-                      <input type="date" 
-                            name="date_paiement" 
-                            class="input" 
-                            value="{{ now|date:'Y-m-d' }}"
-                            required>
-                      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
-                        💡 Date prévue ou effective
-                      </small>
-                    </div>
-                  </div>
-                  
-                  <div class="info-card">
-                    <div class="label">✅ Statut</div>
-                    <div class="value">
-                      <select name="paye" class="select">
-                        <option value="true">Déjà payé</option>
-                        <option value="false">Prévu / À venir</option>
-                      </select>
-                      <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
-                        💡 "Déjà payé" = reçu aujourd'hui<br>
-                        "Prévu" = attendu plus tard
-                      </small>
-                    </div>
-                  </div>
-                </div>
-                
-                <button type="submit" class="btn success" style="width:100%">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-                  Enregistrer ce paiement
-                </button>
-              </form>
-            </div>
-            
-            <!-- Info aide -->
-            {% if not echeances %}
-            <div class="alert info" style="margin-top:1rem">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-              <div>
-                <strong>💡 Comment ça marche ?</strong><br>
-                • Ajoutez un paiement quand vous voulez<br>
-                • Vous pouvez enregistrer des acomptes, le solde, ou tout en une fois<br>
-                • Marquez "Déjà payé" si c'est reçu, sinon "Prévu"<br>
-                • Quand tout est payé, l'opération passe automatiquement en statut "Payé"
-              </div>
-            </div>
-            {% endif %}
-            
-          </div>
-        </section>
-        {% endif %}
-      </div>
 
       <!-- ========================================
      COLONNE DROITE - HISTORIQUE
