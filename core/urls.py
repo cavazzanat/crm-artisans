@@ -31,6 +31,7 @@ urlpatterns = [
     path('profil/', views.profil_entreprise, name='profil'),  
     
     path('operations/<int:operation_id>/devis/pdf/', views.telecharger_devis_pdf, name='telecharger_devis_pdf'),
+    path('factures/<int:echeance_id>/pdf/', telecharger_facture_pdf, name='telecharger_facture_pdf'),
 
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
     path('register/', views.register, name='register'),

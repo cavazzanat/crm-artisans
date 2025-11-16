@@ -1935,15 +1935,14 @@ function initSyncDevis() {
                     <span style="color:var(--success); font-weight:600; font-size:.85rem">
                       📄 {{ echeance.numero_facture }}
                     </span>
-                    <button type="button" 
-                            class="btn primary sm" 
-                            onclick="alert('📥 Téléchargement PDF - Phase 4')" 
-                            title="Télécharger le PDF"
-                            style="padding:0.2rem 0.4rem">
+                    <a href="{% url 'telecharger_facture_pdf' echeance.id %}" 
+                      class="btn primary sm" 
+                      title="Télécharger le PDF"
+                      style="padding:0.2rem 0.4rem; text-decoration:none">
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
                       </svg>
-                    </button>
+                    </a>
                   </div>
                 {% elif echeance.paye %}
                   <!-- Payé mais pas encore facturé -->
