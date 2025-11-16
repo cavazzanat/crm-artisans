@@ -2323,17 +2323,16 @@ def telecharger_facture_pdf(request, echeance_id):
         messages.error(request, "❌ Votre profil entreprise est incomplet. Complétez-le pour générer des PDF.")
         return redirect('profil')
     
-    # ✅ TODO : Générer le PDF de facture (Phase 4)
-    # Pour l'instant, on retourne une erreur temporaire
-    messages.info(request, "📄 Génération PDF de facture - Fonctionnalité en cours de développement (Phase 4)")
-    return redirect('operation_detail', operation_id=echeance.operation.id)
+    # ✅ GÉNÉRATION DU PDF (VERSION FINALE)
+    from .pdf_generator import generer_facture_pdf
     
-    # ✅ VERSION FINALE (à activer en Phase 4) :
-    # from .pdf_generator import generer_facture_pdf
-    # pdf_data = generer_facture_pdf(echeance, profil)
-    # response = HttpResponse(pdf_data, content_type='application/pdf')
-    # response['Content-Disposition'] = f'attachment; filename="facture_{echeance.numero_facture}.pdf"'
-    # return response
+    pdf_data = generer_facture_pdf(echeance, profil)
+    
+    # Retourner le PDF en téléchargement
+    response = HttpResponse(pdf_data, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="facture_{echeance.numero_facture}.pdf"'
+    
+    return response
 
 def register(request):
     if request.method == 'POST':
