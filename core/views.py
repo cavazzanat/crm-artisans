@@ -830,7 +830,7 @@ def operation_detail(request, operation_id):
             if montant_str and date_echeance_str:
                 try:
 
-                    from decimal import Decimal  # ✅ AJOUT
+
                     
                     montant = Decimal(montant_str)  # ✅ CORRECTION
                     date_echeance = datetime.fromisoformat(date_echeance_str).date()
@@ -1008,7 +1008,6 @@ def operation_detail(request, operation_id):
             
             if description and prix_unitaire_str:
                 try:
-                    from decimal import Decimal
                     
                     quantite = Decimal(quantite_str)
                     prix_unitaire_ht = Decimal(prix_unitaire_str)
@@ -1224,7 +1223,6 @@ def operation_detail(request, operation_id):
             if montant_str and date_paiement_str:
                 try:
                     
-                    from decimal import Decimal  # ✅ AJOUT
                     
                     montant = Decimal(montant_str)  # ✅ CORRECTION
                     date_paiement = datetime.strptime(date_paiement_str, '%Y-%m-%d').date()
@@ -1414,6 +1412,10 @@ def operation_detail(request, operation_id):
                 if echeances_payees == 1 and total_echeances == 1:
                     # Une seule échéance = facture globale
                     facture_type = 'globale'
+                
+                # ✅ TEST : Vérifier que Decimal est bien importé
+                    print(f"DEBUG: type de Decimal = {type(Decimal)}")
+                    print(f"DEBUG: Decimal = {Decimal}")
                 elif echeance.montant >= operation.montant_total * Decimal('0.9'):
                     # >= 90% du total = facture de solde
                     facture_type = 'solde'
