@@ -718,7 +718,7 @@ def generer_facture_pdf(echeance, profil):
 
     table_lignes = Table(
         data,
-        colWidths=[7 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 1.5 * cm, 3 * cm],
+        colWidths=[6.5 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 1.5 * cm, 2 * cm],
         hAlign="LEFT",
     )
     table_lignes.setStyle(
