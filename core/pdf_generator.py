@@ -313,8 +313,9 @@ def generer_devis_pdf(operation, profil):
         TableStyle(
             [
                 # En-tête
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#111827")),
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eef2ff")),  # violet très pâle
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#3730a3")),   # violet foncé lisible
+
                 ("ALIGN", (0, 0), (-1, 0), "CENTER"),
                 ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
                 ("FONTSIZE", (0, 0), (-1, 0), 9),
