@@ -2027,14 +2027,34 @@ function initSyncDevis() {
           <div class="info-card">
             <div class="label">💵 Montant (€)</div>
             <div class="value">
-              <input type="number" 
-                    name="montant" 
-                    class="input" 
-                    placeholder="Ex: 500" 
-                    step="0.01" 
-                    min="0.01" 
-                    max="{{ max_paiement }}"
-                    required>
+              <!-- ✅ Container flex pour input + bouton -->
+              <div style="display:flex; gap:0.5rem; align-items:center;">
+                <input type="number" 
+                      id="montant-paiement-input"
+                      name="montant" 
+                      class="input" 
+                      placeholder="Ex: 500" 
+                      step="0.01" 
+                      min="0.01" 
+                      max="{{ max_paiement }}"
+                      style="flex:1; margin:0;"
+                      required>
+                
+                <!-- ✅ NOUVEAU BOUTON -->
+                {% if reste_a_enregistrer > 0 %}
+                <button type="button" 
+                        class="btn primary sm" 
+                        onclick="remplirReste()"
+                        title="Remplir avec le reste à enregistrer"
+                        style="white-space:nowrap; padding:0.5rem 0.75rem;">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                  Reste
+                </button>
+                {% endif %}
+              </div>
+              
               <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
                 {% if reste_a_enregistrer > 0 %}
                   💡 Reste à enregistrer : <strong>{{ reste_a_enregistrer }} €</strong>
@@ -2860,6 +2880,33 @@ function syncFactureData() {
   console.log('✅ Données facture synchronisées:', { dateEmission, notes });
   
   return true; // Permet la soumission du formulaire
+}
+
+// ========================================
+// FONCTION : REMPLIR LE RESTE À ENREGISTRER
+// ========================================
+function remplirReste() {
+  const montantInput = document.getElementById('montant-paiement-input');
+  const resteAEnregistrer = {{ reste_a_enregistrer|default:0 }};
+  
+  if (montantInput && resteAEnregistrer > 0) {
+    // Arrondir à 2 décimales
+    montantInput.value = resteAEnregistrer.toFixed(2);
+    
+    // Animation visuelle
+    montantInput.style.background = '#d1fae5';
+    montantInput.style.transition = 'background 0.3s ease';
+    
+    setTimeout(() => {
+      montantInput.style.background = '';
+    }, 500);
+    
+    // Focus sur le champ
+    montantInput.focus();
+    
+    // Toast de confirmation
+    showToast(`✅ Montant rempli : ${resteAEnregistrer.toFixed(2)} €`, 'success', 2000);
+  }
 }
 
 // ========================================
