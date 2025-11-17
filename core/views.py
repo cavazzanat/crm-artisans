@@ -1405,24 +1405,41 @@ def operation_detail(request, operation_id):
                 nouveau_numero = max_numero + 1
                 nouveau_numero_facture = f'{prefix}{nouveau_numero:05d}'
                 
-                # ✅ DÉTERMINER LE TYPE DE FACTURE
+                # ═══════════════════════════════════════════════════════════
+                # ✅ LOGIQUE AMÉLIORÉE : DÉTERMINER LE TYPE DE FACTURE
+                # ═══════════════════════════════════════════════════════════
+                
+                # 1️⃣ Compter les échéances
                 total_echeances = operation.echeances.count()
-                echeances_payees = operation.echeances.filter(paye=True).count()
+                echeances_payees_count = operation.echeances.filter(paye=True).count()
                 
-                if echeances_payees == 1 and total_echeances == 1:
-                    # Une seule échéance = facture globale
+                # 2️⃣ Calculer le montant déjà facturé (AVANT ce paiement)
+                montant_deja_facture = operation.echeances.filter(
+                    facture_generee=True
+                ).exclude(
+                    id=echeance.id  # ← Exclure l'échéance actuelle si elle était déjà facturée
+                ).aggregate(total=Sum('montant'))['total'] or Decimal('0')
+                
+                # 3️⃣ Calculer ce qui reste à facturer AVANT ce paiement
+                reste_a_facturer_avant = operation.montant_total - montant_deja_facture
+                
+                # 4️⃣ LOGIQUE DE DÉTERMINATION DU TYPE
+                if echeances_payees_count == 1 and total_echeances == 1:
+                    # ✅ CAS 1 : Un seul paiement qui couvre tout
                     facture_type = 'globale'
-                
-                # ✅ TEST : Vérifier que Decimal est bien importé
-                    print(f"DEBUG: type de Decimal = {type(Decimal)}")
-                    print(f"DEBUG: Decimal = {Decimal}")
                     
-                elif echeance.montant >= operation.montant_total * Decimal('0.9'):
-                    # >= 90% du total = facture de solde
+                elif echeance.montant >= reste_a_facturer_avant * Decimal('0.9'):
+                    # ✅ CAS 2 : Ce paiement couvre >= 90% de ce qui reste à facturer
+                    # → C'est le dernier paiement significatif = SOLDE
                     facture_type = 'solde'
+                    
                 else:
-                    # Sinon = facture d'acompte
+                    # ✅ CAS 3 : Paiement partiel = ACOMPTE
                     facture_type = 'acompte'
+                
+                # ═══════════════════════════════════════════════════════════
+                # FIN LOGIQUE AMÉLIORÉE
+                # ═══════════════════════════════════════════════════════════
                 
                 # ✅ ENREGISTRER LA FACTURE
                 echeance.facture_generee = True
@@ -1431,14 +1448,20 @@ def operation_detail(request, operation_id):
                 echeance.facture_type = facture_type
                 echeance.save()
                 
-                # Historique
+                # Historique avec détails du type
+                type_label = {
+                    'globale': 'globale',
+                    'acompte': "d'acompte",
+                    'solde': 'de solde'
+                }.get(facture_type, '')
+                
                 HistoriqueOperation.objects.create(
                     operation=operation,
-                    action=f"📄 Facture {nouveau_numero_facture} générée ({facture_type}) - Montant : {echeance.montant}€",
+                    action=f"📄 Facture {type_label} {nouveau_numero_facture} générée - Montant : {echeance.montant}€",
                     utilisateur=request.user
                 )
                 
-                messages.success(request, f"✅ Facture {nouveau_numero_facture} générée avec succès !")
+                messages.success(request, f"✅ Facture {type_label} {nouveau_numero_facture} générée avec succès !")
                 
             except Echeance.DoesNotExist:
                 messages.error(request, "❌ Paiement introuvable")
