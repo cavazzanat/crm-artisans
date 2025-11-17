@@ -1406,35 +1406,39 @@ def operation_detail(request, operation_id):
                 nouveau_numero_facture = f'{prefix}{nouveau_numero:05d}'
                 
                 # ═══════════════════════════════════════════════════════════
-                # ✅ LOGIQUE AMÉLIORÉE : DÉTERMINER LE TYPE DE FACTURE
+                # ✅ LOGIQUE AMÉLIORÉE V2 : DÉTERMINER LE TYPE DE FACTURE
                 # ═══════════════════════════════════════════════════════════
-                
+
                 # 1️⃣ Compter les échéances
                 total_echeances = operation.echeances.count()
                 echeances_payees_count = operation.echeances.filter(paye=True).count()
-                
-                # 2️⃣ Calculer le montant déjà facturé (AVANT ce paiement)
-                montant_deja_facture = operation.echeances.filter(
-                    facture_generee=True
-                ).exclude(
-                    id=echeance.id  # ← Exclure l'échéance actuelle si elle était déjà facturée
-                ).aggregate(total=Sum('montant'))['total'] or Decimal('0')
-                
-                # 3️⃣ Calculer ce qui reste à facturer AVANT ce paiement
-                reste_a_facturer_avant = operation.montant_total - montant_deja_facture
-                
-                # 4️⃣ LOGIQUE DE DÉTERMINATION DU TYPE
+
+                # 2️⃣ Compter combien de paiements PAYÉS n'ont PAS encore de facture
+                echeances_payees_non_facturees = operation.echeances.filter(
+                    paye=True,
+                    facture_generee=False
+                ).count()
+
+                # 3️⃣ Calculer le montant total des échéances (payées + prévues)
+                total_planifie = operation.echeances.aggregate(
+                    total=Sum('montant')
+                )['total'] or Decimal('0')
+
+                # 4️⃣ Vérifier s'il reste des paiements NON ENREGISTRÉS
+                reste_non_enregistre = operation.montant_total - total_planifie
+
+                # 5️⃣ LOGIQUE DE DÉTERMINATION DU TYPE
                 if echeances_payees_count == 1 and total_echeances == 1:
-                    # ✅ CAS 1 : Un seul paiement qui couvre tout
+                    # ✅ CAS 1 : Un seul paiement unique
                     facture_type = 'globale'
-                    
-                elif echeance.montant >= reste_a_facturer_avant * Decimal('0.9'):
-                    # ✅ CAS 2 : Ce paiement couvre >= 90% de ce qui reste à facturer
-                    # → C'est le dernier paiement significatif = SOLDE
+
+                elif echeances_payees_non_facturees == 1 and reste_non_enregistre <= 0:
+                    # ✅ CAS 2 : C'est le DERNIER paiement à facturer
+                    # ET il n'y a plus rien à enregistrer
                     facture_type = 'solde'
-                    
+
                 else:
-                    # ✅ CAS 3 : Paiement partiel = ACOMPTE
+                    # ✅ CAS 3 : Paiement intermédiaire
                     facture_type = 'acompte'
                 
                 # ═══════════════════════════════════════════════════════════
