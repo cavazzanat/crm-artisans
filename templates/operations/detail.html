@@ -2044,20 +2044,7 @@ function initSyncDevis() {
                 {% if reste_a_enregistrer > 0 %}
                 <button type="button" 
                         class="btn primary sm" 
-                        onclick="
-                          const input = document.getElementById('montant-paiement-input');
-                          const reste = {{ reste_a_enregistrer|default:0 }};
-                          if (input && reste > 0) {
-                            input.value = reste.toFixed(2);
-                            input.style.background = '#d1fae5';
-                            input.style.transition = 'background 0.3s ease';
-                            setTimeout(() => { input.style.background = ''; }, 500);
-                            input.focus();
-                            if (typeof showToast === 'function') {
-                              showToast('✅ Montant rempli : ' + reste.toFixed(2) + ' €', 'success', 2000);
-                            }
-                          }
-                        "
+                        id="btn-reste"
                         title="Remplir avec le reste à enregistrer"
                         style="white-space:nowrap; padding:0.5rem 0.75rem;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2065,6 +2052,38 @@ function initSyncDevis() {
                   </svg>
                   Reste
                 </button>
+
+                <script>
+                // Script exécuté immédiatement après le bouton
+                (function() {
+                  const btn = document.getElementById('btn-reste');
+                  const input = document.getElementById('montant-paiement-input');
+                  const reste = parseFloat('{{ reste_a_enregistrer|default:0 }}');
+                  
+                  if (btn && input && reste > 0) {
+                    btn.addEventListener('click', function() {
+                      input.value = reste.toFixed(2);
+                      input.style.background = '#d1fae5';
+                      input.style.transition = 'background 0.3s ease';
+                      
+                      setTimeout(() => {
+                        input.style.background = '';
+                      }, 500);
+                      
+                      input.focus();
+                      
+                      // Toast optionnel
+                      if (typeof showToast === 'function') {
+                        showToast('✅ Montant rempli : ' + reste.toFixed(2) + ' €', 'success', 2000);
+                      }
+                    });
+                    
+                    console.log('✅ Bouton Reste initialisé avec succès - Montant:', reste);
+                  } else {
+                    console.error('❌ Erreur initialisation bouton Reste:', { btn, input, reste });
+                  }
+                })();
+                </script>
                 {% endif %}
               </div>
               
