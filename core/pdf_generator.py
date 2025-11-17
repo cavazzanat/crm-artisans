@@ -1,29 +1,23 @@
-# core/pdf_generator.py
-
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import (
-    SimpleDocTemplate, Table, TableStyle,
-    Paragraph, Spacer, Image
-)
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
 from io import BytesIO
-from django.conf import settings
 from django.utils import timezone
 import os
 
 
 def generer_devis_pdf(operation, profil):
     """
-    Génère un PDF de devis professionnel (mise en page améliorée)
+    Génère un PDF de devis professionnel (mise en forme plus classique/pro)
     
     Args:
         operation: Instance de Operation
         profil: Instance de ProfilEntreprise
     
     Returns:
-        bytes: Contenu du PDF
+        bytes: contenu du PDF
     """
 
     buffer = BytesIO()
@@ -50,37 +44,26 @@ def generer_devis_pdf(operation, profil):
         fontName="Helvetica",
         fontSize=9,
         leading=12,
-        textColor=colors.HexColor("#1e293b"),
+        textColor=colors.HexColor("#111827"),
     )
 
-    style_small_grey = ParagraphStyle(
-        "SmallGrey",
+    style_small = ParagraphStyle(
+        "Small",
         parent=style_base,
-        fontSize=7.5,
-        leading=9,
-        textColor=colors.HexColor("#64748b"),
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor("#4b5563"),
     )
 
     style_section_title = ParagraphStyle(
         "SectionTitle",
         parent=style_base,
-        fontSize=11,
-        leading=14,
-        spaceBefore=6,
-        spaceAfter=4,
+        fontSize=10,
+        leading=12,
+        fontName="Helvetica-Bold",
         textColor=colors.HexColor("#111827"),
-        fontName="Helvetica-Bold",
-    )
-
-    style_title_devis = ParagraphStyle(
-        "TitleDevis",
-        parent=styles["Heading1"],
-        fontName="Helvetica-Bold",
-        fontSize=20,
-        textColor=colors.HexColor("#6366f1"),
-        alignment=1,  # centre
-        spaceAfter=12,
-        spaceBefore=6,
+        spaceBefore=8,
+        spaceAfter=4,
     )
 
     style_totaux_label = ParagraphStyle(
@@ -97,110 +80,103 @@ def generer_devis_pdf(operation, profil):
     )
 
     # ============================
-    # EN-TÊTE ENTREPRISE
+    # EN-TÊTE : ENTREPRISE + BLOC DEVIS
     # ============================
 
-    # Logo éventuel à gauche
-    header_cells_left = []
+    # --- Colonne gauche : entreprise ---
+    left_cells = []
 
-    # Si tu ajoutes un logo plus tard :
+    # Logo éventuel
     # if profil.logo and os.path.exists(profil.logo.path):
     #     logo = Image(profil.logo.path, width=3 * cm, height=3 * cm)
-    #     header_cells_left.append(logo)
-    #     header_cells_left.append(Spacer(1, 0.2 * cm))
-
-    # Bloc texte entreprise
-    entreprise_lines = []
+    #     left_cells.append(logo)
+    #     left_cells.append(Spacer(1, 0.2 * cm))
 
     nom_entreprise = profil.nom_entreprise or "Entreprise"
-    entreprise_lines.append(
-        Paragraph(f"<b>{nom_entreprise}</b>", style_base)
-    )
-
-    # TODO: plus tard, tu pourras ajouter forme juridique ici :
-    # if getattr(profil, "forme_juridique", None):
-    #     entreprise_lines.append(
-    #         Paragraph(profil.forme_juridique, style_small_grey)
-    #     )
+    left_cells.append(Paragraph(f"<b>{nom_entreprise}</b>", style_base))
 
     if profil.adresse:
-        entreprise_lines.append(
-            Paragraph(profil.adresse.replace("\n", "<br/>"), style_small_grey)
+        left_cells.append(
+            Paragraph(profil.adresse.replace("\n", "<br/>"), style_small)
         )
 
     if profil.code_postal or profil.ville:
-        entreprise_lines.append(
+        left_cells.append(
             Paragraph(
                 f"{profil.code_postal or ''} {profil.ville or ''}",
-                style_small_grey,
+                style_small,
             )
         )
 
     if profil.siret:
-        entreprise_lines.append(
-            Paragraph(f"SIRET : {profil.siret}", style_small_grey)
+        left_cells.append(
+            Paragraph(f"SIRET : {profil.siret}", style_small)
         )
 
-    # TODO: plus tard : TVA / RCS / RM
-    # if getattr(profil, "tva_intracommunautaire", None):
-    #     entreprise_lines.append(
-    #         Paragraph(f"TVA intracom. : {profil.tva_intracommunautaire}", style_small_grey)
-    #     )
-    # if getattr(profil, "rcs_ou_rm", None):
-    #     entreprise_lines.append(
-    #         Paragraph(profil.rcs_ou_rm, style_small_grey)
-    #     )
-
     if profil.telephone:
-        entreprise_lines.append(
-            Paragraph(f"Tél : {profil.telephone}", style_small_grey)
+        left_cells.append(
+            Paragraph(f"Tél : {profil.telephone}", style_small)
         )
 
     if profil.email:
-        entreprise_lines.append(
-            Paragraph(f"Email : {profil.email}", style_small_grey)
+        left_cells.append(
+            Paragraph(f"Email : {profil.email}", style_small)
         )
 
-    header_cells_left.extend(entreprise_lines)
+    # TODO plus tard : forme juridique / TVA / RCS / RM
+    # if getattr(profil, "forme_juridique", None):
+    #     left_cells.append(Paragraph(profil.forme_juridique, style_small))
+    # if getattr(profil, "tva_intracommunautaire", None):
+    #     left_cells.append(Paragraph(f"TVA : {profil.tva_intracommunautaire}", style_small))
 
-    # Colonne droite : bloc "DEMANDE / INFO DOC"
+    # --- Colonne droite : bloc "DEVIS" ---
     date_emission = timezone.now().date()
-    # Plus tard : tu pourras utiliser operation.date_devis
+    # TODO plus tard : utiliser operation.date_devis si tu l’ajoutes
     # date_emission = operation.date_devis or timezone.now().date()
 
-    header_right = [
-        Paragraph("<b>DEVIS</b>", style_section_title),
-        Paragraph(f"N° {operation.numero_devis}", style_base),
-        Spacer(1, 0.2 * cm),
+    right_cells = [
+        Paragraph("<b>DEVIS</b>", ParagraphStyle(
+            "DocType",
+            parent=style_base,
+            fontSize=14,
+            fontName="Helvetica-Bold",
+            textColor=colors.HexColor("#111827"),
+            alignment=2,  # droite
+            spaceAfter=4,
+        )),
+        Paragraph(f"N° {operation.numero_devis}", ParagraphStyle(
+            "DocNumber",
+            parent=style_base,
+            alignment=2,
+        )),
+        Spacer(1, 0.1 * cm),
         Paragraph(
-            f"Émis le : {date_emission.strftime('%d/%m/%Y')}",
-            style_small_grey,
+            f"Date d'émission : {date_emission.strftime('%d/%m/%Y')}",
+            ParagraphStyle("RightSmall", parent=style_small, alignment=2),
         ),
         Paragraph(
             f"Validité : {operation.devis_validite_jours} jours",
-            style_small_grey,
+            ParagraphStyle("RightSmall2", parent=style_small, alignment=2),
         ),
     ]
 
     if operation.devis_date_limite:
-        header_right.append(
+        right_cells.append(
             Paragraph(
                 f"Valable jusqu'au : {operation.devis_date_limite.strftime('%d/%m/%Y')}",
-                style_small_grey,
+                ParagraphStyle("RightSmall3", parent=style_small, alignment=2),
             )
         )
 
-    # Table en-tête (2 colonnes)
     header_table = Table(
-        [[header_cells_left, header_right]],
-        colWidths=[9 * cm, 7 * cm],
+        [[left_cells, right_cells]],
+        colWidths=[10 * cm, 6 * cm],
         hAlign="LEFT",
     )
     header_table.setStyle(
         TableStyle(
             [
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
             ]
         )
     )
@@ -208,16 +184,27 @@ def generer_devis_pdf(operation, profil):
     elements.append(header_table)
     elements.append(Spacer(1, 0.5 * cm))
 
-    # Gros titre central
-    elements.append(Paragraph("DEVIS", style_title_devis))
-    elements.append(Spacer(1, 0.3 * cm))
+    # Petite ligne de séparation
+    elements.append(Spacer(1, 0.1 * cm))
+    elements.append(
+        Table(
+            [[Paragraph("", style_small)]],
+            colWidths=[16 * cm],
+            style=TableStyle(
+                [
+                    ("LINEABOVE", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
+                ]
+            ),
+        )
+    )
+    elements.append(Spacer(1, 0.5 * cm))
 
     # ============================
-    # INFO CLIENT / INFO DEVIS
+    # BLOC CLIENT / INFOS COMPLÉMENTAIRES
     # ============================
 
-    client_lines = [
-        Paragraph("<b>Client</b>", style_section_title),
+    client_block = [
+        Paragraph("Client", style_section_title),
         Paragraph(
             f"{operation.client.nom} {operation.client.prenom}",
             style_base,
@@ -225,7 +212,7 @@ def generer_devis_pdf(operation, profil):
     ]
 
     if operation.adresse_intervention:
-        client_lines.append(
+        client_block.append(
             Paragraph(
                 operation.adresse_intervention.replace("\n", "<br/>"),
                 style_base,
@@ -233,41 +220,40 @@ def generer_devis_pdf(operation, profil):
         )
 
     if operation.client.telephone:
-        client_lines.append(
-            Paragraph(f"Tél : {operation.client.telephone}", style_small_grey)
+        client_block.append(
+            Paragraph(f"Tél : {operation.client.telephone}", style_small)
         )
 
     if operation.client.email:
-        client_lines.append(
-            Paragraph(f"Email : {operation.client.email}", style_small_grey)
+        client_block.append(
+            Paragraph(f"Email : {operation.client.email}", style_small)
         )
 
-    # Bloc info devis complémentaire (si tu veux séparer du header)
-    info_devis_lines = [
-        Paragraph("<b>Informations devis</b>", style_section_title),
+    info_block = [
+        Paragraph("Informations", style_section_title),
         Paragraph(
-            f"Référence opération : {operation.id_operation}",
+            f"Référence devis : {operation.numero_devis}",
             style_base,
         ),
     ]
 
-    # TODO : plus tard, tu pourras ajouter conditions de paiement, etc.
+    # TODO plus tard : conditions de paiement, délai d’exécution, etc.
     # if getattr(operation, "conditions_paiement", None):
-    #     info_devis_lines.append(
-    #         Paragraph(operation.conditions_paiement, style_small_grey)
+    #     info_block.append(
+    #         Paragraph(f"Conditions de paiement : {operation.conditions_paiement}", style_small)
     #     )
 
     info_table = Table(
-        [[client_lines, info_devis_lines]],
-        colWidths=[9 * cm, 7 * cm],
+        [[client_block, info_block]],
+        colWidths=[10 * cm, 6 * cm],
         hAlign="LEFT",
     )
     info_table.setStyle(
         TableStyle(
             [
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
-                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
                 ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f9fafb")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
                 ("LEFTPADDING", (0, 0), (-1, -1), 6),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 6),
                 ("TOPPADDING", (0, 0), (-1, -1), 6),
@@ -280,8 +266,9 @@ def generer_devis_pdf(operation, profil):
     elements.append(Spacer(1, 0.7 * cm))
 
     # ============================
-    # OBJET
+    # OBJET DU DEVIS
     # ============================
+
     elements.append(Paragraph("Objet du devis", style_section_title))
     elements.append(
         Paragraph(operation.type_prestation or "", style_base)
@@ -305,21 +292,15 @@ def generer_devis_pdf(operation, profil):
 
     interventions = operation.interventions.all()
 
-    for idx, intervention in enumerate(interventions):
+    for intervention in interventions:
         table_data.append(
             [
                 Paragraph(intervention.description or "", style_base),
-                f"{intervention.quantite:,.2f}".replace(",", " ").replace(
-                    ".", ","
-                ),
+                f"{intervention.quantite:,.2f}".replace(",", " ").replace(".", ","),
                 intervention.get_unite_display(),
-                f"{intervention.prix_unitaire_ht:,.2f} €".replace(
-                    ",", " "
-                ).replace(".", ","),
+                f"{intervention.prix_unitaire_ht:,.2f} €".replace(",", " ").replace(".", ","),
                 f"{intervention.taux_tva:,.0f}%".replace(".", ","),
-                f"{intervention.montant:,.2f} €".replace(",", " ").replace(
-                    ".", ","
-                ),
+                f"{intervention.montant:,.2f} €".replace(",", " ").replace(".", ","),
             ]
         )
 
@@ -332,7 +313,7 @@ def generer_devis_pdf(operation, profil):
         TableStyle(
             [
                 # En-tête
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#6366f1")),
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#111827")),
                 ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
                 ("ALIGN", (0, 0), (-1, 0), "CENTER"),
                 ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
@@ -346,8 +327,6 @@ def generer_devis_pdf(operation, profil):
                 ("ALIGN", (0, 1), (0, -1), "LEFT"),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e5e7eb")),
-                # Bandes alternées
-                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
             ]
         )
     )
@@ -356,50 +335,36 @@ def generer_devis_pdf(operation, profil):
     elements.append(Spacer(1, 0.7 * cm))
 
     # ============================
-    # BLOC TOTAUX
+    # TOTAUX
     # ============================
 
-    totaux_data = []
-
-    totaux_data.append(
+    totaux_data = [
         [
             Paragraph("Sous-total HT", style_totaux_label),
             Paragraph(
-                f"{operation.sous_total_ht:,.2f} €".replace(
-                    ",", " "
-                ).replace(".", ","),
+                f"{operation.sous_total_ht:,.2f} €".replace(",", " ").replace(".", ","),
                 style_totaux_value,
             ),
-        ]
-    )
-
-    totaux_data.append(
+        ],
         [
             Paragraph("TVA", style_totaux_label),
             Paragraph(
-                f"{operation.total_tva:,.2f} €".replace(
-                    ",", " "
-                ).replace(".", ","),
+                f"{operation.total_tva:,.2f} €".replace(",", " ").replace(".", ","),
                 style_totaux_value,
             ),
-        ]
-    )
-
-    totaux_data.append(
+        ],
         [
             Paragraph("<b>TOTAL TTC</b>", style_totaux_label),
             Paragraph(
-                f"<b>{operation.total_ttc:,.2f} €</b>".replace(
-                    ",", " "
-                ).replace(".", ","),
+                f"<b>{operation.total_ttc:,.2f} €</b>".replace(",", " ").replace(".", ","),
                 style_totaux_value,
             ),
-        ]
-    )
+        ],
+    ]
 
     totaux_table = Table(
         totaux_data,
-        colWidths=[4 * cm, 4 * cm],
+        colWidths=[4.5 * cm, 4.5 * cm],
         hAlign="RIGHT",
     )
     totaux_table.setStyle(
@@ -411,7 +376,7 @@ def generer_devis_pdf(operation, profil):
                 ("LEFTPADDING", (0, 0), (-1, -1), 6),
                 ("RIGHTPADDING", (0, 0), (-1, -1), 6),
                 ("BACKGROUND", (0, 0), (-1, -2), colors.white),
-                ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#eef2ff")),
+                ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#f3f4ff")),
                 ("LINEABOVE", (0, -1), (-1, -1), 1, colors.HexColor("#6366f1")),
                 ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
             ]
@@ -436,7 +401,7 @@ def generer_devis_pdf(operation, profil):
         elements.append(Spacer(1, 0.6 * cm))
 
     # ============================
-    # MENTIONS LÉGALES
+    # MENTIONS / CONDITIONS GÉNÉRALES
     # ============================
 
     if profil.mentions_legales_devis:
@@ -444,7 +409,7 @@ def generer_devis_pdf(operation, profil):
         elements.append(
             Paragraph(
                 profil.mentions_legales_devis.replace("\n", "<br/>"),
-                style_small_grey,
+                style_small,
             )
         )
         elements.append(Spacer(1, 0.8 * cm))
@@ -465,7 +430,7 @@ def generer_devis_pdf(operation, profil):
 
     signature_table = Table(
         signature_data,
-        colWidths=[9 * cm, 7 * cm],
+        colWidths=[10 * cm, 6 * cm],
         hAlign="LEFT",
     )
     signature_table.setStyle(
@@ -482,13 +447,14 @@ def generer_devis_pdf(operation, profil):
     elements.append(signature_table)
 
     # ============================
-    # CONSTRUCTION DU PDF
+    # GÉNÉRATION
     # ============================
 
     doc.build(elements)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
 
 
 def generer_facture_pdf(echeance, profil):
