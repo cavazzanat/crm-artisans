@@ -2044,7 +2044,20 @@ function initSyncDevis() {
                 {% if reste_a_enregistrer > 0 %}
                 <button type="button" 
                         class="btn primary sm" 
-                        onclick="remplirReste()"
+                        onclick="
+                          const input = document.getElementById('montant-paiement-input');
+                          const reste = {{ reste_a_enregistrer|default:0 }};
+                          if (input && reste > 0) {
+                            input.value = reste.toFixed(2);
+                            input.style.background = '#d1fae5';
+                            input.style.transition = 'background 0.3s ease';
+                            setTimeout(() => { input.style.background = ''; }, 500);
+                            input.focus();
+                            if (typeof showToast === 'function') {
+                              showToast('✅ Montant rempli : ' + reste.toFixed(2) + ' €', 'success', 2000);
+                            }
+                          }
+                        "
                         title="Remplir avec le reste à enregistrer"
                         style="white-space:nowrap; padding:0.5rem 0.75rem;">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
