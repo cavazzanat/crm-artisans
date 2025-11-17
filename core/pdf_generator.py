@@ -1,287 +1,495 @@
-# ================================
 # core/pdf_generator.py
-# Générateur de PDF pour devis
-# ================================
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+from reportlab.platypus import (
+    SimpleDocTemplate, Table, TableStyle,
+    Paragraph, Spacer, Image
+)
 from io import BytesIO
 from django.conf import settings
+from django.utils import timezone
 import os
+
 
 def generer_devis_pdf(operation, profil):
     """
-    Génère un PDF de devis professionnel
+    Génère un PDF de devis professionnel (mise en page améliorée)
     
     Args:
         operation: Instance de Operation
         profil: Instance de ProfilEntreprise
     
     Returns:
-        BytesIO contenant le PDF généré
+        bytes: Contenu du PDF
     """
-    
-    # Créer un buffer en mémoire
+
     buffer = BytesIO()
-    
-    # Créer le document PDF
+
     doc = SimpleDocTemplate(
         buffer,
         pagesize=A4,
-        rightMargin=2*cm,
-        leftMargin=2*cm,
-        topMargin=2*cm,
-        bottomMargin=2*cm
+        rightMargin=2 * cm,
+        leftMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm,
     )
-    
-    # Container pour les éléments
+
     elements = []
-    
-    # Styles
+
+    # ============================
+    # STYLES
+    # ============================
     styles = getSampleStyleSheet()
-    style_normal = styles['Normal']
-    style_heading = styles['Heading1']
-    
-    # Style personnalisé pour le titre
-    style_titre = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        textColor=colors.HexColor('#6366f1'),
-        spaceAfter=30,
-        alignment=1  # Centré
+
+    style_base = ParagraphStyle(
+        "Base",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#1e293b"),
     )
-    
-    # ========================================
-    # EN-TÊTE : Infos entreprise
-    # ========================================
-    
-    # Logo (si existe)
-    #if profil.logo and os.path.exists(profil.logo.path):
-    #   logo = Image(profil.logo.path, width=4*cm, height=2*cm)
-    #   elements.append(logo)
-    #   elements.append(Spacer(1, 0.5*cm))
-    
-    # Informations entreprise
-    entreprise_data = [
-        [Paragraph(f"<b>{profil.nom_entreprise}</b>", style_normal)],
-        [Paragraph(profil.adresse.replace('\n', '<br/>'), style_normal)],
-        [Paragraph(f"{profil.code_postal} {profil.ville}", style_normal)],
-    ]
-    
-    if profil.siret:
-        entreprise_data.append([Paragraph(f"SIRET : {profil.siret}", style_normal)])
-    
-    if profil.telephone:
-        entreprise_data.append([Paragraph(f"Tél : {profil.telephone}", style_normal)])
-    
-    if profil.email:
-        entreprise_data.append([Paragraph(f"Email : {profil.email}", style_normal)])
-    
-    table_entreprise = Table(entreprise_data, colWidths=[17*cm])
-    table_entreprise.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
-    
-    elements.append(table_entreprise)
-    elements.append(Spacer(1, 1*cm))
-    
-    # ========================================
-    # TITRE DU DEVIS
-    # ========================================
-    
-    titre = Paragraph(f"DEVIS N° {operation.numero_devis}", style_titre)
-    elements.append(titre)
-    elements.append(Spacer(1, 0.5*cm))
-    
-    # ========================================
-    # INFORMATIONS CLIENT ET DEVIS
-    # ========================================
-    
-    # Bloc gauche : Client
-    client_data = [
-        [Paragraph("<b>CLIENT</b>", style_normal)],
-        [Paragraph(f"{operation.client.nom} {operation.client.prenom}", style_normal)],
-        [Paragraph(operation.adresse_intervention.replace('\n', '<br/>'), style_normal)],
-    ]
-    
-    if operation.client.telephone:
-        client_data.append([Paragraph(f"Tél : {operation.client.telephone}", style_normal)])
-    
-    if operation.client.email:
-        client_data.append([Paragraph(f"Email : {operation.client.email}", style_normal)])
-    
-    # Bloc droit : Infos devis
-    from django.utils import timezone
-    date_emission = timezone.now().date()
-    date_limite = operation.devis_date_limite if operation.devis_date_limite else None
-    
-    devis_data = [
-        [Paragraph("<b>INFORMATIONS</b>", style_normal)],
-        [Paragraph(f"Date : {date_emission.strftime('%d/%m/%Y')}", style_normal)],
-        [Paragraph(f"Validité : {operation.devis_validite_jours} jours", style_normal)],
-    ]
-    
-    if date_limite:
-        devis_data.append([Paragraph(f"Valable jusqu'au : {date_limite.strftime('%d/%m/%Y')}", style_normal)])
-    
-    # Créer un tableau 2 colonnes
-    info_table_data = [
-        [
-            Table(client_data, colWidths=[8*cm]),
-            Table(devis_data, colWidths=[8*cm])
-        ]
-    ]
-    
-    info_table = Table(info_table_data, colWidths=[8.5*cm, 8.5*cm])
-    info_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-    ]))
-    
-    elements.append(info_table)
-    elements.append(Spacer(1, 1*cm))
-    
-    # ========================================
-    # OBJET / TYPE DE PRESTATION
-    # ========================================
-    
-    objet = Paragraph(f"<b>Objet :</b> {operation.type_prestation}", style_normal)
-    elements.append(objet)
-    elements.append(Spacer(1, 0.5*cm))
-    
-    # ========================================
-    # TABLEAU DES LIGNES
-    # ========================================
-    
-    # En-tête du tableau
-    table_data = [
-        ['Description', 'Qté', 'Unité', 'P.U. HT', 'TVA', 'Total HT']
-    ]
-    
-    # Lignes d'intervention
-    interventions = operation.interventions.all()
-    
-    for intervention in interventions:
-        table_data.append([
-            Paragraph(intervention.description, style_normal),
-            f"{intervention.quantite:,.2f}".replace(',', ' ').replace('.', ','),
-            intervention.get_unite_display(),
-            f"{intervention.prix_unitaire_ht:,.2f} €".replace(',', ' ').replace('.', ','),
-            f"{intervention.taux_tva:,.0f}%".replace('.', ','),
-            f"{intervention.montant:,.2f} €".replace(',', ' ').replace('.', ',')
-        ])
-    
-    # Ligne vide
-    table_data.append(['', '', '', '', '', ''])
-    
-    # Totaux
-    table_data.append(['', '', '', '', 'Sous-total HT', f"{operation.sous_total_ht:,.2f} €".replace(',', ' ').replace('.', ',')])
-    table_data.append(['', '', '', '', 'TVA', f"{operation.total_tva:,.2f} €".replace(',', ' ').replace('.', ',')])
-    table_data.append(['', '', '', '', Paragraph('<b>TOTAL TTC</b>', style_normal), Paragraph(f"<b>{operation.total_ttc:,.2f} €</b>".replace(',', ' ').replace('.', ','), style_normal)])
-    
-    # Créer le tableau
-    table = Table(table_data, colWidths=[7*cm, 2*cm, 2*cm, 2*cm, 2*cm, 2*cm])
-    table.setStyle(TableStyle([
-        # En-tête
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6366f1')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        
-        # Corps du tableau
-        ('ALIGN', (1, 1), (-1, -1), 'CENTER'),
-        ('ALIGN', (0, 1), (0, -1), 'LEFT'),
-        ('VALIGN', (0, 1), (-1, -1), 'TOP'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('GRID', (0, 0), (-1, -4), 0.5, colors.grey),
-        
-        # Totaux
-        ('ALIGN', (4, -3), (5, -1), 'RIGHT'),
-        ('FONTNAME', (4, -1), (5, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (4, -3), (5, -1), 10),
-        ('LINEABOVE', (4, -3), (5, -3), 1, colors.grey),
-        ('LINEABOVE', (4, -1), (5, -1), 2, colors.HexColor('#6366f1')),
-        ('BACKGROUND', (4, -1), (5, -1), colors.HexColor('#eef2ff')),
-    ]))
-    
-    elements.append(table)
-    elements.append(Spacer(1, 1*cm))
-    
-    # ========================================
-    # NOTES DU DEVIS
-    # ========================================
-    
-    if operation.devis_notes:
-        notes_titre = Paragraph("<b>Notes :</b>", style_normal)
-        elements.append(notes_titre)
-        elements.append(Spacer(1, 0.3*cm))
-        
-        notes_contenu = Paragraph(operation.devis_notes.replace('\n', '<br/>'), style_normal)
-        elements.append(notes_contenu)
-        elements.append(Spacer(1, 0.5*cm))
-    
-    # ========================================
-    # MENTIONS LÉGALES
-    # ========================================
-    
-    if profil.mentions_legales_devis:
-        elements.append(Spacer(1, 0.5*cm))
-        mentions_titre = Paragraph("<b>Conditions générales :</b>", style_normal)
-        elements.append(mentions_titre)
-        elements.append(Spacer(1, 0.3*cm))
-        
-        mentions = Paragraph(
-            profil.mentions_legales_devis.replace('\n', '<br/>'),
-            ParagraphStyle(
-                'SmallText',
-                parent=style_normal,
-                fontSize=8,
-                textColor=colors.grey
+
+    style_small_grey = ParagraphStyle(
+        "SmallGrey",
+        parent=style_base,
+        fontSize=7.5,
+        leading=9,
+        textColor=colors.HexColor("#64748b"),
+    )
+
+    style_section_title = ParagraphStyle(
+        "SectionTitle",
+        parent=style_base,
+        fontSize=11,
+        leading=14,
+        spaceBefore=6,
+        spaceAfter=4,
+        textColor=colors.HexColor("#111827"),
+        fontName="Helvetica-Bold",
+    )
+
+    style_title_devis = ParagraphStyle(
+        "TitleDevis",
+        parent=styles["Heading1"],
+        fontName="Helvetica-Bold",
+        fontSize=20,
+        textColor=colors.HexColor("#6366f1"),
+        alignment=1,  # centre
+        spaceAfter=12,
+        spaceBefore=6,
+    )
+
+    style_totaux_label = ParagraphStyle(
+        "TotauxLabel",
+        parent=style_base,
+        alignment=2,  # droite
+    )
+
+    style_totaux_value = ParagraphStyle(
+        "TotauxValue",
+        parent=style_base,
+        alignment=2,
+        fontName="Helvetica-Bold",
+    )
+
+    # ============================
+    # EN-TÊTE ENTREPRISE
+    # ============================
+
+    # Logo éventuel à gauche
+    header_cells_left = []
+
+    # Si tu ajoutes un logo plus tard :
+    # if profil.logo and os.path.exists(profil.logo.path):
+    #     logo = Image(profil.logo.path, width=3 * cm, height=3 * cm)
+    #     header_cells_left.append(logo)
+    #     header_cells_left.append(Spacer(1, 0.2 * cm))
+
+    # Bloc texte entreprise
+    entreprise_lines = []
+
+    nom_entreprise = profil.nom_entreprise or "Entreprise"
+    entreprise_lines.append(
+        Paragraph(f"<b>{nom_entreprise}</b>", style_base)
+    )
+
+    # TODO: plus tard, tu pourras ajouter forme juridique ici :
+    # if getattr(profil, "forme_juridique", None):
+    #     entreprise_lines.append(
+    #         Paragraph(profil.forme_juridique, style_small_grey)
+    #     )
+
+    if profil.adresse:
+        entreprise_lines.append(
+            Paragraph(profil.adresse.replace("\n", "<br/>"), style_small_grey)
+        )
+
+    if profil.code_postal or profil.ville:
+        entreprise_lines.append(
+            Paragraph(
+                f"{profil.code_postal or ''} {profil.ville or ''}",
+                style_small_grey,
             )
         )
-        elements.append(mentions)
-    
-    # ========================================
-    # SIGNATURE
-    # ========================================
-    
-    elements.append(Spacer(1, 1.5*cm))
-    
-    signature_data = [
+
+    if profil.siret:
+        entreprise_lines.append(
+            Paragraph(f"SIRET : {profil.siret}", style_small_grey)
+        )
+
+    # TODO: plus tard : TVA / RCS / RM
+    # if getattr(profil, "tva_intracommunautaire", None):
+    #     entreprise_lines.append(
+    #         Paragraph(f"TVA intracom. : {profil.tva_intracommunautaire}", style_small_grey)
+    #     )
+    # if getattr(profil, "rcs_ou_rm", None):
+    #     entreprise_lines.append(
+    #         Paragraph(profil.rcs_ou_rm, style_small_grey)
+    #     )
+
+    if profil.telephone:
+        entreprise_lines.append(
+            Paragraph(f"Tél : {profil.telephone}", style_small_grey)
+        )
+
+    if profil.email:
+        entreprise_lines.append(
+            Paragraph(f"Email : {profil.email}", style_small_grey)
+        )
+
+    header_cells_left.extend(entreprise_lines)
+
+    # Colonne droite : bloc "DEMANDE / INFO DOC"
+    date_emission = timezone.now().date()
+    # Plus tard : tu pourras utiliser operation.date_devis
+    # date_emission = operation.date_devis or timezone.now().date()
+
+    header_right = [
+        Paragraph("<b>DEVIS</b>", style_section_title),
+        Paragraph(f"N° {operation.numero_devis}", style_base),
+        Spacer(1, 0.2 * cm),
+        Paragraph(
+            f"Émis le : {date_emission.strftime('%d/%m/%Y')}",
+            style_small_grey,
+        ),
+        Paragraph(
+            f"Validité : {operation.devis_validite_jours} jours",
+            style_small_grey,
+        ),
+    ]
+
+    if operation.devis_date_limite:
+        header_right.append(
+            Paragraph(
+                f"Valable jusqu'au : {operation.devis_date_limite.strftime('%d/%m/%Y')}",
+                style_small_grey,
+            )
+        )
+
+    # Table en-tête (2 colonnes)
+    header_table = Table(
+        [[header_cells_left, header_right]],
+        colWidths=[9 * cm, 7 * cm],
+        hAlign="LEFT",
+    )
+    header_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+
+    elements.append(header_table)
+    elements.append(Spacer(1, 0.5 * cm))
+
+    # Gros titre central
+    elements.append(Paragraph("DEVIS", style_title_devis))
+    elements.append(Spacer(1, 0.3 * cm))
+
+    # ============================
+    # INFO CLIENT / INFO DEVIS
+    # ============================
+
+    client_lines = [
+        Paragraph("<b>Client</b>", style_section_title),
+        Paragraph(
+            f"{operation.client.nom} {operation.client.prenom}",
+            style_base,
+        ),
+    ]
+
+    if operation.adresse_intervention:
+        client_lines.append(
+            Paragraph(
+                operation.adresse_intervention.replace("\n", "<br/>"),
+                style_base,
+            )
+        )
+
+    if operation.client.telephone:
+        client_lines.append(
+            Paragraph(f"Tél : {operation.client.telephone}", style_small_grey)
+        )
+
+    if operation.client.email:
+        client_lines.append(
+            Paragraph(f"Email : {operation.client.email}", style_small_grey)
+        )
+
+    # Bloc info devis complémentaire (si tu veux séparer du header)
+    info_devis_lines = [
+        Paragraph("<b>Informations devis</b>", style_section_title),
+        Paragraph(
+            f"Référence opération : {operation.id_operation}",
+            style_base,
+        ),
+    ]
+
+    # TODO : plus tard, tu pourras ajouter conditions de paiement, etc.
+    # if getattr(operation, "conditions_paiement", None):
+    #     info_devis_lines.append(
+    #         Paragraph(operation.conditions_paiement, style_small_grey)
+    #     )
+
+    info_table = Table(
+        [[client_lines, info_devis_lines]],
+        colWidths=[9 * cm, 7 * cm],
+        hAlign="LEFT",
+    )
+    info_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
+                ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f9fafb")),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ("TOPPADDING", (0, 0), (-1, -1), 6),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ]
+        )
+    )
+
+    elements.append(info_table)
+    elements.append(Spacer(1, 0.7 * cm))
+
+    # ============================
+    # OBJET
+    # ============================
+    elements.append(Paragraph("Objet du devis", style_section_title))
+    elements.append(
+        Paragraph(operation.type_prestation or "", style_base)
+    )
+    elements.append(Spacer(1, 0.5 * cm))
+
+    # ============================
+    # TABLEAU DES LIGNES
+    # ============================
+
+    table_data = [
         [
-            Paragraph("<b>Signature du client</b><br/>(Précédée de 'Bon pour accord')", style_normal),
-            Paragraph(f"<b>{profil.nom_entreprise}</b>", style_normal)
+            Paragraph("<b>Description</b>", style_base),
+            Paragraph("<b>Qté</b>", style_base),
+            Paragraph("<b>Unité</b>", style_base),
+            Paragraph("<b>P.U. HT</b>", style_base),
+            Paragraph("<b>TVA</b>", style_base),
+            Paragraph("<b>Total HT</b>", style_base),
         ]
     ]
-    
-    signature_table = Table(signature_data, colWidths=[8.5*cm, 8.5*cm])
-    signature_table.setStyle(TableStyle([
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-    ]))
-    
+
+    interventions = operation.interventions.all()
+
+    for idx, intervention in enumerate(interventions):
+        table_data.append(
+            [
+                Paragraph(intervention.description or "", style_base),
+                f"{intervention.quantite:,.2f}".replace(",", " ").replace(
+                    ".", ","
+                ),
+                intervention.get_unite_display(),
+                f"{intervention.prix_unitaire_ht:,.2f} €".replace(
+                    ",", " "
+                ).replace(".", ","),
+                f"{intervention.taux_tva:,.0f}%".replace(".", ","),
+                f"{intervention.montant:,.2f} €".replace(",", " ").replace(
+                    ".", ","
+                ),
+            ]
+        )
+
+    lignes_table = Table(
+        table_data,
+        colWidths=[7 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 1.5 * cm, 3 * cm],
+        hAlign="LEFT",
+    )
+    lignes_table.setStyle(
+        TableStyle(
+            [
+                # En-tête
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#6366f1")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+                ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, 0), 9),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+                ("TOPPADDING", (0, 0), (-1, 0), 6),
+                # Corps
+                ("FONTNAME", (0, 1), (-1, -1), "Helvetica"),
+                ("FONTSIZE", (0, 1), (-1, -1), 8.5),
+                ("ALIGN", (1, 1), (-1, -1), "CENTER"),
+                ("ALIGN", (0, 1), (0, -1), "LEFT"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e5e7eb")),
+                # Bandes alternées
+                ("BACKGROUND", (0, 1), (-1, -1), colors.white),
+            ]
+        )
+    )
+
+    elements.append(lignes_table)
+    elements.append(Spacer(1, 0.7 * cm))
+
+    # ============================
+    # BLOC TOTAUX
+    # ============================
+
+    totaux_data = []
+
+    totaux_data.append(
+        [
+            Paragraph("Sous-total HT", style_totaux_label),
+            Paragraph(
+                f"{operation.sous_total_ht:,.2f} €".replace(
+                    ",", " "
+                ).replace(".", ","),
+                style_totaux_value,
+            ),
+        ]
+    )
+
+    totaux_data.append(
+        [
+            Paragraph("TVA", style_totaux_label),
+            Paragraph(
+                f"{operation.total_tva:,.2f} €".replace(
+                    ",", " "
+                ).replace(".", ","),
+                style_totaux_value,
+            ),
+        ]
+    )
+
+    totaux_data.append(
+        [
+            Paragraph("<b>TOTAL TTC</b>", style_totaux_label),
+            Paragraph(
+                f"<b>{operation.total_ttc:,.2f} €</b>".replace(
+                    ",", " "
+                ).replace(".", ","),
+                style_totaux_value,
+            ),
+        ]
+    )
+
+    totaux_table = Table(
+        totaux_data,
+        colWidths=[4 * cm, 4 * cm],
+        hAlign="RIGHT",
+    )
+    totaux_table.setStyle(
+        TableStyle(
+            [
+                ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+                ("TOPPADDING", (0, 0), (-1, -1), 3),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 3),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+                ("BACKGROUND", (0, 0), (-1, -2), colors.white),
+                ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#eef2ff")),
+                ("LINEABOVE", (0, -1), (-1, -1), 1, colors.HexColor("#6366f1")),
+                ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
+            ]
+        )
+    )
+
+    elements.append(totaux_table)
+    elements.append(Spacer(1, 0.8 * cm))
+
+    # ============================
+    # NOTES
+    # ============================
+
+    if operation.devis_notes:
+        elements.append(Paragraph("Notes", style_section_title))
+        elements.append(
+            Paragraph(
+                operation.devis_notes.replace("\n", "<br/>"),
+                style_base,
+            )
+        )
+        elements.append(Spacer(1, 0.6 * cm))
+
+    # ============================
+    # MENTIONS LÉGALES
+    # ============================
+
+    if profil.mentions_legales_devis:
+        elements.append(Paragraph("Conditions générales", style_section_title))
+        elements.append(
+            Paragraph(
+                profil.mentions_legales_devis.replace("\n", "<br/>"),
+                style_small_grey,
+            )
+        )
+        elements.append(Spacer(1, 0.8 * cm))
+
+    # ============================
+    # SIGNATURE
+    # ============================
+
+    signature_data = [
+        [
+            Paragraph(
+                "<b>Signature du client</b><br/><font size='7' color='#6b7280'>(Précédée de la mention manuscrite 'Bon pour accord')</font>",
+                style_base,
+            ),
+            Paragraph(f"<b>{nom_entreprise}</b>", style_base),
+        ]
+    ]
+
+    signature_table = Table(
+        signature_data,
+        colWidths=[9 * cm, 7 * cm],
+        hAlign="LEFT",
+    )
+    signature_table.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("ALIGN", (0, 0), (0, 0), "LEFT"),
+                ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+                ("TOPPADDING", (0, 0), (-1, -1), 18),
+            ]
+        )
+    )
+
     elements.append(signature_table)
-    
-    # ========================================
-    # CONSTRUIRE LE PDF
-    # ========================================
-    
+
+    # ============================
+    # CONSTRUCTION DU PDF
+    # ============================
+
     doc.build(elements)
-    
-    # Récupérer le PDF du buffer
     pdf = buffer.getvalue()
     buffer.close()
-    
     return pdf
+
 
 def generer_facture_pdf(echeance, profil):
     """
