@@ -594,6 +594,7 @@ def generer_facture_pdf(echeance, profil):
 
     right_cells = [
         Paragraph(type_label, style_doc_type),
+        Spacer(1, 0.25 * cm),  # espace ajouté
         Paragraph(f"N° {echeance.numero_facture}", style_doc_num),
         Spacer(1, 0.1 * cm),
         Paragraph(
@@ -605,6 +606,7 @@ def generer_facture_pdf(echeance, profil):
             style_right_small,
         ),
     ]
+
 
     header_table = Table(
         [[left_cells, right_cells]],
