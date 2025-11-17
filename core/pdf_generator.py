@@ -750,7 +750,8 @@ def generer_facture_pdf(echeance, profil):
     if echeance.facture_type in ["acompte", "solde"]:
         totaux.append(["", ""])
         totaux.append(
-            [f"Montant de la facture ({echeance.facture_type})", f"{echeance.montant:.2f} €"]
+            [Paragraph(f"Montant de la facture<br/>({echeance.facture_type})", style_totaux_label),
+            Paragraph(f"{echeance.montant:.2f} €", style_totaux_value)]
         )
 
     totaux_table = Table(
