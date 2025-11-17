@@ -2058,7 +2058,7 @@ function initSyncDevis() {
                 (function() {
                   const btn = document.getElementById('btn-reste');
                   const input = document.getElementById('montant-paiement-input');
-                  const reste = parseFloat('{{ reste_a_enregistrer|default:0 }}');
+                  const reste = {{ reste_a_enregistrer|floatformat:2|default:"0.00" }};
                   
                   if (btn && input && reste > 0) {
                     btn.addEventListener('click', function() {
