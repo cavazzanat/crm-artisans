@@ -456,223 +456,283 @@ def generer_devis_pdf(operation, profil):
     buffer.close()
     return pdf
 
-
-
 def generer_facture_pdf(echeance, profil):
     """
-    Génère le PDF d'une facture pour une échéance
-    
-    Args:
-        echeance: Instance de Echeance
-        profil: Instance de ProfilEntreprise
-    
-    Returns:
-        bytes: Contenu du PDF
+    Génère une facture avec la même DA que le devis
     """
+
     from reportlab.lib.pagesizes import A4
     from reportlab.lib.units import cm
     from reportlab.lib import colors
     from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.enums import TA_LEFT, TA_RIGHT, TA_CENTER
+    from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+    from reportlab.lib.enums import TA_RIGHT
     from io import BytesIO
-    from datetime import datetime
-    
+
     buffer = BytesIO()
-    doc = SimpleDocTemplate(buffer, pagesize=A4, rightMargin=2*cm, leftMargin=2*cm, topMargin=2*cm, bottomMargin=2*cm)
-    
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=2 * cm,
+        leftMargin=2 * cm,
+        topMargin=2 * cm,
+        bottomMargin=2 * cm,
+    )
+
     elements = []
     styles = getSampleStyleSheet()
-    
-    # ═══════════════════════════════════════
-    # STYLES PERSONNALISÉS
-    # ═══════════════════════════════════════
-    style_title = ParagraphStyle(
-        'CustomTitle',
-        parent=styles['Heading1'],
-        fontSize=24,
-        textColor=colors.HexColor('#6366f1'),
-        spaceAfter=30,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold'
+
+    # =======================================================
+    # STYLES (même que devis)
+    # =======================================================
+    style_base = ParagraphStyle(
+        "Base",
+        parent=styles["Normal"],
+        fontName="Helvetica",
+        fontSize=9,
+        leading=12,
+        textColor=colors.HexColor("#111827"),
     )
-    
-    style_header = ParagraphStyle(
-        'CustomHeader',
-        parent=styles['Normal'],
+
+    style_small = ParagraphStyle(
+        "Small",
+        parent=style_base,
+        fontSize=8,
+        leading=10,
+        textColor=colors.HexColor("#4b5563"),
+    )
+
+    style_section_title = ParagraphStyle(
+        "SectionTitle",
+        parent=style_base,
         fontSize=10,
-        textColor=colors.HexColor('#64748b'),
-        spaceAfter=6,
-        fontName='Helvetica-Bold'
+        leading=12,
+        fontName="Helvetica-Bold",
+        textColor=colors.HexColor("#111827"),
+        spaceBefore=8,
+        spaceAfter=4,
     )
-    
-    style_normal = ParagraphStyle(
-        'CustomNormal',
-        parent=styles['Normal'],
-        fontSize=10,
-        textColor=colors.HexColor('#1e293b'),
-        spaceAfter=6
+
+    style_totaux_label = ParagraphStyle(
+        "TotauxLabel",
+        parent=style_base,
+        alignment=TA_RIGHT,
     )
-    
-    # ═══════════════════════════════════════
-    # EN-TÊTE ENTREPRISE
-    # ═══════════════════════════════════════
-    elements.append(Paragraph(profil.nom_entreprise or "Entreprise", style_title))
-    elements.append(Spacer(1, 0.5*cm))
-    
-    # Infos entreprise
-    if profil.adresse:
-        elements.append(Paragraph(profil.adresse, style_normal))
-    if profil.code_postal and profil.ville:
-        elements.append(Paragraph(f"{profil.code_postal} {profil.ville}", style_normal))
-    if profil.telephone:
-        elements.append(Paragraph(f"Tél : {profil.telephone}", style_normal))
-    if profil.email:
-        elements.append(Paragraph(f"Email : {profil.email}", style_normal))
-    if profil.siret:
-        elements.append(Paragraph(f"SIRET : {profil.siret}", style_normal))
-    
-    elements.append(Spacer(1, 1*cm))
-    
-    # ═════════════════════════════════════════
-    # TITRE FACTURE + TYPE
-    # ═══════════════════════════════════════════
-    type_facture_label = {
-        'acompte': 'FACTURE D\'ACOMPTE',
-        'solde': 'FACTURE DE SOLDE',
-        'globale': 'FACTURE'
-    }.get(echeance.facture_type, 'FACTURE')
-    
-    style_facture_title = ParagraphStyle(
-        'FactureTitle',
-        parent=styles['Heading1'],
-        fontSize=20,
-        textColor=colors.HexColor('#ef4444'),
-        spaceAfter=20,
-        alignment=TA_CENTER,
-        fontName='Helvetica-Bold'
+
+    style_totaux_value = ParagraphStyle(
+        "TotauxValue",
+        parent=style_base,
+        alignment=TA_RIGHT,
+        fontName="Helvetica-Bold",
     )
-    
-    elements.append(Paragraph(type_facture_label, style_facture_title))
-    elements.append(Paragraph(f"N° {echeance.numero_facture}", style_header))
-    elements.append(Spacer(1, 0.5*cm))
-    
-    # ═══════════════════════════════════════
-    # INFOS CLIENT + FACTURE
-    # ═══════════════════════════════════════
+
+    # =======================================================
+    # DONNÉES
+    # =======================================================
     operation = echeance.operation
     client = operation.client
-    
-    data_info = [
-        ['CLIENT', 'FACTURE'],
+
+    # Type de facture
+    type_label = {
+        "acompte": "FACTURE D'ACOMPTE",
+        "solde": "FACTURE DE SOLDE",
+        "globale": "FACTURE"
+    }.get(echeance.facture_type, "FACTURE")
+
+    # =======================================================
+    # EN-TÊTE : ENTREPRISE / FACTURE
+    # =======================================================
+    left_cells = []
+    left_cells.append(Paragraph(f"<b>{profil.nom_entreprise}</b>", style_base))
+
+    if profil.adresse:
+        left_cells.append(Paragraph(profil.adresse.replace("\n", "<br/>"), style_small))
+
+    if profil.code_postal or profil.ville:
+        left_cells.append(Paragraph(f"{profil.code_postal} {profil.ville}", style_small))
+
+    if profil.siret:
+        left_cells.append(Paragraph(f"SIRET : {profil.siret}", style_small))
+
+    if profil.telephone:
+        left_cells.append(Paragraph(f"Tél : {profil.telephone}", style_small))
+
+    if profil.email:
+        left_cells.append(Paragraph(f"Email : {profil.email}", style_small))
+
+    # TODO: forme juridique, TVA, RCS / RM, assurance…
+
+    right_cells = [
+        Paragraph(f"<b>{type_label}</b>", ParagraphStyle(
+            "DocType",
+            parent=style_base,
+            fontSize=14,
+            fontName="Helvetica-Bold",
+            alignment=TA_RIGHT,
+        )),
+        Paragraph(f"N° {echeance.numero_facture}", ParagraphStyle(
+            "DocNum",
+            parent=style_base,
+            alignment=TA_RIGHT,
+        )),
+        Spacer(1, 0.1 * cm),
+        Paragraph(f"Émise le : {echeance.facture_date_emission.strftime('%d/%m/%Y')}", ParagraphStyle("Date1", parent=style_small, alignment=TA_RIGHT)),
+        Paragraph(f"Échéance : {echeance.date_echeance.strftime('%d/%m/%Y')}", ParagraphStyle("Date2", parent=style_small, alignment=TA_RIGHT)),
+    ]
+
+    header_table = Table(
+        [[left_cells, right_cells]],
+        colWidths=[10 * cm, 6 * cm],
+    )
+    header_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+    ]))
+
+    elements.append(header_table)
+    elements.append(Spacer(1, 0.4 * cm))
+
+    # Ligne séparatrice
+    elements.append(Table(
+        [[Paragraph("", style_small)]],
+        colWidths=[16 * cm],
+        style=TableStyle([("LINEABOVE", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb"))]),
+    ))
+    elements.append(Spacer(1, 0.5 * cm))
+
+    # =======================================================
+    # CLIENT + INFORMATIONS FACTURE
+    # =======================================================
+    client_block = [
+        Paragraph("Client", style_section_title),
+        Paragraph(f"{client.nom} {client.prenom}", style_base),
+    ]
+
+    if client.adresse:
+        client_block.append(Paragraph(client.adresse.replace("\n", "<br/>"), style_base))
+
+    if client.telephone:
+        client_block.append(Paragraph(f"Tél : {client.telephone}", style_small))
+
+    if client.email:
+        client_block.append(Paragraph(f"Email : {client.email}", style_small))
+
+    info_block = [
+        Paragraph("Informations", style_section_title),
+        Paragraph(f"Opération : {operation.id_operation}", style_base),
+        Paragraph(f"Montant facturé : {echeance.montant:.2f} €", style_small),
+    ]
+
+    info_table = Table(
+        [[client_block, info_block]],
+        colWidths=[10 * cm, 6 * cm],
+    )
+    info_table.setStyle(TableStyle([
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f9fafb")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
+        ("LEFTPADDING", (0, 0), (-1, -1), 6),
+        ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+        ("TOPPADDING", (0, 0), (-1, -1), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+    ]))
+
+    elements.append(info_table)
+    elements.append(Spacer(1, 0.7 * cm))
+
+    # =======================================================
+    # TABLEAU LIGNES (DA identique devis)
+    # =======================================================
+    data = [
         [
-            f"{client.nom} {client.prenom}\n{client.adresse or ''}\n{client.ville or ''}\n{client.telephone or ''}",
-            f"Date d'émission : {echeance.facture_date_emission.strftime('%d/%m/%Y')}\nDate d'échéance : {echeance.date_echeance.strftime('%d/%m/%Y')}\nOpération : {operation.id_operation}"
+            Paragraph("<b>Description</b>", style_base),
+            Paragraph("<b>Qté</b>", style_base),
+            Paragraph("<b>Unité</b>", style_base),
+            Paragraph("<b>P.U. HT</b>", style_base),
+            Paragraph("<b>TVA</b>", style_base),
+            Paragraph("<b>Total HT</b>", style_base),
         ]
     ]
-    
-    table_info = Table(data_info, colWidths=[8*cm, 8*cm])
-    table_info.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f8fafc')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.HexColor('#64748b')),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 10),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-        ('TOPPADDING', (0, 0), (-1, 0), 12),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-        ('VALIGN', (0, 0), (-1, -1), 'TOP'),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-    ]))
-    
-    elements.append(table_info)
-    elements.append(Spacer(1, 1*cm))
-    
-    # ═══════════════════════════════════════
-    # DÉTAILS LIGNES (TOUTES LES INTERVENTIONS)
-    # ═══════════════════════════════════════
-    elements.append(Paragraph("Détail de la prestation", style_header))
-    elements.append(Spacer(1, 0.3*cm))
-    
-    data_lignes = [['Description', 'Qté', 'Unité', 'PU HT', 'TVA', 'Total HT']]
-    
+
     for intervention in operation.interventions.all():
-        data_lignes.append([
-            intervention.description,
-            f"{intervention.quantite:.2f}",
+        data.append([
+            Paragraph(intervention.description, style_base),
+            f"{intervention.quantite:.2f}".replace(".", ","),
             intervention.get_unite_display(),
-            f"{intervention.prix_unitaire_ht:.2f} €",
+            f"{intervention.prix_unitaire_ht:.2f} €".replace(".", ","),
             f"{intervention.taux_tva:.0f}%",
-            f"{intervention.montant:.2f} €"
+            f"{intervention.montant:.2f} €".replace(".", ","),
         ])
-    
-    table_lignes = Table(data_lignes, colWidths=[7*cm, 1.5*cm, 2*cm, 2*cm, 1.5*cm, 2*cm])
+
+    table_lignes = Table(
+        data,
+        colWidths=[7 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 1.5 * cm, 3 * cm],
+    )
     table_lignes.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#6366f1')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-        ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, 0), (-1, 0), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
-        ('TOPPADDING', (0, 0), (-1, 0), 8),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
-        ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
-        ('FONTSIZE', (0, 1), (-1, -1), 9),
-        ('ALIGN', (1, 1), (-1, -1), 'RIGHT'),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#f3f4f6")),
+        ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#111827")),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+        ("ALIGN", (0, 0), (-1, 0), "CENTER"),
+        ("GRID", (0, 0), (-1, -1), 0.3, colors.HexColor("#e5e7eb")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
     ]))
-    
+
     elements.append(table_lignes)
-    elements.append(Spacer(1, 0.5*cm))
-    
-    # ═══════════════════════════════════════
-    # TOTAUX
-    # ═══════════════════════════════════════
-    data_totaux = [
-        ['Sous-total HT', f"{operation.sous_total_ht:.2f} €"],
-        ['TVA', f"{operation.total_tva:.2f} €"],
-        ['TOTAL TTC', f"{operation.total_ttc:.2f} €"],
+    elements.append(Spacer(1, 0.7 * cm))
+
+    # =======================================================
+    # TOTAUX (même DA que devis)
+    # =======================================================
+    totaux = [
+        ["Sous-total HT", f"{operation.sous_total_ht:.2f} €"],
+        ["TVA", f"{operation.total_tva:.2f} €"],
+        ["TOTAL TTC", f"{operation.total_ttc:.2f} €"],
     ]
-    
-    # ✅ AJOUT : Montant de cette facture (si acompte/solde)
-    if echeance.facture_type in ['acompte', 'solde']:
-        data_totaux.append(['', ''])  # Ligne vide
-        data_totaux.append([f'Montant de cet {echeance.facture_type}', f"{echeance.montant:.2f} €"])
-    
-    table_totaux = Table(data_totaux, colWidths=[12*cm, 4*cm])
-    table_totaux.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, -2), 'Helvetica'),
-        ('FONTSIZE', (0, 0), (-1, -2), 10),
-        ('FONTNAME', (0, -1), (-1, -1), 'Helvetica-Bold'),
-        ('FONTSIZE', (0, -1), (-1, -1), 12),
-        ('TEXTCOLOR', (0, -1), (-1, -1), colors.HexColor('#6366f1')),
-        ('LINEABOVE', (0, -1), (-1, -1), 2, colors.HexColor('#6366f1')),
-        ('TOPPADDING', (0, -1), (-1, -1), 12),
+
+    # Ajout montant de cette facture (acompte/solde)
+    if echeance.facture_type in ["acompte", "solde"]:
+        totaux.append(["", ""])
+        totaux.append([f"Montant de la facture ({echeance.facture_type})", f"{echeance.montant:.2f} €"])
+
+    totaux_table = Table(totaux, colWidths=[5 * cm, 5 * cm], hAlign="RIGHT")
+    totaux_table.setStyle(TableStyle([
+        ("ALIGN", (0, 0), (-1, -1), "RIGHT"),
+        ("BACKGROUND", (0, 0), (-1, -2), colors.white),
+        ("BACKGROUND", (0, -1), (-1, -1), colors.HexColor("#f3f4ff")),
+        ("BOX", (0, 0), (-1, -1), 0.5, colors.HexColor("#e5e7eb")),
+        ("LINEABOVE", (0, -1), (-1, -1), 1, colors.HexColor("#6366f1")),
+        ("FONTNAME", (0, -1), (-1, -1), "Helvetica-Bold"),
     ]))
-    
-    elements.append(table_totaux)
-    elements.append(Spacer(1, 1*cm))
-    
-    # ═══════════════════════════════════════
-    # MENTIONS LÉGALES
-    # ═══════════════════════════════════════
+
+    elements.append(totaux_table)
+    elements.append(Spacer(1, 0.8 * cm))
+
+    # =======================================================
+    # MENTIONS
+    # =======================================================
     if profil.mentions_legales_devis:
-        elements.append(Spacer(1, 0.5*cm))
-        style_mentions = ParagraphStyle(
-            'Mentions',
-            parent=styles['Normal'],
-            fontSize=8,
-            textColor=colors.HexColor('#64748b'),
-            leading=10
-        )
-        elements.append(Paragraph(profil.mentions_legales_devis.replace('\n', '<br/>'), style_mentions))
-    
-    # ═══════════════════════════════════════
-    # GÉNÉRATION DU PDF
-    # ═══════════════════════════════════════
+        elements.append(Paragraph("Conditions générales", style_section_title))
+        elements.append(Paragraph(profil.mentions_legales_devis.replace("\n", "<br/>"), style_small))
+        elements.append(Spacer(1, 0.6 * cm))
+
+    # =======================================================
+    # SIGNATURE
+    # =======================================================
+    signature = Table(
+        [[
+            Paragraph("<b>Signature du client</b>", style_base),
+            Paragraph(f"<b>{profil.nom_entreprise}</b>", style_base)
+        ]],
+        colWidths=[10 * cm, 6 * cm]
+    )
+    signature.setStyle(TableStyle([
+        ("ALIGN", (1, 0), (1, 0), "RIGHT"),
+        ("TOPPADDING", (0, 0), (-1, -1), 18),
+    ]))
+
+    elements.append(signature)
+
+    # Génération du PDF
     doc.build(elements)
-    
     pdf = buffer.getvalue()
     buffer.close()
-    
     return pdf
