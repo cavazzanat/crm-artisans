@@ -230,6 +230,7 @@ def generer_devis_pdf(operation, profil):
         )
 
     info_block = [
+        Spacer(1, 0.2 * cm),   # équilibre vertical
         Paragraph("Informations", style_section_title),
         Paragraph(
             f"Référence devis : {operation.numero_devis}",
@@ -662,6 +663,7 @@ def generer_facture_pdf(echeance, profil):
         )
 
     info_block = [
+        Spacer(1, 0.2 * cm),   # équilibre vertical
         Paragraph("Informations", style_section_title),
         Paragraph(f"Opération : {operation.id_operation}", style_base),
         Paragraph(f"Montant facturé : {echeance.montant:.2f} €", style_small),
