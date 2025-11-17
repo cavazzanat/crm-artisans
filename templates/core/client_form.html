@@ -3,6 +3,8 @@ CLIENT_FORM_TEMPLATE = '''
 <html>
 <head>
     <title>{% if is_edit %}Modifier{% else %}Nouveau{% endif %} Client - CRM Artisans</title>
+      {% load static %}
+  <link rel="icon" type="image/png" href="/static/core/image/favicon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
         * {
@@ -181,7 +183,7 @@ CLIENT_FORM_TEMPLATE = '''
 </head>
 <body>
     <header class="header">
-        <h1>CRM Artisans</h1>
+        <h1>manay</h1>
         <nav class="nav-menu">
             <a href="{% url 'dashboard' %}">Accueil</a>
             <a href="{% url 'operations' %}">Opérations</a>
