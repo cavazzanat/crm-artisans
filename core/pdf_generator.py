@@ -306,7 +306,7 @@ def generer_devis_pdf(operation, profil):
 
     lignes_table = Table(
         table_data,
-        colWidths=[7 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 1.5 * cm, 3 * cm],
+        colWidths=[6.5 * cm, 1.5 * cm, 2 * cm, 2.5 * cm, 1.5 * cm, 2 * cm],
         hAlign="LEFT",
     )
     lignes_table.setStyle(
