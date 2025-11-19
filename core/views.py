@@ -366,11 +366,11 @@ def operations_list(request):
 
     # ✅ NOUVEAU
     elif filtre == 'genere_non_envoye':
-        # Opérations qui ont au moins 1 devis envoyé sans date d'envoi
+        # Opérations qui ont au moins 1 devis prêt (généré mais pas encore envoyé)
         operations = operations.filter(
             avec_devis=True
         ).filter(
-            Exists(Devis.objects.filter(operation=OuterRef('pk'), statut='envoye', date_envoi__isnull=True))
+            Exists(Devis.objects.filter(operation=OuterRef('pk'), statut='pret'))
         )
         
     # ✅ NOUVEAU
