@@ -2560,7 +2560,7 @@ document.head.appendChild(style);
 </script>
 <script>
 // ════════════════════════════════════════════════════════════
-// GESTION AJAX DES LIGNES DE DEVIS (VERSION DEBUG)
+// GESTION AJAX DES LIGNES DE DEVIS (VERSION FINALE)
 // ════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
   
@@ -2623,11 +2623,28 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.success) {
           console.log('🎉 Succès ! Ajout de la ligne dans le DOM...');
           
-          // ✅ OUVRIR LE DEVIS SI FERMÉ
+          // ✅ FORCER L'OUVERTURE DU DEVIS
           const devisBody = document.getElementById(`devis-body-${devisId}`);
-          if (devisBody && (devisBody.style.maxHeight === '0px' || devisBody.style.maxHeight === '')) {
-            console.log('🔓 Ouverture du devis...');
-            toggleDevis(parseInt(devisId));
+          if (devisBody) {
+            const header = devisBody.previousElementSibling;
+            const icon = header ? header.querySelector('.toggle-devis-icon') : null;
+            
+            console.log('🔓 Vérification état devis:', {
+              maxHeight: devisBody.style.maxHeight,
+              opacity: devisBody.style.opacity,
+              isClosed: devisBody.style.maxHeight === '0px' || devisBody.style.maxHeight === ''
+            });
+            
+            // Si fermé, ouvrir
+            if (devisBody.style.maxHeight === '0px' || devisBody.style.maxHeight === '') {
+              console.log('🔓 Ouverture forcée du devis...');
+              devisBody.style.maxHeight = (devisBody.scrollHeight + 2000) + 'px';
+              devisBody.style.opacity = '1';
+              devisBody.style.paddingTop = '1.5rem';
+              if (icon) icon.style.transform = 'rotate(180deg)';
+            } else {
+              console.log('✅ Devis déjà ouvert');
+            }
           }
           
           // ✅ Ajouter la ligne dans le DOM
@@ -2825,6 +2842,5 @@ styleAnimations.textContent = `
 `;
 document.head.appendChild(styleAnimations);
 </script>
-
 </body>
 </html>
