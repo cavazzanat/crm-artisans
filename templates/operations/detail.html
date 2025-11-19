@@ -2558,136 +2558,30 @@ style.textContent = `
 document.head.appendChild(style);
 
 </script>
-
-<script>
-// ========================================
-// SYNCHRONISATION NOTES & VALIDITÉ
-// ========================================
-
-function syncNotesValidite() {
-  const notes = document.getElementById('devis-notes-temp')?.value || '';
-  const validite = document.getElementById('devis-validite-temp')?.value || 30;
-  
-  // Synchroniser avec les champs cachés du formulaire d'ajout
-  const hiddenNotes = document.getElementById('hidden-notes');
-  const hiddenValidite = document.getElementById('hidden-validite');
-  
-  if (hiddenNotes) hiddenNotes.value = notes;
-  if (hiddenValidite) hiddenValidite.value = validite;
-  
-  console.log('✅ Sync avant soumission:', { notes, validite });
-}
-
-function syncNotesValiditeForDelete(interventionId) {
-  const notes = document.getElementById('devis-notes-temp')?.value || '';
-  const validite = document.getElementById('devis-validite-temp')?.value || 30;
-  
-  // Synchroniser avec les champs cachés du formulaire de suppression
-  const hiddenNotes = document.getElementById(`hidden-notes-del-${interventionId}`);
-  const hiddenValidite = document.getElementById(`hidden-validite-del-${interventionId}`);
-  
-  if (hiddenNotes) hiddenNotes.value = notes;
-  if (hiddenValidite) hiddenValidite.value = validite;
-}
-
-// ========================================
-// SYNCHRONISATION DONNÉES FACTURE
-// ========================================
-
-function syncFactureData() {
-  const dateEmission = document.getElementById('facture-date-emission-temp')?.value;
-  const notes = document.getElementById('facture-notes-temp')?.value || '';
-  
-  // Synchroniser avec les champs cachés
-  const hiddenDate = document.getElementById('facture-date-hidden');
-  const hiddenNotes = document.getElementById('facture-notes-hidden');
-  
-  if (hiddenDate) hiddenDate.value = dateEmission;
-  if (hiddenNotes) hiddenNotes.value = notes;
-  
-  console.log('✅ Données facture synchronisées:', { dateEmission, notes });
-  
-  return true; // Permet la soumission du formulaire
-}
-
-// ========================================
-// FONCTION : REMPLIR LE RESTE À ENREGISTRER
-// ========================================
-function remplirReste() {
-  const montantInput = document.getElementById('montant-paiement-input');
-  const resteAEnregistrer = {{ reste_a_enregistrer|default:0 }};
-  
-  if (montantInput && resteAEnregistrer > 0) {
-    // Arrondir à 2 décimales
-    montantInput.value = resteAEnregistrer.toFixed(2);
-    
-    // Animation visuelle
-    montantInput.style.background = '#d1fae5';
-    montantInput.style.transition = 'background 0.3s ease';
-    
-    setTimeout(() => {
-      montantInput.style.background = '';
-    }, 500);
-    
-    // Focus sur le champ
-    montantInput.focus();
-    
-    // Toast de confirmation
-    showToast(`✅ Montant rempli : ${resteAEnregistrer.toFixed(2)} €`, 'success', 2000);
-  }
-}
-
-// ========================================
-// SCROLL AUTOMATIQUE VERS LA SECTION DEVIS
-// ========================================
-
-window.addEventListener('DOMContentLoaded', function() {
-  // Si un message de succès pour ligne ajoutée/supprimée, scroller vers le devis
-  const messages = document.getElementById('django-messages');
-  if (messages) {
-    const hasLineMessage = Array.from(messages.querySelectorAll('[data-message]'))
-      .some(msg => msg.dataset.message.includes('Ligne'));
-    
-    if (hasLineMessage) {
-      const devisSection = document.getElementById('section-devis');
-      if (devisSection) {
-        setTimeout(() => {
-          devisSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-      }
-    }
-  }
-});
-</script>
-
-<script>
-function validateDevisGeneration() {
-  const interventionsCount = {{ interventions.count|default:0 }};
-  
-  if (interventionsCount === 0) {
-    const confirmer = confirm('⚠️ ATTENTION : Vous allez générer un devis SANS lignes.\n\n' +
-                              '💡 Conseil : Ajoutez des lignes avant de l\'envoyer au client.\n\n' +
-                              'Continuer quand même ?');
-    return confirmer;
-  }
-  
-  return true;
-}
-</script>
-
 <script>
 // ════════════════════════════════════════════════════════════
-// GESTION AJAX DES LIGNES DE DEVIS (SANS RECHARGEMENT)
+// GESTION AJAX DES LIGNES DE DEVIS (VERSION DEBUG)
 // ════════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', function() {
+  
+  console.log('🚀 Script AJAX devis chargé');
   
   function getCsrfToken() {
     return document.querySelector('[name="csrfmiddlewaretoken"]')?.value || '';
   }
+  
   // ──────────────────────────────────────────────────────────
   // AJOUT DE LIGNE EN AJAX
   // ──────────────────────────────────────────────────────────
-  document.querySelectorAll('.form-add-ligne-ajax').forEach(form => {
+  const forms = document.querySelectorAll('.form-add-ligne-ajax');
+  console.log('📝 Formulaires trouvés:', forms.length);
+  
+  forms.forEach((form, index) => {
+    console.log(`📋 Formulaire ${index + 1}:`, {
+      devisId: form.dataset.devisId,
+      operationId: form.dataset.operationId
+    });
+    
     form.addEventListener('submit', function(e) {
       e.preventDefault();
       
@@ -2696,12 +2590,20 @@ document.addEventListener('DOMContentLoaded', function() {
       const submitBtn = this.querySelector('.btn-add-ligne');
       const btnOriginalText = submitBtn.innerHTML;
       
+      console.log('🔄 Soumission formulaire:', { devisId, operationId });
+      
       const formData = new FormData(this);
       formData.append('devis_id', devisId);
       
+      // Debug : afficher les données
+      console.log('📤 Données envoyées:');
+      for (let [key, value] of formData.entries()) {
+        console.log(`  ${key}: ${value}`);
+      }
+      
       // Désactiver le bouton
       submitBtn.disabled = true;
-      submitBtn.innerHTML = '⏳';
+      submitBtn.innerHTML = '⏳ Envoi...';
       
       // Envoyer en AJAX
       fetch(`/operations/${operationId}/ajax/add-ligne-devis/`, {
@@ -2711,9 +2613,23 @@ document.addEventListener('DOMContentLoaded', function() {
           'X-Requested-With': 'XMLHttpRequest'
         }
       })
-      .then(response => response.json())
+      .then(response => {
+        console.log('📥 Réponse reçue:', response.status);
+        return response.json();
+      })
       .then(data => {
+        console.log('✅ Données reçues:', data);
+        
         if (data.success) {
+          console.log('🎉 Succès ! Ajout de la ligne dans le DOM...');
+          
+          // ✅ OUVRIR LE DEVIS SI FERMÉ
+          const devisBody = document.getElementById(`devis-body-${devisId}`);
+          if (devisBody && (devisBody.style.maxHeight === '0px' || devisBody.style.maxHeight === '')) {
+            console.log('🔓 Ouverture du devis...');
+            toggleDevis(parseInt(devisId));
+          }
+          
           // ✅ Ajouter la ligne dans le DOM
           ajouterLigneDansContainer(devisId, data.ligne, operationId);
           
@@ -2730,16 +2646,18 @@ document.addEventListener('DOMContentLoaded', function() {
           showToast('✅ Ligne ajoutée', 'success', 2000);
           
         } else {
+          console.error('❌ Erreur:', data.error);
           showToast(`❌ ${data.error}`, 'error', 3000);
         }
       })
       .catch(error => {
-        console.error('Erreur:', error);
-        showToast('❌ Erreur réseau', 'error', 3000);
+        console.error('💥 Erreur réseau:', error);
+        showToast('❌ Erreur réseau: ' + error.message, 'error', 3000);
       })
       .finally(() => {
         submitBtn.disabled = false;
         submitBtn.innerHTML = btnOriginalText;
+        console.log('🏁 Fin du traitement');
       });
     });
   });
@@ -2748,8 +2666,16 @@ document.addEventListener('DOMContentLoaded', function() {
   // FONCTION : Ajouter ligne dans le container
   // ──────────────────────────────────────────────────────────
   function ajouterLigneDansContainer(devisId, ligne, operationId) {
+    console.log('➕ Ajout ligne dans container:', { devisId, ligneId: ligne.id });
+    
     const container = document.getElementById(`lignes-container-${devisId}`);
-    if (!container) return;
+    
+    if (!container) {
+      console.error('❌ Container introuvable:', `lignes-container-${devisId}`);
+      return;
+    }
+    
+    console.log('✅ Container trouvé:', container);
     
     // Créer la div de la ligne
     const ligneDiv = document.createElement('div');
@@ -2771,14 +2697,19 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Trouver la div des totaux et insérer avant
     const totauxDiv = container.querySelector('[style*="background: #f8fafc"]');
+    
     if (totauxDiv) {
+      console.log('✅ Insertion avant totaux');
       container.insertBefore(ligneDiv, totauxDiv);
     } else {
+      console.log('⚠️ Totaux introuvables, ajout à la fin');
       container.appendChild(ligneDiv);
     }
     
     // Animation
     ligneDiv.style.animation = 'slideIn 0.3s ease';
+    
+    console.log('✅ Ligne ajoutée au DOM');
     
     // Attacher le listener de suppression
     attachDeleteListener(ligneDiv.querySelector('.form-delete-ligne-ajax'));
@@ -2799,6 +2730,8 @@ document.addEventListener('DOMContentLoaded', function() {
       const devisId = this.dataset.devisId;
       const operationId = this.dataset.operationId;
       
+      console.log('🗑️ Suppression ligne:', { ligneId, devisId, operationId });
+      
       const formData = new FormData();
       formData.append('csrfmiddlewaretoken', getCsrfToken());
       formData.append('ligne_id', ligneId);
@@ -2812,12 +2745,17 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(response => response.json())
       .then(data => {
+        console.log('📥 Réponse suppression:', data);
+        
         if (data.success) {
           // Supprimer du DOM
           const ligneDiv = document.querySelector(`[data-ligne-id="${ligneId}"]`);
           if (ligneDiv) {
             ligneDiv.style.animation = 'slideOut 0.3s ease';
-            setTimeout(() => ligneDiv.remove(), 300);
+            setTimeout(() => {
+              ligneDiv.remove();
+              console.log('✅ Ligne supprimée du DOM');
+            }, 300);
           }
           
           // Mettre à jour totaux
@@ -2825,11 +2763,12 @@ document.addEventListener('DOMContentLoaded', function() {
           
           showToast('✅ Ligne supprimée', 'success', 2000);
         } else {
+          console.error('❌ Erreur suppression:', data.error);
           showToast(`❌ ${data.error}`, 'error', 3000);
         }
       })
       .catch(error => {
-        console.error('Erreur:', error);
+        console.error('💥 Erreur réseau suppression:', error);
         showToast('❌ Erreur réseau', 'error', 3000);
       });
     });
@@ -2842,19 +2781,34 @@ document.addEventListener('DOMContentLoaded', function() {
   // UTILITAIRES
   // ──────────────────────────────────────────────────────────
   function updateTotaux(devisId, totaux) {
+    console.log('💰 Mise à jour totaux:', { devisId, totaux });
+    
     const container = document.getElementById(`devis-body-${devisId}`);
-    if (!container) return;
+    if (!container) {
+      console.error('❌ Container body introuvable');
+      return;
+    }
     
     const stElement = container.querySelector('.sous-total-ht');
-    if (stElement) stElement.textContent = `${totaux.sous_total_ht.toFixed(2)} €`;
+    if (stElement) {
+      stElement.textContent = `${totaux.sous_total_ht.toFixed(2)} €`;
+      console.log('✅ Sous-total HT mis à jour');
+    }
     
     const tvaElement = container.querySelector('.total-tva');
-    if (tvaElement) tvaElement.textContent = `${totaux.total_tva.toFixed(2)} €`;
+    if (tvaElement) {
+      tvaElement.textContent = `${totaux.total_tva.toFixed(2)} €`;
+      console.log('✅ TVA mise à jour');
+    }
     
     const ttcElements = container.querySelectorAll('.total-ttc');
-    ttcElements.forEach(el => el.textContent = `${totaux.total_ttc.toFixed(2)} €`);
+    ttcElements.forEach(el => {
+      el.textContent = `${totaux.total_ttc.toFixed(2)} €`;
+    });
+    console.log('✅ Total TTC mis à jour');
   }
   
+  console.log('✅ Script AJAX devis prêt');
 });
 
 // Animations
