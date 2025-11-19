@@ -5,7 +5,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Q, Sum, Count, Subquery
+from django.db.models import Q, Sum, Count, Subquery, Exists, OuterRef
 from django.db import models
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
@@ -519,7 +519,16 @@ def operations_list(request):
         ('en_attente_devis', 'Devis'),
         ('a_planifier', 'À planifier'),
     ]
-    
+    # ========================================
+    # ENRICHISSEMENT : Dernier devis pour chaque opération
+    # ========================================
+    for op in operations:
+        if op.avec_devis:
+            derniers = list(op.devis_set.all())
+            op.dernier_devis = derniers[-1] if derniers else None
+        else:
+            op.dernier_devis = None
+
     context = {
         'operations': operations,
         'total_operations': operations.count(),
@@ -560,7 +569,7 @@ def operations_list(request):
         # Options
         'cycle_options': cycle_options,
     }
-    
+
     return render(request, 'operations/list.html', context)
 # ========================================
 # AUTRES VUES (inchangées)

@@ -827,7 +827,7 @@
                 {% if operation.avec_devis %}
                   <!-- ✅ OPÉRATION AVEC DEVIS -->
                   <!-- Récupérer le dernier devis (ou celui accepté) -->
-                  {% with operation.devis_set.all|last as dernier_devis %}
+                  {% with operation.dernier_devis as dernier_devis %}
                     {% if not dernier_devis %}
                       <span class="status warn">📝 Aucun devis</span>
                     {% elif dernier_devis.statut == 'brouillon' %}
