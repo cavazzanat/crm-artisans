@@ -623,6 +623,10 @@
               📝 Brouillon
               <span class="filter-badge">{{ nb_devis_brouillon }}</span>
             </a>
+            <a href="?filtre=sans_devis" class="filter-btn alert {% if filtre_actif == 'sans_devis' %}active{% endif %}">
+              ⚠️ Sans devis
+              <span class="filter-badge">{{ nb_sans_devis }}</span>
+            </a>
             <a href="?filtre=genere_non_envoye" class="filter-btn {% if filtre_actif == 'genere_non_envoye' %}active{% endif %}">
               📄 Généré non envoyé
               <span class="filter-badge">{{ nb_devis_genere_non_envoye }}</span>
@@ -730,6 +734,8 @@
         <h2>
           {% if filtre_actif == 'brouillon' %}
             📝 Devis en brouillon
+          {% elif filtre_actif == 'sans_devis' %}
+            ⚠️ Opérations sans devis créé
           {% elif filtre_actif == 'genere_non_envoye' %}
             📄 Devis générés non envoyés
           {% elif filtre_actif == 'devis_en_attente' %}

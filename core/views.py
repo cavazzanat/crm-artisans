@@ -362,6 +362,14 @@ def operations_list(request):
         ).filter(
             Exists(Devis.objects.filter(operation=OuterRef('pk'), statut='brouillon'))
         )
+        
+    # ✅ NOUVEAU : Opérations AVEC DEVIS mais SANS aucun devis créé
+    elif filtre == 'sans_devis':
+        # Opérations marquées "avec_devis=True" mais qui n'ont AUCUN devis
+        operations = operations.filter(
+            avec_devis=True,
+            devis__isnull=True  # Aucune relation vers Devis
+        ).distinct()
 
     elif filtre == 'genere_non_envoye':
         # Opérations qui ont au moins 1 devis prêt (généré mais pas encore envoyé)
@@ -496,6 +504,14 @@ def operations_list(request):
         operation__user=request.user,
         statut='pret'  # ← Statut "prêt" = PDF généré, en attente d'envoi
     ).count()
+    
+    # ✅ NOUVEAU : Opérations avec_devis=True mais sans aucun devis créé
+    nb_sans_devis = Operation.objects.filter(
+        user=request.user,
+        avec_devis=True
+    ).annotate(
+        nb_devis=Count('devis')
+    ).filter(nb_devis=0).count()
 
     # ✅ NOUVEAU (version simple)
     nb_devis_expire = 0
@@ -555,6 +571,7 @@ def operations_list(request):
         'nb_devis_genere_non_envoye': nb_devis_genere_non_envoye,
         'nb_devis_en_attente': nb_devis_en_attente,
         'nb_devis_expire': nb_devis_expire,
+        'nb_sans_devis': nb_sans_devis,
         
         # Options
         'cycle_options': cycle_options,
