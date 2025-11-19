@@ -319,10 +319,14 @@ class Devis(models.Model):
             nouveau_numero = max_numero + 1
             self.numero_devis = f'{prefix}{nouveau_numero:05d}'
         
-        # Auto-incrémenter la version si non définie
-        if not self.pk and not self.version:
-            dernier_devis = self.operation.devis_set.order_by('-version').first()
-            self.version = (dernier_devis.version + 1) if dernier_devis else 1
+        # ✅ CORRECTION : Auto-incrémenter la version AVANT le save
+        if not self.pk:  # Seulement pour les nouveaux devis
+            if not self.version or self.version == 0:
+                # Récupérer la version max actuelle pour cette opération
+                max_version = self.operation.devis_set.aggregate(
+                    Max('version')
+                )['version__max'] or 0
+                self.version = max_version + 1
         
         super().save(*args, **kwargs)
     
