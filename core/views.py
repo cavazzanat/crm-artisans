@@ -510,7 +510,7 @@ def operations_list(request):
         user=request.user,
         avec_devis=True
     ).annotate(
-        nb_devis=Count('devis')
+        nb_devis=Count('devis_set')  # ← CORRECTION : utiliser 'devis_set'
     ).filter(nb_devis=0).count()
 
     # ✅ NOUVEAU (version simple)
