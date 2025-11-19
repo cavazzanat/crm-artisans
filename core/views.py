@@ -1541,12 +1541,6 @@ def operation_detail(request, operation_id):
     for devis in devis_list:
         devis.lignes_list = devis.lignes.all().order_by('ordre')
         
-        # Calculer si expiré
-        if devis.date_envoi and devis.validite_jours and devis.statut == 'envoye':
-            date_limite = devis.date_envoi + timedelta(days=devis.validite_jours)
-            devis.est_expire = date_limite < timezone.now().date()
-        else:
-            devis.est_expire = False
 
     # Interventions (pour opérations SANS devis uniquement)
     interventions = operation.interventions.all().order_by('ordre')
