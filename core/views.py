@@ -5,7 +5,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Q, Sum, Count, OuterRef, Subquery, Exists
+from django.db.models import Q, Sum, Count, Subquery
 from django.db import models
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
@@ -357,7 +357,6 @@ def operations_list(request):
     # ✅ NOUVEAU
     if filtre == 'brouillon':
         # Opérations qui ont au moins 1 devis en brouillon
-        from django.db.models import Exists, OuterRef
         operations = operations.filter(
             avec_devis=True
         ).filter(

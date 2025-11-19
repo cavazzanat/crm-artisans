@@ -826,23 +826,28 @@
               <td>
                 {% if operation.avec_devis %}
                   <!-- ✅ OPÉRATION AVEC DEVIS -->
-                  {% if not operation.numero_devis %}
-                    <span class="status warn">📝 Brouillon</span>
-                  {% elif operation.devis_statut == 'accepte' %}
-                    <span class="status ok">✅ Accepté</span>
-                  {% elif operation.devis_statut == 'refuse' %}
-                    <span class="status bad">❌ Refusé</span>
-                  {% elif operation.devis_statut == 'pret' %}
-                    <span class="status" style="color:#3b82f6; border-color:rgba(59,130,246,.3); background:rgba(59,130,246,.1)">
-                      📄 Prêt
-                    </span>
-                  {% elif operation.devis_statut == 'envoye' %}
-                    <span class="status" style="color:#6366f1; border-color:rgba(99,102,241,.3); background:rgba(99,102,241,.1)">
-                      ⏳ Envoyé
-                    </span>
-                  {% else %}
-                    <span class="status">{{ operation.devis_statut|default:"En cours" }}</span>
-                  {% endif %}
+                  <!-- Récupérer le dernier devis (ou celui accepté) -->
+                  {% with operation.devis_set.all|last as dernier_devis %}
+                    {% if not dernier_devis %}
+                      <span class="status warn">📝 Aucun devis</span>
+                    {% elif dernier_devis.statut == 'brouillon' %}
+                      <span class="status warn">📝 Brouillon</span>
+                    {% elif dernier_devis.statut == 'accepte' %}
+                      <span class="status ok">✅ Accepté</span>
+                    {% elif dernier_devis.statut == 'refuse' %}
+                      <span class="status bad">❌ Refusé</span>
+                    {% elif dernier_devis.statut == 'pret' %}
+                      <span class="status" style="color:#3b82f6; border-color:rgba(59,130,246,.3); background:rgba(59,130,246,.1)">
+                        📄 Prêt
+                      </span>
+                    {% elif dernier_devis.statut == 'envoye' %}
+                      <span class="status" style="color:#6366f1; border-color:rgba(99,102,241,.3); background:rgba(99,102,241,.1)">
+                        ⏳ Envoyé
+                      </span>
+                    {% else %}
+                      <span class="status">{{ dernier_devis.statut }}</span>
+                    {% endif %}
+                  {% endwith %}
                 {% else %}
                   <!-- ✅ OPÉRATION SANS DEVIS (PARCOURS DIRECT) -->
                   {% if operation.statut == 'a_planifier' %}
