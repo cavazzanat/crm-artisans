@@ -826,35 +826,63 @@
           {% endif %}
           
 
-          <!-- ──────────────────────────────────────────
-          NOTES ET VALIDITÉ (ÉDITABLE EN BROUILLON)
-          ────────────────────────────────────────── -->
-
           {% if devis.statut == 'brouillon' %}
-          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
-            <h5 style="margin: 0 0 0.75rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">📝 Notes et validité</h5>
-            <form method="POST">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="update_notes_validite_devis">
-              <input type="hidden" name="devis_id" value="{{ devis.id }}">
+            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
+              <h5 style="margin: 0 0 1rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">📝 Notes et validité</h5>
               
-              <!-- Notes -->
-              <div style="margin-bottom: 0.75rem;">
-                <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Notes (optionnel)</label>
-                <textarea name="notes" class="input" rows="3" placeholder="Notes qui apparaîtront sur le devis..." style="margin: 0;">{{ devis.notes }}</textarea>
-              </div>
-              
-              <!-- Validité -->
-              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: end;">
-                <div>
-                  <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Validité (jours)</label>
-                  <input type="number" name="validite_jours" class="input" value="{{ devis.validite_jours }}" min="1" max="365" style="margin: 0; text-align: center;">
+              <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="update_notes_validite_devis">
+                <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                
+                <!-- ✅ TOUT SUR UNE LIGNE PROPRE -->
+                <div style="display: grid; grid-template-columns: 2fr 150px 120px; gap: 1rem; align-items: center;">
+                  
+                  <!-- Notes -->
+                  <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--muted); font-size: 0.85rem; font-weight: 600;">
+                      💬 Notes (optionnel)
+                    </label>
+                    <textarea 
+                      name="notes" 
+                      class="input" 
+                      rows="2" 
+                      placeholder="Notes sur le devis..."
+                      style="margin: 0; resize: vertical;">{{ devis.notes }}</textarea>
+                  </div>
+                  
+                  <!-- Validité -->
+                  <div>
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--muted); font-size: 0.85rem; font-weight: 600;">
+                      ⏳ Validité
+                    </label>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                      <input 
+                        type="number" 
+                        name="validite_jours" 
+                        class="input" 
+                        value="{{ devis.validite_jours }}" 
+                        min="1" 
+                        max="365" 
+                        style="width: 80px; text-align: center; margin: 0;">
+                      <span style="color: var(--muted); font-size: 0.85rem;">jours</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Bouton -->
+                  <div style="align-self: end; padding-bottom: 0.25rem;">
+                    <button type="submit" class="btn success" style="width: 100%; margin: 0; padding: 0.65rem;">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="m5 12 4 4 10-10"/>
+                      </svg>
+                      Valider
+                    </button>
+                  </div>
+                  
                 </div>
-                <button type="submit" class="btn" style="margin: 0;">💾 Enregistrer</button>
-              </div>
-            </form>
-          </div>
-          {% endif %}
+              </form>
+            </div>
+            {% endif %}
 
           <!-- ──────────────────────────────────────────
               ACTIONS SELON LE STATUT

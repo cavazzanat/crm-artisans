@@ -767,18 +767,15 @@
               <th>ID</th>
               <th>Date</th>
               <th>Client / Opération</th>
+              <th>Ville</th>
+              <th>Montant</th>
+              <th>Statut</th>
               
+              <!-- ✅ Colonnes spéciales selon filtre -->
               {% if filtre_actif == 'retards' %}
-                <th>Échéance</th>
                 <th>Retard</th>
-                <th>Montant dû</th>
               {% elif filtre_actif == 'non_planifies' %}
-                <th>Réalisation</th>
-                <th>Montant restant</th>
-              {% else %}
-                <th>Ville</th>
-                <th>Montant</th>
-                <th>Statut</th>
+                <th>Reste à planifier</th>
               {% endif %}
               
               <th>Actions</th>
@@ -787,7 +784,14 @@
           <tbody>
             {% for operation in operations %}
             <tr>
+              <!-- ═══════════════════════════════════════════
+                  COLONNES FIXES (TOUJOURS PRÉSENTES)
+                  ═══════════════════════════════════════════ -->
+              
+              <!-- ID -->
               <td class="id">{{ operation.id_operation }}</td>
+              
+              <!-- Date -->
               <td class="nowrap">
                 {% if operation.date_prevue %}
                   {{ operation.date_prevue|date:"d/m/Y" }}
@@ -795,6 +799,8 @@
                   {{ operation.date_creation|date:"d/m/Y" }}
                 {% endif %}
               </td>
+              
+              <!-- Client / Opération -->
               <td>
                 <div style="font-weight:700; margin-bottom:.25rem">
                   {{ operation.client.nom }} {{ operation.client.prenom }}
@@ -804,90 +810,91 @@
                 </div>
               </td>
               
-              {% if filtre_actif == 'retards' %}
-                <td>
-                  {% if operation.premier_retard %}
-                    {{ operation.premier_retard.date_echeance|date:"d/m/Y" }}
+              <!-- Ville -->
+              <td>{{ operation.client.ville|default:"—" }}</td>
+              
+              <!-- Montant -->
+              <td>
+                {% if operation.montant_total %}
+                  {{ operation.montant_total|floatformat:0 }} €
+                {% else %}
+                  <span class="muted">—</span>
+                {% endif %}
+              </td>
+              
+              <!-- Statut -->
+              <td>
+                {% if operation.avec_devis %}
+                  <!-- ✅ OPÉRATION AVEC DEVIS -->
+                  {% if not operation.numero_devis %}
+                    <span class="status warn">📝 Brouillon</span>
+                  {% elif operation.devis_statut == 'accepte' %}
+                    <span class="status ok">✅ Accepté</span>
+                  {% elif operation.devis_statut == 'refuse' %}
+                    <span class="status bad">❌ Refusé</span>
+                  {% elif operation.devis_statut == 'pret' %}
+                    <span class="status" style="color:#3b82f6; border-color:rgba(59,130,246,.3); background:rgba(59,130,246,.1)">
+                      📄 Prêt
+                    </span>
+                  {% elif operation.devis_statut == 'envoye' %}
+                    <span class="status" style="color:#6366f1; border-color:rgba(99,102,241,.3); background:rgba(99,102,241,.1)">
+                      ⏳ Envoyé
+                    </span>
                   {% else %}
-                    <span class="muted">—</span>
+                    <span class="status">{{ operation.devis_statut|default:"En cours" }}</span>
                   {% endif %}
-                </td>
+                {% else %}
+                  <!-- ✅ OPÉRATION SANS DEVIS (PARCOURS DIRECT) -->
+                  {% if operation.statut == 'a_planifier' %}
+                    <span class="status">📅 À planifier</span>
+                  {% elif operation.statut == 'planifie' %}
+                    <span class="status">⏰ Planifié</span>
+                  {% elif operation.statut == 'realise' %}
+                    <span class="status ok">✅ Réalisé</span>
+                  {% elif operation.statut == 'paye' %}
+                    <span class="status ok">💰 Payé</span>
+                  {% else %}
+                    <span class="status">{{ operation.get_statut_display }}</span>
+                  {% endif %}
+                {% endif %}
+              </td>
+              
+              <!-- ═══════════════════════════════════════════
+                  COLONNES CONDITIONNELLES
+                  ═══════════════════════════════════════════ -->
+              
+              {% if filtre_actif == 'retards' %}
+                <!-- Retard -->
                 <td>
                   {% if operation.jours_retard %}
-                    <strong class="status bad">{{ operation.jours_retard }} j</strong>
-                  {% else %}
-                    <span class="muted">—</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if operation.premier_retard %}
-                    <strong style="font-size:1.05rem">{{ operation.premier_retard.montant|floatformat:0 }} €</strong>
+                    <strong class="status bad" style="font-size:1rem">
+                      🚨 {{ operation.jours_retard }} jour{{ operation.jours_retard|pluralize }}
+                    </strong>
+                    {% if operation.premier_retard %}
+                    <div class="muted" style="font-size:.75rem; margin-top:.25rem">
+                      Échéance : {{ operation.premier_retard.date_echeance|date:"d/m/Y" }}
+                    </div>
+                    {% endif %}
                   {% else %}
                     <span class="muted">—</span>
                   {% endif %}
                 </td>
                 
               {% elif filtre_actif == 'non_planifies' %}
-                <td>
-                  {% if operation.date_realisation %}
-                    {{ operation.date_realisation|date:"d/m/Y" }}
-                  {% else %}
-                    <span class="muted">Non renseigné</span>
-                  {% endif %}
-                </td>
+                <!-- Reste à planifier -->
                 <td>
                   <strong class="status warn" style="font-size:.95rem">
                     {{ operation.reste_a_planifier|floatformat:0 }} €
                   </strong>
+                  {% if operation.date_realisation %}
                   <div class="muted" style="font-size:.75rem; margin-top:.25rem">
-                    sur {{ operation.montant_total|floatformat:0 }}€ total
+                    Réalisé le {{ operation.date_realisation|date:"d/m/Y" }}
                   </div>
-                </td>
-                
-              {% else %}
-                <td>{{ operation.client.ville|default:"—" }}</td>
-                <td>
-                  {% if operation.montant_total %}
-                    {{ operation.montant_total|floatformat:0 }} €
-                  {% else %}
-                    <span class="muted">—</span>
-                  {% endif %}
-                </td>
-                <td>
-                  {% if operation.avec_devis %}
-                    {% if not operation.numero_devis %}
-                      <span class="status warn">📝 Brouillon</span>
-                    {% elif operation.devis_statut == 'accepte' %}
-                      <span class="status ok">✅ Accepté</span>
-                    {% elif operation.devis_statut == 'refuse' %}
-                      <span class="status bad">❌ Refusé</span>
-                    {% elif not operation.devis_date_envoi %}
-                      <span class="status" style="color:#3b82f6; border-color:rgba(59,130,246,.3); background:rgba(59,130,246,.1)">
-                        📄 Généré
-                      </span>
-                    {% else %}
-                      <span class="status" style="color:#6366f1; border-color:rgba(99,102,241,.3); background:rgba(99,102,241,.1)">
-                        ⏳ En attente
-                      </span>
-                    {% endif %}
-                  {% else %}
-                    {% if operation.statut == 'a_planifier' %}
-                      <span class="status">📅 À planifier</span>
-                    {% elif operation.statut == 'planifie' %}
-                      <span class="status">⏰ Planifié</span>
-                    {% elif operation.statut == 'realise' %}
-                      <span class="status ok">✅ Réalisé</span>
-                    {% elif operation.statut == 'paye' %}
-                      <span class="status ok">💰 Payé</span>
-                    {% elif operation.statut == 'devis_refuse' %}
-                      <span class="status bad">❌ Annulé</span>
-                    {% else %}
-                      <span class="status">{{ operation.get_statut_display }}</span>
-                    {% endif %}
                   {% endif %}
                 </td>
               {% endif %}
               
+              <!-- Actions -->
               <td>
                 <div style="display:flex; gap:.5rem; flex-wrap:wrap">
                   <a href="{% url 'operation_detail' operation.id %}" class="btn" style="font-size:.85rem; padding:.4rem .6rem">
@@ -896,11 +903,11 @@
                   
                   {% if filtre_actif == 'retards' %}
                     <a href="tel:{{ operation.client.telephone }}" class="btn" style="font-size:.85rem; padding:.4rem .6rem; background:var(--danger); color:white; border-color:var(--danger)">
-                      Appeler
+                      📞 Appeler
                     </a>
                   {% elif filtre_actif == 'non_planifies' %}
                     <a href="{% url 'operation_detail' operation.id %}#paiements" class="btn" style="font-size:.85rem; padding:.4rem .6rem; background:var(--warning); color:white; border-color:var(--warning)">
-                      Planifier
+                      💰 Planifier
                     </a>
                   {% endif %}
                 </div>
