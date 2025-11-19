@@ -366,10 +366,12 @@ def operations_list(request):
     # ✅ NOUVEAU : Opérations AVEC DEVIS mais SANS aucun devis créé
     elif filtre == 'sans_devis':
         # Opérations marquées "avec_devis=True" mais qui n'ont AUCUN devis
-        operations = operations.filter(
+        operations = operations.annotate(
+            nb_devis=Count('devis_set')
+        ).filter(
             avec_devis=True,
-            devis__isnull=True  # Aucune relation vers Devis
-        ).distinct()
+            nb_devis=0
+        )
 
     elif filtre == 'genere_non_envoye':
         # Opérations qui ont au moins 1 devis prêt (généré mais pas encore envoyé)
