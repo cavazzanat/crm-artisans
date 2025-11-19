@@ -396,8 +396,8 @@ class Devis(models.Model):
     
     @property
     def peut_etre_supprime(self):
-        """On peut supprimer uniquement les brouillons"""
-        return self.statut == 'brouillon'
+        """On peut supprimer les devis en brouillon, prêt ou refusé"""
+        return self.statut in ['brouillon', 'pret', 'refuse']
 
 
 # ========================================

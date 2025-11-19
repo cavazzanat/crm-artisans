@@ -780,34 +780,7 @@
             {% endif %}
           </div>
           {% endif %}
-          <!-- ──────────────────────────────────────────
-    NOTES ET VALIDITÉ (ÉDITABLE EN BROUILLON)
-    ────────────────────────────────────────── -->
-          {% if devis.statut == 'brouillon' %}
-          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
-            <h5 style="margin: 0 0 0.75rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">📝 Notes et validité</h5>
-            <form method="POST">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="update_notes_validite_devis">
-              <input type="hidden" name="devis_id" value="{{ devis.id }}">
-              
-              <!-- Notes -->
-              <div style="margin-bottom: 0.75rem;">
-                <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Notes (optionnel)</label>
-                <textarea name="notes" class="input" rows="3" placeholder="Notes qui apparaîtront sur le devis..." style="margin: 0;">{{ devis.notes }}</textarea>
-              </div>
-              
-              <!-- Validité -->
-              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: end;">
-                <div>
-                  <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Validité (jours)</label>
-                  <input type="number" name="validite_jours" class="input" value="{{ devis.validite_jours }}" min="1" max="365" style="margin: 0; text-align: center;">
-                </div>
-                <button type="submit" class="btn" style="margin: 0;">💾 Enregistrer</button>
-              </div>
-            </form>
-          </div>
-          {% endif %}
+
           <!-- ──────────────────────────────────────────
               FORMULAIRE AJOUT LIGNE (inline compact)
               ────────────────────────────────────────── -->
@@ -836,6 +809,37 @@
           </div>
           {% endif %}
           
+
+          <!-- ──────────────────────────────────────────
+          NOTES ET VALIDITÉ (ÉDITABLE EN BROUILLON)
+          ────────────────────────────────────────── -->
+
+          {% if devis.statut == 'brouillon' %}
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
+            <h5 style="margin: 0 0 0.75rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">📝 Notes et validité</h5>
+            <form method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="update_notes_validite_devis">
+              <input type="hidden" name="devis_id" value="{{ devis.id }}">
+              
+              <!-- Notes -->
+              <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Notes (optionnel)</label>
+                <textarea name="notes" class="input" rows="3" placeholder="Notes qui apparaîtront sur le devis..." style="margin: 0;">{{ devis.notes }}</textarea>
+              </div>
+              
+              <!-- Validité -->
+              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: end;">
+                <div>
+                  <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Validité (jours)</label>
+                  <input type="number" name="validite_jours" class="input" value="{{ devis.validite_jours }}" min="1" max="365" style="margin: 0; text-align: center;">
+                </div>
+                <button type="submit" class="btn" style="margin: 0;">💾 Enregistrer</button>
+              </div>
+            </form>
+          </div>
+          {% endif %}
+
           <!-- ──────────────────────────────────────────
               ACTIONS SELON LE STATUT
               ────────────────────────────────────────── -->
