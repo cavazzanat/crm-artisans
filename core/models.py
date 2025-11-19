@@ -292,6 +292,8 @@ class Devis(models.Model):
         return f"{self.numero_devis} - Version {self.version}"
     
     def save(self, *args, **kwargs):
+        from django.db.models import Max
+        
         # Auto-générer le numéro si nouveau devis
         if not self.numero_devis:
             import re
@@ -319,14 +321,18 @@ class Devis(models.Model):
             nouveau_numero = max_numero + 1
             self.numero_devis = f'{prefix}{nouveau_numero:05d}'
         
-        # ✅ CORRECTION : Auto-incrémenter la version AVANT le save
+        # ✅ CORRECTION FINALE : Auto-incrémenter la version
         if not self.pk:  # Seulement pour les nouveaux devis
-            if not self.version or self.version == 0:
-                # Récupérer la version max actuelle pour cette opération
-                max_version = self.operation.devis_set.aggregate(
-                    Max('version')
-                )['version__max'] or 0
-                self.version = max_version + 1
+            # ✅ EXCLURE le devis actuel (self) de la requête
+            autres_devis = Devis.objects.filter(
+                operation=self.operation
+            ).exclude(pk=self.pk)  # ← CRITIQUE : exclure self
+            
+            max_version = autres_devis.aggregate(
+                Max('version')
+            )['version__max'] or 0
+            
+            self.version = max_version + 1
         
         super().save(*args, **kwargs)
     
