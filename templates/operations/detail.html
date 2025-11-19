@@ -729,37 +729,46 @@
           <!-- ──────────────────────────────────────────
               LIGNES DU DEVIS (version compacte)
               ────────────────────────────────────────── -->
-          {% if devis.lignes_list %}
+          <!-- ✅ CONTAINER TOUJOURS PRÉSENT (même si vide) -->
           <div style="margin-top: 1.5rem;">
             <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 600;">Lignes du devis</h4>
             
-            <!-- Lignes sous forme de liste compacte -->
+            <!-- ✅ Container des lignes (TOUJOURS créé) -->
             <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden;" id="lignes-container-{{ devis.id }}">
-              {% for ligne in devis.lignes_list %}
-              <div style="display: grid; grid-template-columns: 1fr 80px 100px 120px 80px 120px 40px; gap: 0.75rem; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border); background: {% cycle 'white' '#f9fafb' %};">
-                <div style="font-size: 0.9rem; color: var(--text);">{{ ligne.description }}</div>
-                <div style="text-align: center; font-size: 0.85rem;">{{ ligne.quantite|floatformat:"-2" }} {{ ligne.get_unite_display }}</div>
-                <div style="text-align: right; font-weight: 600; font-size: 0.85rem;">{{ ligne.prix_unitaire_ht|floatformat:2 }} €</div>
-                <div style="text-align: center; font-size: 0.85rem;">TVA {{ ligne.taux_tva|floatformat:0 }}%</div>
-                <div style="text-align: right; font-weight: 600; font-size: 0.9rem; color: var(--primary);">{{ ligne.montant|floatformat:2 }} €</div>
-                
-                {% if devis.statut == 'brouillon' %}
-                  <form 
-                    class="form-delete-ligne-ajax" 
-                    data-ligne-id="{{ ligne.id }}"
-                    data-devis-id="{{ devis.id }}"
-                    data-operation-id="{{ operation.id }}"
-                    style="display:inline; margin: 0;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin: 0;">×</button>
-                  </form>
-                {% else %}
-                  <div></div> <!-- Colonne vide pour l'alignement -->
-                {% endif %}
-              </div>
-              {% endfor %}
               
-              <!-- Totaux -->
+              {% if devis.lignes_list %}
+                <!-- Lignes existantes -->
+                {% for ligne in devis.lignes_list %}
+                <div style="display: grid; grid-template-columns: 1fr 80px 100px 120px 80px 120px 40px; gap: 0.75rem; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border); background: {% cycle 'white' '#f9fafb' %};">
+                  <div style="font-size: 0.9rem; color: var(--text);">{{ ligne.description }}</div>
+                  <div style="text-align: center; font-size: 0.85rem;">{{ ligne.quantite|floatformat:"-2" }} {{ ligne.get_unite_display }}</div>
+                  <div style="text-align: right; font-weight: 600; font-size: 0.85rem;">{{ ligne.prix_unitaire_ht|floatformat:2 }} €</div>
+                  <div style="text-align: center; font-size: 0.85rem;">TVA {{ ligne.taux_tva|floatformat:0 }}%</div>
+                  <div style="text-align: right; font-weight: 600; font-size: 0.9rem; color: var(--primary);">{{ ligne.montant|floatformat:2 }} €</div>
+                  
+                  {% if devis.statut == 'brouillon' %}
+                    <form 
+                      class="form-delete-ligne-ajax" 
+                      data-ligne-id="{{ ligne.id }}"
+                      data-devis-id="{{ devis.id }}"
+                      data-operation-id="{{ operation.id }}"
+                      style="display:inline; margin: 0;">
+                      {% csrf_token %}
+                      <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin: 0;">×</button>
+                    </form>
+                  {% else %}
+                    <div></div>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              {% else %}
+                <!-- ✅ Message si aucune ligne -->
+                <div style="padding: 2rem; text-align: center; color: var(--muted); font-size: 0.9rem;">
+                  📝 Aucune ligne ajoutée pour le moment
+                </div>
+              {% endif %}
+              
+              <!-- ✅ Totaux (TOUJOURS présents) -->
               <div style="background: #f8fafc; padding: 1rem; border-top: 2px solid var(--border);">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                   <span style="font-weight: 600; font-size: 0.9rem;">Sous-total HT</span>
@@ -784,7 +793,6 @@
             </div>
             {% endif %}
           </div>
-          {% endif %}
 
           <!-- ──────────────────────────────────────────
               FORMULAIRE AJOUT LIGNE (inline compact)
