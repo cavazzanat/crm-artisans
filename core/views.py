@@ -400,7 +400,7 @@ def operations_list(request):
             devis_envoyes = op.devis_set.filter(statut='envoye', date_envoi__isnull=False)
             
             for devis in devis_envoyes:
-                if devis.est_expire_display:
+                if devis.est_expire:
                     operations_expire_ids.append(op.id)
                     break
         
@@ -504,14 +504,14 @@ def operations_list(request):
     nb_devis_expire = 0
     for op in Operation.objects.filter(user=request.user, avec_devis=True):
         for devis in op.devis_set.filter(statut='envoye'):
-            if devis.est_expire_display:
+            if devis.est_expire:
                 nb_devis_expire += 1
 
     # ✅ NOUVEAU
     nb_devis_en_attente = 0
     for op in Operation.objects.filter(user=request.user, avec_devis=True):
         for devis in op.devis_set.filter(statut='envoye', date_envoi__isnull=False):
-            if not devis.est_expire_display:
+            if not devis.est_expire:
                 nb_devis_en_attente += 1
     
     # Options de cycle pour les boutons
@@ -1544,9 +1544,9 @@ def operation_detail(request, operation_id):
         # Calculer si expiré
         if devis.date_envoi and devis.validite_jours and devis.statut == 'envoye':
             date_limite = devis.date_envoi + timedelta(days=devis.validite_jours)
-            devis.est_expire_display = date_limite < timezone.now().date()
+            devis.est_expire = date_limite < timezone.now().date()
         else:
-            devis.est_expire_display = False
+            devis.est_expire = False
 
     # Interventions (pour opérations SANS devis uniquement)
     interventions = operation.interventions.all().order_by('ordre')

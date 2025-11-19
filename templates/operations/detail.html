@@ -692,7 +692,7 @@
             
             {% elif devis.statut == 'envoye' %}
             <span style="padding: 0.3rem 0.75rem; background: rgba(249,115,22,.1); color: #f97316; border: 1px solid rgba(249,115,22,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
-              {% if devis.est_expire_display %}
+              {% if devis.est_expire %}
               ⚠️ Expiré
               {% else %}
               📤 Envoyé (en attente)
@@ -945,7 +945,7 @@
                 {% if devis.date_limite %}
                 <div style="color: #065f46; font-size: 0.8rem; margin-top: 0.25rem;">
                   📅 Valable jusqu'au : {{ devis.date_limite|date:"d/m/Y" }}
-                  {% if devis.est_expire_display %}
+                  {% if devis.est_expire %}
                   <span style="color: var(--danger); font-weight: 600;">⚠️ EXPIRÉ</span>
                   {% endif %}
                 </div>
