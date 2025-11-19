@@ -18,7 +18,6 @@ import sys
 import json
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-from django.db.models import Exists, OuterRef
 
 # ✅ IMPORTS MODIFIÉS
 from .models import (
@@ -488,17 +487,10 @@ def operations_list(request):
     # ========================================
 
     # 1️⃣ BROUILLON : Devis commencé mais pas généré
-    nb_devis_brouillon = Operation.objects.filter(
-        user=request.user,
-        avec_devis=True
-    ).annotate(
-        has_brouillon=Exists(
-            Devis.objects.filter(
-                operation=OuterRef('pk'),
-                statut='brouillon'
-            )
-        )
-    ).filter(has_brouillon=True).count()
+    nb_devis_brouillon = Devis.objects.filter(
+        operation__user=request.user,
+        statut='brouillon'
+    ).count()
 
     # 2️⃣ GÉNÉRÉ MAIS NON ENVOYÉ
     nb_devis_genere_non_envoye = Operation.objects.filter(
