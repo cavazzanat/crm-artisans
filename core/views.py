@@ -5,7 +5,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Q, Max, Sum
+from django.db.models import Q, Sum, Count, OuterRef, Subquery, Exists
 from django.db import models
 from django.contrib import messages
 from django.contrib.auth.forms import UserCreationForm
