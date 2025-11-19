@@ -363,7 +363,6 @@ def operations_list(request):
             Exists(Devis.objects.filter(operation=OuterRef('pk'), statut='brouillon'))
         )
 
-    # ✅ NOUVEAU
     elif filtre == 'genere_non_envoye':
         # Opérations qui ont au moins 1 devis prêt (généré mais pas encore envoyé)
         operations = operations.filter(
@@ -492,11 +491,10 @@ def operations_list(request):
         statut='brouillon'
     ).count()
 
-    # ✅ NOUVEAU
+    # ✅ CORRECTION : Devis "prêt" = généré mais pas encore envoyé
     nb_devis_genere_non_envoye = Devis.objects.filter(
         operation__user=request.user,
-        statut='envoye',
-        date_envoi__isnull=True
+        statut='pret'  # ← Statut "prêt" = PDF généré, en attente d'envoi
     ).count()
 
     # ✅ NOUVEAU (version simple)
@@ -519,15 +517,7 @@ def operations_list(request):
         ('en_attente_devis', 'Devis'),
         ('a_planifier', 'À planifier'),
     ]
-    # ========================================
-    # ENRICHISSEMENT : Dernier devis pour chaque opération
-    # ========================================
-    for op in operations:
-        if op.avec_devis:
-            derniers = list(op.devis_set.all())
-            op.dernier_devis = derniers[-1] if derniers else None
-        else:
-            op.dernier_devis = None
+
 
     context = {
         'operations': operations,
