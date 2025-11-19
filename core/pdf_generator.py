@@ -8,12 +8,12 @@ from django.utils import timezone
 import os
 
 
-def generer_devis_pdf(operation, profil):
+def generer_devis_pdf(devis, profil):
     """
     Génère un PDF de devis professionnel (mise en forme plus classique/pro)
     
     Args:
-        operation: Instance de Operation
+        devis: Instance de Devis (CHANGÉ : avant c'était Operation)
         profil: Instance de ProfilEntreprise
     
     Returns:
@@ -34,7 +34,7 @@ def generer_devis_pdf(operation, profil):
     elements = []
 
     # ============================
-    # STYLES
+    # STYLES (INCHANGÉS)
     # ============================
     styles = getSampleStyleSheet()
 
@@ -80,17 +80,16 @@ def generer_devis_pdf(operation, profil):
     )
 
     # ============================
+    # ✅ CHANGEMENT : Récupérer l'opération depuis le devis
+    # ============================
+    operation = devis.operation
+
+    # ============================
     # EN-TÊTE : ENTREPRISE + BLOC DEVIS
     # ============================
 
-    # --- Colonne gauche : entreprise ---
+    # --- Colonne gauche : entreprise (INCHANGÉE) ---
     left_cells = []
-
-    # Logo éventuel
-    # if profil.logo and os.path.exists(profil.logo.path):
-    #     logo = Image(profil.logo.path, width=3 * cm, height=3 * cm)
-    #     left_cells.append(logo)
-    #     left_cells.append(Spacer(1, 0.2 * cm))
 
     nom_entreprise = profil.nom_entreprise or "Entreprise"
     left_cells.append(Paragraph(f"<b>{nom_entreprise}</b>", style_base))
@@ -123,16 +122,9 @@ def generer_devis_pdf(operation, profil):
             Paragraph(f"Email : {profil.email}", style_small)
         )
 
-    # TODO plus tard : forme juridique / TVA / RCS / RM
-    # if getattr(profil, "forme_juridique", None):
-    #     left_cells.append(Paragraph(profil.forme_juridique, style_small))
-    # if getattr(profil, "tva_intracommunautaire", None):
-    #     left_cells.append(Paragraph(f"TVA : {profil.tva_intracommunautaire}", style_small))
-
     # --- Colonne droite : bloc "DEVIS" ---
-    date_emission = timezone.now().date()
-    # TODO plus tard : utiliser operation.date_devis si tu l’ajoutes
-    # date_emission = operation.date_devis or timezone.now().date()
+    # ✅ CHANGEMENT : Utiliser devis.date_creation au lieu de timezone.now()
+    date_emission = devis.date_creation.date() if devis.date_creation else timezone.now().date()
 
     right_cells = [
         Paragraph("<b>DEVIS</b>", ParagraphStyle(
@@ -144,7 +136,8 @@ def generer_devis_pdf(operation, profil):
             alignment=2,  # droite
             spaceAfter=4,
         )),
-        Paragraph(f"N° {operation.numero_devis}", ParagraphStyle(
+        # ✅ CHANGEMENT : devis.numero_devis au lieu de operation.numero_devis
+        Paragraph(f"N° {devis.numero_devis}", ParagraphStyle(
             "DocNumber",
             parent=style_base,
             alignment=2,
@@ -154,16 +147,18 @@ def generer_devis_pdf(operation, profil):
             f"Date d'émission : {date_emission.strftime('%d/%m/%Y')}",
             ParagraphStyle("RightSmall", parent=style_small, alignment=2),
         ),
+        # ✅ CHANGEMENT : devis.validite_jours
         Paragraph(
-            f"Validité : {operation.devis_validite_jours} jours",
+            f"Validité : {devis.validite_jours} jours",
             ParagraphStyle("RightSmall2", parent=style_small, alignment=2),
         ),
     ]
 
-    if operation.devis_date_limite:
+    # ✅ CHANGEMENT : devis.date_limite
+    if devis.date_limite:
         right_cells.append(
             Paragraph(
-                f"Valable jusqu'au : {operation.devis_date_limite.strftime('%d/%m/%Y')}",
+                f"Valable jusqu'au : {devis.date_limite.strftime('%d/%m/%Y')}",
                 ParagraphStyle("RightSmall3", parent=style_small, alignment=2),
             )
         )
@@ -184,7 +179,7 @@ def generer_devis_pdf(operation, profil):
     elements.append(header_table)
     elements.append(Spacer(1, 0.5 * cm))
 
-    # Petite ligne de séparation
+    # Petite ligne de séparation (INCHANGÉE)
     elements.append(Spacer(1, 0.1 * cm))
     elements.append(
         Table(
@@ -230,19 +225,14 @@ def generer_devis_pdf(operation, profil):
         )
 
     info_block = [
-        Spacer(1, 0.2 * cm),   # équilibre vertical
+        Spacer(1, 0.2 * cm),
         Paragraph("Informations", style_section_title),
+        # ✅ CHANGEMENT : devis.numero_devis
         Paragraph(
-            f"Référence devis : {operation.numero_devis}",
+            f"Référence devis : {devis.numero_devis}",
             style_base,
         ),
     ]
-
-    # TODO plus tard : conditions de paiement, délai d’exécution, etc.
-    # if getattr(operation, "conditions_paiement", None):
-    #     info_block.append(
-    #         Paragraph(f"Conditions de paiement : {operation.conditions_paiement}", style_small)
-    #     )
 
     info_table = Table(
         [[client_block, info_block]],
@@ -291,17 +281,18 @@ def generer_devis_pdf(operation, profil):
         ]
     ]
 
-    interventions = operation.interventions.all()
+    # ✅ CHANGEMENT CRITIQUE : devis.lignes au lieu de operation.interventions
+    lignes = devis.lignes.all()
 
-    for intervention in interventions:
+    for ligne in lignes:
         table_data.append(
             [
-                Paragraph(intervention.description or "", style_base),
-                f"{intervention.quantite:,.2f}".replace(",", " ").replace(".", ","),
-                intervention.get_unite_display(),
-                f"{intervention.prix_unitaire_ht:,.2f} €".replace(",", " ").replace(".", ","),
-                f"{intervention.taux_tva:,.0f}%".replace(".", ","),
-                f"{intervention.montant:,.2f} €".replace(",", " ").replace(".", ","),
+                Paragraph(ligne.description or "", style_base),
+                f"{ligne.quantite:,.2f}".replace(",", " ").replace(".", ","),
+                ligne.get_unite_display(),
+                f"{ligne.prix_unitaire_ht:,.2f} €".replace(",", " ").replace(".", ","),
+                f"{ligne.taux_tva:,.0f}%".replace(".", ","),
+                f"{ligne.montant:,.2f} €".replace(",", " ").replace(".", ","),
             ]
         )
 
@@ -314,9 +305,8 @@ def generer_devis_pdf(operation, profil):
         TableStyle(
             [
                 # En-tête
-                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eef2ff")),  # violet très pâle
-                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#3730a3")),   # violet foncé lisible
-
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#eef2ff")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#3730a3")),
                 ("ALIGN", (0, 0), (-1, 0), "CENTER"),
                 ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
                 ("FONTSIZE", (0, 0), (-1, 0), 9),
@@ -340,25 +330,26 @@ def generer_devis_pdf(operation, profil):
     # TOTAUX
     # ============================
 
+    # ✅ CHANGEMENT : devis.sous_total_ht, devis.total_tva, devis.total_ttc
     totaux_data = [
         [
             Paragraph("Sous-total HT", style_totaux_label),
             Paragraph(
-                f"{operation.sous_total_ht:,.2f} €".replace(",", " ").replace(".", ","),
+                f"{devis.sous_total_ht:,.2f} €".replace(",", " ").replace(".", ","),
                 style_totaux_value,
             ),
         ],
         [
             Paragraph("TVA", style_totaux_label),
             Paragraph(
-                f"{operation.total_tva:,.2f} €".replace(",", " ").replace(".", ","),
+                f"{devis.total_tva:,.2f} €".replace(",", " ").replace(".", ","),
                 style_totaux_value,
             ),
         ],
         [
             Paragraph("<b>TOTAL TTC</b>", style_totaux_label),
             Paragraph(
-                f"<b>{operation.total_ttc:,.2f} €</b>".replace(",", " ").replace(".", ","),
+                f"<b>{devis.total_ttc:,.2f} €</b>".replace(",", " ").replace(".", ","),
                 style_totaux_value,
             ),
         ],
@@ -392,18 +383,19 @@ def generer_devis_pdf(operation, profil):
     # NOTES
     # ============================
 
-    if operation.devis_notes:
+    # ✅ CHANGEMENT : devis.notes au lieu de operation.devis_notes
+    if devis.notes:
         elements.append(Paragraph("Notes", style_section_title))
         elements.append(
             Paragraph(
-                operation.devis_notes.replace("\n", "<br/>"),
+                devis.notes.replace("\n", "<br/>"),
                 style_base,
             )
         )
         elements.append(Spacer(1, 0.6 * cm))
 
     # ============================
-    # MENTIONS / CONDITIONS GÉNÉRALES
+    # MENTIONS / CONDITIONS GÉNÉRALES (INCHANGÉES)
     # ============================
 
     if profil.mentions_legales_devis:
@@ -417,7 +409,7 @@ def generer_devis_pdf(operation, profil):
         elements.append(Spacer(1, 0.8 * cm))
 
     # ============================
-    # SIGNATURE
+    # SIGNATURE (INCHANGÉE)
     # ============================
 
     signature_data = [
@@ -449,13 +441,15 @@ def generer_devis_pdf(operation, profil):
     elements.append(signature_table)
 
     # ============================
-    # GÉNÉRATION
+    # GÉNÉRATION (INCHANGÉE)
     # ============================
 
     doc.build(elements)
     pdf = buffer.getvalue()
     buffer.close()
     return pdf
+
+
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
 from reportlab.lib import colors

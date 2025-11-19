@@ -1,12 +1,14 @@
 # ================================
-# core/models.py - Version avec devis/facture
+# core/models.py - Version refactorisée avec système de devis multiple
 # ================================
 
 from django.db import models
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.utils import timezone
-from django.db.models import Sum  # ← AJOUTER cette ligne
+from django.db.models import Sum
+from decimal import Decimal
+
 
 class Client(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -101,100 +103,11 @@ class Operation(models.Model):
     )
     
     # ========================================
-    # NOUVEAU : CHAMPS POUR LE DEVIS
+    # SYSTÈME DE DEVIS
     # ========================================
     avec_devis = models.BooleanField(
         default=False,
         verbose_name="Opération avec devis"
-    )
-    
-    numero_devis = models.CharField(
-        max_length=20,
-        null=True,
-        blank=True,
-        unique=True,
-        verbose_name="Numéro de devis",
-        help_text="Format: DEV-2025-001"
-    )
-    
-    devis_date_envoi = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="Date d'envoi du devis"
-    )
-    
-    devis_date_reponse = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="Date de réponse du client"
-    )
-    
-    devis_statut = models.CharField(
-        max_length=20,
-        choices=[
-            ('en_attente', 'En attente de réponse'),
-            ('accepte', 'Devis accepté'),
-            ('refuse', 'Devis refusé'),
-            ('relance', 'À relancer'),
-        ],
-        null=True,
-        blank=True,
-        verbose_name="Statut du devis"
-    )
-    
-    devis_notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Notes du devis",
-        help_text="Notes qui apparaîtront sur le PDF du devis"
-    )
-    
-    devis_validite_jours = models.IntegerField(
-        default=30,
-        verbose_name="Validité du devis (jours)",
-        help_text="Nombre de jours de validité du devis"
-    )
-    
-    devis_historique_numeros = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Historique des numéros de devis",
-        help_text="Liste JSON des anciens numéros de devis (en cas de refus et nouveau devis)"
-    )
-    
-    # ========================================
-    # ANCIEN : CHAMPS POUR LE DEVIS (À SUPPRIMER APRÈS MIGRATION)
-    # ========================================
-    devis_cree = models.BooleanField(default=False, verbose_name="Devis créé")
-    
-    # ========================================
-    # NOUVEAU : CHAMPS POUR LA FACTURE
-    # ========================================
-    facture_generee = models.BooleanField(
-        default=False,
-        verbose_name="Facture générée"
-    )
-    
-    numero_facture = models.CharField(
-        max_length=20,
-        null=True,
-        blank=True,
-        unique=True,
-        verbose_name="Numéro de facture",
-        help_text="Format: FAC-2025-001"
-    )
-    
-    facture_date_emission = models.DateField(
-        null=True,
-        blank=True,
-        verbose_name="Date d'émission de la facture"
-    )
-    
-    facture_notes = models.TextField(
-        blank=True,
-        null=True,
-        verbose_name="Notes de la facture",
-        help_text="Notes qui apparaîtront sur le PDF de la facture"
     )
     
     # ========================================
@@ -223,29 +136,33 @@ class Operation(models.Model):
             unique_suffix = str(uuid.uuid4())[:6].upper()
             self.id_operation = f"U{self.user.id}OP{unique_suffix}"
         
-        # Synchroniser automatiquement devis_statut et statut
-        if self.devis_statut == 'refuse' and self.statut != 'devis_refuse':
-            self.statut = 'devis_refuse'
-        elif self.devis_statut == 'accepte' and self.statut == 'en_attente_devis':
-            self.statut = 'a_planifier'
-        
         super().save(*args, **kwargs)
     
     # ========================================
-    # PROPERTIES EXISTANTES
+    # PROPERTIES POUR MONTANT TOTAL
     # ========================================
     @property
     def montant_total(self):
-        """Calcule le montant total de l'opération (somme des lignes d'intervention)"""
-        return self.total_ttc
+        """
+        Calcule le montant total de l'opération :
+        - Si avec_devis : somme des devis acceptés
+        - Si sans devis : somme des interventions
+        """
+        if self.avec_devis:
+            # Somme de tous les devis acceptés
+            devis_acceptes = self.devis_set.filter(statut='accepte')
+            total = sum(devis.total_ttc for devis in devis_acceptes)
+            return Decimal(str(total))
+        else:
+            # Somme des interventions (logique actuelle conservée)
+            return self.total_ttc
     
-    # ========================================
-    # NOUVELLES PROPERTIES POUR HT/TVA/TTC
-    # ========================================
     @property
     def sous_total_ht(self):
-        """Sous-total HT (somme des lignes HT)"""
-        from decimal import Decimal
+        """Sous-total HT - logique pour opérations SANS devis uniquement"""
+        if self.avec_devis:
+            return Decimal('0.00')
+        
         total = self.interventions.aggregate(
             total=Sum('montant')
         )['total']
@@ -253,8 +170,10 @@ class Operation(models.Model):
     
     @property
     def total_tva(self):
-        """Total de la TVA (somme des TVA de chaque ligne)"""
-        from decimal import Decimal
+        """Total de la TVA - logique pour opérations SANS devis uniquement"""
+        if self.avec_devis:
+            return Decimal('0.00')
+        
         total_tva = Decimal('0.00')
         for intervention in self.interventions.all():
             total_tva += intervention.montant_tva
@@ -262,143 +181,377 @@ class Operation(models.Model):
     
     @property
     def total_ttc(self):
-        """Total TTC (HT + TVA) = CE QUE LE CLIENT PAIE"""
+        """Total TTC - logique pour opérations SANS devis uniquement"""
+        if self.avec_devis:
+            return Decimal('0.00')
+        
         return self.sous_total_ht + self.total_tva
+    
     # ========================================
-    # NOUVELLES PROPERTIES POUR DEVIS/FACTURE
+    # PROPERTIES POUR GESTION DEVIS
     # ========================================
     @property
-    def peut_generer_devis(self):
-        """
-        Vérifie si on peut générer un devis PDF.
-        
-        Conditions :
-        - avec_devis = True
-        - statut = EN_ATTENTE_DEVIS
-        - Au moins 1 ligne d'intervention
-        - Pas encore de numéro de devis
-        """
-        return (
-            self.avec_devis == True 
-            and self.statut == 'en_attente_devis' 
-            and self.interventions.exists()
-            and not self.numero_devis
-        )
+    def dernier_devis(self):
+        """Retourne le devis avec la version la plus élevée"""
+        return self.devis_set.order_by('-version').first()
     
     @property
-    def peut_generer_facture(self):
-        """
-        Vérifie si on peut générer une facture PDF.
-        
-        Conditions :
-        - statut in [REALISE, PAYE]
-        - facture_generee = False
-        - Au moins 1 ligne d'intervention
-        """
-        return (
-            self.statut in ['realise', 'paye'] 
-            and self.facture_generee == False
-            and self.interventions.exists()
-        )
+    def statut_devis_global(self):
+        """Retourne le statut du dernier devis créé"""
+        dernier = self.dernier_devis
+        return dernier.statut if dernier else None
     
     @property
-    def peut_creer_nouveau_devis(self):
-        """
-        Vérifie si on peut créer un nouveau devis après un refus.
-        
-        Conditions :
-        - avec_devis = True
-        - devis_statut = 'refuse'
-        """
-        return (
-            self.avec_devis == True 
-            and self.devis_statut == 'refuse'
-        )
+    def nombre_devis(self):
+        """Compte le nombre total de devis"""
+        return self.devis_set.count()
     
     @property
-    def devis_date_limite(self):
-        """
-        Calcule la date limite de validité du devis.
+    def nombre_devis_acceptes(self):
+        """Compte le nombre de devis acceptés"""
+        return self.devis_set.filter(statut='accepte').count()
+
+
+# ========================================
+# NOUVEAU MODÈLE : DEVIS
+# ========================================
+class Devis(models.Model):
+    STATUTS_DEVIS = [
+        ('brouillon', 'Brouillon'),
+        ('envoye', 'Envoyé'),
+        ('accepte', 'Accepté'),
+        ('refuse', 'Refusé'),
+    ]
+    
+    operation = models.ForeignKey(
+        Operation, 
+        on_delete=models.CASCADE, 
+        related_name='devis_set'
+    )
+    
+    # Identification
+    numero_devis = models.CharField(
+        max_length=30,
+        unique=True,
+        verbose_name="Numéro de devis",
+        help_text="Format: DEVIS-2025-U1-00001"
+    )
+    
+    version = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Version du devis",
+        help_text="1, 2, 3... (incrémenté automatiquement)"
+    )
+    
+    # Dates
+    date_creation = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Date de création"
+    )
+    
+    date_envoi = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date d'envoi au client"
+    )
+    
+    date_reponse = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Date de réponse du client"
+    )
+    
+    # Statut
+    statut = models.CharField(
+        max_length=20,
+        choices=STATUTS_DEVIS,
+        default='brouillon',
+        verbose_name="Statut du devis"
+    )
+    
+    # Contenu
+    notes = models.TextField(
+        blank=True,
+        verbose_name="Notes du devis",
+        help_text="Notes qui apparaîtront sur le PDF"
+    )
+    
+    validite_jours = models.IntegerField(
+        default=30,
+        verbose_name="Validité (jours)",
+        help_text="Nombre de jours de validité"
+    )
+    
+    class Meta:
+        ordering = ['version']  # Du plus ancien au plus récent
+        verbose_name = "Devis"
+        verbose_name_plural = "Devis"
+        unique_together = [['operation', 'version']]
+    
+    def __str__(self):
+        return f"{self.numero_devis} - Version {self.version}"
+    
+    def save(self, *args, **kwargs):
+        # Auto-générer le numéro si nouveau devis
+        if not self.numero_devis:
+            import re
+            from datetime import datetime
+            
+            annee_courante = datetime.now().year
+            prefix = f'DEVIS-{annee_courante}-U{self.operation.user.id}-'
+            
+            # Récupérer tous les devis existants de cet utilisateur pour cette année
+            derniers_devis = Devis.objects.filter(
+                operation__user=self.operation.user,
+                numero_devis__startswith=prefix
+            ).values_list('numero_devis', flat=True)
+            
+            # Extraire le numéro le plus élevé
+            max_numero = 0
+            for devis in derniers_devis:
+                match = re.search(r'-(\d+)$', devis)
+                if match:
+                    numero = int(match.group(1))
+                    if numero > max_numero:
+                        max_numero = numero
+            
+            # Nouveau numéro = max + 1
+            nouveau_numero = max_numero + 1
+            self.numero_devis = f'{prefix}{nouveau_numero:05d}'
         
-        Retourne None si pas de date d'envoi.
-        """
-        if self.devis_date_envoi and self.devis_validite_jours:
+        # Auto-incrémenter la version si non définie
+        if not self.pk and not self.version:
+            dernier_devis = self.operation.devis_set.order_by('-version').first()
+            self.version = (dernier_devis.version + 1) if dernier_devis else 1
+        
+        super().save(*args, **kwargs)
+    
+    # ========================================
+    # PROPERTIES POUR CALCULS
+    # ========================================
+    @property
+    def sous_total_ht(self):
+        """Sous-total HT (somme des lignes HT)"""
+        total = self.lignes.aggregate(
+            total=Sum('montant')
+        )['total']
+        return total if total is not None else Decimal('0.00')
+    
+    @property
+    def total_tva(self):
+        """Total de la TVA"""
+        total_tva = Decimal('0.00')
+        for ligne in self.lignes.all():
+            total_tva += ligne.montant_tva
+        return total_tva
+    
+    @property
+    def total_ttc(self):
+        """Total TTC (ce que paie le client)"""
+        return self.sous_total_ht + self.total_tva
+    
+    @property
+    def date_limite(self):
+        """Date limite de validité du devis"""
+        if self.date_envoi and self.validite_jours:
             from datetime import timedelta
-            return self.devis_date_envoi + timedelta(days=self.devis_validite_jours)
+            return self.date_envoi + timedelta(days=self.validite_jours)
         return None
     
-    @property
-    def delai_reponse_client(self):
-        """
-        Calcule le délai de réponse du client en jours.
-        
-        Retourne None si pas de date de réponse ou d'envoi.
-        """
-        if self.devis_date_envoi and self.devis_date_reponse:
-            return (self.devis_date_reponse - self.devis_date_envoi).days
-        return None
-    
-    @property
-    def est_brouillon(self):
-        """
-        Vérifie si le devis est en brouillon (commencé mais pas généré).
-        
-        Conditions :
-        - avec_devis = True
-        - Pas encore de numéro de devis
-        """
-        return self.avec_devis and not self.numero_devis
-
-    @property
-    def est_genere_non_envoye(self):
-        """
-        Vérifie si le devis est généré mais pas encore envoyé.
-        
-        Conditions :
-        - Numéro de devis existe
-        - Pas de date d'envoi
-        """
-        return self.numero_devis and not self.devis_date_envoi
-
-    @property
-    def est_en_attente_reponse(self):
-        """
-        Vérifie si le devis est en attente de réponse client.
-        
-        Conditions :
-        - Date d'envoi existe
-        - Statut = 'en_attente'
-        """
-        return (
-            self.devis_date_envoi 
-            and self.devis_statut == 'en_attente'
-        )
-
     @property
     def est_expire(self):
-        """
-        Vérifie si le devis a dépassé sa date limite de validité.
-        
-        Conditions :
-        - Date d'envoi existe
-        - Date limite dépassée
-        - Statut = 'en_attente' (pas encore accepté/refusé)
-        """
-        if not self.devis_date_envoi or not self.devis_validite_jours:
+        """Vérifie si le devis est expiré"""
+        if not self.date_envoi or not self.validite_jours:
             return False
         
-        from django.utils import timezone
-        date_limite = self.devis_date_limite
-        
+        date_limite = self.date_limite
         return (
             date_limite 
             and date_limite < timezone.now().date()
-            and self.devis_statut == 'en_attente'
+            and self.statut == 'envoye'
         )
+    
+    @property
+    def delai_reponse(self):
+        """Délai de réponse du client en jours"""
+        if self.date_envoi and self.date_reponse:
+            return (self.date_reponse - self.date_envoi).days
+        return None
+    
+    @property
+    def est_verrouille(self):
+        """Un devis est verrouillé s'il n'est plus en brouillon"""
+        return self.statut != 'brouillon'
+    
+    @property
+    def peut_etre_supprime(self):
+        """On peut supprimer uniquement les brouillons"""
+        return self.statut == 'brouillon'
 
 
-# MODÈLE SÉPARÉ pour les échéances (pas à l'intérieur de Operation!)
-# MODÈLE SÉPARÉ pour les échéances (pas à l'intérieur de Operation!)
+# ========================================
+# NOUVEAU MODÈLE : LIGNE DE DEVIS
+# ========================================
+class LigneDevis(models.Model):
+    UNITES_CHOICES = [
+        ('unite', 'Unité'),
+        ('forfait', 'Forfait'),
+        ('heure', 'Heure'),
+        ('jour', 'Jour'),
+        ('m2', 'm²'),
+        ('ml', 'Mètre linéaire'),
+    ]
+    
+    devis = models.ForeignKey(
+        Devis,
+        on_delete=models.CASCADE,
+        related_name='lignes'
+    )
+    
+    description = models.TextField(verbose_name="Description")
+    
+    quantite = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=1,
+        verbose_name="Quantité"
+    )
+    
+    unite = models.CharField(
+        max_length=20,
+        choices=UNITES_CHOICES,
+        default='forfait',
+        verbose_name="Unité"
+    )
+    
+    prix_unitaire_ht = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Prix unitaire HT (€)"
+    )
+    
+    taux_tva = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=10.0,
+        verbose_name="Taux TVA (%)"
+    )
+    
+    montant = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name="Total HT",
+        help_text="Calculé automatiquement (quantité × prix unitaire HT)"
+    )
+    
+    ordre = models.PositiveIntegerField(default=1)
+    
+    class Meta:
+        ordering = ['ordre']
+        verbose_name = "Ligne de devis"
+        verbose_name_plural = "Lignes de devis"
+    
+    def __str__(self):
+        return f"{self.description} - {self.montant}€ HT"
+    
+    def save(self, *args, **kwargs):
+        """Calcul automatique du montant HT"""
+        self.montant = self.quantite * self.prix_unitaire_ht
+        super().save(*args, **kwargs)
+    
+    @property
+    def montant_tva(self):
+        """Montant de la TVA pour cette ligne"""
+        return (self.montant * self.taux_tva) / Decimal('100')
+    
+    @property
+    def montant_ttc(self):
+        """Total TTC de cette ligne"""
+        return self.montant + self.montant_tva
+
+
+# ========================================
+# MODÈLE INTERVENTION (CONSERVÉ POUR OPÉRATIONS SANS DEVIS)
+# ========================================
+class Intervention(models.Model):
+    """Ligne d'intervention pour opérations SANS devis uniquement"""
+    
+    UNITES_CHOICES = [
+        ('unite', 'Unité'),
+        ('forfait', 'Forfait'),
+        ('heure', 'Heure'),
+        ('jour', 'Jour'),
+        ('m2', 'm²'),
+        ('ml', 'Mètre linéaire'),
+    ]
+    
+    operation = models.ForeignKey(
+        Operation,
+        on_delete=models.CASCADE,
+        related_name='interventions'
+    )
+    description = models.TextField()
+    
+    quantite = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=1,
+        help_text="Quantité (ex: 2, 1.5, 10)"
+    )
+    unite = models.CharField(
+        max_length=20,
+        choices=UNITES_CHOICES,
+        default='forfait',
+        help_text="Unité de mesure"
+    )
+    prix_unitaire_ht = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        help_text="Prix unitaire HT en euros"
+    )
+    taux_tva = models.DecimalField(
+        max_digits=5,
+        decimal_places=2,
+        default=10.0,
+        help_text="Taux de TVA en %"
+    )
+    
+    montant = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Total HT de la ligne (quantité × prix unitaire HT)"
+    )
+    
+    ordre = models.PositiveIntegerField(default=1)
+    
+    class Meta:
+        ordering = ['ordre']
+    
+    def __str__(self):
+        return f"{self.description} - {self.montant}€ HT"
+    
+    @property
+    def montant_tva(self):
+        """Montant de la TVA pour cette ligne"""
+        return (self.montant * self.taux_tva) / Decimal('100')
+    
+    @property
+    def montant_ttc(self):
+        """Total TTC de cette ligne"""
+        return self.montant + self.montant_tva
+    
+    def save(self, *args, **kwargs):
+        """Calcul automatique du montant HT lors de la sauvegarde"""
+        if self.prix_unitaire_ht is not None:
+            self.montant = self.quantite * self.prix_unitaire_ht
+        super().save(*args, **kwargs)
+
+
+# ========================================
+# MODÈLE ÉCHEANCE (INCHANGÉ)
+# ========================================
 class Echeance(models.Model):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='echeances')
     numero = models.IntegerField(verbose_name="Numéro d'échéance")
@@ -407,25 +560,25 @@ class Echeance(models.Model):
     paye = models.BooleanField(default=False, verbose_name="Payé")
     ordre = models.IntegerField(default=1)
     
-    # ✅ NOUVEAUX CHAMPS FACTURE
+    # Champs facture
     facture_generee = models.BooleanField(
-        default=False, 
+        default=False,
         verbose_name="Facture générée"
     )
     numero_facture = models.CharField(
-        max_length=50, 
-        blank=True, 
-        null=True, 
+        max_length=50,
+        blank=True,
+        null=True,
         verbose_name="Numéro de facture"
     )
     facture_date_emission = models.DateField(
-        blank=True, 
-        null=True, 
+        blank=True,
+        null=True,
         verbose_name="Date d'émission facture"
     )
     facture_type = models.CharField(
-        max_length=20, 
-        blank=True, 
+        max_length=20,
+        blank=True,
         null=True,
         choices=[
             ('globale', 'Facture globale'),
@@ -445,8 +598,6 @@ class Echeance(models.Model):
     
     def statut_display(self):
         """Retourne le statut dynamique de l'échéance"""
-        from django.utils import timezone
-        
         if self.paye:
             return 'paye'
         elif self.date_echeance < timezone.now().date():
@@ -454,102 +605,15 @@ class Echeance(models.Model):
         else:
             return 'en_attente'
     
-    # ✅ NOUVELLE PROPRIÉTÉ
     @property
     def peut_generer_facture(self):
         """Une facture peut être générée si le paiement est marqué comme payé"""
         return self.paye and not self.facture_generee
 
 
-class Intervention(models.Model):
-    """Ligne d'intervention ou de devis"""
-    
-    UNITES_CHOICES = [
-        ('unite', 'Unité'),
-        ('forfait', 'Forfait'),
-        ('heure', 'Heure'),
-        ('jour', 'Jour'),
-        ('m2', 'm²'),
-        ('ml', 'Mètre linéaire'),
-    ]
-    
-    operation = models.ForeignKey(
-        Operation, 
-        on_delete=models.CASCADE, 
-        related_name='interventions'
-    )
-    description = models.TextField()  # ✅ CHANGÉ : pas de limite
-    
-    # ========================================
-    # NOUVEAUX CHAMPS
-    # ========================================
-    quantite = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        default=1,
-        help_text="Quantité (ex: 2, 1.5, 10)"
-    )
-    unite = models.CharField(
-        max_length=20,
-        choices=UNITES_CHOICES,
-        default='forfait',
-        help_text="Unité de mesure"
-    )
-    prix_unitaire_ht = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2,
-        null=True,  # ✅ TEMPORAIRE : pour la migration
-        blank=True,
-        help_text="Prix unitaire HT en euros"
-    )
-    taux_tva = models.DecimalField(
-        max_digits=5,
-        decimal_places=2,
-        default=10.0,
-        help_text="Taux de TVA en %"
-    )
-    
-    # ========================================
-    # CHAMP EXISTANT (devient le total HT)
-    # ========================================
-    montant = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2,
-        help_text="Total HT de la ligne (quantité × prix unitaire HT)"
-    )
-    
-    ordre = models.PositiveIntegerField(default=1)
-    
-    class Meta:
-        ordering = ['ordre']
-    
-    def __str__(self):
-        return f"{self.description} - {self.montant}€ HT"
-    
-    # ========================================
-    # PROPERTIES POUR LES CALCULS
-    # ========================================
-    @property
-    def montant_tva(self):
-        """Montant de la TVA pour cette ligne"""
-        from decimal import Decimal
-        return (self.montant * self.taux_tva) / Decimal('100')
-    
-    @property
-    def montant_ttc(self):
-        """Total TTC de cette ligne"""
-        return self.montant + self.montant_tva
-    
-    def save(self, *args, **kwargs):
-        """Calcul automatique du montant HT lors de la sauvegarde"""
-        # ✅ SEULEMENT si prix_unitaire_ht est renseigné (nouvelle ligne)
-        if self.prix_unitaire_ht is not None:
-            from decimal import Decimal
-            self.montant = self.quantite * self.prix_unitaire_ht
-        # Sinon, garder le montant existant (ancienne ligne migrée)
-        super().save(*args, **kwargs)
-
-
+# ========================================
+# MODÈLE HISTORIQUE (INCHANGÉ)
+# ========================================
 class HistoriqueOperation(models.Model):
     operation = models.ForeignKey(Operation, on_delete=models.CASCADE, related_name='historique')
     action = models.CharField(max_length=200)
@@ -561,7 +625,11 @@ class HistoriqueOperation(models.Model):
     
     def __str__(self):
         return f"{self.operation.id_operation} - {self.action}"
-    
+
+
+# ========================================
+# MODÈLE PROFIL ENTREPRISE (INCHANGÉ)
+# ========================================
 class ProfilEntreprise(models.Model):
     """Profil de l'entreprise pour générer les devis/factures"""
     
@@ -576,16 +644,14 @@ class ProfilEntreprise(models.Model):
     ]
     
     user = models.OneToOneField(
-        User, 
-        on_delete=models.CASCADE, 
+        User,
+        on_delete=models.CASCADE,
         related_name='profil_entreprise'
     )
     
-    # ========================================
-    # IDENTIFICATION ENTREPRISE (Obligatoire)
-    # ========================================
+    # Identification entreprise
     nom_entreprise = models.CharField(
-        max_length=200, 
+        max_length=200,
         blank=True,
         verbose_name="Nom de l'entreprise / Raison sociale"
     )
@@ -602,77 +668,63 @@ class ProfilEntreprise(models.Model):
     
     siret = models.CharField(max_length=14, blank=True, verbose_name="N° SIRET")
     rcs = models.CharField(
-        max_length=100, 
-        blank=True, 
-        verbose_name="N° RCS + Ville", 
+        max_length=100,
+        blank=True,
+        verbose_name="N° RCS + Ville",
         help_text="Ex: RCS Paris 123 456 789"
     )
     code_ape = models.CharField(max_length=10, blank=True, verbose_name="Code APE/NAF")
     capital_social = models.DecimalField(
-        max_digits=10, 
-        decimal_places=2, 
-        null=True, 
-        blank=True, 
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
         verbose_name="Capital social (€)"
     )
     tva_intracommunautaire = models.CharField(
-        max_length=20, 
-        blank=True, 
+        max_length=20,
+        blank=True,
         verbose_name="N° TVA intracommunautaire"
     )
     
-    # ========================================
-    # COORDONNÉES PROFESSIONNELLES
-    # ========================================
+    # Coordonnées professionnelles
     telephone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone professionnel")
     email = models.EmailField(blank=True, verbose_name="Email professionnel")
     site_web = models.URLField(blank=True, verbose_name="Site web")
     
-    # ========================================
-    # ASSURANCES (Obligatoire bâtiment)
-    # ========================================
+    # Assurances
     assurance_decennale_nom = models.CharField(
-        max_length=200, 
-        blank=True, 
+        max_length=200,
+        blank=True,
         verbose_name="Nom de l'assureur"
     )
     assurance_decennale_numero = models.CharField(
-        max_length=100, 
-        blank=True, 
+        max_length=100,
+        blank=True,
         verbose_name="N° de police"
     )
     assurance_decennale_validite = models.DateField(
-        null=True, 
-        blank=True, 
+        null=True,
+        blank=True,
         verbose_name="Date de validité"
     )
     
-    # ========================================
-    # QUALIFICATIONS (Optionnel)
-    # ========================================
+    # Qualifications
     qualifications = models.TextField(
-        blank=True, 
-        verbose_name="Qualifications / Certifications", 
+        blank=True,
+        verbose_name="Qualifications / Certifications",
         help_text="Ex: RGE, Qualibat, etc."
     )
     
-    # ========================================
-    # BRANDING (Optionnel)
-    # ========================================
-
-    # ========================================
-    # FACTURATION (Optionnel mais utile)
-    # ========================================
+    # Facturation
     iban = models.CharField(max_length=34, blank=True, verbose_name="IBAN")
     bic = models.CharField(max_length=11, blank=True, verbose_name="BIC/SWIFT")
     
-    # ========================================
-    # MENTIONS LÉGALES PERSONNALISÉES
-    # ========================================
+    # Mentions légales
     mentions_legales_devis = models.TextField(
         blank=True,
         verbose_name="Mentions légales sur le devis",
-        help_text="Texte qui apparaîtra en bas du devis (conditions de paiement, pénalités de retard, etc.)"
+        help_text="Texte qui apparaîtra en bas du devis"
     )
     
     date_creation = models.DateTimeField(auto_now_add=True)

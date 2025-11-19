@@ -641,799 +641,453 @@
     </section>
 
     
-    <!-- ========================================
-        SECTION DEVIS - VERSION FINALE SIMPLIFIÉE
-        ======================================== -->
-    {% if operation.avec_devis %}
-    <section class="section" id="section-devis">
-      <div class="section-header" onclick="toggleSection(this)">
-        <h2 class="section-title">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="1.6"/></svg>
-          Devis
-          
-          {# ✅ LOGIQUE DE BADGE CORRIGÉE #}
-          {% if operation.devis_statut == 'accepte' %}
-            {# ÉTAT : Accepté par le client #}
-            <span class="section-badge complete">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-              Accepté
-            </span>
-            
-          {% elif operation.devis_statut == 'refuse' %}
-            {# ÉTAT : Refusé par le client #}
-            <span class="section-badge" style="background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid rgba(239,68,68,.2);">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
-              Refusé
-            </span>
-            
-          {% elif devis_expire %}
-            {# ÉTAT : Devis envoyé mais expiré #}
-            <span class="section-badge" style="background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid rgba(239,68,68,.2);">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.6"/></svg>
-              Expiré
-            </span>
-            
-          {% elif operation.devis_date_envoi %}
-            {# ÉTAT : Devis envoyé, en attente réponse client (et valide) #}
-            <span class="section-badge pending">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="1.6"/></svg>
-              En attente client
-            </span>
-            
-          {% elif operation.numero_devis %}
-            {# ÉTAT : Devis généré mais pas encore envoyé #}
-            <span class="section-badge" style="background: rgba(59,130,246,.1); color: #3b82f6; border: 1px solid rgba(59,130,246,.2);">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2" stroke="currentColor" stroke-width="1.6"/></svg>
-              Généré (non envoyé)
-            </span>
-            
-          {% else %}
-            {# ÉTAT : Brouillon - devis pas encore généré #}
-            <span class="section-badge pending">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-              Brouillon
-            </span>
-          {% endif %}
-        </h2>
-        <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-        </svg>
-      </div>
+  <!-- ========================================
+      SECTION DEVIS - VERSION MULTI-DEVIS CONDENSÉE
+      ======================================== -->
+  {% if operation.avec_devis %}
+  <section class="section" id="section-devis">
+    <div class="section-header" onclick="toggleSection(this)">
+      <h2 class="section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="1.6"/></svg>
+        📋 Devis
+        
+        {% if nombre_devis > 0 %}
+        <span class="section-badge complete">{{ nombre_devis }} devis</span>
+        {% else %}
+        <span class="section-badge pending">Aucun devis</span>
+        {% endif %}
+      </h2>
+      <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </div>
+    
+    <div class="section-body">
       
-      <div class="section-body">
+      <!-- ═══════════════════════════════════════════════
+          BOUCLE SUR TOUS LES DEVIS
+          ═══════════════════════════════════════════════ -->
+      {% for devis in devis_list %}
+      <div class="devis-card" style="border: 2px solid {% if devis.statut == 'accepte' %}var(--success){% elif devis.statut == 'refuse' %}var(--danger){% elif devis.statut == 'envoye' %}var(--primary){% else %}var(--border){% endif %}; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; background: white;">
         
         <!-- ═══════════════════════════════════════════════
-            ÉTAT 1 : CRÉATION DU DEVIS (avant génération)
+            EN-TÊTE DU DEVIS (toujours visible, cliquable)
             ═══════════════════════════════════════════════ -->
-        {% if not operation.numero_devis %}
-        
-        <div style="border: 2px solid var(--border); border-radius: 12px; padding: 2rem; background: white;">
-          
-          <!-- En-tête -->
-          <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
-            <h3 style="margin: 0; color: var(--muted); font-size: 1.1rem; font-weight: 600;">
-              Devis N° <span style="color: var(--muted); font-style: italic; font-weight: 400;">(sera généré automatiquement)</span>
+        <div class="devis-header" style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; cursor: pointer; padding-bottom: 1rem; border-bottom: 1px solid var(--border);" onclick="toggleDevis({{ devis.id }})">
+          <div style="display: flex; align-items: center; gap: 1rem; flex: 1;">
+            <h3 style="margin: 0; color: var(--text); font-size: 1.1rem; font-weight: 700;">
+              Devis {{ devis.version }} - {{ devis.numero_devis }}
             </h3>
-          </div>
-          
-          <!-- Lignes du devis -->
-          <div style="margin-bottom: 2rem;">
-            <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 600;">Lignes du devis</h4>
             
-            <!-- Tableau des lignes existantes -->
-            {% if interventions %}
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 1.5rem;">
-              <thead>
-                <tr style="border-bottom: 2px solid var(--border);">
-                  <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Description</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">Qté</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 100px;">Unité</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">PU HT</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">TVA</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">Total HT</th>
-                  <th style="width: 80px;"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for intervention in interventions %}
-                <tr style="border-bottom: 1px solid var(--border);">
-                  <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.quantite|floatformat:"-2" }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.get_unite_display }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.prix_unitaire_ht|floatformat:2 }} €</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.taux_tva|floatformat:0 }}%</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600; color: var(--primary);">{{ intervention.montant|floatformat:2 }} €</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">
-                    <form method="POST" style="display:inline" onsubmit="return confirm('Supprimer cette ligne ?')">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="delete_intervention">
-                      <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
-                      <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;">×</button>
-                    </form>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-              <tfoot>
-                <tr style="border-top: 2px solid var(--border); background: #f8fafc;">
-                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 0.95rem; text-align: right;">Sous-total HT</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.1rem; font-weight: 700; color: var(--text);">{{ operation.sous_total_ht|floatformat:2 }} €</td>
-                  <td></td>
-                </tr>
-                <tr style="background: #f8fafc;">
-                  <td colspan="5" style="padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.9rem; text-align: right;">TVA (10%)</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-size: 1rem; font-weight: 600; color: var(--muted);">{{ operation.total_tva|floatformat:2 }} €</td>
-                  <td></td>
-                </tr>
-                <tr style="border-top: 2px solid var(--primary); background: #eef2ff;">
-                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem; text-align: right;">TOTAL TTC</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary);">{{ operation.total_ttc|floatformat:2 }} €</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>
-            {% endif %}
+            <!-- Badge statut -->
+            {% if devis.statut == 'brouillon' %}
+            <span style="padding: 0.3rem 0.75rem; background: rgba(148,163,184,.1); color: var(--muted); border: 1px solid rgba(148,163,184,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+              📝 Brouillon
+            </span>
             
-            <!-- Formulaire "+ Ajouter une ligne" -->
-            <div style="{% if interventions %}border-top: 2px dashed var(--border); padding-top: 1.5rem;{% endif %}">
-              <h5 style="margin: 0 0 0.75rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">+ Ajouter une ligne</h5>
-              <form method="POST" onsubmit="syncNotesValidite()">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="add_intervention">
-                
-                <!-- ✅ NOUVEAUX CHAMPS CACHÉS : Notes et Validité -->
-                <input type="hidden" name="devis_notes_temp" id="hidden-notes">
-                <input type="hidden" name="devis_validite_temp" id="hidden-validite">
-                
-                <!-- Ligne 1 : Description -->
-                <div style="margin-bottom: 0.75rem;">
-                  <input type="text" 
-                        name="description" 
-                        class="input" 
-                        placeholder="Description de la prestation" 
-                        style="margin: 0;"
-                        required>
-                </div>
-                
-                <!-- Ligne 2 : Quantité, Unité, Prix unitaire HT, TVA -->
-                <div style="display: grid; grid-template-columns: 100px 150px 150px 100px 100px; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
-                  <div>
-                    <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Quantité</label>
-                    <input type="number" 
-                          name="quantite" 
-                          class="input" 
-                          value="1" 
-                          step="0.01" 
-                          min="0.01"
-                          style="margin: 0; text-align: center;"
-                          required>
-                  </div>
-                  
-                  <div>
-                    <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Unité</label>
-                    <select name="unite" class="select" style="margin: 0;">
-                      <option value="unite">Unité</option>
-                      <option value="forfait" selected>Forfait</option>
-                      <option value="heure">Heure</option>
-                      <option value="jour">Jour</option>
-                      <option value="m2">m²</option>
-                      <option value="ml">Mètre linéaire</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Prix unitaire HT (€)</label>
-                    <input type="number" 
-                          name="prix_unitaire_ht" 
-                          class="input" 
-                          placeholder="0.00" 
-                          step="0.01" 
-                          min="0.01"
-                          style="margin: 0; text-align: right;"
-                          required>
-                  </div>
-                  
-                  <div>
-                    <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">TVA (%)</label>
-                    <input type="number" 
-                          name="taux_tva" 
-                          class="input" 
-                          value="10" 
-                          step="0.01" 
-                          min="0"
-                          style="margin: 0; text-align: center;"
-                          required>
-                  </div>
-                  
-                  <button type="submit" class="btn success" style="width: 100%; margin: 0; margin-top: 1.5rem; white-space: nowrap;">Ajouter</button>
-                </div>
-              </form>
-            </div>
-          </div>
-          
-          <!-- Notes -->
-          <div style="margin-bottom: 1.5rem;">
-            <label style="display: block; margin-bottom: 0.5rem; color: var(--text); font-size: 0.9rem; font-weight: 600;">Notes :</label>
-            <textarea name="devis_notes_temp" 
-                      id="devis-notes-temp"
-                      class="input" 
-                      rows="3" 
-                      placeholder="Notes optionnelles (ex: Devis valable sous réserve de disponibilité)"
-                      style="resize: vertical;">{{ operation.devis_notes|default:'' }}</textarea>
-          </div>
-          
-          <!-- Validité -->
-          <div style="margin-bottom: 2rem;">
-            <label style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text); font-size: 0.9rem; font-weight: 600;">
-              Validité : 
-              <input type="number" 
-                    id="devis-validite-temp"
-                    value="{{ operation.devis_validite_jours|default:30 }}" 
-                    min="1" 
-                    max="365"
-                    style="width: 70px; padding: 0.4rem; border: 1px solid var(--border); border-radius: 6px; text-align: center; font-weight: 600;"> 
-              jours
-            </label>
-          </div>
-          
-          <!-- Bouton Générer le devis -->
-          <form method="POST" id="form-generer-devis" onsubmit="return validateDevisGeneration()">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="generer_devis">
-            <input type="hidden" name="devis_notes" id="devis-notes-hidden">
-            <input type="hidden" name="devis_validite_jours" id="devis-validite-hidden">
-            <button type="submit" class="btn primary" style="width: 100%; padding: 1rem; font-size: 1.05rem; font-weight: 600;">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2" stroke="currentColor" stroke-width="2"/></svg>
-              📋 Générer le devis
-            </button>
-          </form>
-
-
-
-          {% if not interventions %}
-          <div class="alert info" style="margin-top: 1rem;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-            <div>
-              💡 <strong>Astuce :</strong> Vous pouvez générer le devis sans lignes, puis les ajouter avant l'envoi.
-            </div>
-          </div>
-          {% endif %}
-          
-        </div>
-        
-        <!-- ═══════════════════════════════════════════════
-            ÉTAT 2 : DEVIS GÉNÉRÉ - Validation client
-            ═══════════════════════════════════════════════ -->
-        {% elif operation.numero_devis and operation.devis_statut != 'accepte' and operation.devis_statut != 'refuse' %}
-        
-        <div style="border: 2px solid var(--primary); border-radius: 12px; padding: 2rem; background: white;">
-          
-          <!-- Numéro de devis -->
-          <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border);">
-            <h3 style="margin: 0; color: var(--primary); font-size: 1.3rem; font-weight: 700;">
-              Devis N° {{ operation.numero_devis }}
-            </h3>
-          </div>
-          
-          <!-- Lignes (lecture seule) -->
-          <div style="margin-bottom: 2rem;">
-            <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 600;">Lignes du devis</h4>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="border-bottom: 2px solid var(--border);">
-                  <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Description</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">Qté</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 100px;">Unité</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">PU HT</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">TVA</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">Total HT</th>
-                  <th style="width: 80px;"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for intervention in interventions %}
-                <tr style="border-bottom: 1px solid var(--border);">
-                  <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.quantite|floatformat:"-2" }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.get_unite_display }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.prix_unitaire_ht|floatformat:2 }} €</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.taux_tva|floatformat:0 }}%</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600; color: var(--primary);">{{ intervention.montant|floatformat:2 }} €</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">
-                    <form method="POST" style="display:inline" onsubmit="syncNotesValidite(); return confirm('Supprimer cette ligne ?')">
-                      {% csrf_token %}
-                      <input type="hidden" name="action" value="delete_intervention">
-                      <input type="hidden" name="intervention_id" value="{{ intervention.id }}">
-                      
-                      <!-- ✅ NOUVEAUX CHAMPS CACHÉS -->
-                      <input type="hidden" name="devis_notes_temp" id="hidden-notes-del-{{ intervention.id }}">
-                      <input type="hidden" name="devis_validite_temp" id="hidden-validite-del-{{ intervention.id }}">
-                      
-                      <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.8rem;" onclick="syncNotesValiditeForDelete({{ intervention.id }})">×</button>
-                    </form>
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-              <tfoot>
-                <tr style="border-top: 2px solid var(--border); background: #f8fafc;">
-                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 0.95rem; text-align: right;">Sous-total HT</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.1rem; font-weight: 700; color: var(--text);">{{ operation.sous_total_ht|floatformat:2 }} €</td>
-                  <td></td>
-                </tr>
-                <tr style="background: #f8fafc;">
-                  <td colspan="5" style="padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.9rem; text-align: right;">TVA (10%)</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-size: 1rem; font-weight: 600; color: var(--muted);">{{ operation.total_tva|floatformat:2 }} €</td>
-                  <td></td>
-                </tr>
-                <tr style="border-top: 2px solid var(--primary); background: #eef2ff;">
-                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem; text-align: right;">TOTAL TTC</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary);">{{ operation.total_ttc|floatformat:2 }} €</td>
-                  <td></td>
-                </tr>
-              </tfoot>
-            </table>  
-            {% if operation.devis_notes %}
-            <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
-              <strong style="font-size: 0.85rem; color: var(--muted);">📝 Notes :</strong>
-              <p style="margin: 0.5rem 0 0 0; color: var(--text); font-size: 0.9rem;">{{ operation.devis_notes }}</p>
-            </div>
+            {% elif devis.statut == 'envoye' %}
+            <span style="padding: 0.3rem 0.75rem; background: rgba(59,130,246,.1); color: #3b82f6; border: 1px solid rgba(59,130,246,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+              {% if devis.est_expire_display %}
+              ⚠️ Expiré
+              {% else %}
+              📤 Envoyé
+              {% endif %}
+            </span>
+            
+            {% elif devis.statut == 'accepte' %}
+            <span style="padding: 0.3rem 0.75rem; background: rgba(34,197,94,.1); color: var(--success); border: 1px solid rgba(34,197,94,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+              ✅ Accepté
+            </span>
+            
+            {% elif devis.statut == 'refuse' %}
+            <span style="padding: 0.3rem 0.75rem; background: rgba(239,68,68,.1); color: var(--danger); border: 1px solid rgba(239,68,68,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+              ❌ Refusé
+            </span>
             {% endif %}
           </div>
           
-          <!-- ═══════════════════════════════════════════════
-            SECTION GESTION DU DEVIS - VERSION CLAIRE
-            ═══════════════════════════════════════════════ -->
-        <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #3b82f6; border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
-          
-          <!-- En-tête -->
-          <h4 style="margin: 0 0 1.5rem 0; color: #1e40af; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2"/>
+          <div style="display: flex; align-items: center; gap: 1rem;">
+            <span style="font-size: 1.2rem; font-weight: 700; color: var(--primary);">
+              {{ devis.total_ttc|floatformat:2 }} € TTC
+            </span>
+            <svg class="toggle-devis-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" style="transition: transform 0.3s ease; color: var(--muted);">
+              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
-            Gestion du devis
-          </h4>
-
-          <!-- ============================
-              ÉTAPE 1 : TÉLÉCHARGER LE PDF
-              ============================ -->
-          <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #bfdbfe;">
-            <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-              <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">1</span>
-              Télécharger le devis PDF
-            </h5>
-            <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
-              💡 Téléchargez le devis au format PDF pour l'envoyer à votre client.
-            </p>
-              <a href="{% url 'telecharger_devis_pdf' operation.id %}" class="btn primary" style="width: 100%; padding: 0.85rem; text-decoration: none; justify-content: center;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
-                </svg>
-                📥 Télécharger le PDF
-              </a>
           </div>
-
-        <!-- ============================
-            ÉTAPE 2 : ENREGISTRER L'ENVOI
-            ============================ -->
-        <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid #bfdbfe;">
-          <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-            <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">2</span>
-            Enregistrer la date d'envoi au client
-          </h5>
-          <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
-            💡 Une fois le devis envoyé au client (email, courrier, etc.), enregistrez la date d'envoi.
-          </p>
-          
-          {% if not operation.devis_date_envoi %}
-          <!-- Formulaire d'enregistrement de la date -->
-          <form method="POST">
-            {% csrf_token %}
-            <input type="hidden" name="action" value="enregistrer_date_envoi">
-            
-          <div style="display: grid; gap: 1rem;">
-            <div>
-              <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
-                📅 Date d'envoi au client <span style="color: #ef4444;">*</span>
-              </label>
-              
-              <div style="position: relative;">
-                <input type="date" 
-                      id="devis-date-envoi-temp" 
-                      name="devis_date_envoi"
-                      class="input" 
-                      value="{{ now|date:'Y-m-d' }}"
-                      style="background: white;"
-                      required>
-                
-                <!-- ✅ NOUVEAU : Alerte date passée -->
-                <div id="alerte-date-passee" style="display: none; margin-top: 0.5rem; padding: 0.5rem 0.75rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 6px; display: flex; align-items: center; gap: 0.5rem;">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
-                    <path d="M12 9v4m0 4h0M12 3l9 18H3L12 3z"/>
-                  </svg>
-                  <span style="color: #991b1b; font-size: 0.85rem; font-weight: 600;">⚠️ Attention : date dans le passé</span>
-                </div>
-              </div>
-              
-              <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem;">
-                ℹ️ Date à laquelle vous envoyez le devis au client
-              </small>
-            </div>
-            
-            <!-- ✅ RAPPEL : Rappel de la validité -->
-            <div style="background: #dbeafe; border: 1px solid #93c5fd; border-radius: 8px; padding: 1rem;">
-              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1e40af" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M12 6v6l4 2"/>
-                </svg>
-                <strong style="color: #1e40af; font-size: 0.9rem;">Rappel - Validité du devis</strong>
-              </div>
-              <p style="margin: 0; color: #1e40af; font-size: 0.95rem;">
-                ⏳ Ce devis est valable <strong>{{ operation.devis_validite_jours|default:30 }} jours</strong>
-              </p>
-              <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.85rem; opacity: 0.8;">
-                💡 Le client aura jusqu'au <strong id="date-expiration-preview">...</strong> pour répondre
-              </small>
-            </div>
-          </div>
-
-
-          <!-- Script pour calculer la date d'expiration + vérifier si date passée (UNIQUEMENT à la création) -->
-          <script>
-          (function() {
-            const dateInput = document.getElementById('devis-date-envoi-temp');
-            const expirationPreview = document.getElementById('date-expiration-preview');
-            const alertePassee = document.getElementById('alerte-date-passee');
-            const validiteJours = {{ operation.devis_validite_jours|default:30 }};
-            
-            // ✅ VÉRIFIER SI LA DATE EST DÉJÀ ENREGISTRÉE EN BASE
-            const dateDejaEnregistree = {% if operation.devis_date_envoi %}true{% else %}false{% endif %};
-            
-            function updateAll() {
-              if (!dateInput.value) return;
-              
-              const dateSelectionnee = new Date(dateInput.value);
-              const aujourdhui = new Date();
-              aujourdhui.setHours(0, 0, 0, 0); // Réinitialiser l'heure pour comparer seulement la date
-              
-              // ✅ AFFICHER L'ALERTE UNIQUEMENT SI :
-              // 1. La date n'est PAS déjà enregistrée en base (première saisie)
-              // 2. ET la date sélectionnée est dans le passé
-              if (!dateDejaEnregistree && dateSelectionnee < aujourdhui) {
-                alertePassee.style.display = 'flex';
-              } else {
-                alertePassee.style.display = 'none';
-              }
-              
-              // ✅ CALCULER DATE EXPIRATION
-              const dateExpiration = new Date(dateSelectionnee);
-              dateExpiration.setDate(dateExpiration.getDate() + validiteJours);
-              
-              const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-              expirationPreview.textContent = dateExpiration.toLocaleDateString('fr-FR', options);
-            }
-            
-            // Calculer au chargement
-            updateAll();
-            
-            // Recalculer quand la date change
-            dateInput.addEventListener('change', updateAll);
-            dateInput.addEventListener('input', updateAll); // Pour la mise à jour en temps réel
-          })();
-          </script>
-
-
-            <button type="submit" class="btn success" style="width: 100%; margin-top: 1rem; padding: 0.85rem; font-weight: 600;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m5 12 4 4 10-10"/>
-              </svg>
-              ✅ Valider la date d'envoi
-            </button>
-          </form>
-          
-          {% else %}
-          <!-- Date déjà enregistrée -->
-          <div style="display: grid; gap: 1rem;">
-            <div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 8px; padding: 1rem;">
-              <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2">
-                  <path d="m5 12 4 4 10-10"/>
-                </svg>
-                <strong style="color: #22c55e; font-size: 0.95rem;">Date d'envoi enregistrée</strong>
-              </div>
-              <div style="color: #065f46; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">
-                📅 {{ operation.devis_date_envoi|date:"d/m/Y" }}
-              </div>
-              
-              <!-- Calcul de l'expiration -->
-              {% if date_expiration_devis %}
-              <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(34,197,94,0.2);">
-                <div style="font-size: 0.85rem; color: #065f46;">
-                  ⏳ Validité : {{ operation.devis_validite_jours }} jours
-                </div>
-                <div style="font-size: 0.85rem; {% if devis_expire %}color: #ef4444;{% else %}color: #065f46;{% endif %} margin-top: 0.25rem;">
-                  📅 Date d'expiration : {{ date_expiration_devis|date:"d/m/Y" }}
-                  
-                  {% if devis_expire %}
-                  <br><strong style="color: #ef4444;">⚠️ Devis expiré !</strong>
-                  {% else %}
-                  <br><span style="color: #22c55e;">✅ Devis valide</span>
-                  {% endif %}
-                </div>
-              </div>
-              {% endif %}
-            </div>
-          </div>
-          {% endif %}
-        </div>
-
-          <!-- ============================
-            ÉTAPE 3 : RÉPONSE DU CLIENT
-            ============================ -->
-        <div style="background: white; border-radius: 10px; padding: 1.5rem; border: 1px solid #bfdbfe;">
-          <h5 style="margin: 0 0 1rem 0; color: #1e40af; font-size: 1rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem;">
-            <span style="background: #3b82f6; color: white; width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">3</span>
-            Enregistrer la réponse du client
-          </h5>
-          <p style="margin: 0 0 1rem 0; color: #1e40af; font-size: 0.9rem;">
-            💡 Une fois que le client a répondu, cliquez sur le bouton correspondant.
-          </p>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <!-- ✅ BOUTON ACCEPTÉ -->
-            <form method="POST" onsubmit="return validateDateEnvoi('accepter')">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="accepter_devis">
-              <button type="submit" class="btn success" style="width: 100%; padding: 1rem; font-weight: 600; font-size: 0.95rem;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="m5 12 4 4 10-10"/>
-                </svg>
-                ✅ Accepté par le client
-              </button>
-            </form>
-            
-            <!-- ❌ BOUTON REFUSÉ -->
-            <form method="POST" onsubmit="return validateDateEnvoi('refuser')">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="refuser_devis">
-              <button type="submit" class="btn danger" style="width: 100%; padding: 1rem; font-weight: 600; font-size: 0.95rem;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 6 6 18M6 6l12 12"/>
-                </svg>
-                ❌ Refusé par le client
-              </button>
-            </form>
-          </div>
-          
-          <!-- ℹ️ INFO CLIENT NE RÉPOND PAS -->
-          <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-            <small style="color: #64748b; font-size: 0.85rem; display: block;">
-              💬 <strong>Le client ne répond pas ?</strong><br>
-              Relancez-le par téléphone ou email. Si le devis est abandonné, cliquez sur "❌ Refusé".
-            </small>
-          </div>
-        </div>
-        </div>
-
-          <script>
-          // ✅ VALIDATION SIMPLIFIÉE (2 boutons seulement)
-          function validateDateEnvoi(action) {
-            {% if not operation.devis_date_envoi %}
-            // ⚠️ Si pas de date d'envoi, bloquer
-            showToast('⚠️ Veuillez d\'abord enregistrer la date d\'envoi du devis', 'warning');
-            
-            // Scroll vers le formulaire de date d'envoi
-            const dateEnvoiSection = document.querySelector('[name="devis_date_envoi"]');
-            if (dateEnvoiSection) {
-              dateEnvoiSection.closest('.info-card, div').scrollIntoView({ behavior: 'smooth', block: 'center' });
-              dateEnvoiSection.focus();
-              dateEnvoiSection.style.border = '2px solid var(--danger)';
-              setTimeout(() => {
-                dateEnvoiSection.style.border = '';
-              }, 2000);
-            }
-            
-            return false;
-            {% endif %}
-            
-            // Confirmation pour refus
-            if (action === 'refuser') {
-              return confirm('⚠️ Confirmer le refus du devis ?\n\nVous pourrez créer un nouveau devis modifié juste après.');
-            }
-            
-            return true;
-          }
-          </script>
-
         </div>
         
         <!-- ═══════════════════════════════════════════════
-            ÉTAT 3 : DEVIS ACCEPTÉ (RESTE OUVERT)
+            CORPS DU DEVIS (repliable)
             ═══════════════════════════════════════════════ -->
-        {% elif operation.devis_statut == 'accepte' %}
-        
-        <div style="border: 2px solid var(--success); border-radius: 12px; padding: 2rem; background: white;">
+        <div class="devis-body" id="devis-body-{{ devis.id }}" style="max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.4s ease, opacity 0.3s ease, padding-top 0.3s ease;">
           
-          <!-- En-tête avec badge accepté -->
-          <div style="margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 2px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
-            <h3 style="margin: 0; color: var(--success); font-size: 1.3rem; font-weight: 700;">
-              Devis N° {{ operation.numero_devis }}
-            </h3>
-            <div style="background: var(--success); color: white; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="m5 12 4 4 10-10"/>
-              </svg>
-              Accepté le {{ operation.devis_date_reponse|date:"d/m/Y" }}
-            </div>
-          </div>
-          
-          <!-- Lignes du devis (lecture seule) -->
-          <div style="margin-bottom: 2rem;">
+          <!-- ──────────────────────────────────────────
+              LIGNES DU DEVIS (version compacte)
+              ────────────────────────────────────────── -->
+          {% if devis.lignes_list %}
+          <div style="margin-top: 1.5rem;">
             <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 600;">Lignes du devis</h4>
-            <table style="width: 100%; border-collapse: collapse;">
-              <thead>
-                <tr style="border-bottom: 2px solid var(--border);">
-                  <th style="text-align: left; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase;">Description</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">Qté</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 100px;">Unité</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">PU HT</th>
-                  <th style="text-align: center; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 80px;">TVA</th>
-                  <th style="text-align: right; padding: 0.75rem 0.5rem; font-size: 0.85rem; color: var(--muted); font-weight: 600; text-transform: uppercase; width: 120px;">Total HT</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% for intervention in interventions %}
-                <tr style="border-bottom: 1px solid var(--border);">
-                  <td style="padding: 0.75rem 0.5rem;">{{ intervention.description }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.quantite|floatformat:"-2" }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.get_unite_display }}</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600;">{{ intervention.prix_unitaire_ht|floatformat:2 }} €</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: center;">{{ intervention.taux_tva|floatformat:0 }}%</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-weight: 600; color: var(--primary);">{{ intervention.montant|floatformat:2 }} €</td>
-                </tr>
-                {% endfor %}
-              </tbody>
-              <tfoot>
-                <tr style="border-top: 2px solid var(--border); background: #f8fafc;">
-                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 0.95rem; text-align: right;">Sous-total HT</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.1rem; font-weight: 700; color: var(--text);">{{ operation.sous_total_ht|floatformat:2 }} €</td>
-                </tr>
-                <tr style="background: #f8fafc;">
-                  <td colspan="5" style="padding: 0.75rem 0.5rem; font-weight: 600; font-size: 0.9rem; text-align: right;">TVA (10%)</td>
-                  <td style="padding: 0.75rem 0.5rem; text-align: right; font-size: 1rem; font-weight: 600; color: var(--muted);">{{ operation.total_tva|floatformat:2 }} €</td>
-                </tr>
-                <tr style="border-top: 2px solid var(--primary); background: #eef2ff;">
-                  <td colspan="5" style="padding: 1rem 0.5rem; font-weight: 700; font-size: 1rem; text-align: right;">TOTAL TTC</td>
-                  <td style="padding: 1rem 0.5rem; text-align: right; font-size: 1.3rem; font-weight: 700; color: var(--primary);">{{ operation.total_ttc|floatformat:2 }} €</td>
-                </tr>
-              </tfoot>
-            </table>
-
-            {% if operation.devis_notes %}
+            
+            <!-- Lignes sous forme de liste compacte -->
+            <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+              {% for ligne in devis.lignes_list %}
+              <div style="display: grid; grid-template-columns: 1fr 80px 100px 120px 80px 120px {% if devis.statut == 'brouillon' %}40px{% endif %}; gap: 0.75rem; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border); background: {% cycle 'white' '#f9fafb' %};">
+                <div style="font-size: 0.9rem; color: var(--text);">{{ ligne.description }}</div>
+                <div style="text-align: center; font-size: 0.85rem;">{{ ligne.quantite|floatformat:"-2" }} {{ ligne.get_unite_display }}</div>
+                <div style="text-align: right; font-weight: 600; font-size: 0.85rem;">{{ ligne.prix_unitaire_ht|floatformat:2 }} €</div>
+                <div style="text-align: center; font-size: 0.85rem;">TVA {{ ligne.taux_tva|floatformat:0 }}%</div>
+                <div style="text-align: right; font-weight: 600; font-size: 0.9rem; color: var(--primary);">{{ ligne.montant|floatformat:2 }} €</div>
+                
+                {% if devis.statut == 'brouillon' %}
+                <form method="POST" style="display:inline; margin: 0;" onsubmit="return confirm('Supprimer cette ligne ?')">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="delete_ligne_devis">
+                  <input type="hidden" name="ligne_id" value="{{ ligne.id }}">
+                  <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin: 0;">×</button>
+                </form>
+                {% endif %}
+              </div>
+              {% endfor %}
+              
+              <!-- Totaux -->
+              <div style="background: #f8fafc; padding: 1rem; border-top: 2px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                  <span style="font-weight: 600; font-size: 0.9rem;">Sous-total HT</span>
+                  <span style="font-weight: 700; font-size: 1rem;">{{ devis.sous_total_ht|floatformat:2 }} €</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                  <span style="font-weight: 600; font-size: 0.9rem; color: var(--muted);">TVA</span>
+                  <span style="font-weight: 600; font-size: 0.9rem; color: var(--muted);">{{ devis.total_tva|floatformat:2 }} €</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 2px solid var(--primary);">
+                  <span style="font-weight: 700; font-size: 1.1rem;">TOTAL TTC</span>
+                  <span style="font-weight: 700; font-size: 1.3rem; color: var(--primary);">{{ devis.total_ttc|floatformat:2 }} €</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Notes du devis (si présentes) -->
+            {% if devis.notes %}
             <div style="margin-top: 1rem; padding: 0.75rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
               <strong style="font-size: 0.85rem; color: var(--muted);">📝 Notes :</strong>
-              <p style="margin: 0.5rem 0 0 0; color: var(--text); font-size: 0.9rem;">{{ operation.devis_notes }}</p>
+              <p style="margin: 0.5rem 0 0 0; color: var(--text); font-size: 0.9rem;">{{ devis.notes }}</p>
             </div>
             {% endif %}
           </div>
+          {% endif %}
           
-          <!-- Informations acceptation -->
-          <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 1px solid var(--success); border-radius: 10px; padding: 1.5rem;">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+          <!-- ──────────────────────────────────────────
+              FORMULAIRE AJOUT LIGNE (inline compact)
+              ────────────────────────────────────────── -->
+          {% if devis.statut == 'brouillon' %}
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
+            <h5 style="margin: 0 0 0.75rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">+ Ajouter une ligne</h5>
+            <form method="POST" style="display: grid; grid-template-columns: 2fr 80px 120px 120px 100px 80px; gap: 0.5rem; align-items: end;">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="add_ligne_devis">
+              <input type="hidden" name="devis_id" value="{{ devis.id }}">
               
-              <div>
-                <div style="color: var(--success); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">📅 Date d'envoi</div>
-                <div style="color: #065f46; font-size: 1rem; font-weight: 700;">{{ operation.devis_date_envoi|date:"d/m/Y" }}</div>
-              </div>
-              
-              <div>
-                <div style="color: var(--success); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">✅ Date d'acceptation</div>
-                <div style="color: #065f46; font-size: 1rem; font-weight: 700;">{{ operation.devis_date_reponse|date:"d/m/Y" }}</div>
-              </div>
-              
-              {% if operation.devis_date_envoi and operation.devis_date_reponse %}
-              <div>
-                <div style="color: var(--success); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">⏱️ Délai de réponse</div>
-                <div style="color: #065f46; font-size: 1rem; font-weight: 700;">
-                  {% widthratio operation.devis_date_reponse|date:"U" 1 1 as date_reponse_unix %}
-                  {% widthratio operation.devis_date_envoi|date:"U" 1 1 as date_envoi_unix %}
-                  {% widthratio date_reponse_unix|add:"-"|add:date_envoi_unix 86400 1 as delai_jours %}
-                  {{ delai_jours }} jour{{ delai_jours|pluralize }}
-                </div>
-              </div>
-              {% endif %}
-              
-              <div>
-                <div style="color: var(--success); font-size: 0.8rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.25rem;">🔒 Statut</div>
-                <div style="color: #065f46; font-size: 1rem; font-weight: 700;">Montant verrouillé</div>
-              </div>
-              
-            </div>
-            
-            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(34,197,94,0.2); color: #065f46; font-size: 0.85rem;">
-              ℹ️ Le statut de l'opération est passé automatiquement à <strong>"À planifier"</strong>
-            </div>
+              <input type="text" name="description" class="input" placeholder="Description" style="margin: 0; font-size: 0.9rem;" required>
+              <input type="number" name="quantite" class="input" value="1" step="0.01" min="0.01" style="margin: 0; text-align: center; font-size: 0.9rem;" required>
+              <select name="unite" class="select" style="margin: 0; font-size: 0.85rem;">
+                <option value="forfait" selected>Forfait</option>
+                <option value="unite">Unité</option>
+                <option value="heure">Heure</option>
+                <option value="jour">Jour</option>
+                <option value="m2">m²</option>
+                <option value="ml">ML</option>
+              </select>
+              <input type="number" name="prix_unitaire_ht" class="input" placeholder="Prix HT" step="0.01" min="0.01" style="margin: 0; text-align: right; font-size: 0.9rem;" required>
+              <input type="number" name="taux_tva" class="input" value="10" step="0.01" min="0" style="margin: 0; text-align: center; font-size: 0.9rem;" required>
+              <button type="submit" class="btn success" style="margin: 0; padding: 0.5rem; font-size: 0.9rem;">+ Ajouter</button>
+            </form>
           </div>
+          {% endif %}
           
-        </div>
-        <!-- ═══════════════════════════════════════════════
-            ÉTAT 4 : DEVIS REFUSÉ
-            ═══════════════════════════════════════════════ -->
-        {% elif operation.devis_statut == 'refuse' %}
-
-        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 2px solid #f59e0b; border-radius: 12px; padding: 2rem;">
-          
-          <!-- Alerte refus -->
-          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
-            <div style="width: 48px; height: 48px; background: #dc2626; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                <path d="M18 6 6 18M6 6l12 12"/>
-              </svg>
-            </div>
-            <div>
-              <h3 style="margin: 0; color: #92400e; font-size: 1.2rem; font-weight: 700;">
-                Devis {{ operation.numero_devis }} refusé
-              </h3>
-              <p style="margin: 0.25rem 0 0 0; color: #92400e; font-size: 0.9rem;">
-                Montant : {{ montant_total }} € • Date de refus : {{ operation.devis_date_reponse|date:"d/m/Y" }}
-              </p>
-            </div>
-          </div>
-          
-          <!-- Options -->
-          <div style="background: white; border-radius: 10px; padding: 1.5rem; margin-bottom: 1rem;">
-            <h4 style="margin: 0 0 1rem 0; color: #92400e; font-size: 1rem; font-weight: 600;">
-              🔄 Que souhaitez-vous faire ?
-            </h4>
+          <!-- ──────────────────────────────────────────
+              ACTIONS SELON LE STATUT
+              ────────────────────────────────────────── -->
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
             
-            <div style="display: grid; gap: 1rem;">
-              <!-- Option 1 : Créer nouveau devis -->
-              {% if operation.peut_creer_nouveau_devis %}
-              <form method="POST">
+            {% if devis.statut == 'brouillon' %}
+            <!-- ════════════════════════════════════
+                BROUILLON : Générer + Supprimer
+                ════════════════════════════════════ -->
+            <div style="display: flex; gap: 0.75rem;">
+              <form method="POST" style="flex: 1;">
                 {% csrf_token %}
-                <input type="hidden" name="action" value="creer_nouveau_devis">
-                <button type="submit" class="btn primary" style="width: 100%; padding: 1rem; justify-content: center;">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 5v14M5 12h14"/>
-                  </svg>
-                  📝 Créer un nouveau devis modifié
+                <input type="hidden" name="action" value="generer_pdf_devis">
+                <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                <button type="submit" class="btn primary" style="width: 100%; padding: 0.75rem;">
+                  📄 Générer le PDF
                 </button>
               </form>
-              <small style="color: #92400e; font-size: 0.85rem; text-align: center; display: block; margin-top: -0.5rem;">
-                💡 Vous pourrez modifier les lignes et le montant
-              </small>
+              
+              <form method="POST" onsubmit="return confirm('Supprimer ce devis brouillon ?')">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="supprimer_devis">
+                <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                <button type="submit" class="btn danger" style="padding: 0.75rem;">
+                  🗑️
+                </button>
+              </form>
+            </div>
+            
+            {% elif devis.statut == 'envoye' %}
+            <!-- ════════════════════════════════════
+                ENVOYÉ : Workflow 3 étapes (compact)
+                ════════════════════════════════════ -->
+            <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #3b82f6; border-radius: 10px; padding: 1.5rem;">
+              
+              <!-- Étape 1 : Télécharger PDF -->
+              <div style="margin-bottom: 1rem;">
+                <a href="{% url 'telecharger_devis_pdf' devis.id %}" class="btn primary" style="width: 100%; text-decoration: none; text-align: center; padding: 0.75rem;">
+                  📥 Télécharger le PDF
+                </a>
+              </div>
+              
+              <!-- Étape 2 : Date d'envoi -->
+              {% if not devis.date_envoi %}
+              <div style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
+                  📅 Date d'envoi au client
+                </label>
+                <form method="POST" style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="enregistrer_date_envoi_devis">
+                  <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                  <input type="date" name="date_envoi" class="input" value="{{ now|date:'Y-m-d' }}" style="margin: 0;" required>
+                  <button type="submit" class="btn success" style="margin: 0; white-space: nowrap;">✓ Valider</button>
+                </form>
+                <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.8rem;">
+                  ⏳ Validité : {{ devis.validite_jours }} jours
+                </small>
+              </div>
+              {% else %}
+              <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem;">
+                <div style="color: #065f46; font-size: 0.85rem;">
+                  ✅ Envoyé le : <strong>{{ devis.date_envoi|date:"d/m/Y" }}</strong>
+                </div>
+                {% if devis.date_limite %}
+                <div style="color: #065f46; font-size: 0.8rem; margin-top: 0.25rem;">
+                  📅 Valable jusqu'au : {{ devis.date_limite|date:"d/m/Y" }}
+                  {% if devis.est_expire_display %}
+                  <span style="color: var(--danger); font-weight: 600;">⚠️ EXPIRÉ</span>
+                  {% endif %}
+                </div>
+                {% endif %}
+              </div>
               {% endif %}
               
-              <!-- Option 2 : Abandonner -->
-              <a href="{% url 'operations' %}" class="btn" style="width: 100%; padding: 1rem; justify-content: center; text-decoration: none;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-                Retour aux opérations (abandonner)
+              <!-- Étape 3 : Réponse client -->
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                <form method="POST" id="form-accepter-{{ devis.id }}" onsubmit="return validateDateEnvoiDevis({{ devis.id }}, 'accepter')">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="accepter_devis">
+                  <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                  <button type="submit" class="btn success" style="width: 100%; padding: 0.75rem; font-size: 0.9rem;">
+                    ✅ Accepté
+                  </button>
+                </form>
+                
+                <form method="POST" id="form-refuser-{{ devis.id }}" onsubmit="return validateDateEnvoiDevis({{ devis.id }}, 'refuser')">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="refuser_devis">
+                  <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                  <button type="submit" class="btn danger" style="width: 100%; padding: 0.75rem; font-size: 0.9rem;">
+                    ❌ Refusé
+                  </button>
+                </form>
+              </div>
+              
+              <small style="display: block; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(59,130,246,0.2); color: #1e40af; font-size: 0.8rem; text-align: center;">
+                💬 Enregistrez d'abord la date d'envoi avant de valider la réponse
+              </small>
+            </div>
+            
+            {% elif devis.statut == 'accepte' %}
+            <!-- ════════════════════════════════════
+                ACCEPTÉ : Infos + Télécharger
+                ════════════════════════════════════ -->
+            <div style="background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; padding: 1.5rem;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                  <div style="color: #065f46; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">📅 Envoyé</div>
+                  <div style="color: #065f46; font-size: 0.95rem; font-weight: 700;">{{ devis.date_envoi|date:"d/m/Y" }}</div>
+                </div>
+                <div>
+                  <div style="color: #065f46; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">✅ Accepté</div>
+                  <div style="color: #065f46; font-size: 0.95rem; font-weight: 700;">{{ devis.date_reponse|date:"d/m/Y" }}</div>
+                </div>
+                {% if devis.delai_reponse %}
+                <div>
+                  <div style="color: #065f46; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">⏱️ Délai</div>
+                  <div style="color: #065f46; font-size: 0.95rem; font-weight: 700;">{{ devis.delai_reponse }} jour{{ devis.delai_reponse|pluralize }}</div>
+                </div>
+                {% endif %}
+              </div>
+              
+              <a href="{% url 'telecharger_devis_pdf' devis.id %}" class="btn primary" style="width: 100%; text-decoration: none; text-align: center; padding: 0.75rem;">
+                📥 Télécharger le PDF
               </a>
             </div>
+            
+            {% elif devis.statut == 'refuse' %}
+            <!-- ════════════════════════════════════
+                REFUSÉ : Date + Supprimer
+                ════════════════════════════════════ -->
+            <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 10px; padding: 1.5rem;">
+              <div style="color: #991b1b; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem;">
+                ❌ Refusé le {{ devis.date_reponse|date:"d/m/Y" }}
+              </div>
+              <div style="color: #991b1b; font-size: 0.8rem; margin-bottom: 1rem;">
+                💡 Créez un nouveau devis modifié ou supprimez celui-ci
+              </div>
+              
+              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem;">
+                <a href="{% url 'telecharger_devis_pdf' devis.id %}" class="btn" style="text-decoration: none; text-align: center; padding: 0.75rem;">
+                  📥 Télécharger PDF
+                </a>
+                
+                <form method="POST" onsubmit="return confirm('Supprimer définitivement ce devis refusé ?')">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="supprimer_devis">
+                  <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                  <button type="submit" class="btn danger" style="padding: 0.75rem;">
+                    🗑️ Supprimer
+                  </button>
+                </form>
+              </div>
+            </div>
+            {% endif %}
+            
           </div>
           
-          <!-- Archive ancien devis -->
-          {% if operation.devis_historique_numeros %}
-          <div style="background: rgba(255,255,255,0.5); border-radius: 8px; padding: 1rem;">
-            <small style="color: #92400e; font-size: 0.85rem;">
-              📦 <strong>Historique :</strong> {{ operation.devis_historique_numeros }}
-            </small>
-          </div>
-          {% endif %}
         </div>
-        
-        {% endif %}
-        
       </div>
-    </section>
-    {% endif %}
+      {% empty %}
+      <!-- Aucun devis existant -->
+      <div class="alert info">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
+        <div>
+          💡 Aucun devis créé pour cette opération. Créez le premier devis ci-dessous.
+        </div>
+      </div>
+      {% endfor %}
+      
+      <!-- ═══════════════════════════════════════════════
+          BOUTON : CRÉER UN NOUVEAU DEVIS
+          ═══════════════════════════════════════════════ -->
+      <form method="POST" style="margin-top: 1.5rem;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="creer_nouveau_devis">
+        <button type="submit" class="btn primary" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
+          ➕ Créer un nouveau devis
+        </button>
+      </form>
+      
+    </div>
+  </section>
 
-    <!-- ========================================
-        FIN SECTION DEVIS
-        ======================================== -->
+  <!-- ═══════════════════════════════════════════════
+      SCRIPTS JAVASCRIPT
+      ═══════════════════════════════════════════════ -->
+  <script>
+  // ────────────────────────────────────────────────
+  // ACCORDÉON DEVIS
+  // ────────────────────────────────────────────────
+  function toggleDevis(devisId) {
+    const body = document.getElementById('devis-body-' + devisId);
+    const header = body.previousElementSibling;
+    const icon = header.querySelector('.toggle-devis-icon');
+    
+    if (body.style.maxHeight === '0px' || body.style.maxHeight === '') {
+      // Ouvrir
+      body.style.maxHeight = body.scrollHeight + 1000 + 'px'; // +1000 pour sécurité
+      body.style.opacity = '1';
+      body.style.paddingTop = '1.5rem';
+      icon.style.transform = 'rotate(180deg)';
+    } else {
+      // Fermer
+      body.style.maxHeight = '0';
+      body.style.opacity = '0';
+      body.style.paddingTop = '0';
+      icon.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  // ────────────────────────────────────────────────
+  // VALIDATION DATE D'ENVOI (pour accepter/refuser)
+  // ────────────────────────────────────────────────
+  function validateDateEnvoiDevis(devisId, action) {
+    // Vérifier si la date d'envoi est enregistrée
+    const devisBody = document.getElementById('devis-body-' + devisId);
+    const dateEnvoiInput = devisBody.querySelector('input[name="date_envoi"]');
+    
+    // Si le champ existe encore, c'est que la date n'est pas enregistrée
+    if (dateEnvoiInput) {
+      alert('⚠️ Veuillez d\'abord enregistrer la date d\'envoi du devis avant de valider la réponse du client.');
+      
+      // Scroll vers le formulaire et focus
+      dateEnvoiInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      dateEnvoiInput.focus();
+      dateEnvoiInput.style.border = '2px solid var(--danger)';
+      setTimeout(() => {
+        dateEnvoiInput.style.border = '';
+      }, 2000);
+      
+      return false;
+    }
+    
+    // Confirmation pour refus
+    if (action === 'refuser') {
+      return confirm('⚠️ Confirmer le refus du devis ?\n\nVous pourrez créer un nouveau devis modifié juste après.');
+    }
+    
+    return true;
+  }
+
+  // ────────────────────────────────────────────────
+  // ALERTE DATES PASSÉES (optionnel, à activer si besoin)
+  // ────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', function() {
+    // Parcourir tous les champs date d'envoi
+    const dateInputs = document.querySelectorAll('input[type="date"][name="date_envoi"]');
+    
+    dateInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        const selectedDate = new Date(this.value);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Si date dans le passé, afficher un badge warning (optionnel)
+        if (selectedDate < today) {
+          const parent = this.parentElement;
+          let alert = parent.querySelector('.date-passee-alert');
+          
+          if (!alert) {
+            alert = document.createElement('small');
+            alert.className = 'date-passee-alert';
+            alert.style.cssText = 'display: block; margin-top: 0.5rem; padding: 0.5rem; background: #fee2e2; border: 1px solid #fecaca; border-radius: 6px; color: #991b1b; font-size: 0.8rem;';
+            alert.textContent = '⚠️ Attention : date dans le passé';
+            parent.appendChild(alert);
+          }
+        } else {
+          // Supprimer l'alerte si elle existe
+          const alert = this.parentElement.querySelector('.date-passee-alert');
+          if (alert) alert.remove();
+        }
+      });
+    });
+  });
+  </script>
+
+  {% endif %}
+  <!-- ========================================
+      FIN SECTION DEVIS
+      ======================================== -->
+
 
 <!-- ✅ SCRIPT DE SYNCHRONISATION (DÉPLACÉ ICI POUR ÊTRE SÛR QU'IL S'EXÉCUTE) -->
 <script>

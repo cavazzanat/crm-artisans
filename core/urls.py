@@ -15,7 +15,7 @@ urlpatterns = [
     path('operations/<int:operation_id>/duplicate/', views.operation_duplicate, name='operation_duplicate'),
     
     # Documents PDF
-    path('operations/<int:operation_id>/devis/pdf/', views.telecharger_devis_pdf, name='telecharger_devis_pdf'),
+    path('devis/<int:devis_id>/pdf/', views.telecharger_devis_pdf, name='telecharger_devis_pdf'),
     path('factures/<int:echeance_id>/pdf/', views.telecharger_facture_pdf, name='telecharger_facture_pdf'),
     
     # Clients
