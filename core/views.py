@@ -354,54 +354,55 @@ def operations_list(request):
 
     recherche = request.GET.get('recherche', '')
     
-    # Filtrage selon le filtre actif
+    # ✅ NOUVEAU
     if filtre == 'brouillon':
-        # ✅ UTILISER LA PROPRIÉTÉ du modèle
-        operations = operations.filter(avec_devis=True, numero_devis__isnull=True)
+        # Opérations qui ont au moins 1 devis en brouillon
+        from django.db.models import Exists, OuterRef
+        operations = operations.filter(
+            avec_devis=True
+        ).filter(
+            Exists(Devis.objects.filter(operation=OuterRef('pk'), statut='brouillon'))
+        )
 
+    # ✅ NOUVEAU
     elif filtre == 'genere_non_envoye':
-        # ✅ UTILISER LA PROPRIÉTÉ du modèle
-        operations = operations.filter(numero_devis__isnull=False, devis_date_envoi__isnull=True)
-
-    elif filtre == 'devis_en_attente':
-        # ✅ Devis envoyés + en attente MAIS non expirés
-        operations_en_attente_ids = []
-        operations_candidats = operations.filter(
-            devis_date_envoi__isnull=False, 
-            devis_statut='en_attente'
+        # Opérations qui ont au moins 1 devis envoyé sans date d'envoi
+        operations = operations.filter(
+            avec_devis=True
+        ).filter(
+            Exists(Devis.objects.filter(operation=OuterRef('pk'), statut='envoye', date_envoi__isnull=True))
         )
         
-        for op in operations_candidats:
-            # Vérifier si expiré
-            if op.devis_validite_jours:
-                date_limite = op.devis_date_envoi + timedelta(days=op.devis_validite_jours)
-                
-                # ✅ SEULEMENT si NON expiré
-                if date_limite >= timezone.now().date():
+    # ✅ NOUVEAU
+    elif filtre == 'devis_en_attente':
+        # Opérations qui ont au moins 1 devis envoyé et en attente (non expiré)
+        operations_en_attente_ids = []
+        
+        for op in operations.filter(avec_devis=True):
+            devis_en_attente = op.devis_set.filter(statut='envoye', date_envoi__isnull=False)
+            
+            for devis in devis_en_attente:
+                if devis.date_limite and devis.date_limite >= timezone.now().date():
                     operations_en_attente_ids.append(op.id)
-            else:
-                # Pas de date de validité = toujours valide
-                operations_en_attente_ids.append(op.id)
+                    break
+                elif not devis.date_limite:
+                    operations_en_attente_ids.append(op.id)
+                    break
         
         operations = operations.filter(id__in=operations_en_attente_ids)
 
+    # ✅ NOUVEAU
     elif filtre == 'expire':
-        # ✅ CORRECTION : Utiliser la méthode correcte avec date_limit
-        
+        # Opérations qui ont au moins 1 devis expiré
         operations_expire_ids = []
-        operations_candidats = operations.filter(
-            devis_date_envoi__isnull=False,
-            devis_statut='en_attente',
-            devis_validite_jours__isnull=False
-        )
         
-        for op in operations_candidats:
-            # Calculer la date limite
-            date_limite = op.devis_date_envoi + timedelta(days=op.devis_validite_jours)
+        for op in operations.filter(avec_devis=True):
+            devis_envoyes = op.devis_set.filter(statut='envoye', date_envoi__isnull=False)
             
-            # Vérifier si expiré
-            if date_limite < timezone.now().date():
-                operations_expire_ids.append(op.id)
+            for devis in devis_envoyes:
+                if devis.est_expire_display:
+                    operations_expire_ids.append(op.id)
+                    break
         
         operations = operations.filter(id__in=operations_expire_ids)
 
@@ -492,40 +493,26 @@ def operations_list(request):
         statut='brouillon'
     ).count()
 
-    # 2️⃣ GÉNÉRÉ MAIS NON ENVOYÉ
-    nb_devis_genere_non_envoye = Operation.objects.filter(
-        user=request.user,
-        numero_devis__isnull=False,
-        devis_date_envoi__isnull=True
+    # ✅ NOUVEAU
+    nb_devis_genere_non_envoye = Devis.objects.filter(
+        operation__user=request.user,
+        statut='envoye',
+        date_envoi__isnull=True
     ).count()
 
-    # ✅ 3️⃣ CALCULER D'ABORD LES EXPIRÉS (avant de les utiliser)
-    operations_avec_devis = Operation.objects.filter(
-        user=request.user,
-        devis_date_envoi__isnull=False,
-        devis_statut='en_attente',
-        devis_validite_jours__isnull=False
-    )
+    # ✅ NOUVEAU (version simple)
+    nb_devis_expire = 0
+    for op in Operation.objects.filter(user=request.user, avec_devis=True):
+        for devis in op.devis_set.filter(statut='envoye'):
+            if devis.est_expire_display:
+                nb_devis_expire += 1
 
-    operations_expire_ids = []
-    today = timezone.now().date()
-
-    for op in operations_avec_devis:
-        if op.devis_validite_jours:
-            date_limite = op.devis_date_envoi + timedelta(days=op.devis_validite_jours)
-            if date_limite < today:
-                operations_expire_ids.append(op.id)
-
-    nb_devis_expire = len(operations_expire_ids)
-
-    # ✅ 4️⃣ MAINTENANT on peut calculer EN ATTENTE (en excluant les expirés)
-    nb_devis_en_attente = Operation.objects.filter(
-        user=request.user,
-        devis_date_envoi__isnull=False,
-        devis_statut='en_attente'
-    ).exclude(
-        id__in=operations_expire_ids  # ← Maintenant operations_expire_ids existe déjà !
-    ).count()
+    # ✅ NOUVEAU
+    nb_devis_en_attente = 0
+    for op in Operation.objects.filter(user=request.user, avec_devis=True):
+        for devis in op.devis_set.filter(statut='envoye', date_envoi__isnull=False):
+            if not devis.est_expire_display:
+                nb_devis_en_attente += 1
     
     # Options de cycle pour les boutons
     cycle_options = [
