@@ -1612,6 +1612,129 @@ def operation_detail(request, operation_id):
     return render(request, 'operations/detail.html', context)
 
 @login_required
+def ajax_add_ligne_devis(request, operation_id):
+    """Vue AJAX pour ajouter une ligne de devis sans recharger"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Méthode non autorisée'}, status=405)
+    
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'error': 'Requête non AJAX'}, status=400)
+    
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    
+    devis_id = request.POST.get('devis_id')
+    description = request.POST.get('description', '').strip()
+    quantite_str = request.POST.get('quantite', '1').strip()
+    unite = request.POST.get('unite', 'forfait')
+    prix_unitaire_str = request.POST.get('prix_unitaire_ht', '').strip()
+    taux_tva_str = request.POST.get('taux_tva', '10').strip()
+    
+    if not (devis_id and description and prix_unitaire_str):
+        return JsonResponse({'success': False, 'error': 'Champs obligatoires manquants'}, status=400)
+    
+    try:
+        devis = Devis.objects.get(id=devis_id, operation=operation)
+        
+        if devis.est_verrouille:
+            return JsonResponse({'success': False, 'error': 'Devis verrouillé'}, status=403)
+        
+        quantite = Decimal(quantite_str)
+        prix_unitaire_ht = Decimal(prix_unitaire_str)
+        taux_tva = Decimal(taux_tva_str)
+        
+        dernier_ordre = devis.lignes.aggregate(max_ordre=Max('ordre'))['max_ordre'] or 0
+        
+        ligne = LigneDevis.objects.create(
+            devis=devis,
+            description=description,
+            quantite=quantite,
+            unite=unite,
+            prix_unitaire_ht=prix_unitaire_ht,
+            taux_tva=taux_tva,
+            ordre=dernier_ordre + 1
+        )
+        
+        HistoriqueOperation.objects.create(
+            operation=operation,
+            action=f"➕ Ligne ajoutée au devis {devis.numero_devis} : {description}",
+            utilisateur=request.user
+        )
+        
+        devis.refresh_from_db()
+        
+        return JsonResponse({
+            'success': True,
+            'ligne': {
+                'id': ligne.id,
+                'description': ligne.description,
+                'quantite': float(ligne.quantite),
+                'unite': ligne.unite,
+                'unite_display': ligne.get_unite_display(),
+                'prix_unitaire_ht': float(ligne.prix_unitaire_ht),
+                'taux_tva': float(ligne.taux_tva),
+                'montant': float(ligne.montant)
+            },
+            'totaux': {
+                'sous_total_ht': float(devis.sous_total_ht),
+                'total_tva': float(devis.total_tva),
+                'total_ttc': float(devis.total_ttc)
+            }
+        })
+        
+    except Devis.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Devis introuvable'}, status=404)
+    except ValueError as e:
+        return JsonResponse({'success': False, 'error': f'Données invalides: {str(e)}'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
+def ajax_delete_ligne_devis(request, operation_id):
+    """Vue AJAX pour supprimer une ligne de devis"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Méthode non autorisée'}, status=405)
+    
+    if not request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'success': False, 'error': 'Requête non AJAX'}, status=400)
+    
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    ligne_id = request.POST.get('ligne_id')
+    
+    try:
+        ligne = LigneDevis.objects.get(id=ligne_id, devis__operation=operation)
+        devis = ligne.devis
+        
+        if devis.est_verrouille:
+            return JsonResponse({'success': False, 'error': 'Devis verrouillé'}, status=403)
+        
+        description = ligne.description
+        ligne.delete()
+        
+        HistoriqueOperation.objects.create(
+            operation=operation,
+            action=f"🗑️ Ligne supprimée : {description}",
+            utilisateur=request.user
+        )
+        
+        devis.refresh_from_db()
+        
+        return JsonResponse({
+            'success': True,
+            'totaux': {
+                'sous_total_ht': float(devis.sous_total_ht),
+                'total_tva': float(devis.total_tva),
+                'total_ttc': float(devis.total_ttc)
+            }
+        })
+        
+    except LigneDevis.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Ligne introuvable'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@login_required
 def operation_delete(request, operation_id):
     """Suppression d'une opération avec ses données liées"""
     operation = get_object_or_404(Operation, id=operation_id, user=request.user)

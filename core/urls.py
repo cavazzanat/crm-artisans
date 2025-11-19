@@ -32,6 +32,9 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='/login/'), name='logout'),
     path('register/', views.register, name='register'),
     
+    path('operations/<int:operation_id>/ajax/add-ligne-devis/', views.ajax_add_ligne_devis, name='ajax_add_ligne_devis'),
+    path('operations/<int:operation_id>/ajax/delete-ligne-devis/', views.ajax_delete_ligne_devis, name='ajax_delete_ligne_devis'),
+    
     # Utilitaires
     path('run-migration/', views.run_migration, name='run_migration'),
 ]

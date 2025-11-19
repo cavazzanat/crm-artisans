@@ -734,9 +734,9 @@
             <h4 style="margin: 0 0 1rem 0; color: var(--text); font-size: 1rem; font-weight: 600;">Lignes du devis</h4>
             
             <!-- Lignes sous forme de liste compacte -->
-            <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+            <div style="border: 1px solid var(--border); border-radius: 8px; overflow: hidden;" id="lignes-container-{{ devis.id }}">
               {% for ligne in devis.lignes_list %}
-              <div style="display: grid; grid-template-columns: 1fr 80px 100px 120px 80px 120px {% if devis.statut == 'brouillon' %}40px{% endif %}; gap: 0.75rem; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border); background: {% cycle 'white' '#f9fafb' %};">
+              <div style="display: grid; grid-template-columns: 1fr 80px 100px 120px 80px 120px 40px; gap: 0.75rem; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border); background: {% cycle 'white' '#f9fafb' %};">
                 <div style="font-size: 0.9rem; color: var(--text);">{{ ligne.description }}</div>
                 <div style="text-align: center; font-size: 0.85rem;">{{ ligne.quantite|floatformat:"-2" }} {{ ligne.get_unite_display }}</div>
                 <div style="text-align: right; font-weight: 600; font-size: 0.85rem;">{{ ligne.prix_unitaire_ht|floatformat:2 }} €</div>
@@ -744,12 +744,17 @@
                 <div style="text-align: right; font-weight: 600; font-size: 0.9rem; color: var(--primary);">{{ ligne.montant|floatformat:2 }} €</div>
                 
                 {% if devis.statut == 'brouillon' %}
-                <form method="POST" style="display:inline; margin: 0;" onsubmit="return confirm('Supprimer cette ligne ?')">
-                  {% csrf_token %}
-                  <input type="hidden" name="action" value="delete_ligne_devis">
-                  <input type="hidden" name="ligne_id" value="{{ ligne.id }}">
-                  <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin: 0;">×</button>
-                </form>
+                  <form 
+                    class="form-delete-ligne-ajax" 
+                    data-ligne-id="{{ ligne.id }}"
+                    data-devis-id="{{ devis.id }}"
+                    data-operation-id="{{ operation.id }}"
+                    style="display:inline; margin: 0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin: 0;">×</button>
+                  </form>
+                {% else %}
+                  <div></div> <!-- Colonne vide pour l'alignement -->
                 {% endif %}
               </div>
               {% endfor %}
@@ -758,15 +763,15 @@
               <div style="background: #f8fafc; padding: 1rem; border-top: 2px solid var(--border);">
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                   <span style="font-weight: 600; font-size: 0.9rem;">Sous-total HT</span>
-                  <span style="font-weight: 700; font-size: 1rem;">{{ devis.sous_total_ht|floatformat:2 }} €</span>
+                  <span class="sous-total-ht" style="font-weight: 700; font-size: 1rem;">{{ devis.sous_total_ht|floatformat:2 }} €</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
                   <span style="font-weight: 600; font-size: 0.9rem; color: var(--muted);">TVA</span>
-                  <span style="font-weight: 600; font-size: 0.9rem; color: var(--muted);">{{ devis.total_tva|floatformat:2 }} €</span>
+                  <span class="total-tva" style="font-weight: 600; font-size: 0.9rem; color: var(--muted);">{{ devis.total_tva|floatformat:2 }} €</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding-top: 0.5rem; border-top: 2px solid var(--primary);">
                   <span style="font-weight: 700; font-size: 1.1rem;">TOTAL TTC</span>
-                  <span style="font-weight: 700; font-size: 1.3rem; color: var(--primary);">{{ devis.total_ttc|floatformat:2 }} €</span>
+                  <span class="total-ttc" style="font-weight: 700; font-size: 1.3rem; color: var(--primary);">{{ devis.total_ttc|floatformat:2 }} €</span>
                 </div>
               </div>
             </div>
@@ -787,12 +792,15 @@
           {% if devis.statut == 'brouillon' %}
           <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
             <h5 style="margin: 0 0 0.75rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">+ Ajouter une ligne</h5>
-            <form method="POST" style="display: grid; grid-template-columns: 2fr 80px 120px 120px 100px 80px; gap: 0.5rem; align-items: end;">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="add_ligne_devis">
-              <input type="hidden" name="devis_id" value="{{ devis.id }}">
+            <form 
+              class="form-add-ligne-ajax"
+              data-devis-id="{{ devis.id }}"
+              data-operation-id="{{ operation.id }}"
+              style="display: grid; grid-template-columns: 2fr 80px 120px 120px 100px 80px; gap: 0.5rem; align-items: end;">
               
-              <input type="text" name="description" class="input" placeholder="Description" style="margin: 0; font-size: 0.9rem;" required>
+              {% csrf_token %}
+              
+              <input type="text" name="description" class="input input-description" placeholder="Description" style="margin: 0; font-size: 0.9rem;" required>
               <input type="number" name="quantite" class="input" value="1" step="0.01" min="0.01" style="margin: 0; text-align: center; font-size: 0.9rem;" required>
               <select name="unite" class="select" style="margin: 0; font-size: 0.85rem;">
                 <option value="forfait" selected>Forfait</option>
@@ -804,7 +812,7 @@
               </select>
               <input type="number" name="prix_unitaire_ht" class="input" placeholder="Prix HT" step="0.01" min="0.01" style="margin: 0; text-align: right; font-size: 0.9rem;" required>
               <input type="number" name="taux_tva" class="input" value="10" step="0.01" min="0" style="margin: 0; text-align: center; font-size: 0.9rem;" required>
-              <button type="submit" class="btn success" style="margin: 0; padding: 0.5rem; font-size: 0.9rem;">+ Ajouter</button>
+              <button type="submit" class="btn success btn-add-ligne" style="margin: 0; padding: 0.5rem; font-size: 0.9rem;">+ Ajouter</button>
             </form>
           </div>
           {% endif %}
@@ -2666,5 +2674,203 @@ function validateDevisGeneration() {
   return true;
 }
 </script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// GESTION AJAX DES LIGNES DE DEVIS (SANS RECHARGEMENT)
+// ════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', function() {
+  
+  function getCsrfToken() {
+    return document.querySelector('[name="csrfmiddlewaretoken"]')?.value || '';
+  }
+  // ──────────────────────────────────────────────────────────
+  // AJOUT DE LIGNE EN AJAX
+  // ──────────────────────────────────────────────────────────
+  document.querySelectorAll('.form-add-ligne-ajax').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const devisId = this.dataset.devisId;
+      const operationId = this.dataset.operationId;
+      const submitBtn = this.querySelector('.btn-add-ligne');
+      const btnOriginalText = submitBtn.innerHTML;
+      
+      const formData = new FormData(this);
+      formData.append('devis_id', devisId);
+      
+      // Désactiver le bouton
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '⏳';
+      
+      // Envoyer en AJAX
+      fetch(`/operations/${operationId}/ajax/add-ligne-devis/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // ✅ Ajouter la ligne dans le DOM
+          ajouterLigneDansContainer(devisId, data.ligne, operationId);
+          
+          // Mettre à jour les totaux
+          updateTotaux(devisId, data.totaux);
+          
+          // Réinitialiser le formulaire
+          this.reset();
+          this.querySelector('[name="quantite"]').value = '1';
+          this.querySelector('[name="taux_tva"]').value = '10';
+          this.querySelector('.input-description').focus();
+          
+          // Toast
+          showToast('✅ Ligne ajoutée', 'success', 2000);
+          
+        } else {
+          showToast(`❌ ${data.error}`, 'error', 3000);
+        }
+      })
+      .catch(error => {
+        console.error('Erreur:', error);
+        showToast('❌ Erreur réseau', 'error', 3000);
+      })
+      .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = btnOriginalText;
+      });
+    });
+  });
+  
+  // ──────────────────────────────────────────────────────────
+  // FONCTION : Ajouter ligne dans le container
+  // ──────────────────────────────────────────────────────────
+  function ajouterLigneDansContainer(devisId, ligne, operationId) {
+    const container = document.getElementById(`lignes-container-${devisId}`);
+    if (!container) return;
+    
+    // Créer la div de la ligne
+    const ligneDiv = document.createElement('div');
+    ligneDiv.style.cssText = 'display: grid; grid-template-columns: 1fr 80px 100px 120px 80px 120px 40px; gap: 0.75rem; align-items: center; padding: 0.75rem; border-bottom: 1px solid var(--border); background: white;';
+    ligneDiv.setAttribute('data-ligne-id', ligne.id);
+    
+    ligneDiv.innerHTML = `
+      <div style="font-size: 0.9rem; color: var(--text);">${ligne.description}</div>
+      <div style="text-align: center; font-size: 0.85rem;">${ligne.quantite.toFixed(2)} ${ligne.unite_display}</div>
+      <div style="text-align: right; font-weight: 600; font-size: 0.85rem;">${ligne.prix_unitaire_ht.toFixed(2)} €</div>
+      <div style="text-align: center; font-size: 0.85rem;">TVA ${ligne.taux_tva.toFixed(0)}%</div>
+      <div style="text-align: right; font-weight: 600; font-size: 0.9rem; color: var(--primary);">${ligne.montant.toFixed(2)} €</div>
+      <div></div>
+      <form class="form-delete-ligne-ajax" data-ligne-id="${ligne.id}" data-devis-id="${devisId}" data-operation-id="${operationId}" style="display:inline; margin: 0;">
+        <input type="hidden" name="csrfmiddlewaretoken" value="${getCsrfToken()}">
+        <button type="submit" class="btn danger sm" style="padding: 0.3rem 0.6rem; font-size: 0.85rem; margin: 0;">×</button>
+      </form>
+    `;
+    
+    // Trouver la div des totaux et insérer avant
+    const totauxDiv = container.querySelector('[style*="background: #f8fafc"]');
+    if (totauxDiv) {
+      container.insertBefore(ligneDiv, totauxDiv);
+    } else {
+      container.appendChild(ligneDiv);
+    }
+    
+    // Animation
+    ligneDiv.style.animation = 'slideIn 0.3s ease';
+    
+    // Attacher le listener de suppression
+    attachDeleteListener(ligneDiv.querySelector('.form-delete-ligne-ajax'));
+  }
+  
+  // ──────────────────────────────────────────────────────────
+  // SUPPRESSION EN AJAX
+  // ──────────────────────────────────────────────────────────
+  function attachDeleteListener(form) {
+    if (!form) return;
+    
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      if (!confirm('Supprimer cette ligne ?')) return;
+      
+      const ligneId = this.dataset.ligneId;
+      const devisId = this.dataset.devisId;
+      const operationId = this.dataset.operationId;
+      
+      const formData = new FormData();
+      formData.append('csrfmiddlewaretoken', getCsrfToken());
+      formData.append('ligne_id', ligneId);
+      
+      fetch(`/operations/${operationId}/ajax/delete-ligne-devis/`, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Supprimer du DOM
+          const ligneDiv = document.querySelector(`[data-ligne-id="${ligneId}"]`);
+          if (ligneDiv) {
+            ligneDiv.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => ligneDiv.remove(), 300);
+          }
+          
+          // Mettre à jour totaux
+          updateTotaux(devisId, data.totaux);
+          
+          showToast('✅ Ligne supprimée', 'success', 2000);
+        } else {
+          showToast(`❌ ${data.error}`, 'error', 3000);
+        }
+      })
+      .catch(error => {
+        console.error('Erreur:', error);
+        showToast('❌ Erreur réseau', 'error', 3000);
+      });
+    });
+  }
+  
+  // Attacher aux formulaires existants
+  document.querySelectorAll('.form-delete-ligne-ajax').forEach(attachDeleteListener);
+  
+  // ──────────────────────────────────────────────────────────
+  // UTILITAIRES
+  // ──────────────────────────────────────────────────────────
+  function updateTotaux(devisId, totaux) {
+    const container = document.getElementById(`devis-body-${devisId}`);
+    if (!container) return;
+    
+    const stElement = container.querySelector('.sous-total-ht');
+    if (stElement) stElement.textContent = `${totaux.sous_total_ht.toFixed(2)} €`;
+    
+    const tvaElement = container.querySelector('.total-tva');
+    if (tvaElement) tvaElement.textContent = `${totaux.total_tva.toFixed(2)} €`;
+    
+    const ttcElements = container.querySelectorAll('.total-ttc');
+    ttcElements.forEach(el => el.textContent = `${totaux.total_ttc.toFixed(2)} €`);
+  }
+  
+});
+
+// Animations
+const styleAnimations = document.createElement('style');
+styleAnimations.textContent = `
+  @keyframes slideIn {
+    from { transform: translateX(30px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(-30px); opacity: 0; }
+  }
+`;
+document.head.appendChild(styleAnimations);
+</script>
+
 </body>
 </html>
