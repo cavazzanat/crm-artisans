@@ -684,13 +684,18 @@
             <span style="padding: 0.3rem 0.75rem; background: rgba(148,163,184,.1); color: var(--muted); border: 1px solid rgba(148,163,184,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
               📝 Brouillon
             </span>
+
+            {% elif devis.statut == 'pret' %}
+            <span style="padding: 0.3rem 0.75rem; background: rgba(59,130,246,.1); color: #3b82f6; border: 1px solid rgba(59,130,246,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+              📄 Prêt (à envoyer)
+            </span>
             
             {% elif devis.statut == 'envoye' %}
-            <span style="padding: 0.3rem 0.75rem; background: rgba(59,130,246,.1); color: #3b82f6; border: 1px solid rgba(59,130,246,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
+            <span style="padding: 0.3rem 0.75rem; background: rgba(249,115,22,.1); color: #f97316; border: 1px solid rgba(249,115,22,.2); border-radius: 12px; font-size: 0.85rem; font-weight: 600;">
               {% if devis.est_expire_display %}
               ⚠️ Expiré
               {% else %}
-              📤 Envoyé
+              📤 Envoyé (en attente)
               {% endif %}
             </span>
             
@@ -775,7 +780,34 @@
             {% endif %}
           </div>
           {% endif %}
-          
+          <!-- ──────────────────────────────────────────
+    NOTES ET VALIDITÉ (ÉDITABLE EN BROUILLON)
+    ────────────────────────────────────────── -->
+          {% if devis.statut == 'brouillon' %}
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
+            <h5 style="margin: 0 0 0.75rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">📝 Notes et validité</h5>
+            <form method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="update_notes_validite_devis">
+              <input type="hidden" name="devis_id" value="{{ devis.id }}">
+              
+              <!-- Notes -->
+              <div style="margin-bottom: 0.75rem;">
+                <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Notes (optionnel)</label>
+                <textarea name="notes" class="input" rows="3" placeholder="Notes qui apparaîtront sur le devis..." style="margin: 0;">{{ devis.notes }}</textarea>
+              </div>
+              
+              <!-- Validité -->
+              <div style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; align-items: end;">
+                <div>
+                  <label style="display: block; margin-bottom: 0.25rem; color: var(--muted); font-size: 0.8rem; font-weight: 600;">Validité (jours)</label>
+                  <input type="number" name="validite_jours" class="input" value="{{ devis.validite_jours }}" min="1" max="365" style="margin: 0; text-align: center;">
+                </div>
+                <button type="submit" class="btn" style="margin: 0;">💾 Enregistrer</button>
+              </div>
+            </form>
+          </div>
+          {% endif %}
           <!-- ──────────────────────────────────────────
               FORMULAIRE AJOUT LIGNE (inline compact)
               ────────────────────────────────────────── -->
@@ -819,7 +851,7 @@
                 <input type="hidden" name="action" value="generer_pdf_devis">
                 <input type="hidden" name="devis_id" value="{{ devis.id }}">
                 <button type="submit" class="btn primary" style="width: 100%; padding: 0.75rem;">
-                  📄 Générer le PDF
+                  📄 Marquer comme prêt
                 </button>
               </form>
               
@@ -832,6 +864,48 @@
                 </button>
               </form>
             </div>
+
+            {% elif devis.statut == 'pret' %}
+            <!-- ════════════════════════════════════
+                PRÊT : Télécharger + Envoyer + Supprimer
+                ════════════════════════════════════ -->
+            <div style="background: #dbeafe; border: 2px solid #3b82f6; border-radius: 10px; padding: 1.5rem;">
+              
+              <!-- Télécharger PDF -->
+              <div style="margin-bottom: 1rem;">
+                <a href="{% url 'telecharger_devis_pdf' devis.id %}" class="btn primary" style="width: 100%; text-decoration: none; text-align: center; padding: 0.75rem;">
+                  📥 Télécharger le PDF
+                </a>
+              </div>
+              
+              <!-- Enregistrer date d'envoi -->
+              <div style="background: white; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: #1e40af; font-size: 0.9rem; font-weight: 600;">
+                  📅 Date d'envoi au client
+                </label>
+                <form method="POST" style="display: grid; grid-template-columns: 1fr auto; gap: 0.5rem;">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="enregistrer_date_envoi_devis">
+                  <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                  <input type="date" name="date_envoi" class="input" value="{{ now|date:'Y-m-d' }}" style="margin: 0;" required>
+                  <button type="submit" class="btn success" style="margin: 0; white-space: nowrap;">✓ Marquer comme envoyé</button>
+                </form>
+                <small style="display: block; margin-top: 0.5rem; color: #1e40af; font-size: 0.8rem;">
+                  ⏳ Validité : {{ devis.validite_jours }} jours
+                </small>
+              </div>
+              
+              <!-- Supprimer -->
+              <form method="POST" onsubmit="return confirm('Supprimer ce devis ?')">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="supprimer_devis">
+                <input type="hidden" name="devis_id" value="{{ devis.id }}">
+                <button type="submit" class="btn danger" style="width: 100%; padding: 0.75rem;">
+                  🗑️ Supprimer ce devis
+                </button>
+              </form>
+            </div>
+
             
             {% elif devis.statut == 'envoye' %}
             <!-- ════════════════════════════════════
@@ -1089,52 +1163,6 @@
       ======================================== -->
 
 
-<!-- ✅ SCRIPT DE SYNCHRONISATION (DÉPLACÉ ICI POUR ÊTRE SÛR QU'IL S'EXÉCUTE) -->
-<script>
-(function() {
-  // Attendre que tout le DOM soit chargé
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initSyncDevis);
-  } else {
-    initSyncDevis();
-  }
-  
-function initSyncDevis() {
-  const formGenererDevis = document.getElementById('form-generer-devis');
-  
-  if (formGenererDevis) {
-    console.log('✅ Formulaire trouvé, installation du listener...');
-    
-    formGenererDevis.addEventListener('submit', function(e) {
-      console.log('📤 Formulaire soumis - Synchronisation en cours...');
-      
-      // ✅ SYNCHRONISATION FINALE (par sécurité)
-      syncNotesValidite();
-      
-      // 1️⃣ Copier les NOTES
-      const notesTemp = document.getElementById('devis-notes-temp');
-      const notesHidden = document.getElementById('devis-notes-hidden');
-      
-      if (notesTemp && notesHidden) {
-        notesHidden.value = notesTemp.value;
-        console.log('✅ Notes copiées:', notesTemp.value);
-      }
-      
-      // 2️⃣ Copier la VALIDITÉ
-      const validiteTemp = document.getElementById('devis-validite-temp');
-      const validiteHidden = document.getElementById('devis-validite-hidden');
-      
-      if (validiteTemp && validiteHidden) {
-        validiteHidden.value = validiteTemp.value;
-        console.log('✅ Validité copiée:', validiteTemp.value);
-      }
-    });
-    
-    console.log('✅ Listener installé avec succès');
-  }
-}
-})();
-</script>
 
 <!-- ========================================
     LIGNES D'INTERVENTION

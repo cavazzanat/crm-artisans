@@ -218,6 +218,7 @@ class Operation(models.Model):
 class Devis(models.Model):
     STATUTS_DEVIS = [
         ('brouillon', 'Brouillon'),
+        ('pret', 'Prêt (PDF généré)'),
         ('envoye', 'Envoyé'),
         ('accepte', 'Accepté'),
         ('refuse', 'Refusé'),

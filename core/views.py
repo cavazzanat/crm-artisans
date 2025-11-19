@@ -690,6 +690,33 @@ def operation_detail(request, operation_id):
                 messages.error(request, "❌ Ligne introuvable")
             
             return redirect('operation_detail', operation_id=operation.id)
+    
+        #notes et validité
+        elif action == 'update_notes_validite_devis':
+            devis_id = request.POST.get('devis_id')
+            notes = request.POST.get('notes', '').strip()
+            validite_jours_str = request.POST.get('validite_jours', '30')
+            
+            try:
+                devis = Devis.objects.get(id=devis_id, operation=operation)
+                
+                # Vérifier que le devis est en brouillon
+                if devis.statut != 'brouillon':
+                    messages.error(request, "❌ Impossible de modifier un devis déjà généré.")
+                    return redirect('operation_detail', operation_id=operation.id)
+                
+                devis.notes = notes
+                devis.validite_jours = int(validite_jours_str)
+                devis.save()
+                
+                messages.success(request, "✅ Notes et validité enregistrées")
+                
+            except Devis.DoesNotExist:
+                messages.error(request, "❌ Devis introuvable")
+            except ValueError:
+                messages.error(request, "❌ Validité invalide")
+            
+            return redirect('operation_detail', operation_id=operation.id)
         
         # ========================================
         # ACTION : GÉNÉRER LE PDF DU DEVIS
@@ -705,19 +732,19 @@ def operation_detail(request, operation_id):
                     messages.warning(request, "⚠️ Le devis ne contient aucune ligne.")
                     return redirect('operation_detail', operation_id=operation.id)
                 
-                # Changer le statut : brouillon → envoyé
+                # ✅ NOUVEAU : brouillon → prêt (pas encore envoyé)
                 if devis.statut == 'brouillon':
-                    devis.statut = 'envoye'
+                    devis.statut = 'pret'
                     devis.save()
                     
                     # Historique
                     HistoriqueOperation.objects.create(
                         operation=operation,
-                        action=f"📄 Devis {devis.numero_devis} généré (PDF) - Montant : {devis.total_ttc}€ TTC",
+                        action=f"📄 Devis {devis.numero_devis} marqué comme prêt (PDF généré) - Montant : {devis.total_ttc}€ TTC",
                         utilisateur=request.user
                     )
                     
-                    messages.success(request, f"✅ Devis {devis.numero_devis} généré ! Statut : Envoyé")
+                    messages.success(request, f"✅ Devis {devis.numero_devis} marqué comme prêt ! Vous pouvez maintenant l'envoyer au client.")
                 else:
                     messages.info(request, f"ℹ️ Le devis {devis.numero_devis} était déjà généré.")
                 
@@ -738,16 +765,18 @@ def operation_detail(request, operation_id):
                 
                 if date_envoi_str:
                     devis.date_envoi = datetime.strptime(date_envoi_str, '%Y-%m-%d').date()
+                    # ✅ CHANGEMENT : Passer en statut "envoyé" maintenant
+                    devis.statut = 'envoye'
                     devis.save()
                     
                     # Historique
                     HistoriqueOperation.objects.create(
                         operation=operation,
-                        action=f"📅 Date d'envoi enregistrée pour {devis.numero_devis} : {devis.date_envoi.strftime('%d/%m/%Y')}",
+                        action=f"📅 Date d'envoi enregistrée pour {devis.numero_devis} : {devis.date_envoi.strftime('%d/%m/%Y')} - Statut : Envoyé",
                         utilisateur=request.user
                     )
                     
-                    messages.success(request, f"✅ Date d'envoi enregistrée : {devis.date_envoi.strftime('%d/%m/%Y')}")
+                    messages.success(request, f"✅ Date d'envoi enregistrée : {devis.date_envoi.strftime('%d/%m/%Y')} - Devis marqué comme envoyé")
                 else:
                     messages.error(request, "⚠️ Veuillez renseigner une date")
                 
