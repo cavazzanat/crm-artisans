@@ -856,6 +856,25 @@
                 📄 Marquer comme prêt
               </button>
             </form>
+
+            <script>
+            // ✅ Copier les valeurs des champs visibles vers les champs cachés avant soumission
+            document.getElementById('form-marquer-pret-{{ devis.id }}').addEventListener('submit', function(e) {
+              // Trouver les champs dans la même section devis
+              const devisBody = document.getElementById('devis-body-{{ devis.id }}');
+              if (devisBody) {
+                const notesField = devisBody.querySelector('textarea[name="notes"]');
+                const validiteField = devisBody.querySelector('input[name="validite_jours"]');
+                
+                if (notesField) {
+                  document.getElementById('hidden-notes-{{ devis.id }}').value = notesField.value;
+                }
+                if (validiteField) {
+                  document.getElementById('hidden-validite-{{ devis.id }}').value = validiteField.value;
+                }
+              }
+            });
+            </script>
             
             <!-- Supprimer (formulaire séparé) -->
             <form method="POST" onsubmit="return confirm('Supprimer ce devis brouillon ?')">
