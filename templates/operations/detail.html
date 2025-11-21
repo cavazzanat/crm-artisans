@@ -824,94 +824,56 @@
             </form>
           </div>
           {% endif %}
-          
 
           {% if devis.statut == 'brouillon' %}
-            <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
-              <h5 style="margin: 0 0 1rem 0; color: var(--text); font-size: 0.9rem; font-weight: 600;">📝 Notes et validité</h5>
+          <!-- ══════════════════════════════════════════
+              NOTES, VALIDITÉ ET ACTIONS (TOUT INTÉGRÉ)
+              ══════════════════════════════════════════ -->
+          <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--border);">
+            
+            <form method="POST">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="generer_pdf_devis">
+              <input type="hidden" name="devis_id" value="{{ devis.id }}">
               
-              <form method="POST">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="update_notes_validite_devis">
-                <input type="hidden" name="devis_id" value="{{ devis.id }}">
-                
-                <!-- ✅ TOUT SUR UNE LIGNE PROPRE -->
-                <div style="display: grid; grid-template-columns: 2fr 150px 120px; gap: 1rem; align-items: center;">
-                  
-                  <!-- Notes -->
-                  <div>
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--muted); font-size: 0.85rem; font-weight: 600;">
-                      💬 Notes (optionnel)
-                    </label>
-                    <textarea 
-                      name="notes" 
-                      class="input" 
-                      rows="2" 
-                      placeholder="Notes sur le devis..."
-                      style="margin: 0; resize: vertical;">{{ devis.notes }}</textarea>
-                  </div>
-                  
-                  <!-- Validité -->
-                  <div>
-                    <label style="display: block; margin-bottom: 0.5rem; color: var(--muted); font-size: 0.85rem; font-weight: 600;">
-                      ⏳ Validité
-                    </label>
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                      <input 
-                        type="number" 
-                        name="validite_jours" 
-                        class="input" 
-                        value="{{ devis.validite_jours }}" 
-                        min="1" 
-                        max="365" 
-                        style="width: 80px; text-align: center; margin: 0;">
-                      <span style="color: var(--muted); font-size: 0.85rem;">jours</span>
-                    </div>
-                  </div>
-                  
-                  <!-- Bouton -->
-                  <div style="align-self: end; padding-bottom: 0.25rem;">
-                    <button type="submit" class="btn success" style="width: 100%; margin: 0; padding: 0.65rem;">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="m5 12 4 4 10-10"/>
-                      </svg>
-                      Valider
-                    </button>
-                  </div>
-                  
+              <!-- Notes et Validité -->
+              <div style="display: grid; grid-template-columns: 2fr 150px; gap: 1rem; align-items: start; margin-bottom: 1rem;">
+                <div>
+                  <label style="display: block; margin-bottom: 0.5rem; color: var(--muted); font-size: 0.85rem; font-weight: 600;">💬 Notes (optionnel)</label>
+                  <textarea name="notes" class="input" rows="2" placeholder="Conditions particulières..." style="margin: 0; resize: vertical;">{{ devis.notes }}</textarea>
                 </div>
-              </form>
-            </div>
-            {% endif %}
+                <div>
+                  <label style="display: block; margin-bottom: 0.5rem; color: var(--muted); font-size: 0.85rem; font-weight: 600;">⏳ Validité</label>
+                  <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="number" name="validite_jours" class="input" value="{{ devis.validite_jours }}" min="1" max="365" style="width: 80px; text-align: center; margin: 0;">
+                    <span style="color: var(--muted); font-size: 0.85rem;">jours</span>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Bouton principal -->
+              <button type="submit" class="btn primary" style="width: 100%; padding: 0.75rem; margin-bottom: 0.5rem;">
+                📄 Marquer comme prêt
+              </button>
+            </form>
+            
+            <!-- Supprimer (formulaire séparé) -->
+            <form method="POST" onsubmit="return confirm('Supprimer ce devis brouillon ?')">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="supprimer_devis">
+              <input type="hidden" name="devis_id" value="{{ devis.id }}">
+              <button type="submit" class="btn danger" style="width: 100%; padding: 0.75rem;">🗑️ Supprimer ce brouillon</button>
+            </form>
+          </div>
+          {% endif %}
+          
 
+          
           <!-- ──────────────────────────────────────────
               ACTIONS SELON LE STATUT
               ────────────────────────────────────────── -->
           <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
             
-            {% if devis.statut == 'brouillon' %}
-            <!-- ════════════════════════════════════
-                BROUILLON : Générer + Supprimer
-                ════════════════════════════════════ -->
-            <div style="display: flex; gap: 0.75rem;">
-              <form method="POST" style="flex: 1;">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="generer_pdf_devis">
-                <input type="hidden" name="devis_id" value="{{ devis.id }}">
-                <button type="submit" class="btn primary" style="width: 100%; padding: 0.75rem;">
-                  📄 Marquer comme prêt
-                </button>
-              </form>
-              
-              <form method="POST" onsubmit="return confirm('Supprimer ce devis brouillon ?')">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="supprimer_devis">
-                <input type="hidden" name="devis_id" value="{{ devis.id }}">
-                <button type="submit" class="btn danger" style="padding: 0.75rem;">
-                  🗑️
-                </button>
-              </form>
-            </div>
 
             {% elif devis.statut == 'pret' %}
             <!-- ════════════════════════════════════
