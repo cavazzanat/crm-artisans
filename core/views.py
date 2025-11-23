@@ -255,23 +255,31 @@ def operations_list(request):
     # ========================================
     # CALCULS FINANCIERS (PÉRIODE)
     # ========================================
+    # Pour les calculs financiers (limité à la période)
     operations_periode = Operation.objects.filter(
         user=request.user,
         statut__in=['realise', 'paye'],
         date_realisation__gte=periode_start,
         date_realisation__lte=periode_end
     ).prefetch_related('echeances')
-    
+
+    # Pour détecter les paiements non planifiés (TOUTES les opérations réalisées)
+    operations_pour_paiements = Operation.objects.filter(
+        user=request.user,
+        statut__in=['realise', 'paye']
+    ).prefetch_related('echeances')
+
     ca_encaisse = 0
     ca_en_attente_total = 0
     ca_retard = 0
     ca_non_planifies = 0
     nb_paiements_retard = 0
     nb_operations_sans_paiement = 0
-    
+
     operations_avec_retards_ids = []
     operations_sans_echeances_ids = []
-    
+
+    # ✅ Boucle 1 : Calculs financiers sur la PÉRIODE
     for op in operations_periode:
         montant_total = op.montant_total
         
@@ -303,15 +311,24 @@ def operations_list(request):
             nb_paiements_retard += retards.count()
             operations_avec_retards_ids.append(op.id)
         
-        # Non planifiés
+        # Non planifiés (DANS la période uniquement) - pour le KPI CA
         reste_a_planifier = montant_total - total_planifie
         
         if reste_a_planifier > 0:
             ca_non_planifies += reste_a_planifier
-            nb_operations_sans_paiement += 1
-            operations_sans_echeances_ids.append(op.id)
-    
-    # Dans views.py, fonction operations_list, ligne ~180 environ
+
+    # ✅ Boucle 2 : Détecter TOUTES les opérations sans paiement complet (pour le filtre)
+    for op in operations_pour_paiements:
+        total_planifie = op.echeances.aggregate(
+            total=Sum('montant')
+        )['total'] or 0
+        
+        reste = op.montant_total - total_planifie
+        
+        if reste > 0:
+            if op.id not in operations_sans_echeances_ids:
+                operations_sans_echeances_ids.append(op.id)
+                nb_operations_sans_paiement += 1
 
     # ✅ CA Prévisionnel 30 jours - CORRECTION
     date_dans_30j = today + timedelta(days=30)
