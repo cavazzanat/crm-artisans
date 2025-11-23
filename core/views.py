@@ -2196,10 +2196,54 @@ def operation_create(request):
                     commentaires=commentaires,
                     avec_devis=False,
                     statut=statut_initial,
-                    date_prevue=date_prevue,
-                    date_realisation=date_realisation,
                     date_paiement=date_paiement
                 )
+                
+                # ✅ AJOUTER CE BLOC ICI (après ligne 217)
+                print(f"\n{'─'*80}")
+                print("CRÉATION PASSAGE OPÉRATION")
+                print(f"{'─'*80}")
+
+                # Créer le passage selon le statut
+                if statut_initial == 'a_planifier':
+                    # Passage vide (à planifier plus tard)
+                    PassageOperation.objects.create(
+                        operation=operation,
+                        date_prevue=None,
+                        realise=False
+                    )
+                    print(f"✓ Passage créé (à planifier)")
+
+                elif statut_initial == 'planifie':
+                    # Passage planifié avec date
+                    PassageOperation.objects.create(
+                        operation=operation,
+                        date_prevue=date_prevue,
+                        realise=False
+                    )
+                    print(f"✓ Passage créé (planifié) - date: {date_prevue}")
+
+                elif statut_initial == 'realise':
+                    # Passage réalisé avec date
+                    PassageOperation.objects.create(
+                        operation=operation,
+                        date_prevue=None,
+                        date_realisation=date_realisation,
+                        realise=True
+                    )
+                    print(f"✓ Passage créé (réalisé) - date: {date_realisation}")
+
+                elif statut_initial == 'paye':
+                    # Passage payé avec date
+                    PassageOperation.objects.create(
+                        operation=operation,
+                        date_prevue=None,
+                        date_realisation=date_realisation,
+                        realise=True
+                    )
+                    print(f"✓ Passage créé (payé) - date: {date_realisation}")
+
+                print(f"{'─'*80}\n")
                 
                 print(f"✓ Opération créée (DIRECTE)")
                 print(f"  ID: {operation.id}")
