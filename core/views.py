@@ -28,7 +28,8 @@ from .models import (
     Intervention, 
     HistoriqueOperation, 
     Echeance, 
-    ProfilEntreprise
+    ProfilEntreprise,
+    PassageOperation
 )
 
 from .fix_database import fix_client_constraint
