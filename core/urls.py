@@ -37,4 +37,16 @@ urlpatterns = [
     
     # Utilitaires
     path('run-migration/', views.run_migration, name='run_migration'),
+    
+    # ✅ ROUTES POUR INTERVENTIONS MULTIPLES
+    path('operation/<int:operation_id>/intervention/<int:intervention_id>/planifier/', 
+        views.planifier_intervention, name='planifier_intervention'),
+    path('operation/<int:operation_id>/intervention/<int:intervention_id>/marquer-realise/', 
+        views.marquer_realise, name='marquer_realise'),
+    path('operation/<int:operation_id>/intervention/<int:intervention_id>/commentaire/', 
+        views.ajouter_commentaire, name='ajouter_commentaire'),
+    path('operation/<int:operation_id>/intervention/<int:intervention_id>/supprimer/', 
+        views.supprimer_intervention, name='supprimer_intervention'),
+    path('operation/<int:operation_id>/intervention/creer/', 
+        views.creer_nouvelle_intervention, name='creer_nouvelle_intervention'),
 ]

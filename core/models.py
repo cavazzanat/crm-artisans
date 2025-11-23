@@ -51,11 +51,13 @@ class Operation(models.Model):
         ('en_attente_devis', 'En attente devis'),
         ('a_planifier', 'À planifier'),
         ('planifie', 'Planifié'),
+        ('en_cours', '🔵 En cours'),  # ✅ NOUVEAU STATUT
+        ('a_traiter', '🟠 À traiter'),  # ✅ NOUVEAU STATUT
         ('realise', 'Réalisé'),
         ('paye', 'Payé'),
         ('devis_refuse', 'Devis refusé / Opération annulée'),
     ]
-    
+        
     PLANNING_MODE_CHOICES = [
         ('a_planifier', 'À planifier'),
         ('replanifier', 'Replanifier'),
@@ -138,6 +140,8 @@ class Operation(models.Model):
         
         super().save(*args, **kwargs)
     
+    
+    
     # ========================================
     # PROPERTIES POUR MONTANT TOTAL
     # ========================================
@@ -210,7 +214,186 @@ class Operation(models.Model):
     def nombre_devis_acceptes(self):
         """Compte le nombre de devis acceptés"""
         return self.devis_set.filter(statut='accepte').count()
-
+class Operation(models.Model):
+    STATUTS = [
+        ('en_attente_devis', 'En attente devis'),
+        ('a_planifier', 'À planifier'),
+        ('planifie', 'Planifié'),
+        ('en_cours', '🔵 En cours'),
+        ('a_traiter', '🟠 À traiter'),
+        ('realise', 'Réalisé'),
+        ('paye', 'Payé'),
+        ('devis_refuse', 'Devis refusé / Opération annulée'),
+    ]
+    
+    PLANNING_MODE_CHOICES = [
+        ('a_planifier', 'À planifier'),
+        ('replanifier', 'Replanifier'),
+        ('deja_realise', 'Déjà réalisé'),
+    ]
+    
+    planning_mode = models.CharField(
+        max_length=20,
+        choices=PLANNING_MODE_CHOICES,
+        default='a_planifier',
+        verbose_name="Mode de planification"
+    )
+    
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    client = models.ForeignKey(Client, on_delete=models.CASCADE, related_name='operations')
+    id_operation = models.CharField(max_length=15, blank=True)
+    type_prestation = models.CharField(max_length=200)
+    adresse_intervention = models.TextField()
+    commentaires = models.TextField(blank=True, null=True, verbose_name="Commentaires / Notes")
+    
+    statut = models.CharField(max_length=20, choices=STATUTS, default='en_attente_devis')
+    date_creation = models.DateTimeField(auto_now_add=True)
+    date_modification = models.DateTimeField(auto_now=True)
+    
+    date_prevue = models.DateTimeField(
+        null=True, 
+        blank=True,
+        verbose_name="Date prévue d'intervention"
+    )
+    date_realisation = models.DateTimeField(
+        null=True, 
+        blank=True,
+        verbose_name="Date de réalisation"
+    )
+    date_paiement = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de paiement"
+    )
+    
+    avec_devis = models.BooleanField(
+        default=False,
+        verbose_name="Opération avec devis"
+    )
+    
+    mode_paiement = models.CharField(
+        max_length=20,
+        choices=[
+            ('comptant', 'Comptant'),
+            ('echelonne', 'Échelonné'),
+        ],
+        default='comptant',
+        verbose_name="Mode de paiement"
+    )
+    
+    class Meta:
+        ordering = ['-date_creation']
+    
+    def __str__(self):
+        return f"{self.id_operation} - {self.type_prestation}"
+    
+    def save(self, *args, **kwargs):
+        if not self.id_operation:
+            import uuid
+            unique_suffix = str(uuid.uuid4())[:6].upper()
+            self.id_operation = f"U{self.user.id}OP{unique_suffix}"
+        super().save(*args, **kwargs)
+    
+    @property
+    def montant_total(self):
+        """Calcule le montant total de l'opération"""
+        if self.avec_devis:
+            devis_acceptes = self.devis_set.filter(statut='accepte')
+            total = sum(devis.total_ttc for devis in devis_acceptes)
+            return Decimal(str(total))
+        else:
+            return self.total_ttc
+    
+    @property
+    def sous_total_ht(self):
+        """Sous-total HT"""
+        if self.avec_devis:
+            return Decimal('0.00')
+        total = self.interventions.aggregate(total=Sum('montant'))['total']
+        return total if total is not None else Decimal('0.00')
+    
+    @property
+    def total_tva(self):
+        """Total de la TVA"""
+        if self.avec_devis:
+            return Decimal('0.00')
+        total_tva = Decimal('0.00')
+        for intervention in self.interventions.all():
+            total_tva += intervention.montant_tva
+        return total_tva
+    
+    @property
+    def total_ttc(self):
+        """Total TTC"""
+        if self.avec_devis:
+            return Decimal('0.00')
+        return self.sous_total_ht + self.total_tva
+    
+    @property
+    def dernier_devis(self):
+        """Retourne le devis avec la version la plus élevée"""
+        return self.devis_set.order_by('-version').first()
+    
+    @property
+    def statut_devis_global(self):
+        """Retourne le statut du dernier devis créé"""
+        dernier = self.dernier_devis
+        return dernier.statut if dernier else None
+    
+    @property
+    def nombre_devis(self):
+        """Compte le nombre total de devis"""
+        return self.devis_set.count()
+    
+    @property
+    def nombre_devis_acceptes(self):
+        """Compte le nombre de devis acceptés"""
+        return self.devis_set.filter(statut='accepte').count()
+    
+    def update_statut_from_interventions(self):
+        """
+        Recalcule automatiquement le statut de l'opération
+        selon l'état des interventions multiples
+        """
+        from django.utils import timezone
+        
+        interventions = self.interventions.all()
+        
+        if not interventions.exists():
+            return
+        
+        nb_total = interventions.count()
+        nb_realisees = interventions.filter(realise=True).count()
+        nb_non_planifiees = interventions.filter(date_prevue__isnull=True).count()
+        
+        maintenant = timezone.now()
+        en_retard = interventions.filter(
+            realise=False,
+            date_prevue__lt=maintenant
+        ).exists()
+        
+        if nb_realisees == nb_total:
+            nouveau_statut = 'realise'
+        elif nb_realisees > 0:
+            nouveau_statut = 'en_cours'
+        elif nb_non_planifiees > 0:
+            nouveau_statut = 'a_planifier'
+        elif en_retard:
+            nouveau_statut = 'a_traiter'
+        else:
+            nouveau_statut = 'planifie'
+        
+        if self.statut != nouveau_statut:
+            self.statut = nouveau_statut
+            super(Operation, self).save(update_fields=['statut'])
+    
+    def get_interventions_stats(self):
+        """Retourne stats des interventions planifiées"""
+        planifiees = self.interventions.exclude(date_prevue__isnull=True)
+        return {
+            'total': planifiees.count(),
+            'realisees': planifiees.filter(realise=True).count()
+        }
 
 # ========================================
 # NOUVEAU MODÈLE : DEVIS
@@ -399,7 +582,6 @@ class Devis(models.Model):
         """On peut supprimer les devis en brouillon, prêt ou refusé"""
         return self.statut in ['brouillon', 'pret', 'refuse']
 
-
 # ========================================
 # NOUVEAU MODÈLE : LIGNE DE DEVIS
 # ========================================
@@ -484,8 +666,14 @@ class LigneDevis(models.Model):
 # ========================================
 # MODÈLE INTERVENTION (CONSERVÉ POUR OPÉRATIONS SANS DEVIS)
 # ========================================
+# ========================================
+# MODÈLE INTERVENTION - VERSION INTERVENTIONS MULTIPLES
+# ========================================
 class Intervention(models.Model):
-    """Ligne d'intervention pour opérations SANS devis uniquement"""
+    """
+    Modèle Intervention - Supporte maintenant les interventions multiples
+    Chaque intervention = une étape de réalisation d'une opération
+    """
     
     UNITES_CHOICES = [
         ('unite', 'Unité'),
@@ -496,52 +684,113 @@ class Intervention(models.Model):
         ('ml', 'Mètre linéaire'),
     ]
     
+    # ════════════════════════════════════════════════════════════
+    # CHAMPS EXISTANTS (CONSERVÉS)
+    # ════════════════════════════════════════════════════════════
+    
     operation = models.ForeignKey(
         Operation,
         on_delete=models.CASCADE,
         related_name='interventions'
     )
-    description = models.TextField()
+    
+    description = models.TextField(
+        verbose_name="Description de l'intervention"
+    )
     
     quantite = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         default=1,
+        verbose_name="Quantité",
         help_text="Quantité (ex: 2, 1.5, 10)"
     )
+    
     unite = models.CharField(
         max_length=20,
         choices=UNITES_CHOICES,
         default='forfait',
+        verbose_name="Unité",
         help_text="Unité de mesure"
     )
+    
     prix_unitaire_ht = models.DecimalField(
         max_digits=10,
         decimal_places=2,
         null=True,
         blank=True,
+        verbose_name="Prix unitaire HT (€)",
         help_text="Prix unitaire HT en euros"
     )
+    
     taux_tva = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=10.0,
+        verbose_name="Taux TVA (%)",
         help_text="Taux de TVA en %"
     )
     
     montant = models.DecimalField(
         max_digits=10,
         decimal_places=2,
+        verbose_name="Montant HT",
         help_text="Total HT de la ligne (quantité × prix unitaire HT)"
     )
     
-    ordre = models.PositiveIntegerField(default=1)
+    ordre = models.PositiveIntegerField(
+        default=999,  # ← MODIFIÉ : 999 au lieu de 1
+        verbose_name="Ordre d'affichage"
+    )
+    
+    # ════════════════════════════════════════════════════════════
+    # ✅ NOUVEAUX CHAMPS POUR INTERVENTIONS MULTIPLES
+    # ════════════════════════════════════════════════════════════
+    
+    date_prevue = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date prévue",
+        help_text="Date et heure planifiées pour cette intervention"
+    )
+    
+    date_realisation = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de réalisation",
+        help_text="Rempli automatiquement quand l'intervention est marquée comme réalisée"
+    )
+    
+    realise = models.BooleanField(
+        default=False,
+        verbose_name="Réalisée",
+        help_text="Cocher si l'intervention a été effectuée"
+    )
+    
+    commentaire = models.TextField(
+        blank=True,
+        verbose_name="Commentaire",
+        help_text="Notes libres sur cette intervention"
+    )
+    
+    # ════════════════════════════════════════════════════════════
+    # META & __STR__
+    # ════════════════════════════════════════════════════════════
     
     class Meta:
-        ordering = ['ordre']
+        ordering = ['ordre', 'date_prevue']
+        verbose_name = "Intervention"
+        verbose_name_plural = "Interventions"
     
     def __str__(self):
-        return f"{self.description} - {self.montant}€ HT"
+        if self.date_prevue:
+            date_str = self.date_prevue.strftime('%d/%m/%Y %H:%M')
+            return f"{self.description[:50]} - {date_str}"
+        return f"{self.description[:50]} - {self.montant}€ HT"
+    
+    # ════════════════════════════════════════════════════════════
+    # PROPERTIES EXISTANTES (CONSERVÉES)
+    # ════════════════════════════════════════════════════════════
     
     @property
     def montant_tva(self):
@@ -553,11 +802,105 @@ class Intervention(models.Model):
         """Total TTC de cette ligne"""
         return self.montant + self.montant_tva
     
+    # ════════════════════════════════════════════════════════════
+    # ✅ NOUVELLES PROPERTIES POUR INTERVENTIONS MULTIPLES
+    # ════════════════════════════════════════════════════════════
+    
+    @property
+    def est_planifiee(self):
+        """Vérifie si l'intervention a une date prévue"""
+        return self.date_prevue is not None
+    
+    @property
+    def est_en_retard(self):
+        """Vérifie si l'intervention est en retard (date passée et non réalisée)"""
+        if not self.date_prevue or self.realise:
+            return False
+        return self.date_prevue < timezone.now()
+    
+    @property
+    def statut_display(self):
+        """Retourne le statut de l'intervention pour affichage"""
+        if self.realise:
+            return "✅ Réalisé"
+        elif not self.date_prevue:
+            return "📅 À planifier"
+        elif self.est_en_retard:
+            return "⚠️ En retard"
+        else:
+            return "⏰ Planifié"
+        
+    @property
+    def est_planifiee(self):
+        """Intervention est planifiée si elle a une date prévue"""
+        return self.date_prevue is not None
+    
+    @property
+    def est_en_retard(self):
+        """Intervention en retard si date prévue dépassée et non réalisée"""
+        if not self.date_prevue or self.realise:
+            return False
+        return timezone.now() > self.date_prevue
+    
+    @property
+    def statut_display(self):
+        """Affichage textuel du statut"""
+        if self.realise:
+            return "✅ Réalisée"
+        elif self.est_en_retard:
+            return "⚠️ En retard"
+        elif self.est_planifiee:
+            return "📅 Planifiée"
+        else:
+            return "⏳ À planifier"
+    
+    @property
+    def montant_ttc(self):
+        """Calcul du montant TTC"""
+        return self.montant * (1 + self.taux_tva / 100)
+    
+    # ════════════════════════════════════════════════════════════
+    # ✅ MÉTHODE SAVE() SURCHARGÉE
+    # ════════════════════════════════════════════════════════════
+    
     def save(self, *args, **kwargs):
-        """Calcul automatique du montant HT lors de la sauvegarde"""
+        """
+        Calcul automatique lors de la sauvegarde :
+        1. Montant HT (quantité × prix unitaire)
+        2. Ordre selon date_prevue
+        3. Date de réalisation si marquée comme réalisée
+        4. Recalcul du statut de l'opération parent
+        """
+        
+        # ✅ CALCUL 1 : Montant HT
         if self.prix_unitaire_ht is not None:
             self.montant = self.quantite * self.prix_unitaire_ht
+        
+        # ✅ CALCUL 2 : Ordre automatique selon date_prevue
+        if self.date_prevue:
+            # Compter combien d'interventions ont une date_prevue antérieure
+            interventions_avant = Intervention.objects.filter(
+                operation=self.operation,
+                date_prevue__lt=self.date_prevue
+            ).exclude(pk=self.pk if self.pk else None)
+            
+            self.ordre = interventions_avant.count() + 1
+        else:
+            # Pas de date = ordre 999 (à la fin)
+            self.ordre = 999
+        
+        # ✅ CALCUL 3 : Date de réalisation automatique
+        if self.realise and not self.date_realisation:
+            self.date_realisation = timezone.now()
+        elif not self.realise:
+            # Si on décoche "réalisé", on efface la date de réalisation
+            self.date_realisation = None
+        
+        # Sauvegarder l'intervention
         super().save(*args, **kwargs)
+        
+        # ✅ CALCUL 4 : Recalculer le statut de l'opération parent
+        self.operation.update_statut_from_interventions()
 
 
 # ========================================

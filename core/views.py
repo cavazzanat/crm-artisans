@@ -2649,3 +2649,204 @@ def run_migration(request):
     except Exception as e:
         sys.stdout = old_stdout
         return HttpResponse(f"<pre>Erreur migration: {str(e)}</pre>")
+    
+
+# ════════════════════════════════════════════════════════════════════════
+# ✅ NOUVELLES ACTIONS POUR INTERVENTIONS MULTIPLES
+# ════════════════════════════════════════════════════════════════════════
+
+@login_required
+def planifier_intervention(request, operation_id, intervention_id):
+    """
+    Planifie ou replanifie une intervention
+    Modifie la date_prevue d'une intervention existante
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    intervention = get_object_or_404(Intervention, id=intervention_id, operation=operation)
+    
+    if request.method == 'POST':
+        date_prevue_str = request.POST.get('date_prevue')
+        
+        if date_prevue_str:
+            try:
+                # Parser la date au format ISO (YYYY-MM-DDTHH:MM)
+                from datetime import datetime
+                date_prevue = datetime.fromisoformat(date_prevue_str)
+                
+                # Mettre à jour la date prévue
+                intervention.date_prevue = date_prevue
+                intervention.save()  # Le save() recalcule automatiquement l'ordre et le statut
+                
+                messages.success(
+                    request,
+                    f"✅ Intervention planifiée le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
+                )
+                
+                # Enregistrer dans l'historique
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    utilisateur=request.user,
+                    action=f"Intervention planifiée : {intervention.description[:50]} - {date_prevue.strftime('%d/%m/%Y %H:%M')}"
+                )
+                
+            except ValueError:
+                messages.error(request, "❌ Format de date invalide")
+        else:
+            messages.error(request, "❌ Veuillez saisir une date")
+    
+    return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def marquer_realise(request, operation_id, intervention_id):
+    """
+    Marque une intervention comme réalisée (ou inverse)
+    Bascule le champ 'realise' et remplit automatiquement 'date_realisation'
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    intervention = get_object_or_404(Intervention, id=intervention_id, operation=operation)
+    
+    if request.method == 'POST':
+        # Basculer l'état réalisé
+        intervention.realise = not intervention.realise
+        intervention.save()  # Le save() gère automatiquement date_realisation
+        
+        if intervention.realise:
+            messages.success(
+                request,
+                f"✅ Intervention marquée comme réalisée"
+            )
+            action = f"Intervention réalisée : {intervention.description[:50]}"
+        else:
+            messages.info(
+                request,
+                f"ℹ️ Intervention marquée comme non réalisée"
+            )
+            action = f"Intervention marquée comme non réalisée : {intervention.description[:50]}"
+        
+        # Enregistrer dans l'historique
+        HistoriqueOperation.objects.create(
+            operation=operation,
+            utilisateur=request.user,
+            action=action
+        )
+    
+    return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def ajouter_commentaire(request, operation_id, intervention_id):
+    """
+    Ajoute ou modifie un commentaire sur une intervention
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    intervention = get_object_or_404(Intervention, id=intervention_id, operation=operation)
+    
+    if request.method == 'POST':
+        commentaire = request.POST.get('commentaire', '').strip()
+        
+        intervention.commentaire = commentaire
+        intervention.save()
+        
+        if commentaire:
+            messages.success(request, "✅ Commentaire ajouté")
+        else:
+            messages.info(request, "ℹ️ Commentaire supprimé")
+    
+    return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def creer_nouvelle_intervention(request, operation_id):
+    """
+    Crée une nouvelle intervention pour une opération existante
+    (pour les opérations qui nécessitent plusieurs passages)
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    
+    if request.method == 'POST':
+        description = request.POST.get('description', '').strip()
+        date_prevue_str = request.POST.get('date_prevue', '').strip()
+        
+        if not description:
+            messages.error(request, "❌ Veuillez saisir une description")
+            return redirect('operation_detail', operation_id=operation.id)
+        
+        # Créer la nouvelle intervention
+        nouvelle_intervention = Intervention.objects.create(
+            operation=operation,
+            description=description,
+            quantite=1,
+            unite='forfait',
+            prix_unitaire_ht=0,
+            montant=0,
+            taux_tva=10.0
+        )
+        
+        # Si une date prévue est fournie, la définir
+        if date_prevue_str:
+            try:
+                from datetime import datetime
+                date_prevue = datetime.fromisoformat(date_prevue_str)
+                nouvelle_intervention.date_prevue = date_prevue
+                nouvelle_intervention.save()
+            except ValueError:
+                pass  # Si format invalide, on laisse sans date
+        
+        messages.success(
+            request,
+            f"✅ Nouvelle intervention ajoutée : {description}"
+        )
+        
+        # Enregistrer dans l'historique
+        HistoriqueOperation.objects.create(
+            operation=operation,
+            utilisateur=request.user,
+            action=f"Nouvelle intervention créée : {description}"
+        )
+    
+    return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def supprimer_intervention(request, operation_id, intervention_id):
+    """
+    Supprime une intervention
+    ATTENTION : Vérifie que ce n'est pas la dernière intervention de l'opération
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    intervention = get_object_or_404(Intervention, id=intervention_id, operation=operation)
+    
+    if request.method == 'POST':
+        # Vérifier qu'il reste au moins une intervention
+        nb_interventions = operation.interventions.count()
+        
+        if nb_interventions <= 1:
+            messages.error(
+                request,
+                "❌ Impossible de supprimer la dernière intervention d'une opération"
+            )
+            return redirect('operation_detail', operation_id=operation.id)
+        
+        # Enregistrer la description avant suppression
+        description = intervention.description[:50]
+        
+        # Supprimer l'intervention
+        intervention.delete()
+        
+        messages.success(
+            request,
+            f"✅ Intervention supprimée : {description}"
+        )
+        
+        # Enregistrer dans l'historique
+        HistoriqueOperation.objects.create(
+            operation=operation,
+            utilisateur=request.user,
+            action=f"Intervention supprimée : {description}"
+        )
+        
+        # Recalculer le statut de l'opération
+        operation.update_statut_from_interventions()
+    
+    return redirect('operation_detail', operation_id=operation.id)
