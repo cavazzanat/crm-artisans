@@ -413,11 +413,16 @@ def operations_list(request):
         operations = operations.filter(id__in=operations_expire_ids)
 
     elif filtre == 'a_traiter':
-        # Opérations planifiées dont la date est passée
-        operations = operations.filter(
-            statut='planifie',
-            date_prevue__lt=timezone.now()  # Date dans le passé
-        )
+        # Opérations avec passages en retard (date passée, non réalisé)
+        now = timezone.now()
+        
+        passages_en_retard = PassageOperation.objects.filter(
+            operation__user=request.user,
+            date_prevue__lt=now,
+            realise=False
+        ).values_list('operation_id', flat=True).distinct()
+        
+        operations = operations.filter(id__in=passages_en_retard)
 
     # ✅ ENRICHISSEMENT POUR FILTRES SPÉCIAUX
     elif filtre == 'retards':
@@ -482,12 +487,15 @@ def operations_list(request):
     nb_paye = all_operations_periode.filter(statut='paye').count()
     nb_refuse = all_operations_periode.filter(statut='devis_refuse').count()
 
-    # ✅ NOUVEAU : Compteur "À traiter"
-    nb_a_traiter = Operation.objects.filter(
-        user=request.user,
-        statut='planifie',
-        date_prevue__lt=timezone.now()
-    ).count()
+    # ✅ Compteur "À traiter" basé sur PassageOperation
+    now = timezone.now()
+    passages_en_retard_ids = PassageOperation.objects.filter(
+        operation__user=request.user,
+        date_prevue__lt=now,
+        realise=False
+    ).values_list('operation_id', flat=True).distinct()
+
+    nb_a_traiter = len(set(passages_en_retard_ids))
 
     # ========================================
     # NOUVEAUX COMPTEURS DEVIS (KPI)
