@@ -1353,215 +1353,22 @@
     </section>
     {% endif %}
 
-        <!-- ========================================
-            PLANIFICATION - AVEC AFFICHAGE CONDITIONNEL
-            ======================================== -->
-        <section class="section">
-          <div class="section-header" onclick="toggleSection(this)">
-            <h2 class="section-title">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/></svg>
-              Planification
-              
-              {% if operation.statut == 'realise' or operation.statut == 'paye' %}
-                <span class="section-badge complete">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                  Réalisée
-                </span>
-              {% elif operation.date_prevue %}
-                <span class="section-badge complete">
-                  📅 {{ operation.date_prevue|date:"d/m/Y H:i" }}
-                </span>
-              {% else %}
-                <span class="section-badge pending">À planifier</span>
-              {% endif %}
-            </h2>
-            <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-          </div>
-          
-          <div class="section-body">
-            
-            {% if operation.statut == 'realise' or operation.statut == 'paye' %}
-            <!-- ========================================
-                MODE 1 : AFFICHAGE RÉALISÉE (LECTURE SEULE)
-                ======================================== -->
-            <div class="alert success" style="margin-bottom:1rem">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-              <div>
-                <strong>✅ Intervention réalisée</strong>
-                {% if operation.date_realisation %}
-                  <br>Date de réalisation : <strong>{{ operation.date_realisation|date:"d/m/Y à H:i" }}</strong>
-                {% endif %}
-              </div>
-            </div>
-            
-            <div class="info-grid">
-              {% if operation.date_prevue %}
-              <div class="info-card">
-                <div class="label">📅 Date prévue initialement</div>
-                <div class="value">{{ operation.date_prevue|date:"d/m/Y à H:i" }}</div>
-              </div>
-              {% endif %}
-              
-              {% if operation.date_realisation %}
-              <div class="info-card">
-                <div class="label">✅ Date de réalisation</div>
-                <div class="value" style="color:var(--success); font-weight:700">
-                  {{ operation.date_realisation|date:"d/m/Y à H:i" }}
-                </div>
-              </div>
-              {% endif %}
-            </div>
-            
-            <!-- Bouton pour corriger si besoin -->
-            <div style="margin-top:1rem; padding-top:1rem; border-top:1px solid var(--border)">
-              <button type="button" class="btn" onclick="toggleModificationDates()" style="width:100%">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="1.6"/></svg>
-                Corriger les dates (si erreur)
-              </button>
-            </div>
-            
-            <!-- Formulaire de correction (caché par défaut) -->
-            <div id="modification-dates-form" style="display:none; margin-top:1rem; padding:1rem; background:#fef3c7; border:1px solid #fde68a; border-radius:8px">
-              <h4 style="margin-bottom:1rem; color:#92400e">⚠️ Correction des dates</h4>
-              <form method="POST">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="corriger_dates_realisation">
-                
-                <div class="info-grid" style="margin-bottom:1rem">
-                  <div class="info-card">
-                    <div class="label">Date de réalisation</div>
-                    <div class="value">
-                      <input type="datetime-local" 
-                            id="correction-date-realisation"
-                            name="date_realisation" 
-                            class="input" 
-                            value="{% if operation.date_realisation %}{{ operation.date_realisation|date:'Y-m-d\TH:i' }}{% endif %}"
-                            max="{{ now|date:'Y-m-d\TH:i' }}" 
-                            required>
-                    </div>
-                  </div>
-                </div>
-                
-                <div style="display:flex; gap:1rem">
-                  <button type="button" class="btn" onclick="toggleModificationDates()" style="flex:1">Annuler</button>
-                  <button type="submit" class="btn primary" style="flex:1">Enregistrer la correction</button>
-                </div>
-              </form>
-            </div>
-            
-            {% else %}
-            <!-- ========================================
-                MODE 2 : PLANIFICATION ACTIVE (MODIFIABLE)
-                ======================================== -->
-            <form method="POST" id="planning-form">
-              {% csrf_token %}
-              <input type="hidden" name="action" value="update_planning">
-              
-              <div class="info-card" style="margin-bottom:1rem">
-                <div class="label">Date d'intervention prévue</div>
-                <div class="value">
-                  <input type="datetime-local" 
-                        id="date-prevue-input" 
-                        name="date_prevue" 
-                        class="input" 
-                        value="{% if operation.date_prevue %}{{ operation.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}"
-                        required>
-                </div>
-              </div>
-              
-              <!-- Alerte si date passée -->
-              <div class="alert warning" id="date-passee-alert" style="display:none; margin-bottom:1rem">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 9v4M12 17h0M12 3l9 18H3L12 3z" stroke="currentColor" stroke-width="1.6"/></svg>
-                <div><strong>⚠️ Date dépassée !</strong> La date prévue est dans le passé. Validez la réalisation ou modifiez la date.</div>
-              </div>
-              
-              <!-- Info replanification -->
-              {% if operation.date_prevue and operation.statut == 'planifie' %}
-              <div class="alert info" style="margin-bottom:1rem">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-                <div>💡 <strong>Actuellement planifié le {{ operation.date_prevue|date:"d/m/Y à H:i" }}</strong><br>
-                Modifiez la date ci-dessus pour replanifier.</div>
-              </div>
-              {% endif %}
-              
-              <div style="display:flex; gap:1rem; flex-wrap:wrap">
-                <button type="submit" class="btn primary" style="flex:1">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                  {% if operation.date_prevue %}Replanifier{% else %}Enregistrer la date{% endif %}
-                </button>
-                
-                {% if operation.date_prevue %}
-                <button type="button" class="btn success" style="flex:1" onclick="toggleRealisationForm()">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                  Valider la réalisation
-                </button>
-                {% endif %}
-              </div>
-            </form>
-            
-            <!-- Formulaire de validation réalisation (caché par défaut) -->
-            <div id="realisation-form" style="display:none; margin-top:1.5rem; padding-top:1.5rem; border-top:2px solid var(--border)">
-              <form method="POST">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="valider_realisation">
-                
-                <h4 style="margin-bottom:1rem; color:var(--success); font-size:1.1rem; display:flex; align-items:center; gap:.5rem">
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                  Validation de la réalisation
-                </h4>
-                
-                <div class="info-card" style="margin-bottom:1rem">
-                  <div class="label">Date de réalisation effective</div>
-                  <div class="value">
-                    <input type="datetime-local" 
-                          id="date-realisation-input" 
-                          name="date_realisation" 
-                          class="input" 
-                          max="{{ now|date:'Y-m-d\TH:i' }}"
-                          required>
-                    <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
-                      ⚠️ La date ne peut pas être dans le futur
-                    </small>
-                  </div>
-                </div>
-                
-                <div style="display:flex; gap:1rem">
-                  <button type="button" class="btn" onclick="toggleRealisationForm()" style="flex:1">
-                    Annuler
-                  </button>
-                  <button type="submit" class="btn success" style="flex:1">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/></svg>
-                    Confirmer la réalisation
-                  </button>
-                </div>
-              </form>
-            </div>
-            {% endif %}
-            
-          </div>
-        </section>
-
-
 <!-- ========================================
-    SECTION INTERVENTIONS MULTIPLES
-    ⚠️ VERSION INTERVENTIONS MULTIPLES
+    SECTION PLANIFICATION UNIFIÉE
     ======================================== -->
-{% if not operation.avec_devis %}
 <section class="section">
   <div class="section-header" onclick="toggleSection(this)">
     <h2 class="section-title">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-      📅 Gestion des interventions
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18M5 4h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.6"/></svg>
+      📅 Planification
       
       {% with stats=operation.get_interventions_stats %}
         {% if stats.total > 0 %}
           <span class="section-badge {% if stats.realisees == stats.total %}complete{% else %}pending{% endif %}">
-            [{{ stats.realisees }}/{{ stats.total }}] interventions
+            {{ stats.realisees }}/{{ stats.total }} intervention{{ stats.total|pluralize }}
           </span>
         {% else %}
-          <span class="section-badge disabled">Aucune intervention planifiée</span>
+          <span class="section-badge pending">À planifier</span>
         {% endif %}
       {% endwith %}
     </h2>
@@ -1572,15 +1379,6 @@
   
   <div class="section-body">
     
-    <!-- Info explicative -->
-    <div class="alert info" style="margin-bottom: 1.5rem;">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.6"/></svg>
-      <div>
-        💡 <strong>Interventions multiples</strong> : Cette opération peut nécessiter plusieurs passages.<br>
-        Gérez chaque intervention séparément avec sa propre date et son statut.
-      </div>
-    </div>
-    
     <!-- Liste des interventions -->
     {% if operation.interventions.exists %}
       <div class="table-wrap">
@@ -1588,21 +1386,18 @@
           <thead>
             <tr>
               <th width="5%">#</th>
-              <th width="30%">Description</th>
-              <th width="15%">Date prévue</th>
+              <th width="35%">Description</th>
+              <th width="20%">Date prévue</th>
               <th width="15%">Statut</th>
-              <th width="15%">Montant</th>
-              <th width="20%">Actions</th>
+              <th width="25%">Actions</th>
             </tr>
           </thead>
           <tbody>
             {% for intervention in operation.interventions.all %}
             <tr style="{% if intervention.est_en_retard %}background: #fee2e2;{% elif intervention.realise %}background: #f0fdf4;{% endif %}">
               
-              <!-- Ordre -->
               <td><strong>{{ forloop.counter }}</strong></td>
               
-              <!-- Description -->
               <td>
                 {{ intervention.description }}
                 {% if intervention.commentaire %}
@@ -1610,7 +1405,6 @@
                 {% endif %}
               </td>
               
-              <!-- Date prévue -->
               <td>
                 {% if intervention.date_prevue %}
                   <small>{{ intervention.date_prevue|date:"d/m/Y H:i" }}</small>
@@ -1619,7 +1413,6 @@
                 {% endif %}
               </td>
               
-              <!-- Statut -->
               <td>
                 <span style="display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.85rem; font-weight: 600; 
                   {% if intervention.realise %}background: rgba(34,197,94,.1); color: var(--success); border: 1px solid rgba(34,197,94,.2);
@@ -1634,55 +1427,32 @@
                 {% endif %}
               </td>
               
-              <!-- Montant -->
-              <td>
-                {% if intervention.montant_ttc > 0 %}
-                  <strong>{{ intervention.montant_ttc|floatformat:2 }}€</strong>
-                  <small style="color: var(--muted);">TTC</small>
-                {% else %}
-                  <span style="color: var(--muted);">—</span>
-                {% endif %}
-              </td>
-              
-              <!-- Actions -->
               <td>
                 <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
                   
-                  <!-- Planifier / Replanifier -->
                   {% if not intervention.realise %}
                     <button type="button" class="btn primary sm" onclick="openModalPlanifier{{ intervention.id }}()" title="{% if intervention.date_prevue %}Replanifier{% else %}Planifier{% endif %}">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M8 2v4M16 2v4M3 10h18" stroke="currentColor" stroke-width="1.6"/></svg>
+                      📅
                     </button>
                   {% endif %}
                   
-                  <!-- Marquer réalisée / Annuler -->
                   {% if intervention.est_planifiee %}
                     <form method="POST" action="{% url 'marquer_realise' operation.id intervention.id %}" style="display: inline; margin: 0;">
                       {% csrf_token %}
-                      <button type="submit" class="btn {% if intervention.realise %}sm{% else %}success sm{% endif %}" title="{% if intervention.realise %}Annuler{% else %}Marquer réalisée{% endif %}">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          {% if intervention.realise %}
-                            <path d="M3 12h18M12 5l7 7-7 7" stroke="currentColor" stroke-width="2"/>
-                          {% else %}
-                            <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
-                          {% endif %}
-                        </svg>
+                      <button type="submit" class="btn {% if intervention.realise %}sm{% else %}success sm{% endif %}" title="{% if intervention.realise %}Annuler{% else %}Réalisée{% endif %}">
+                        {% if intervention.realise %}↩{% else %}✓{% endif %}
                       </button>
                     </form>
                   {% endif %}
                   
-                  <!-- Commentaire -->
                   <button type="button" class="btn sm" onclick="openModalCommentaire{{ intervention.id }}()" title="Commentaire">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M7 8h10M7 12h4m1 8-4-4H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-3l-4 4Z" stroke="currentColor" stroke-width="1.6"/></svg>
+                    💬
                   </button>
                   
-                  <!-- Supprimer (si plusieurs interventions) -->
                   {% if operation.interventions.count > 1 %}
                     <form method="POST" action="{% url 'supprimer_intervention' operation.id intervention.id %}" style="display: inline; margin: 0;" onsubmit="return confirm('Supprimer cette intervention ?')">
                       {% csrf_token %}
-                      <button type="submit" class="btn danger sm" title="Supprimer">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 6 6 18M6 6l12 12" stroke="currentColor" stroke-width="2"/></svg>
-                      </button>
+                      <button type="submit" class="btn danger sm" title="Supprimer">×</button>
                     </form>
                   {% endif %}
                   
@@ -1690,13 +1460,13 @@
               </td>
             </tr>
             
-            <!-- Modals inline pour chaque intervention -->
+            <!-- Modals inline -->
             <script>
             function openModalPlanifier{{ intervention.id }}() {
               const html = `
                 <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 9999; display: flex; align-items: center; justify-content: center;" onclick="this.remove()">
                   <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 500px; width: 90%;" onclick="event.stopPropagation()">
-                    <h3 style="margin: 0 0 1rem 0;">📅 {% if intervention.date_prevue %}Replanifier{% else %}Planifier{% endif %} l'intervention</h3>
+                    <h3 style="margin: 0 0 1rem 0;">📅 {% if intervention.date_prevue %}Replanifier{% else %}Planifier{% endif %}</h3>
                     <p style="margin-bottom: 1rem;"><strong>{{ intervention.description }}</strong></p>
                     <form method="POST" action="{% url 'planifier_intervention' operation.id intervention.id %}">
                       {% csrf_token %}
@@ -1721,7 +1491,7 @@
                     <p style="margin-bottom: 1rem;"><strong>{{ intervention.description }}</strong></p>
                     <form method="POST" action="{% url 'ajouter_commentaire' operation.id intervention.id %}">
                       {% csrf_token %}
-                      <textarea name="commentaire" class="input" rows="3" placeholder="Notes, observations..." style="width: 100%; margin-bottom: 1rem;">{{ intervention.commentaire }}</textarea>
+                      <textarea name="commentaire" class="input" rows="3" placeholder="Notes..." style="width: 100%; margin-bottom: 1rem;">{{ intervention.commentaire }}</textarea>
                       <div style="display: flex; gap: 0.5rem;">
                         <button type="button" class="btn" onclick="this.closest('[style*=fixed]').remove()" style="flex: 1;">Annuler</button>
                         <button type="submit" class="btn primary" style="flex: 1;">Enregistrer</button>
@@ -1738,14 +1508,14 @@
         </table>
       </div>
     {% else %}
-      <p style="text-align: center; color: var(--muted); padding: 2rem;">Aucune intervention enregistrée</p>
+      <p style="text-align: center; color: var(--muted); padding: 2rem;">📅 Aucune intervention planifiée</p>
     {% endif %}
     
     <!-- Bouton Ajouter -->
     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
       <button type="button" class="btn success" onclick="openModalNouvelleIntervention()" style="width: 100%;">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
-        Ajouter une intervention
+        + Ajouter une intervention
       </button>
     </div>
     
@@ -1759,11 +1529,10 @@
             <form method="POST" action="{% url 'creer_nouvelle_intervention' operation.id %}">
               {% csrf_token %}
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Description <span style="color: var(--danger);">*</span></label>
-              <textarea name="description" class="input" rows="3" placeholder="Ex: Pose du radiateur salle de bain" required style="width: 100%; margin-bottom: 1rem;"></textarea>
+              <textarea name="description" class="input" rows="3" placeholder="Ex: Diagnostic initial" required style="width: 100%; margin-bottom: 1rem;"></textarea>
               
               <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Date prévue (optionnel)</label>
               <input type="datetime-local" name="date_prevue" class="input" style="width: 100%; margin-bottom: 1rem;">
-              <small style="display: block; margin-bottom: 1rem; color: var(--muted); font-size: 0.85rem;">Vous pourrez planifier plus tard si besoin</small>
               
               <div style="display: flex; gap: 0.5rem;">
                 <button type="button" class="btn" onclick="this.closest('[style*=fixed]').remove()" style="flex: 1;">Annuler</button>
@@ -1779,8 +1548,8 @@
     
   </div>
 </section>
-{% endif %}
-<!-- FIN SECTION INTERVENTIONS MULTIPLES -->
+
+
 
 <!-- ========================================
     SECTION PAIEMENT & FACTURATION UNIFIÉE
