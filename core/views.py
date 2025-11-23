@@ -744,7 +744,44 @@ def operation_detail(request, operation_id):
             try:
                 devis = Devis.objects.get(id=devis_id, operation=operation)
                 
-                # ✅ AJOUT : Récupérer et enregistrer notes et validité
+                # ✅ 1. Vérifier s'il y a une ligne en cours de saisie à ajouter
+                ligne_description = request.POST.get('ligne_description', '').strip()
+                ligne_prix_ht = request.POST.get('ligne_prix_ht', '').strip()
+                
+                if ligne_description and ligne_prix_ht:
+                    # Il y a une ligne à ajouter avant de générer
+                    try:
+                        ligne_quantite = Decimal(request.POST.get('ligne_quantite', '1'))
+                        ligne_unite = request.POST.get('ligne_unite', 'forfait')
+                        ligne_prix_unitaire_ht = Decimal(ligne_prix_ht)
+                        ligne_tva = Decimal(request.POST.get('ligne_tva', '10'))
+                        
+                        # Dernier ordre
+                        dernier_ordre = devis.lignes.aggregate(max_ordre=Max('ordre'))['max_ordre'] or 0
+                        
+                        # Créer la ligne
+                        LigneDevis.objects.create(
+                            devis=devis,
+                            description=ligne_description,
+                            quantite=ligne_quantite,
+                            unite=ligne_unite,
+                            prix_unitaire_ht=ligne_prix_unitaire_ht,
+                            taux_tva=ligne_tva,
+                            ordre=dernier_ordre + 1
+                        )
+                        
+                        print(f"✅ Ligne ajoutée automatiquement : {ligne_description}")
+                        
+                    except (ValueError, TypeError) as e:
+                        messages.error(request, f"❌ Erreur dans les données de la ligne : {str(e)}")
+                        return redirect('operation_detail', operation_id=operation.id)
+                
+                # ✅ 2. Vérifier qu'il y a au moins une ligne (maintenant ou avant)
+                if not devis.lignes.exists():
+                    messages.error(request, "❌ Le devis doit contenir au moins une ligne.")
+                    return redirect('operation_detail', operation_id=operation.id)
+                
+                # ✅ 3. Enregistrer notes et validité
                 notes = request.POST.get('notes', '').strip()
                 validite_jours_str = request.POST.get('validite_jours', '30')
                 
@@ -754,9 +791,9 @@ def operation_detail(request, operation_id):
                 try:
                     devis.validite_jours = int(validite_jours_str)
                 except ValueError:
-                    pass  # Garder la valeur actuelle si invalide
+                    pass
                 
-                # Passer au statut "prêt"
+                # ✅ 4. Passer au statut "prêt"
                 devis.statut = 'pret'
                 devis.save()
                 

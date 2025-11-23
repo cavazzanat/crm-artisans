@@ -835,6 +835,13 @@
               {% csrf_token %}
               <input type="hidden" name="action" value="generer_pdf_devis">
               <input type="hidden" name="devis_id" value="{{ devis.id }}">
+
+              <!-- ✅ NOUVEAU : Champs cachés pour la ligne optionnelle -->
+              <input type="hidden" name="ligne_description" id="hidden-ligne-description-{{ devis.id }}">
+              <input type="hidden" name="ligne_quantite" id="hidden-ligne-quantite-{{ devis.id }}">
+              <input type="hidden" name="ligne_unite" id="hidden-ligne-unite-{{ devis.id }}">
+              <input type="hidden" name="ligne_prix_ht" id="hidden-ligne-prix-ht-{{ devis.id }}">
+              <input type="hidden" name="ligne_tva" id="hidden-ligne-tva-{{ devis.id }}">
               
               <!-- Notes et Validité -->
               <div style="display: grid; grid-template-columns: 2fr 150px; gap: 1rem; align-items: start; margin-bottom: 1rem;">
@@ -885,6 +892,41 @@
             </form>
           </div>
           {% endif %}
+
+          <!-- ✅ Script pour copier les valeurs avant soumission -->
+          <script>
+          document.addEventListener('DOMContentLoaded', function() {
+            const devisId = {{ devis.id }};
+            const devisBody = document.getElementById('devis-body-' + devisId);
+            
+            if (devisBody) {
+              const form = devisBody.querySelector('form[action*="generer_pdf_devis"]') || 
+                          devisBody.querySelector('input[value="generer_pdf_devis"]')?.closest('form');
+              
+              if (form) {
+                form.addEventListener('submit', function(e) {
+                  // Récupérer les champs de la ligne en cours de saisie (dans le formulaire d'ajout)
+                  const ligneForm = devisBody.querySelector('.form-add-ligne-ajax');
+                  
+                  if (ligneForm) {
+                    const description = ligneForm.querySelector('[name="description"]')?.value || '';
+                    const quantite = ligneForm.querySelector('[name="quantite"]')?.value || '';
+                    const unite = ligneForm.querySelector('[name="unite"]')?.value || '';
+                    const prix_ht = ligneForm.querySelector('[name="prix_unitaire_ht"]')?.value || '';
+                    const tva = ligneForm.querySelector('[name="taux_tva"]')?.value || '';
+                    
+                    // Copier dans les champs cachés
+                    document.getElementById('hidden-ligne-description-' + devisId).value = description;
+                    document.getElementById('hidden-ligne-quantite-' + devisId).value = quantite;
+                    document.getElementById('hidden-ligne-unite-' + devisId).value = unite;
+                    document.getElementById('hidden-ligne-prix-ht-' + devisId).value = prix_ht;
+                    document.getElementById('hidden-ligne-tva-' + devisId).value = tva;
+                  }
+                });
+              }
+            }
+          });
+          </script>
           
 
           
