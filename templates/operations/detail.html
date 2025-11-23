@@ -1355,313 +1355,197 @@
 
 <!-- 📅 PASSAGES PLANIFIÉS -->
 <section class="section">
-  <div class="section-h">
-    <h2>📅 Passages planifiés</h2>
-    <button 
-      onclick="document.getElementById('modal-add-passage').style.display='flex'" 
-      class="btn primary"
-      style="font-size:.9rem; padding:.6rem 1rem"
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="margin-right:.4rem">
-        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+  <div class="section-header" onclick="toggleSection(this)">
+    <h2 class="section-title">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.6"/>
       </svg>
-      Ajouter un passage
-    </button>
+      Passages planifiés
+      
+      {% if operation.passages.exists %}
+      <span class="section-badge complete">
+        {{ operation.passages.count }} passage{{ operation.passages.count|pluralize }}
+      </span>
+      {% else %}
+      <span class="section-badge disabled">Aucun passage</span>
+      {% endif %}
+    </h2>
+    <svg class="toggle-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
+      <path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>
   </div>
 
-  <div style="padding:1.5rem">
+  <div class="section-body">
+    
+    <!-- Bouton ajout -->
+    <div style="display:flex; justify-content:flex-end; margin-bottom:1rem">
+      <button 
+        onclick="document.getElementById('modal-add-passage').style.display='flex'" 
+        class="btn success"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+        Ajouter un passage
+      </button>
+    </div>
+
     {% if operation.passages.exists %}
-      <div style="overflow-x:auto">
-        <table style="width:100%; border-collapse:separate; border-spacing:0 .75rem; min-width:900px">
-          <thead>
-            <tr style="border-bottom:2px solid #e2e8f0">
-              <th style="text-align:left; padding:.75rem 1rem; font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.05em">#</th>
-              <th style="text-align:left; padding:.75rem 1rem; font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.05em">Statut</th>
-              <th style="text-align:left; padding:.75rem 1rem; font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.05em">Date planifiée</th>
-              <th style="text-align:left; padding:.75rem 1rem; font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.05em">Date réalisée</th>
-              <th style="text-align:left; padding:.75rem 1rem; font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.05em">Commentaire</th>
-              <th style="text-align:center; padding:.75rem 1rem; font-size:.75rem; font-weight:700; text-transform:uppercase; color:#64748b; letter-spacing:.05em; min-width:280px">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for passage in operation.passages.all %}
-              <tr style="background:white; border:1px solid #e2e8f0; border-radius:10px; transition: all 0.2s ease" 
-                  onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.08)'; this.style.transform='translateY(-2px)'" 
-                  onmouseout="this.style.boxShadow='none'; this.style.transform='translateY(0)'">
-                
-                <!-- Numéro -->
-                <td style="padding:1rem; border-radius:10px 0 0 10px">
-                  <div style="
-                    display:inline-flex;
-                    align-items:center;
-                    justify-content:center;
-                    width:36px;
-                    height:36px;
-                    border-radius:8px;
-                    font-weight:800;
-                    font-size:1rem;
-                    background: {% if passage.est_en_retard %}linear-gradient(135deg, rgba(245,158,11,.15), rgba(245,158,11,.05)){% elif passage.realise %}linear-gradient(135deg, rgba(34,197,94,.15), rgba(34,197,94,.05)){% elif passage.est_planifie %}linear-gradient(135deg, rgba(99,102,241,.15), rgba(99,102,241,.05)){% else %}linear-gradient(135deg, rgba(148,163,184,.15), rgba(148,163,184,.05)){% endif %};
-                    color: {% if passage.est_en_retard %}#f59e0b{% elif passage.realise %}#22c55e{% elif passage.est_planifie %}#6366f1{% else %}#64748b{% endif %};
-                  ">
-                    {{ passage.numero }}
-                  </div>
-                </td>
-
-                <!-- Statut -->
-                <td style="padding:1rem">
-                  <span style="
-                    display:inline-flex;
-                    align-items:center;
-                    gap:.4rem;
-                    padding:.35rem .75rem;
-                    border-radius:999px;
-                    font-size:.8rem;
-                    font-weight:600;
-                    background: {% if passage.est_en_retard %}rgba(245,158,11,.1){% elif passage.realise %}rgba(34,197,94,.1){% elif passage.est_planifie %}rgba(99,102,241,.1){% else %}rgba(148,163,184,.1){% endif %};
-                    color: {% if passage.est_en_retard %}#f59e0b{% elif passage.realise %}#22c55e{% elif passage.est_planifie %}#6366f1{% else %}#64748b{% endif %};
-                    border: 1px solid {% if passage.est_en_retard %}rgba(245,158,11,.3){% elif passage.realise %}rgba(34,197,94,.3){% elif passage.est_planifie %}rgba(99,102,241,.3){% else %}rgba(148,163,184,.3){% endif %};
-                  ">
-                    {% if passage.est_en_retard %}🟠{% elif passage.realise %}🟢{% elif passage.est_planifie %}🔵{% else %}⚪{% endif %}
-                    {{ passage.statut_display }}
-                  </span>
-                </td>
-
-                <!-- Date planifiée -->
-                <td style="padding:1rem">
-                  {% if passage.date_prevue %}
-                    <div style="font-size:.9rem; color:#1e293b; font-weight:500">
-                      {{ passage.date_prevue|date:"d/m/Y" }}
-                    </div>
-                    <div style="font-size:.8rem; color:#94a3b8; margin-top:.15rem">
-                      à {{ passage.date_prevue|date:"H:i" }}
-                    </div>
-                  {% else %}
-                    <span style="color:#cbd5e1; font-style:italic; font-size:.85rem">Non planifié</span>
-                  {% endif %}
-                </td>
-
-                <!-- Date réalisée -->
-                <td style="padding:1rem">
-                  {% if passage.date_realisation %}
-                    <div style="font-size:.9rem; color:#22c55e; font-weight:600">
-                      ✅ {{ passage.date_realisation|date:"d/m/Y" }}
-                    </div>
-                    <div style="font-size:.8rem; color:#94a3b8; margin-top:.15rem">
-                      à {{ passage.date_realisation|date:"H:i" }}
-                    </div>
-                  {% else %}
-                    <span style="color:#cbd5e1; font-size:.85rem">—</span>
-                  {% endif %}
-                </td>
-
-                <!-- Commentaire -->
-                <td style="padding:1rem; max-width:200px">
-                  {% if passage.commentaire %}
-                    <div style="
-                      font-size:.85rem;
-                      color:#475569;
-                      overflow:hidden;
-                      text-overflow:ellipsis;
-                      white-space:nowrap;
-                      max-width:180px;
-                    " title="{{ passage.commentaire }}">
-                      💬 {{ passage.commentaire }}
-                    </div>
-                  {% else %}
-                    <span style="color:#cbd5e1; font-size:.85rem; font-style:italic">Aucun</span>
-                  {% endif %}
-                </td>
-
-                <!-- Actions -->
-                <td style="padding:1rem; border-radius:0 10px 10px 0; text-align:center">
-                  <div style="display:flex; gap:.5rem; justify-content:center; flex-wrap:wrap">
-                    
-                    <!-- Bouton Replanifier (au lieu de Planifier) -->
-                    <button 
-                      onclick="showFormPassage({{ passage.id }}, 'planifier')"
-                      style="
-                        display:inline-flex;
-                        align-items:center;
-                        gap:.35rem;
-                        padding:.5rem .75rem;
-                        border-radius:8px;
-                        border:1px solid #e2e8f0;
-                        background:white;
-                        color:#6366f1;
-                        cursor:pointer;
-                        font-size:.8rem;
-                        font-weight:600;
-                        font-family:inherit;
-                        transition: all 0.2s;
-                      "
-                      onmouseover="this.style.background='#f0f1ff'; this.style.borderColor='#6366f1'"
-                      onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'"
-                      title="{% if passage.date_prevue %}Replanifier ce passage{% else %}Planifier ce passage{% endif %}"
-                    >
-                      📅 {% if passage.date_prevue %}Replanifier{% else %}Planifier{% endif %}
-                    </button>
-
-                    <!-- Bouton Réaliser -->
-                    <form method="POST" action="{% url 'marquer_passage_realise' operation.id passage.id %}" style="margin:0; display:inline">
-                      {% csrf_token %}
-                      <button 
-                        type="submit"
-                        style="
-                          display:inline-flex;
-                          align-items:center;
-                          gap:.35rem;
-                          padding:.5rem .75rem;
-                          border-radius:8px;
-                          border:1px solid #e2e8f0;
-                          background:white;
-                          color:{% if passage.realise %}#94a3b8{% else %}#22c55e{% endif %};
-                          cursor:pointer;
-                          font-size:.8rem;
-                          font-weight:600;
-                          font-family:inherit;
-                          transition: all 0.2s;
-                        "
-                        onmouseover="this.style.background='{% if passage.realise %}#f8fafc{% else %}#f0fdf4{% endif %}'; this.style.borderColor='{% if passage.realise %}#cbd5e1{% else %}#22c55e{% endif %}'"
-                        onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'"
-                        title="{% if passage.realise %}Marquer comme non réalisé{% else %}Marquer comme réalisé{% endif %}"
-                      >
-                        {% if passage.realise %}↩️ Annuler{% else %}✅ Réaliser{% endif %}
-                      </button>
-                    </form>
-
-                    <!-- Bouton Commentaire -->
-                    <button 
-                      onclick="showFormPassage({{ passage.id }}, 'commentaire')"
-                      style="
-                        display:inline-flex;
-                        align-items:center;
-                        gap:.35rem;
-                        padding:.5rem .75rem;
-                        border-radius:8px;
-                        border:1px solid #e2e8f0;
-                        background:white;
-                        color:#8b5cf6;
-                        cursor:pointer;
-                        font-size:.8rem;
-                        font-weight:600;
-                        font-family:inherit;
-                        transition: all 0.2s;
-                      "
-                      onmouseover="this.style.background='#f5f3ff'; this.style.borderColor='#8b5cf6'"
-                      onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'"
-                      title="Ajouter/modifier un commentaire"
-                    >
-                      💬 Commentaire
-                    </button>
-
-                    <!-- Bouton Supprimer -->
-                    <form 
-                      method="POST" 
-                      action="{% url 'supprimer_passage_operation' operation.id passage.id %}" 
-                      onsubmit="return confirm('Supprimer ce passage ?')" 
-                      style="margin:0; display:inline"
-                    >
-                      {% csrf_token %}
-                      <button 
-                        type="submit"
-                        style="
-                          display:inline-flex;
-                          align-items:center;
-                          gap:.35rem;
-                          padding:.5rem .75rem;
-                          border-radius:8px;
-                          border:1px solid #fee2e2;
-                          background:white;
-                          color:#ef4444;
-                          cursor:pointer;
-                          font-size:.8rem;
-                          font-weight:600;
-                          font-family:inherit;
-                          transition: all 0.2s;
-                        "
-                        onmouseover="this.style.background='#fef2f2'; this.style.borderColor='#ef4444'"
-                        onmouseout="this.style.background='white'; this.style.borderColor='#fee2e2'"
-                        title="Supprimer ce passage"
-                      >
-                        🗑️ Supprimer
-                      </button>
-                    </form>
-
-                  </div>
-
-                  <!-- Formulaire Planifier (caché) -->
-                  <div id="form-planifier-{{ passage.id }}" style="display:none; margin-top:.75rem; padding-top:.75rem; border-top:1px solid #f1f5f9">
-                    <form method="POST" action="{% url 'planifier_passage_operation' operation.id passage.id %}">
-                      {% csrf_token %}
-                      <div style="display:flex; gap:.5rem; align-items:flex-end">
-                        <div style="flex:1; text-align:left">
-                          <label style="display:block; margin-bottom:.3rem; font-size:.75rem; font-weight:600; color:#64748b">
-                            📅 Date et heure
-                          </label>
-                          <input 
-                            type="datetime-local" 
-                            name="date_prevue" 
-                            required
-                            value="{% if passage.date_prevue %}{{ passage.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}"
-                            style="
-                              width:100%;
-                              padding:.5rem .65rem;
-                              border:1px solid #e2e8f0;
-                              border-radius:6px;
-                              font-size:.85rem;
-                              font-family:inherit;
-                            "
-                          >
-                        </div>
-                        <button type="submit" class="btn primary" style="padding:.5rem 1rem; font-size:.85rem">
-                          Valider
-                        </button>
-                        <button type="button" onclick="hideFormPassage({{ passage.id }}, 'planifier')" class="btn" style="padding:.5rem .85rem; font-size:.85rem">
-                          Annuler
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-
-                  <!-- Formulaire Commentaire (caché) -->
-                  <div id="form-commentaire-{{ passage.id }}" style="display:none; margin-top:.75rem; padding-top:.75rem; border-top:1px solid #f1f5f9">
-                    <form method="POST" action="{% url 'ajouter_commentaire_passage' operation.id passage.id %}">
-                      {% csrf_token %}
-                      <div style="display:flex; flex-direction:column; gap:.5rem; text-align:left">
-                        <textarea 
-                          name="commentaire" 
-                          rows="2"
-                          placeholder="Note pour ce passage..."
-                          style="
-                            width:100%;
-                            padding:.5rem .65rem;
-                            border:1px solid #e2e8f0;
-                            border-radius:6px;
-                            font-size:.85rem;
-                            font-family:inherit;
-                            resize:vertical;
-                          "
-                        >{% if passage.commentaire %}{{ passage.commentaire }}{% endif %}</textarea>
-                        <div style="display:flex; gap:.5rem">
-                          <button type="submit" class="btn primary" style="padding:.5rem 1rem; font-size:.85rem">
-                            Enregistrer
-                          </button>
-                          <button type="button" onclick="hideFormPassage({{ passage.id }}, 'commentaire')" class="btn" style="padding:.5rem .85rem; font-size:.85rem">
-                            Annuler
-                          </button>
-                        </div>
-                      </div>
-                    </form>
-                  </div>
-
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+      <!-- ✅ GRILLE SIMPLE (pas de tableau qui décale) -->
+      <div style="display:grid; gap:1rem">
+        {% for passage in operation.passages.all %}
+        <div class="info-card" style="position:relative">
+          
+          <!-- En-tête passage -->
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border)">
+            
+            <!-- Numéro + Statut -->
+            <div style="display:flex; align-items:center; gap:1rem">
+              <div style="
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                width:36px;
+                height:36px;
+                border-radius:8px;
+                font-weight:700;
+                font-size:1rem;
+                background: {% if passage.est_en_retard %}rgba(245,158,11,.15){% elif passage.realise %}rgba(34,197,94,.15){% elif passage.est_planifie %}rgba(99,102,241,.15){% else %}rgba(148,163,184,.15){% endif %};
+                color: {% if passage.est_en_retard %}#f59e0b{% elif passage.realise %}#22c55e{% elif passage.est_planifie %}#6366f1{% else %}#64748b{% endif %};
+              ">
+                {{ passage.numero }}
+              </div>
+              
+              <span style="
+                display:inline-flex;
+                align-items:center;
+                gap:.3rem;
+                padding:.35rem .75rem;
+                border-radius:999px;
+                font-size:.8rem;
+                font-weight:600;
+                background: {% if passage.est_en_retard %}rgba(245,158,11,.1){% elif passage.realise %}rgba(34,197,94,.1){% elif passage.est_planifie %}rgba(99,102,241,.1){% else %}rgba(148,163,184,.1){% endif %};
+                color: {% if passage.est_en_retard %}#f59e0b{% elif passage.realise %}#22c55e{% elif passage.est_planifie %}#6366f1{% else %}#64748b{% endif %};
+                border: 1px solid {% if passage.est_en_retard %}rgba(245,158,11,.3){% elif passage.realise %}rgba(34,197,94,.3){% elif passage.est_planifie %}rgba(99,102,241,.3){% else %}rgba(148,163,184,.3){% endif %};
+              ">
+                {% if passage.est_en_retard %}🟠{% elif passage.realise %}🟢{% elif passage.est_planifie %}🔵{% else %}⚪{% endif %}
+                {{ passage.statut_display }}
+              </span>
+            </div>
+            
+            <!-- Boutons action -->
+            <div style="display:flex; gap:.5rem">
+              <button 
+                onclick="toggleForm('planif-{{ passage.id }}')"
+                class="btn primary sm"
+              >
+                📅 {% if passage.date_prevue %}Replanifier{% else %}Planifier{% endif %}
+              </button>
+              
+              <form method="POST" action="{% url 'marquer_passage_realise' operation.id passage.id %}" style="margin:0">
+                {% csrf_token %}
+                <button type="submit" class="btn {% if passage.realise %}sm{% else %}success sm{% endif %}">
+                  {% if passage.realise %}↩️ Annuler{% else %}✅ Réaliser{% endif %}
+                </button>
+              </form>
+              
+              <button 
+                onclick="toggleForm('comment-{{ passage.id }}')"
+                class="btn sm"
+              >
+                💬
+              </button>
+              
+              <form method="POST" action="{% url 'supprimer_passage_operation' operation.id passage.id %}" style="margin:0" onsubmit="return confirm('Supprimer ?')">
+                {% csrf_token %}
+                <button type="submit" class="btn danger sm">🗑️</button>
+              </form>
+            </div>
+          </div>
+          
+          <!-- Infos passage -->
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1rem">
+            <div>
+              <div class="label">📅 Date planifiée</div>
+              <div class="value" style="font-size:.95rem">
+                {% if passage.date_prevue %}
+                  {{ passage.date_prevue|date:"d/m/Y à H:i" }}
+                {% else %}
+                  <span style="color:var(--muted); font-style:italic">Non planifié</span>
+                {% endif %}
+              </div>
+            </div>
+            
+            <div>
+              <div class="label">✅ Date réalisée</div>
+              <div class="value" style="font-size:.95rem">
+                {% if passage.date_realisation %}
+                  <span style="color:var(--success)">{{ passage.date_realisation|date:"d/m/Y à H:i" }}</span>
+                {% else %}
+                  <span style="color:var(--muted)">—</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Commentaire visible -->
+          {% if passage.commentaire %}
+          <div style="background:#f8fafc; padding:.75rem; border-radius:8px; border-left:3px solid var(--primary)">
+            <div style="font-size:.75rem; font-weight:600; color:var(--muted); margin-bottom:.25rem">💬 COMMENTAIRE</div>
+            <div style="font-size:.9rem; color:var(--text)">{{ passage.commentaire }}</div>
+          </div>
+          {% endif %}
+          
+          <!-- ✅ FORMULAIRE PLANIFICATION (caché par défaut) -->
+          <div id="planif-{{ passage.id }}" style="display:none; margin-top:1rem; padding-top:1rem; border-top:2px dashed var(--border)">
+            <form method="POST" action="{% url 'planifier_passage_operation' operation.id passage.id %}">
+              {% csrf_token %}
+              <div style="display:flex; gap:.5rem; align-items:end">
+                <div style="flex:1">
+                  <label style="display:block; margin-bottom:.3rem; font-size:.75rem; font-weight:600; color:var(--muted)">
+                    📅 Date et heure
+                  </label>
+                  <input 
+                    type="datetime-local" 
+                    name="date_prevue" 
+                    class="input"
+                    value="{% if passage.date_prevue %}{{ passage.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}"
+                    style="margin:0"
+                    required
+                  >
+                </div>
+                <button type="submit" class="btn primary">Valider</button>
+                <button type="button" onclick="toggleForm('planif-{{ passage.id }}')" class="btn">Annuler</button>
+              </div>
+            </form>
+          </div>
+          
+          <!-- ✅ FORMULAIRE COMMENTAIRE (caché par défaut) -->
+          <div id="comment-{{ passage.id }}" style="display:none; margin-top:1rem; padding-top:1rem; border-top:2px dashed var(--border)">
+            <form method="POST" action="{% url 'ajouter_commentaire_passage' operation.id passage.id %}">
+              {% csrf_token %}
+              <div style="display:flex; flex-direction:column; gap:.5rem">
+                <label style="font-size:.75rem; font-weight:600; color:var(--muted)">💬 Commentaire</label>
+                <textarea 
+                  name="commentaire" 
+                  rows="3"
+                  class="input"
+                  placeholder="Note pour ce passage..."
+                  style="margin:0; resize:vertical"
+                >{% if passage.commentaire %}{{ passage.commentaire }}{% endif %}</textarea>
+                <div style="display:flex; gap:.5rem">
+                  <button type="submit" class="btn primary">Enregistrer</button>
+                  <button type="button" onclick="toggleForm('comment-{{ passage.id }}')" class="btn">Annuler</button>
+                </div>
+              </div>
+            </form>
+          </div>
+          
+        </div>
+        {% endfor %}
       </div>
     {% else %}
-      <div style="text-align:center; padding:3rem 1rem; color:#94a3b8">
+      <div style="text-align:center; padding:3rem 1rem; color:var(--muted)">
         <div style="font-size:3rem; margin-bottom:1rem">📅</div>
         <p style="font-size:1rem; margin:0">Aucun passage planifié</p>
         <p style="font-size:.9rem; margin:.5rem 0 0 0">Cliquez sur "Ajouter un passage" pour commencer</p>
@@ -1670,29 +1554,20 @@
   </div>
 </section>
 
-<!-- JavaScript pour les formulaires -->
 <script>
-function showFormPassage(passageId, formType) {
-  // Cacher tous les formulaires de ce passage
-  const planifierForm = document.getElementById('form-planifier-' + passageId);
-  const commentaireForm = document.getElementById('form-commentaire-' + passageId);
+function toggleForm(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
   
-  if (planifierForm) planifierForm.style.display = 'none';
-  if (commentaireForm) commentaireForm.style.display = 'none';
+  // Fermer tous les autres formulaires
+  document.querySelectorAll('[id^="planif-"], [id^="comment-"]').forEach(f => {
+    if (f.id !== formId) {
+      f.style.display = 'none';
+    }
+  });
   
-  // Afficher le formulaire demandé
-  if (formType === 'planifier' && planifierForm) {
-    planifierForm.style.display = 'block';
-  } else if (formType === 'commentaire' && commentaireForm) {
-    commentaireForm.style.display = 'block';
-  }
-}
-
-function hideFormPassage(passageId, formType) {
-  const form = document.getElementById('form-' + formType + '-' + passageId);
-  if (form) {
-    form.style.display = 'none';
-  }
+  // Toggle le formulaire actuel
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
 }
 </script>
 
@@ -2631,21 +2506,23 @@ if (modePaiementSelect) {
           shouldOpen = title.includes('Devis');
           break;
         case 'a_planifier':
-          // ✅ Si devis accepté, ouvrir la section Devis + Planification
+          // ✅ Si devis accepté, ouvrir la section Devis + Passages planifiés
           if (devisStatut === 'accepte') {
-            shouldOpen = title.includes('Devis') || title.includes('Planification');
+            shouldOpen = title.includes('Devis') || title.includes('Passages planifiés');
           } else {
-            shouldOpen = title.includes('Planification');
+            shouldOpen = title.includes('Passages planifiés');
           }
           break;
         case 'planifie':
-          shouldOpen = title.includes('Planification');
+          shouldOpen = title.includes('Passages planifiés');
           break;
         case 'realise':
-          shouldOpen = title.includes('Facture') || title.includes('Paiement');
+          // ✅ MODIFIÉ : Plus d'ouverture auto des Paiements
+          shouldOpen = false;
           break;
         case 'paye':
-          shouldOpen = title.includes('Paiement');
+          // ✅ MODIFIÉ : Plus d'ouverture auto des Paiements même si payé
+          shouldOpen = false;
           break;
         case 'devis_refuse':
           shouldOpen = title.includes('Devis');
