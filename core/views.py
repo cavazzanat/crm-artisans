@@ -2850,3 +2850,158 @@ def supprimer_intervention(request, operation_id, intervention_id):
         operation.update_statut_from_interventions()
     
     return redirect('operation_detail', operation_id=operation.id)
+
+@login_required
+def ajouter_passage_operation(request, operation_id):
+    """
+    Ajoute un nouveau passage pour une opération
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    
+    if request.method == 'POST':
+        date_prevue_str = request.POST.get('date_prevue', '').strip()
+        commentaire = request.POST.get('commentaire', '').strip()
+        
+        # Créer le passage
+        passage = PassageOperation.objects.create(
+            operation=operation,
+            commentaire=commentaire
+        )
+        
+        # Si une date est fournie, l'assigner
+        if date_prevue_str:
+            try:
+                from datetime import datetime
+                date_prevue = datetime.fromisoformat(date_prevue_str)
+                passage.date_prevue = date_prevue
+                passage.save()
+                
+                messages.success(
+                    request,
+                    f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
+                )
+            except ValueError:
+                messages.success(request, f"✅ Passage {passage.numero} créé (à planifier)")
+        else:
+            messages.success(request, f"✅ Passage {passage.numero} créé (à planifier)")
+        
+        # Historique
+        HistoriqueOperation.objects.create(
+            operation=operation,
+            utilisateur=request.user,
+            action=f"Passage {passage.numero} ajouté"
+        )
+    
+    return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def planifier_passage_operation(request, operation_id, passage_id):
+    """
+    Planifie ou modifie la date d'un passage
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    passage = get_object_or_404(PassageOperation, id=passage_id, operation=operation)
+    
+    if request.method == 'POST':
+        date_prevue_str = request.POST.get('date_prevue')
+        
+        if date_prevue_str:
+            try:
+                from datetime import datetime
+                date_prevue = datetime.fromisoformat(date_prevue_str)
+                
+                passage.date_prevue = date_prevue
+                passage.save()
+                
+                messages.success(
+                    request,
+                    f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
+                )
+                
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    utilisateur=request.user,
+                    action=f"Passage {passage.numero} planifié : {date_prevue.strftime('%d/%m/%Y %H:%M')}"
+                )
+                
+            except ValueError:
+                messages.error(request, "❌ Format de date invalide")
+        else:
+            messages.error(request, "❌ Veuillez saisir une date")
+    
+    return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def marquer_passage_realise(request, operation_id, passage_id):
+    """
+    Marque un passage comme réalisé (ou inverse)
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    passage = get_object_or_404(PassageOperation, id=passage_id, operation=operation)
+    
+    if request.method == 'POST':
+        # Basculer l'état
+        passage.realise = not passage.realise
+        passage.save()  # Le save() gère automatiquement date_realisation
+        
+        if passage.realise:
+            messages.success(request, f"✅ Passage {passage.numero} marqué comme réalisé")
+            action = f"Passage {passage.numero} réalisé"
+        else:
+            messages.info(request, f"ℹ️ Passage {passage.numero} marqué comme non réalisé")
+            action = f"Passage {passage.numero} marqué comme non réalisé"
+        
+        HistoriqueOperation.objects.create(
+            operation=operation,
+            utilisateur=request.user,
+            action=action
+        )
+    
+    return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def supprimer_passage_operation(request, operation_id, passage_id):
+    """
+    Supprime un passage
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    passage = get_object_or_404(PassageOperation, id=passage_id, operation=operation)
+    
+    if request.method == 'POST':
+        numero = passage.numero
+        passage.delete()
+        
+        messages.success(request, f"✅ Passage {numero} supprimé")
+        
+        HistoriqueOperation.objects.create(
+            operation=operation,
+            utilisateur=request.user,
+            action=f"Passage {numero} supprimé"
+        )
+    
+    return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def ajouter_commentaire_passage(request, operation_id, passage_id):
+    """
+    Ajoute/modifie un commentaire sur un passage
+    """
+    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
+    passage = get_object_or_404(PassageOperation, id=passage_id, operation=operation)
+    
+    if request.method == 'POST':
+        commentaire = request.POST.get('commentaire', '').strip()
+        
+        passage.commentaire = commentaire
+        passage.save()
+        
+        if commentaire:
+            messages.success(request, "✅ Commentaire ajouté")
+        else:
+            messages.info(request, "ℹ️ Commentaire supprimé")
+    
+    return redirect('operation_detail', operation_id=operation.id)

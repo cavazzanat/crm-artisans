@@ -49,4 +49,11 @@ urlpatterns = [
         views.supprimer_intervention, name='supprimer_intervention'),
     path('operation/<int:operation_id>/intervention/creer/', 
         views.creer_nouvelle_intervention, name='creer_nouvelle_intervention'),
+    
+    # Dans urls.py
+    path('operations/<int:operation_id>/passages/ajouter/', views.ajouter_passage_operation, name='ajouter_passage_operation'),
+    path('operations/<int:operation_id>/passages/<int:passage_id>/planifier/', views.planifier_passage_operation, name='planifier_passage_operation'),
+    path('operations/<int:operation_id>/passages/<int:passage_id>/realise/', views.marquer_passage_realise, name='marquer_passage_realise'),
+    path('operations/<int:operation_id>/passages/<int:passage_id>/supprimer/', views.supprimer_passage_operation, name='supprimer_passage_operation'),
+    path('operations/<int:operation_id>/passages/<int:passage_id>/commentaire/', views.ajouter_commentaire_passage, name='ajouter_commentaire_passage'),
 ]

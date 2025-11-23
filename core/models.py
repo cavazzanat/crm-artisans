@@ -215,38 +215,39 @@ class Operation(models.Model):
     # ✅ MÉTHODE CRITIQUE POUR INTERVENTIONS MULTIPLES
     # ========================================
     def update_statut_from_interventions(self):
-        """
-        Recalcule automatiquement le statut de l'opération
-        selon l'état des interventions multiples
-        """
+        """Recalcule le statut selon TOUS les passages de TOUTES les interventions"""
         interventions = self.interventions.all()
         
         if not interventions.exists():
             return
         
-        nb_total = interventions.count()
-        nb_realisees = interventions.filter(realise=True).count()
-        nb_non_planifiees = interventions.filter(date_prevue__isnull=True).count()
+        # Compter tous les passages
+        total_passages = 0
+        passages_realises = 0
+        passages_en_retard = False
         
-        maintenant = timezone.now()
-        en_retard = interventions.filter(
-            realise=False,
-            date_prevue__lt=maintenant
-        ).exists()
+        for intervention in interventions:
+            passages = intervention.passages.all()
+            total_passages += passages.count()
+            passages_realises += passages.filter(realise=True).count()
+            
+            if passages.filter(
+                realise=False,
+                date_prevue__lt=timezone.now()
+            ).exists():
+                passages_en_retard = True
         
-        # ✅ LOGIQUE DE CALCUL DU STATUT
-        if nb_realisees == nb_total:
-            nouveau_statut = 'realise'
-        elif nb_realisees > 0:
-            nouveau_statut = 'en_cours'
-        elif nb_non_planifiees > 0:
+        if total_passages == 0:
             nouveau_statut = 'a_planifier'
-        elif en_retard:
+        elif passages_realises == total_passages:
+            nouveau_statut = 'realise'
+        elif passages_realises > 0:
+            nouveau_statut = 'en_cours'
+        elif passages_en_retard:
             nouveau_statut = 'a_traiter'
         else:
             nouveau_statut = 'planifie'
         
-        # Sauvegarder uniquement si changement
         if self.statut != nouveau_statut:
             self.statut = nouveau_statut
             super(Operation, self).save(update_fields=['statut'])
@@ -258,7 +259,150 @@ class Operation(models.Model):
             'total': planifiees.count(),
             'realisees': planifiees.filter(realise=True).count()
         }        
+        
+    def update_statut_from_passages(self):
+        """
+        Recalcule le statut de l'opération selon ses passages
+        """
+        passages = self.passages.all()
+        
+        if not passages.exists():
+            # Pas de passages = À planifier
+            return
+        
+        nb_total = passages.count()
+        nb_realises = passages.filter(realise=True).count()
+        nb_planifies = passages.exclude(date_prevue__isnull=True).count()
+        
+        # Vérifier s'il y a des retards
+        from django.utils import timezone
+        en_retard = passages.filter(
+            realise=False,
+            date_prevue__lt=timezone.now()
+        ).exists()
+        
+        # Calculer le nouveau statut
+        if nb_realises == nb_total:
+            nouveau_statut = 'realise'
+        elif nb_realises > 0:
+            nouveau_statut = 'en_cours'
+        elif en_retard:
+            nouveau_statut = 'a_traiter'
+        elif nb_planifies > 0:
+            nouveau_statut = 'planifie'
+        else:
+            nouveau_statut = 'a_planifier'
+        
+        # Mettre à jour si différent
+        if self.statut != nouveau_statut:
+            self.statut = nouveau_statut
+            self.save(update_fields=['statut'])
+
+    def get_passages_stats(self):
+        """
+        Retourne les stats des passages
+        """
+        passages = self.passages.all()
+        return {
+            'total': passages.count(),
+            'realises': passages.filter(realise=True).count(),
+            'planifies': passages.exclude(date_prevue__isnull=True).count()
+        }
     
+
+# Dans models.py, APRÈS la classe Operation
+
+class PassageOperation(models.Model):
+    """
+    Représente UN passage/rendez-vous pour réaliser UNE opération
+    Une opération peut nécessiter plusieurs passages
+    """
+    
+    operation = models.ForeignKey(
+        Operation,
+        on_delete=models.CASCADE,
+        related_name='passages'
+    )
+    
+    numero = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Numéro du passage"
+    )
+    
+    date_prevue = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date prévue du passage"
+    )
+    
+    date_realisation = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Date de réalisation"
+    )
+    
+    realise = models.BooleanField(
+        default=False,
+        verbose_name="Passage réalisé"
+    )
+    
+    commentaire = models.TextField(
+        blank=True,
+        verbose_name="Commentaire sur ce passage"
+    )
+    
+    class Meta:
+        ordering = ['numero', 'date_prevue']
+        verbose_name = "Passage"
+        verbose_name_plural = "Passages"
+    
+    def __str__(self):
+        if self.date_prevue:
+            return f"Passage {self.numero} - {self.date_prevue.strftime('%d/%m/%Y %H:%M')}"
+        return f"Passage {self.numero}"
+    
+    def save(self, *args, **kwargs):
+        # Auto-numérotation
+        if not self.pk:
+            dernier = self.operation.passages.aggregate(
+                Max('numero')
+            )['numero__max'] or 0
+            self.numero = dernier + 1
+        
+        # Date de réalisation auto si marqué comme réalisé
+        if self.realise and not self.date_realisation:
+            from django.utils import timezone
+            self.date_realisation = timezone.now()
+        elif not self.realise:
+            self.date_realisation = None
+        
+        super().save(*args, **kwargs)
+        
+        # Recalculer le statut de l'opération
+        self.operation.update_statut_from_passages()
+    
+    @property
+    def est_planifie(self):
+        return self.date_prevue is not None
+    
+    @property
+    def est_en_retard(self):
+        if not self.date_prevue or self.realise:
+            return False
+        from django.utils import timezone
+        return self.date_prevue < timezone.now()
+    
+    @property
+    def statut_display(self):
+        if self.realise:
+            return "✅ Réalisé"
+        elif not self.date_prevue:
+            return "⏳ À planifier"
+        elif self.est_en_retard:
+            return "⚠️ En retard"
+        else:
+            return "📅 Planifié"
+
 
 # ========================================
 # NOUVEAU MODÈLE : DEVIS
@@ -536,8 +680,8 @@ class LigneDevis(models.Model):
 # ========================================
 class Intervention(models.Model):
     """
-    Modèle Intervention - Supporte maintenant les interventions multiples
-    Chaque intervention = une étape de réalisation d'une opération
+    Ligne de travail (ex: "Installation chaudière")
+    Peut nécessiter plusieurs passages
     """
     
     UNITES_CHOICES = [
@@ -548,10 +692,6 @@ class Intervention(models.Model):
         ('m2', 'm²'),
         ('ml', 'Mètre linéaire'),
     ]
-    
-    # ════════════════════════════════════════════════════════════
-    # CHAMPS EXISTANTS (CONSERVÉS)
-    # ════════════════════════════════════════════════════════════
     
     operation = models.ForeignKey(
         Operation,
@@ -567,16 +707,14 @@ class Intervention(models.Model):
         max_digits=10,
         decimal_places=2,
         default=1,
-        verbose_name="Quantité",
-        help_text="Quantité (ex: 2, 1.5, 10)"
+        verbose_name="Quantité"
     )
     
     unite = models.CharField(
         max_length=20,
         choices=UNITES_CHOICES,
         default='forfait',
-        verbose_name="Unité",
-        help_text="Unité de mesure"
+        verbose_name="Unité"
     )
     
     prix_unitaire_ht = models.DecimalField(
@@ -584,108 +722,187 @@ class Intervention(models.Model):
         decimal_places=2,
         null=True,
         blank=True,
-        verbose_name="Prix unitaire HT (€)",
-        help_text="Prix unitaire HT en euros"
+        verbose_name="Prix unitaire HT (€)"
     )
     
     taux_tva = models.DecimalField(
         max_digits=5,
         decimal_places=2,
         default=10.0,
-        verbose_name="Taux TVA (%)",
-        help_text="Taux de TVA en %"
+        verbose_name="Taux TVA (%)"
     )
     
     montant = models.DecimalField(
         max_digits=10,
         decimal_places=2,
-        verbose_name="Montant HT",
-        help_text="Total HT de la ligne (quantité × prix unitaire HT)"
+        verbose_name="Montant HT"
     )
     
-    ordre = models.PositiveIntegerField(
-        default=999,  # ← MODIFIÉ : 999 au lieu de 1
-        verbose_name="Ordre d'affichage"
+    ordre = models.PositiveIntegerField(default=1)
+    
+    class Meta:
+        ordering = ['ordre']
+        verbose_name = "Intervention"
+        verbose_name_plural = "Interventions"
+    
+    def __str__(self):
+        return f"{self.description[:50]} - {self.montant}€ HT"
+    
+    def save(self, *args, **kwargs):
+        # Calcul montant HT
+        if self.prix_unitaire_ht is not None:
+            self.montant = self.quantite * self.prix_unitaire_ht
+        
+        super().save(*args, **kwargs)
+    
+    @property
+    def montant_tva(self):
+        return (self.montant * self.taux_tva) / Decimal('100')
+    
+    @property
+    def montant_ttc(self):
+        return self.montant + self.montant_tva
+    
+    # ✅ NOUVEAU : Stats des passages
+    def get_passages_stats(self):
+        passages = self.passages.all()
+        return {
+            'total': passages.count(),
+            'planifies': passages.exclude(date_prevue__isnull=True).count(),
+            'realises': passages.filter(realise=True).count()
+        }
+    
+    # ✅ NOUVEAU : Statut global de l'intervention
+    def update_statut_from_passages(self):
+        """Recalcule le statut selon les passages"""
+        passages = self.passages.all()
+        
+        if not passages.exists():
+            return
+        
+        nb_total = passages.count()
+        nb_realises = passages.filter(realise=True).count()
+        
+        # Mettre à jour le statut de l'opération parent
+        self.operation.update_statut_from_interventions()
+    
+    @property
+    def statut_display(self):
+        """Statut basé sur les passages"""
+        passages = self.passages.all()
+        
+        if not passages.exists():
+            return "⏳ À planifier"
+        
+        nb_total = passages.count()
+        nb_realises = passages.filter(realise=True).count()
+        
+        if nb_realises == nb_total:
+            return "✅ Terminée"
+        elif nb_realises > 0:
+            return f"🔵 En cours ({nb_realises}/{nb_total})"
+        else:
+            planifies = passages.exclude(date_prevue__isnull=True).count()
+            if planifies > 0:
+                return f"📅 Planifiée ({planifies} passage(s))"
+            else:
+                return "⏳ À planifier"
+    
+    @property
+    def prochain_passage(self):
+        """Retourne le prochain passage non réalisé"""
+        return self.passages.filter(
+            realise=False,
+            date_prevue__gte=timezone.now()
+        ).order_by('date_prevue').first()
+
+
+# ========================================
+# NOUVEAU MODÈLE : PASSAGE
+# ========================================
+class Passage(models.Model):
+    """
+    Représente un passage/rendez-vous pour réaliser une intervention
+    Une intervention peut nécessiter plusieurs passages
+    """
+    
+    intervention = models.ForeignKey(
+        Intervention,
+        on_delete=models.CASCADE,
+        related_name='passages'
     )
     
-    # ════════════════════════════════════════════════════════════
-    # ✅ NOUVEAUX CHAMPS POUR INTERVENTIONS MULTIPLES
-    # ════════════════════════════════════════════════════════════
+    numero = models.PositiveIntegerField(
+        default=1,
+        verbose_name="Numéro du passage"
+    )
     
     date_prevue = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="Date prévue",
-        help_text="Date et heure planifiées pour cette intervention"
+        help_text="Date et heure planifiées pour ce passage"
     )
     
     date_realisation = models.DateTimeField(
         null=True,
         blank=True,
         verbose_name="Date de réalisation",
-        help_text="Rempli automatiquement quand l'intervention est marquée comme réalisée"
+        help_text="Rempli automatiquement quand marqué comme réalisé"
     )
     
     realise = models.BooleanField(
         default=False,
-        verbose_name="Réalisée",
-        help_text="Cocher si l'intervention a été effectuée"
+        verbose_name="Réalisé"
     )
     
     commentaire = models.TextField(
         blank=True,
-        verbose_name="Commentaire",
-        help_text="Notes libres sur cette intervention"
+        verbose_name="Commentaire sur ce passage"
     )
     
-    # ════════════════════════════════════════════════════════════
-    # META & __STR__
-    # ════════════════════════════════════════════════════════════
-    
     class Meta:
-        ordering = ['ordre', 'date_prevue']
-        verbose_name = "Intervention"
-        verbose_name_plural = "Interventions"
+        ordering = ['numero', 'date_prevue']
+        verbose_name = "Passage"
+        verbose_name_plural = "Passages"
     
     def __str__(self):
         if self.date_prevue:
             date_str = self.date_prevue.strftime('%d/%m/%Y %H:%M')
-            return f"{self.description[:50]} - {date_str}"
-        return f"{self.description[:50]} - {self.montant}€ HT"
+            return f"Passage {self.numero} - {date_str}"
+        return f"Passage {self.numero}"
     
-    # ════════════════════════════════════════════════════════════
-    # PROPERTIES EXISTANTES (CONSERVÉES)
-    # ════════════════════════════════════════════════════════════
+    def save(self, *args, **kwargs):
+        # Auto-numérotation
+        if not self.pk:
+            dernier = self.intervention.passages.aggregate(
+                Max('numero')
+            )['numero__max'] or 0
+            self.numero = dernier + 1
+        
+        # Date de réalisation auto
+        if self.realise and not self.date_realisation:
+            self.date_realisation = timezone.now()
+        elif not self.realise:
+            self.date_realisation = None
+        
+        super().save(*args, **kwargs)
+        
+        # Recalculer le statut de l'intervention parent
+        self.intervention.update_statut_from_passages()
     
     @property
-    def montant_tva(self):
-        """Montant de la TVA pour cette ligne"""
-        return (self.montant * self.taux_tva) / Decimal('100')
-    
-    @property
-    def montant_ttc(self):
-        """Total TTC de cette ligne"""
-        return self.montant + self.montant_tva
-    
-    # ════════════════════════════════════════════════════════════
-    # ✅ NOUVELLES PROPERTIES POUR INTERVENTIONS MULTIPLES
-    # ════════════════════════════════════════════════════════════
-    
-    @property
-    def est_planifiee(self):
-        """Vérifie si l'intervention a une date prévue"""
+    def est_planifie(self):
         return self.date_prevue is not None
     
     @property
     def est_en_retard(self):
-        """Vérifie si l'intervention est en retard (date passée et non réalisée)"""
         if not self.date_prevue or self.realise:
             return False
         return self.date_prevue < timezone.now()
     
     @property
     def statut_display(self):
-        """Retourne le statut de l'intervention pour affichage"""
         if self.realise:
             return "✅ Réalisé"
         elif not self.date_prevue:
@@ -694,55 +911,6 @@ class Intervention(models.Model):
             return "⚠️ En retard"
         else:
             return "⏰ Planifié"
-        
-    
-    @property
-    def montant_ttc(self):
-        """Calcul du montant TTC"""
-        return self.montant * (1 + self.taux_tva / 100)
-    
-    # ════════════════════════════════════════════════════════════
-    # ✅ MÉTHODE SAVE() SURCHARGÉE
-    # ════════════════════════════════════════════════════════════
-    
-    def save(self, *args, **kwargs):
-        """
-        Calcul automatique lors de la sauvegarde :
-        1. Montant HT (quantité × prix unitaire)
-        2. Ordre selon date_prevue
-        3. Date de réalisation si marquée comme réalisée
-        4. Recalcul du statut de l'opération parent
-        """
-        
-        # ✅ CALCUL 1 : Montant HT
-        if self.prix_unitaire_ht is not None:
-            self.montant = self.quantite * self.prix_unitaire_ht
-        
-        # ✅ CALCUL 2 : Ordre automatique selon date_prevue
-        if self.date_prevue:
-            # Compter combien d'interventions ont une date_prevue antérieure
-            interventions_avant = Intervention.objects.filter(
-                operation=self.operation,
-                date_prevue__lt=self.date_prevue
-            ).exclude(pk=self.pk if self.pk else None)
-            
-            self.ordre = interventions_avant.count() + 1
-        else:
-            # Pas de date = ordre 999 (à la fin)
-            self.ordre = 999
-        
-        # ✅ CALCUL 3 : Date de réalisation automatique
-        if self.realise and not self.date_realisation:
-            self.date_realisation = timezone.now()
-        elif not self.realise:
-            # Si on décoche "réalisé", on efface la date de réalisation
-            self.date_realisation = None
-        
-        # Sauvegarder l'intervention
-        super().save(*args, **kwargs)
-        
-        # ✅ CALCUL 4 : Recalculer le statut de l'opération parent
-        self.operation.update_statut_from_interventions()
 
 
 # ========================================
