@@ -734,36 +734,33 @@ def operation_detail(request, operation_id):
                 messages.error(request, "❌ Validité invalide")
             
             return redirect('operation_detail', operation_id=operation.id)
-        
-        # ========================================
-        # ACTION : GÉNÉRER LE PDF DU DEVIS
-        # ========================================
+                
+        # ════════════════════════════════════════════════════════════
+        # ACTION : Générer PDF / Marquer comme prêt
+        # ════════════════════════════════════════════════════════════
         elif action == 'generer_pdf_devis':
             devis_id = request.POST.get('devis_id')
             
             try:
                 devis = Devis.objects.get(id=devis_id, operation=operation)
                 
-                # Vérifier qu'il y a au moins une ligne
-                if not devis.lignes.exists():
-                    messages.warning(request, "⚠️ Le devis ne contient aucune ligne.")
-                    return redirect('operation_detail', operation_id=operation.id)
+                # ✅ AJOUT : Récupérer et enregistrer notes et validité
+                notes = request.POST.get('notes', '').strip()
+                validite_jours_str = request.POST.get('validite_jours', '30')
                 
-                # ✅ NOUVEAU : brouillon → prêt (pas encore envoyé)
-                if devis.statut == 'brouillon':
-                    devis.statut = 'pret'
-                    devis.save()
-                    
-                    # Historique
-                    HistoriqueOperation.objects.create(
-                        operation=operation,
-                        action=f"📄 Devis {devis.numero_devis} marqué comme prêt (PDF généré) - Montant : {devis.total_ttc}€ TTC",
-                        utilisateur=request.user
-                    )
-                    
-                    messages.success(request, f"✅ Devis {devis.numero_devis} marqué comme prêt ! Vous pouvez maintenant l'envoyer au client.")
-                else:
-                    messages.info(request, f"ℹ️ Le devis {devis.numero_devis} était déjà généré.")
+                if notes:
+                    devis.notes = notes
+                
+                try:
+                    devis.validite_jours = int(validite_jours_str)
+                except ValueError:
+                    pass  # Garder la valeur actuelle si invalide
+                
+                # Passer au statut "prêt"
+                devis.statut = 'pret'
+                devis.save()
+                
+                messages.success(request, f"✅ Devis {devis.numero_devis} prêt à envoyer !")
                 
             except Devis.DoesNotExist:
                 messages.error(request, "❌ Devis introuvable")
