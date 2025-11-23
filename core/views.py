@@ -37,27 +37,24 @@ import re
 from .pdf_generator import generer_devis_pdf
 
 
-
 @login_required
 def dashboard(request):
     """Dashboard simplifié : KPI essentiels + Calendrier"""
     fix_client_constraint()
     try:
         # ========================================
-        # KPI ESSENTIELS
+        # KPI ESSENTIELS (INCHANGÉS)
         # ========================================
         nb_clients = Client.objects.filter(user=request.user).count()
         
-        # ✅ CORRECTION : CA du mois encaissé (compter les ÉCHÉANCES payées)
         debut_mois = timezone.now().replace(day=1)
         
         ca_mois = Echeance.objects.filter(
             operation__user=request.user,
-            paye=True,  # ← Seulement les échéances payées
-            date_echeance__gte=debut_mois  # ← Du mois en cours
+            paye=True,
+            date_echeance__gte=debut_mois
         ).aggregate(total=Sum('montant'))['total'] or 0
         
-        # Compteurs opérationnels
         nb_en_attente_devis = Operation.objects.filter(
             user=request.user, 
             statut='en_attente_devis'
@@ -68,7 +65,6 @@ def dashboard(request):
             statut='a_planifier'
         ).count()
         
-        # ✅ CORRECTION : Paiements en retard et non planifiés
         operations_realises = Operation.objects.filter(
             user=request.user,
             statut='realise'
@@ -78,14 +74,12 @@ def dashboard(request):
         nb_operations_sans_paiement = 0
         
         for op in operations_realises:
-            # Retards
             retards = op.echeances.filter(
                 paye=False,
                 date_echeance__lt=timezone.now().date()
             )
             nb_paiements_retard += retards.count()
             
-            # ✅ CORRECTION : Non planifiés (montant planifié < montant total)
             total_planifie = op.echeances.aggregate(
                 total=Sum('montant')
             )['total'] or 0
@@ -96,54 +90,56 @@ def dashboard(request):
                 nb_operations_sans_paiement += 1
         
         # ========================================
-        # CALENDRIER
+        # 🔥 CALENDRIER - VERSION PASSAGES
         # ========================================
         today = timezone.now().date()
         start_date = today - timedelta(days=30)
         end_date = today + timedelta(days=14)
 
-        # ✅ CORRECTION : Récupérer les opérations avec date_prevue OU date_realisation
-        from django.db.models import Q
-
-        operations_calendrier = Operation.objects.filter(
-            user=request.user
+        # ✅ NOUVEAU : Récupérer tous les PASSAGES dans la période
+        passages_calendrier = PassageOperation.objects.filter(
+            operation__user=request.user
         ).filter(
-            Q(date_prevue__isnull=False, date_prevue__gte=start_date, date_prevue__lte=end_date) |
-            Q(date_realisation__isnull=False, date_realisation__gte=start_date, date_realisation__lte=end_date)
-        ).exclude(
-            statut__in=['en_attente_devis', 'a_planifier', 'devis_refuse']
-        ).select_related('client').order_by('date_prevue', 'date_realisation')
+            Q(date_prevue__isnull=False, date_prevue__date__gte=start_date, date_prevue__date__lte=end_date) |
+            Q(date_realisation__isnull=False, date_realisation__date__gte=start_date, date_realisation__date__lte=end_date)
+        ).select_related('operation', 'operation__client').order_by('date_prevue', 'date_realisation')
 
         calendar_events = []
-        for op in operations_calendrier:
-            # ✅ Utiliser date_prevue en priorité, sinon date_realisation
-            date_affichage = op.date_prevue or op.date_realisation
+        
+        for passage in passages_calendrier:
+            op = passage.operation
+            
+            # ✅ Utiliser date_prevue du PASSAGE en priorité
+            date_affichage = passage.date_prevue or passage.date_realisation
             
             if not date_affichage:
-                continue  # Skip si aucune date disponible
+                continue
             
             is_past = date_affichage < timezone.now()
-                    
-            # ✅ CODE COULEUR SELON LE STATUT ET LA DATE
-            if op.statut == 'planifie':
-                # Si la date est passée → À traiter (orange)
-                if is_past:
-                    color_class = 'event-a-traiter'
-                    status_text = "À traiter"
-                else:
-                    color_class = 'event-planifie'
-                    status_text = "Planifié"
-            elif op.statut == 'realise':
-                color_class = 'event-realise'
-                status_text = "Réalisé"
-            elif op.statut == 'paye':
-                color_class = 'event-paye'
-                status_text = "Payé"
-            else:
-                color_class = 'event-default'
-                status_text = op.get_statut_display()
             
-            # Détecter retards paiement
+            # ✅ CODE COULEUR basé sur le STATUT DU PASSAGE
+            if passage.realise:
+                # Si passage réalisé mais opération pas payée
+                if op.statut == 'paye':
+                    color_class = 'event-paye'
+                    status_text = "Payé"
+                else:
+                    color_class = 'event-realise'
+                    status_text = "Réalisé"
+            elif passage.est_en_retard:
+                # Passage prévu dans le passé mais pas réalisé
+                color_class = 'event-a-traiter'
+                status_text = "À traiter (en retard)"
+            elif passage.est_planifie:
+                # Passage planifié dans le futur
+                color_class = 'event-planifie'
+                status_text = "Planifié"
+            else:
+                # Passage sans date prévue
+                color_class = 'event-default'
+                status_text = "À planifier"
+            
+            # Détecter retards paiement de l'OPÉRATION
             paiements_retard_op = op.echeances.filter(
                 paye=False,
                 date_echeance__lt=timezone.now().date()
@@ -157,22 +153,24 @@ def dashboard(request):
             
             calendar_events.append({
                 'id': op.id,
+                'passage_id': passage.id,  # ← NOUVEAU : ID du passage
                 'client_nom': f"{op.client.nom} {op.client.prenom}",
-                'service': op.type_prestation,
+                'service': f"{op.type_prestation} - Passage #{passage.numero}",  # ← Affiche le n° de passage
                 'date': date_affichage.strftime('%Y-%m-%d'),
                 'time': date_affichage.strftime('%H:%M'),
                 'address': op.adresse_intervention,
                 'phone': op.client.telephone,
                 'url': f'/operations/{op.id}/',
-                'statut': op.statut,
+                'statut': passage.statut_display,  # ← Statut du passage
                 'statut_display': status_text,
                 'color_class': color_class,
                 'is_past': is_past,
-                'commentaires': op.commentaires or '',
+                'commentaires': passage.commentaire or op.commentaires or '',  # ← Commentaire du passage ou de l'op
                 'has_retard_paiement': has_retard,
                 'nb_retards': nb_retards_op,
                 'montant_retard': float(montant_retard_op)
             })
+        
         context = {
             # KPI essentiels
             'nb_clients': nb_clients,
@@ -191,7 +189,6 @@ def dashboard(request):
         
     except Exception as e:
         return HttpResponse(f"<h1>CRM Artisans</h1><p>Erreur : {str(e)}</p>")
-
 
 @login_required
 def operations_list(request):
