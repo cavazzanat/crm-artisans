@@ -4,15 +4,10 @@
 
 from django.db import models
 from django.contrib.auth.models import User
-from django.db.models import Max, Sum, Q, F  # ← CETTE LIGNE EST CRITIQUE
+from django.urls import reverse
 from django.utils import timezone
-from datetime import datetime, timedelta
-import os
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.lib.units import cm
-from reportlab.lib import colors
+from django.db.models import Sum, Max
+from decimal import Decimal
 
 
 class Client(models.Model):
