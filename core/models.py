@@ -84,6 +84,8 @@ class Operation(models.Model):
     statut = models.CharField(max_length=20, choices=STATUTS, default='en_attente_devis')
     date_creation = models.DateTimeField(auto_now_add=True)
     date_modification = models.DateTimeField(auto_now=True)
+
+
     
     # ========================================
     # DATES D'OPÉRATION
@@ -265,81 +267,65 @@ class Operation(models.Model):
             'planifies': passages.exclude(date_prevue__isnull=True).count()
         }
     
+    def renumeroter_passages(self):
+        """
+        Recalcule les numéros de passage par ordre chronologique
+        ✅ Appelé automatiquement après chaque save() de PassageOperation
+        """
+        # Récupérer tous les passages triés par date
+        passages = self.passages.order_by('date_prevue', 'created_at')
+        
+        # Renumeroter
+        for index, passage in enumerate(passages, start=1):
+            if passage.numero != index:
+                # ⚠️ IMPORTANT : update_fields pour éviter boucle infinie
+                PassageOperation.objects.filter(pk=passage.pk).update(numero=index)
 
 # Dans models.py, APRÈS la classe Operation
 
 class PassageOperation(models.Model):
-    """
-    Représente UN passage/rendez-vous pour réaliser UNE opération
-    Une opération peut nécessiter plusieurs passages
-    """
-    
     operation = models.ForeignKey(
-        Operation,
+        'Operation',
         on_delete=models.CASCADE,
         related_name='passages'
     )
-    
-    numero = models.PositiveIntegerField(
-        default=1,
-        verbose_name="Numéro du passage"
-    )
-    
-    date_prevue = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="Date prévue du passage"
-    )
-    
-    date_realisation = models.DateTimeField(
-        null=True,
-        blank=True,
-        verbose_name="Date de réalisation"
-    )
-    
-    realise = models.BooleanField(
-        default=False,
-        verbose_name="Passage réalisé"
-    )
-    
-    commentaire = models.TextField(
-        blank=True,
-        verbose_name="Commentaire sur ce passage"
-    )
-    
+    numero = models.PositiveIntegerField(default=1)
+    date_prevue = models.DateTimeField(null=True, blank=True)
+    date_realisation = models.DateTimeField(null=True, blank=True)
+    realise = models.BooleanField(default=False)
+    commentaire = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
     class Meta:
-        ordering = ['numero', 'date_prevue']
-        verbose_name = "Passage"
-        verbose_name_plural = "Passages"
-    
-    def __str__(self):
-        if self.date_prevue:
-            return f"Passage {self.numero} - {self.date_prevue.strftime('%d/%m/%Y %H:%M')}"
-        return f"Passage {self.numero}"
-    
+        # ✅ TRI PAR DÉFAUT : date prévue, puis date de création
+        ordering = ['date_prevue', 'created_at']
+        verbose_name = "Passage d'opération"
+        verbose_name_plural = "Passages d'opération"
+
     def save(self, *args, **kwargs):
-        # Auto-numérotation
+        """
+        Sauvegarde avec recalcul automatique des numéros chronologiques
+        """
+        from django.db.models import Max
+        
+        # Si nouveau passage (pas d'ID)
         if not self.pk:
-            dernier = self.operation.passages.aggregate(
-                Max('numero')
-            )['numero__max'] or 0
-            self.numero = dernier + 1
+            # Donner un numéro temporaire (sera recalculé après)
+            dernier_numero = PassageOperation.objects.filter(
+                operation=self.operation
+            ).aggregate(Max('numero'))['numero__max'] or 0
+            self.numero = dernier_numero + 1
         
-        # Date de réalisation auto si marqué comme réalisé
-        if self.realise and not self.date_realisation:
-            from django.utils import timezone
-            self.date_realisation = timezone.now()
-        elif not self.realise:
-            self.date_realisation = None
-        
+        # Sauvegarder d'abord
         super().save(*args, **kwargs)
         
-        # Recalculer le statut de l'opération
-        self.operation.update_statut_from_passages()
+        # ✅ RECALCUL AUTO des numéros après sauvegarde
+        self.operation.renumeroter_passages()
     
     @property
     def est_planifie(self):
-        return self.date_prevue is not None
+        return self.date_prevue is not None and not self.realise
     
     @property
     def est_en_retard(self):
@@ -351,13 +337,16 @@ class PassageOperation(models.Model):
     @property
     def statut_display(self):
         if self.realise:
-            return "✅ Réalisé"
-        elif not self.date_prevue:
-            return "⏳ À planifier"
+            return "Réalisé"
         elif self.est_en_retard:
-            return "⚠️ En retard"
+            return "En retard"
+        elif self.est_planifie:
+            return "Planifié"
         else:
-            return "📅 Planifié"
+            return "À planifier"
+    
+    def __str__(self):
+        return f"Passage #{self.numero} - {self.operation.id_operation}"
 
 
 # ========================================
