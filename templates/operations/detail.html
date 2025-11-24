@@ -1353,6 +1353,7 @@
     </section>
     {% endif %}
 
+    
 <!-- 📅 PASSAGES PLANIFIÉS -->
 <section class="section">
   <div class="section-header" onclick="toggleSection(this)">
@@ -1397,7 +1398,7 @@
         <div class="info-card" style="position:relative">
           
           <!-- En-tête passage -->
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border)">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid var(--border); flex-wrap:wrap; gap:.5rem">
             
             <!-- Numéro + Statut -->
             <div style="display:flex; align-items:center; gap:1rem">
@@ -1434,9 +1435,9 @@
             </div>
             
             <!-- Boutons action -->
-            <div style="display:flex; gap:.5rem">
+            <div style="display:flex; gap:.5rem; flex-wrap:wrap">
               <button 
-                onclick="toggleForm('planif-{{ passage.id }}')"
+                onclick="toggleFormPassage('planif-{{ passage.id }}')"
                 class="btn primary sm"
               >
                 📅 {% if passage.date_prevue %}Replanifier{% else %}Planifier{% endif %}
@@ -1450,13 +1451,13 @@
               </form>
               
               <button 
-                onclick="toggleForm('comment-{{ passage.id }}')"
+                onclick="toggleFormPassage('comment-{{ passage.id }}')"
                 class="btn sm"
               >
                 💬
               </button>
               
-              <form method="POST" action="{% url 'supprimer_passage_operation' operation.id passage.id %}" style="margin:0" onsubmit="return confirm('Supprimer ?')">
+              <form method="POST" action="{% url 'supprimer_passage_operation' operation.id passage.id %}" style="margin:0" onsubmit="return confirm('Supprimer ce passage ?')">
                 {% csrf_token %}
                 <button type="submit" class="btn danger sm">🗑️</button>
               </form>
@@ -1497,31 +1498,35 @@
           {% endif %}
           
           <!-- ✅ FORMULAIRE PLANIFICATION (caché par défaut) -->
-          <div id="planif-{{ passage.id }}" style="display:none; margin-top:1rem; padding-top:1rem; border-top:2px dashed var(--border)">
-            <form method="POST" action="{% url 'planifier_passage_operation' operation.id passage.id %}">
+          <div id="planif-{{ passage.id }}" class="form-passage-inline" style="display:none; margin-top:1rem; padding-top:1rem; border-top:2px dashed var(--border)">
+            <form method="POST" action="{% url 'planifier_passage_operation' operation.id passage.id %}" onsubmit="return validateDatePlanification(this)">
               {% csrf_token %}
-              <div style="display:flex; gap:.5rem; align-items:end">
-                <div style="flex:1">
+              <div style="display:flex; gap:.5rem; align-items:end; flex-wrap:wrap">
+                <div style="flex:1; min-width:200px">
                   <label style="display:block; margin-bottom:.3rem; font-size:.75rem; font-weight:600; color:var(--muted)">
                     📅 Date et heure
                   </label>
                   <input 
                     type="datetime-local" 
                     name="date_prevue" 
-                    class="input"
+                    class="input input-date-planification"
                     value="{% if passage.date_prevue %}{{ passage.date_prevue|date:'Y-m-d\TH:i' }}{% endif %}"
                     style="margin:0"
                     required
                   >
                 </div>
                 <button type="submit" class="btn primary">Valider</button>
-                <button type="button" onclick="toggleForm('planif-{{ passage.id }}')" class="btn">Annuler</button>
+                <button type="button" onclick="toggleFormPassage('planif-{{ passage.id }}')" class="btn">Annuler</button>
+              </div>
+              <!-- Warning date passée -->
+              <div class="warning-date-passee" style="display:none; margin-top:.5rem; padding:.5rem; background:#fee2e2; border:1px solid #fecaca; border-radius:6px; color:#991b1b; font-size:.85rem">
+                ⚠️ Cette date est dans le passé
               </div>
             </form>
           </div>
           
           <!-- ✅ FORMULAIRE COMMENTAIRE (caché par défaut) -->
-          <div id="comment-{{ passage.id }}" style="display:none; margin-top:1rem; padding-top:1rem; border-top:2px dashed var(--border)">
+          <div id="comment-{{ passage.id }}" class="form-passage-inline" style="display:none; margin-top:1rem; padding-top:1rem; border-top:2px dashed var(--border)">
             <form method="POST" action="{% url 'ajouter_commentaire_passage' operation.id passage.id %}">
               {% csrf_token %}
               <div style="display:flex; flex-direction:column; gap:.5rem">
@@ -1535,7 +1540,7 @@
                 >{% if passage.commentaire %}{{ passage.commentaire }}{% endif %}</textarea>
                 <div style="display:flex; gap:.5rem">
                   <button type="submit" class="btn primary">Enregistrer</button>
-                  <button type="button" onclick="toggleForm('comment-{{ passage.id }}')" class="btn">Annuler</button>
+                  <button type="button" onclick="toggleFormPassage('comment-{{ passage.id }}')" class="btn">Annuler</button>
                 </div>
               </div>
             </form>
@@ -1553,6 +1558,189 @@
     {% endif %}
   </div>
 </section>
+
+<!-- ════════════════════════════════════════════════════════════
+     MODAL AJOUT PASSAGE
+     ════════════════════════════════════════════════════════════ -->
+<div id="modal-add-passage" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,.5); z-index:9999; align-items:center; justify-content:center">
+  <div style="background:white; border-radius:12px; padding:2rem; max-width:500px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem">
+      <h3 style="margin:0; color:var(--text); font-size:1.3rem">➕ Ajouter un passage</h3>
+      <button onclick="closeModalAddPassage()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--muted)">&times;</button>
+    </div>
+    
+    <form method="POST" action="{% url 'ajouter_passage_operation' operation.id %}" id="form-add-passage" onsubmit="return validateAddPassage()">
+      {% csrf_token %}
+      
+      <div style="margin-bottom:1.5rem">
+        <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">
+          📅 Date et heure (optionnel)
+        </label>
+        <input 
+          type="datetime-local" 
+          name="date_prevue" 
+          id="add-passage-date"
+          class="input"
+          style="margin:0"
+        >
+        <small style="display:block; margin-top:.5rem; color:var(--muted); font-size:.85rem">
+          💡 Laissez vide pour créer un passage non planifié
+        </small>
+        <div id="add-passage-warning" style="display:none; margin-top:.5rem; padding:.5rem; background:#fee2e2; border:1px solid #fecaca; border-radius:6px; color:#991b1b; font-size:.85rem">
+          ⚠️ Cette date est dans le passé
+        </div>
+      </div>
+      
+      <div style="margin-bottom:1.5rem">
+        <label style="display:block; margin-bottom:.5rem; color:var(--muted); font-size:.9rem; font-weight:600">
+          💬 Commentaire (optionnel)
+        </label>
+        <textarea 
+          name="commentaire" 
+          rows="3"
+          class="input"
+          placeholder="Note pour ce passage..."
+          style="margin:0; resize:vertical"
+        ></textarea>
+      </div>
+      
+      <div style="display:flex; gap:.5rem; justify-content:flex-end">
+        <button type="button" onclick="closeModalAddPassage()" class="btn">Annuler</button>
+        <button type="submit" class="btn success">✅ Créer le passage</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// GESTION PASSAGES PLANIFIÉS
+// ════════════════════════════════════════════════════════════
+
+// Toggle formulaires inline (planification / commentaire)
+function toggleFormPassage(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+  
+  // Fermer tous les autres formulaires
+  document.querySelectorAll('.form-passage-inline').forEach(f => {
+    if (f.id !== formId) {
+      f.style.display = 'none';
+    }
+  });
+  
+  // Toggle le formulaire actuel
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+
+// Fermer modal ajout passage
+function closeModalAddPassage() {
+  const modal = document.getElementById('modal-add-passage');
+  if (modal) {
+    modal.style.display = 'none';
+    const form = document.getElementById('form-add-passage');
+    if (form) form.reset();
+    const warning = document.getElementById('add-passage-warning');
+    if (warning) warning.style.display = 'none';
+  }
+}
+
+// Fermer modal en cliquant dehors
+document.getElementById('modal-add-passage')?.addEventListener('click', function(e) {
+  if (e.target === this) closeModalAddPassage();
+});
+
+// ════════════════════════════════════════════════════════════
+// VALIDATION DATES PLANIFICATION
+// ════════════════════════════════════════════════════════════
+
+// Validation pour l'ajout de passage (modal)
+function validateAddPassage() {
+  const dateInput = document.getElementById('add-passage-date');
+  
+  // Si pas de date, OK (passage non planifié)
+  if (!dateInput || !dateInput.value) return true;
+  
+  const dateSelectionnee = new Date(dateInput.value);
+  const maintenant = new Date();
+  
+  if (dateSelectionnee < maintenant) {
+    showToast('❌ Impossible de planifier dans le passé !', 'error', 3000);
+    dateInput.focus();
+    return false;
+  }
+  
+  return true;
+}
+
+// Validation pour les formulaires inline de planification
+function validateDatePlanification(form) {
+  const dateInput = form.querySelector('input[name="date_prevue"]');
+  
+  if (!dateInput || !dateInput.value) {
+    showToast('⚠️ Veuillez sélectionner une date', 'warning', 3000);
+    return false;
+  }
+  
+  const dateSelectionnee = new Date(dateInput.value);
+  const maintenant = new Date();
+  
+  if (dateSelectionnee < maintenant) {
+    showToast('❌ Impossible de planifier dans le passé !', 'error', 3000);
+    dateInput.focus();
+    dateInput.style.border = '2px solid var(--danger)';
+    setTimeout(() => { dateInput.style.border = ''; }, 2000);
+    return false;
+  }
+  
+  return true;
+}
+
+// Avertissement live sur date ajout (modal)
+document.getElementById('add-passage-date')?.addEventListener('change', function() {
+  const warning = document.getElementById('add-passage-warning');
+  if (!this.value || !warning) return;
+  
+  const dateSelectionnee = new Date(this.value);
+  const maintenant = new Date();
+  
+  if (dateSelectionnee < maintenant) {
+    warning.style.display = 'block';
+    this.style.border = '2px solid var(--warning)';
+  } else {
+    warning.style.display = 'none';
+    this.style.border = '';
+  }
+});
+
+// Avertissement live sur tous les inputs de planification inline
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.input-date-planification').forEach(input => {
+    input.addEventListener('change', function() {
+      const warningDiv = this.closest('form').querySelector('.warning-date-passee');
+      if (!this.value) {
+        if (warningDiv) warningDiv.style.display = 'none';
+        this.style.border = '';
+        return;
+      }
+      
+      const dateSelectionnee = new Date(this.value);
+      const maintenant = new Date();
+      
+      if (dateSelectionnee < maintenant) {
+        if (warningDiv) warningDiv.style.display = 'block';
+        this.style.border = '2px solid var(--warning)';
+        showToast('⚠️ Attention : cette date est dans le passé', 'warning', 2000);
+      } else {
+        if (warningDiv) warningDiv.style.display = 'none';
+        this.style.border = '';
+      }
+    });
+  });
+  
+  console.log('✅ Validation dates passages activée');
+});
+</script>
 
 <script>
 function toggleForm(formId) {
@@ -2058,6 +2246,9 @@ document.addEventListener('DOMContentLoaded', function() {
   </a>
 </div>
 </div> <!-- ✅ FIN DE .container -->
+
+
+
 
 <script>
 // ========================================
