@@ -108,16 +108,8 @@ def dashboard(request):
             Q(date_realisation__isnull=False, date_realisation__date__gte=start_date, date_realisation__date__lte=end_date)
         ).select_related('operation', 'operation__client')
         
-        # 2️⃣ Passages SANS dates (à planifier) - on les affiche à aujourd'hui
-        passages_sans_dates = PassageOperation.objects.filter(
-            operation__user=request.user,
-            date_prevue__isnull=True,
-            date_realisation__isnull=True,
-            realise=False
-        ).select_related('operation', 'operation__client')
-        
-        # 3️⃣ Combiner les deux listes
-        passages_calendrier = list(passages_avec_dates) + list(passages_sans_dates)
+        # ✅ SEULEMENT les passages avec dates (pas les "à planifier")
+        passages_calendrier = list(passages_avec_dates)
 
         calendar_events = []
         
@@ -2162,14 +2154,6 @@ def operation_create(request):
                         utilisateur=request.user
                     )
 
-                    # ✅ NOUVEAU : Créer le premier passage (à planifier)
-                    PassageOperation.objects.create(
-                        operation=operation,
-                        date_prevue=None,
-                        realise=False
-                    )
-                    print(f"✓ Passage créé pour opération avec devis (à planifier)")
-                
                     if client_type == 'nouveau':
                         HistoriqueOperation.objects.create(
                             operation=operation,
