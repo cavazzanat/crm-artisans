@@ -384,6 +384,35 @@ def operations_list(request):
     
     # Filtrer par période (sauf pour certains filtres)
     filtre = request.GET.get('filtre', 'toutes')
+    
+    # ════════════════════════════════════════════════════════════
+    # 🔍 DEBUG TEMPORAIRE - À SUPPRIMER APRÈS TEST
+    # ════════════════════════════════════════════════════════════
+    if filtre == 'planifie':
+        print("\n" + "="*60)
+        print("DEBUG FILTRE PLANIFIÉ")
+        print("="*60)
+        
+        # Toutes les opérations avec devis
+        ops_avec_devis = Operation.objects.filter(user=request.user, avec_devis=True)
+        print(f"\nOpérations avec devis ({ops_avec_devis.count()}):")
+        
+        for op in ops_avec_devis:
+            passages = op.passages.all()
+            passages_planifies = passages.filter(date_prevue__isnull=False, realise=False)
+            
+            print(f"\n  📋 {op.id_operation}")
+            print(f"     Statut opération: {op.statut}")
+            print(f"     Nombre de passages: {passages.count()}")
+            
+            for p in passages:
+                print(f"       - Passage #{p.numero}: date_prevue={p.date_prevue}, realise={p.realise}")
+            
+            print(f"     Passages planifiés (avec date, non réalisés): {passages_planifies.count()}")
+            print(f"     → Devrait apparaître dans 'Planifié': {op.statut == 'planifie'}")
+        
+        print("="*60 + "\n")
+    # ════════════════════════════════════════════════════════════
 
     recherche = request.GET.get('recherche', '')
     
@@ -3008,44 +3037,6 @@ def ajouter_passage_operation(request, operation_id):
     return redirect('operation_detail', operation_id=operation.id)
 
 @login_required
-def planifier_passage_operation(request, operation_id, passage_id):
-    """
-    Planifie ou modifie la date d'un passage
-    """
-    operation = get_object_or_404(Operation, id=operation_id, user=request.user)
-    passage = get_object_or_404(PassageOperation, id=passage_id, operation=operation)
-    
-    if request.method == 'POST':
-        date_prevue_str = request.POST.get('date_prevue')
-        
-        if date_prevue_str:
-            try:
-                from datetime import datetime
-                date_prevue = datetime.fromisoformat(date_prevue_str)
-                
-                passage.date_prevue = date_prevue
-                passage.save()
-                
-                messages.success(
-                    request,
-                    f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
-                )
-                
-                HistoriqueOperation.objects.create(
-                    operation=operation,
-                    utilisateur=request.user,
-                    action=f"Passage {passage.numero} planifié : {date_prevue.strftime('%d/%m/%Y %H:%M')}"
-                )
-                
-            except ValueError:
-                messages.error(request, "❌ Format de date invalide")
-        else:
-            messages.error(request, "❌ Veuillez saisir une date")
-    
-    return redirect('operation_detail', operation_id=operation.id)
-
-
-@login_required
 def marquer_passage_realise(request, operation_id, passage_id):
     """
     Marque un passage comme réalisé (ou inverse)
@@ -3061,9 +3052,22 @@ def marquer_passage_realise(request, operation_id, passage_id):
         if passage.realise:
             messages.success(request, f"✅ Passage {passage.numero} marqué comme réalisé")
             action = f"Passage {passage.numero} réalisé"
+            
+            # ✅ Vérifier si TOUS les passages sont réalisés
+            tous_realises = not operation.passages.filter(realise=False).exists()
+            if tous_realises and operation.statut == 'planifie':
+                operation.statut = 'realise'
+                operation.save()
+                print(f"✓ Tous les passages réalisés → Statut opération: realise")
         else:
             messages.info(request, f"ℹ️ Passage {passage.numero} marqué comme non réalisé")
             action = f"Passage {passage.numero} marqué comme non réalisé"
+            
+            # ✅ Si on annule un passage réalisé, repasser en planifié
+            if operation.statut == 'realise':
+                operation.statut = 'planifie'
+                operation.save()
+                print(f"✓ Passage annulé → Statut opération: planifie")
         
         HistoriqueOperation.objects.create(
             operation=operation,
@@ -3131,16 +3135,17 @@ def planifier_passage_operation(request, operation_id, passage_id):
         
         if date_prevue_str:
             try:
-                from datetime import datetime
                 date_prevue = datetime.fromisoformat(date_prevue_str)
                 
                 passage.date_prevue = date_prevue
                 passage.save()
                 
-                # ✅ NOUVEAU : Mettre à jour le statut de l'opération
+                # ✅ Mettre à jour le statut de l'opération
                 if operation.statut in ['en_attente_devis', 'a_planifier']:
+                    ancien_statut = operation.statut
                     operation.statut = 'planifie'
                     operation.save()
+                    print(f"✓ Statut opération mis à jour : {ancien_statut} → planifie")
                 
                 messages.success(
                     request,
