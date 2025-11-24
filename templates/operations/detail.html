@@ -1436,14 +1436,19 @@
             
             <!-- Boutons action -->
             <div style="display:flex; gap:.5rem; flex-wrap:wrap">
+              {% if not passage.realise %}
+              <!-- ✅ Bouton Planifier/Replanifier : UNIQUEMENT si pas encore réalisé -->
               <button 
                 onclick="toggleFormPassage('planif-{{ passage.id }}')"
                 class="btn primary sm"
               >
                 📅 {% if passage.date_prevue %}Replanifier{% else %}Planifier{% endif %}
               </button>
+              {% endif %}
               
-              <form method="POST" action="{% url 'marquer_passage_realise' operation.id passage.id %}" style="margin:0">
+              <!-- ✅ Bouton Réaliser avec confirmation si date future -->
+              <form method="POST" action="{% url 'marquer_passage_realise' operation.id passage.id %}" style="margin:0"
+                    onsubmit="return confirmRealisationPassage(this, {{ passage.realise|yesno:'true,false' }}, '{{ passage.date_prevue|date:'Y-m-d\TH:i'|default:'' }}')">
                 {% csrf_token %}
                 <button type="submit" class="btn {% if passage.realise %}sm{% else %}success sm{% endif %}">
                   {% if passage.realise %}↩️ Annuler{% else %}✅ Réaliser{% endif %}
@@ -1693,6 +1698,48 @@ function validateDatePlanification(form) {
     return false;
   }
   
+  return true;
+}
+
+// ════════════════════════════════════════════════════════════
+// CONFIRMATION RÉALISATION PASSAGE FUTUR
+// ════════════════════════════════════════════════════════════
+
+// Confirmation si on marque comme réalisé un passage planifié dans le futur
+function confirmRealisationPassage(form, estDejaRealise, datePrevueStr) {
+  // Si on annule une réalisation, pas besoin de confirmation
+  if (estDejaRealise) {
+    return confirm('↩️ Annuler la réalisation de ce passage ?');
+  }
+  
+  // Si pas de date prévue, OK directement
+  if (!datePrevueStr) {
+    return true;
+  }
+  
+  const datePrevue = new Date(datePrevueStr);
+  const maintenant = new Date();
+  
+  // Si la date prévue est dans le futur
+  if (datePrevue > maintenant) {
+    const options = { 
+      day: '2-digit', 
+      month: '2-digit', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    const dateFormatee = datePrevue.toLocaleDateString('fr-FR', options);
+    
+    return confirm(
+      '⚠️ ATTENTION : Ce passage est planifié dans le FUTUR !\n\n' +
+      '📅 Date prévue : ' + dateFormatee + '\n\n' +
+      'Êtes-vous sûr de vouloir le marquer comme réalisé maintenant ?\n\n' +
+      '💡 Normalement, on valide un passage après sa réalisation effective.'
+    );
+  }
+  
+  // Date passée ou aujourd'hui = OK
   return true;
 }
 
