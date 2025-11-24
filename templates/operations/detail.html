@@ -1435,38 +1435,46 @@
             </div>
             
             <!-- Boutons action -->
-            <div style="display:flex; gap:.5rem; flex-wrap:wrap">
-              {% if not passage.realise %}
-              <!-- ✅ Bouton Planifier/Replanifier : UNIQUEMENT si pas encore réalisé -->
-              <button 
-                onclick="toggleFormPassage('planif-{{ passage.id }}')"
-                class="btn primary sm"
-              >
-                📅 {% if passage.date_prevue %}Replanifier{% else %}Planifier{% endif %}
-              </button>
-              {% endif %}
-              
-              <!-- ✅ Bouton Réaliser avec confirmation si date future -->
-              <form method="POST" action="{% url 'marquer_passage_realise' operation.id passage.id %}" style="margin:0"
-                    onsubmit="return confirmRealisationPassage(this, {{ passage.realise|yesno:'true,false' }}, '{{ passage.date_prevue|date:'Y-m-d\TH:i'|default:'' }}')">
-                {% csrf_token %}
-                <button type="submit" class="btn {% if passage.realise %}sm{% else %}success sm{% endif %}">
-                  {% if passage.realise %}↩️ Annuler{% else %}✅ Réaliser{% endif %}
+              <!-- Boutons action -->
+              <div style="display:flex; gap:.5rem; flex-wrap:wrap">
+                
+                {% if not passage.realise %}
+                  <!-- ✅ Passage NON réalisé → Bouton "Valider" unique -->
+                  <form method="POST" 
+                        action="{% url 'marquer_passage_realise' operation.id passage.id %}" 
+                        style="margin:0"
+                        onsubmit="return confirmerValidationPassage(this, {{ passages_non_realises }}, '{{ passage.date_prevue|date:'Y-m-d' }}')">
+                    {% csrf_token %}
+                    <input type="hidden" name="confirmer_realise" value="false" class="input-confirmer-realise">
+                    <button type="submit" class="btn" style="background:var(--success); color:white; border-color:var(--success)">
+                      ✅ Valider
+                    </button>
+                  </form>
+                {% else %}
+                  <!-- ✅ Passage RÉALISÉ → Bouton "Annuler" -->
+                  <form method="POST" 
+                        action="{% url 'marquer_passage_realise' operation.id passage.id %}" 
+                        style="margin:0"
+                        onsubmit="return confirm('↩️ Annuler la validation de ce passage ?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn sm">
+                      ↩️ Annuler
+                    </button>
+                  </form>
+                {% endif %}
+                
+                <!-- Bouton commentaire -->
+                <button onclick="toggleFormPassage('comment-{{ passage.id }}')" class="btn sm">
+                  💬
                 </button>
-              </form>
-              
-              <button 
-                onclick="toggleFormPassage('comment-{{ passage.id }}')"
-                class="btn sm"
-              >
-                💬
-              </button>
-              
-              <form method="POST" action="{% url 'supprimer_passage_operation' operation.id passage.id %}" style="margin:0" onsubmit="return confirm('Supprimer ce passage ?')">
-                {% csrf_token %}
-                <button type="submit" class="btn danger sm">🗑️</button>
-              </form>
-            </div>
+                
+                <!-- Bouton supprimer -->
+                <form method="POST" action="{% url 'supprimer_passage_operation' operation.id passage.id %}" style="margin:0" onsubmit="return confirm('Supprimer ce passage ?')">
+                  {% csrf_token %}
+                  <button type="submit" class="btn danger sm">🗑️</button>
+                </form>
+                
+              </div>
           </div>
           
           <!-- Infos passage -->
@@ -3168,6 +3176,43 @@ styleAnimations.textContent = `
   }
 `;
 document.head.appendChild(styleAnimations);
+</script>
+
+<script>
+function confirmerValidationPassage(form, passagesNonRealises, datePrevueStr) {
+  // 1. Vérifier si passage dans le FUTUR
+  if (datePrevueStr) {
+    const datePrevue = new Date(datePrevueStr);
+    const maintenant = new Date();
+    maintenant.setHours(0, 0, 0, 0); // Comparer juste la date
+    
+    if (datePrevue > maintenant) {
+      const confirmerFutur = confirm(
+        "⚠️ Ce passage est planifié dans le FUTUR !\n\n" +
+        "Êtes-vous sûr de vouloir le marquer comme réalisé maintenant ?"
+      );
+      if (!confirmerFutur) {
+        return false;
+      }
+    }
+  }
+  
+  // 2. Vérifier si c'est le DERNIER passage
+  if (passagesNonRealises === 1) {
+    const confirmerDernier = confirm(
+      "🎯 C'est le dernier passage à valider !\n\n" +
+      "Voulez-vous également marquer l'OPÉRATION comme RÉALISÉE ?\n\n" +
+      "• OK → L'opération passe en 'Réalisé'\n" +
+      "• Annuler → L'opération reste en 'Planifié'"
+    );
+    
+    if (confirmerDernier) {
+      form.querySelector('.input-confirmer-realise').value = 'true';
+    }
+  }
+  
+  return true;
+}
 </script>
 </body>
 </html>

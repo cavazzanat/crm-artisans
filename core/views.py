@@ -1697,6 +1697,9 @@ def operation_detail(request, operation_id):
         } for e in echeances
     ])
     
+    # ✅ Compter les passages non réalisés (pour la confirmation JS)
+    passages_non_realises = operation.passages.filter(realise=False).count()
+    
     context = {
         'operation': operation,
         
@@ -1722,6 +1725,8 @@ def operation_detail(request, operation_id):
         'lignes_json': lignes_json,
         'echeances_json': echeances_json,
         'now': timezone.now(),
+        
+        'passages_non_realises': passages_non_realises,  # ✅ AJOUTER
     }
 
     return render(request, 'operations/detail.html', context)
@@ -2970,40 +2975,82 @@ def ajouter_passage_operation(request, operation_id):
         date_prevue_str = request.POST.get('date_prevue', '').strip()
         commentaire = request.POST.get('commentaire', '').strip()
         
+        # ✅ Mémoriser le statut avant modification
+        statut_avant = operation.statut
+        
         # Créer le passage
         passage = PassageOperation.objects.create(
             operation=operation,
             commentaire=commentaire
         )
         
-        # Si une date est fournie, l'assigner
+        # Si une date est fournie
         if date_prevue_str:
             try:
                 date_prevue = datetime.fromisoformat(date_prevue_str)
                 passage.date_prevue = date_prevue
                 passage.save()
                 
-                # ✅ NOUVEAU : Mettre à jour le statut de l'opération
-                if operation.statut in ['en_attente_devis', 'a_planifier']:
+                # ✅ LOGIQUE DE MISE À JOUR DU STATUT
+                if operation.statut in ['realise', 'paye']:
+                    # Opération déjà terminée → repasse en planifié avec avertissement
                     operation.statut = 'planifie'
                     operation.save()
-                    print(f"✓ Statut opération mis à jour : {operation.statut}")
+                    
+                    messages.warning(
+                        request,
+                        f"⚠️ Nouveau passage ajouté ! L'opération repasse de '{statut_avant}' à 'Planifié'."
+                    )
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        utilisateur=request.user,
+                        action=f"Passage {passage.numero} ajouté - {date_prevue.strftime('%d/%m/%Y %H:%M')} - ⚠️ Opération repassée de '{statut_avant}' à 'planifie'"
+                    )
+                    
+                elif operation.statut in ['en_attente_devis', 'a_planifier']:
+                    # Opération pas encore planifiée → passe en planifié
+                    operation.statut = 'planifie'
+                    operation.save()
+                    
+                    messages.success(
+                        request,
+                        f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
+                    )
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        utilisateur=request.user,
+                        action=f"Passage {passage.numero} ajouté - Planifié le {date_prevue.strftime('%d/%m/%Y %H:%M')}"
+                    )
+                else:
+                    # Déjà en planifié → juste ajouter
+                    messages.success(
+                        request,
+                        f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
+                    )
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        utilisateur=request.user,
+                        action=f"Passage {passage.numero} ajouté - Planifié le {date_prevue.strftime('%d/%m/%Y %H:%M')}"
+                    )
                 
-                messages.success(
-                    request,
-                    f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
-                )
             except ValueError:
                 messages.success(request, f"✅ Passage {passage.numero} créé (à planifier)")
+                HistoriqueOperation.objects.create(
+                    operation=operation,
+                    utilisateur=request.user,
+                    action=f"Passage {passage.numero} ajouté (à planifier)"
+                )
         else:
+            # Pas de date fournie
             messages.success(request, f"✅ Passage {passage.numero} créé (à planifier)")
-        
-        # Historique
-        HistoriqueOperation.objects.create(
-            operation=operation,
-            utilisateur=request.user,
-            action=f"Passage {passage.numero} ajouté" + (f" - Planifié le {date_prevue.strftime('%d/%m/%Y %H:%M')}" if date_prevue_str else " (à planifier)")
-        )
+            HistoriqueOperation.objects.create(
+                operation=operation,
+                utilisateur=request.user,
+                action=f"Passage {passage.numero} ajouté (à planifier)"
+            )
     
     return redirect('operation_detail', operation_id=operation.id)
 
@@ -3011,34 +3058,62 @@ def ajouter_passage_operation(request, operation_id):
 def marquer_passage_realise(request, operation_id, passage_id):
     """
     Marque un passage comme réalisé (ou inverse)
+    Avec confirmation si c'est le dernier passage
     """
     operation = get_object_or_404(Operation, id=operation_id, user=request.user)
     passage = get_object_or_404(PassageOperation, id=passage_id, operation=operation)
     
     if request.method == 'POST':
-        # Basculer l'état
+        # Récupérer si l'utilisateur a confirmé la réalisation de l'opération
+        confirmer_realise = request.POST.get('confirmer_realise') == 'true'
+        
+        # Basculer l'état du passage
         passage.realise = not passage.realise
-        passage.save()  # Le save() gère automatiquement date_realisation
+        passage.save()
         
         if passage.realise:
+            # ✅ Passage marqué comme réalisé
             messages.success(request, f"✅ Passage {passage.numero} marqué comme réalisé")
             action = f"Passage {passage.numero} réalisé"
             
-            # ✅ Vérifier si TOUS les passages sont réalisés
-            tous_realises = not operation.passages.filter(realise=False).exists()
-            if tous_realises and operation.statut == 'planifie':
-                operation.statut = 'realise'
-                operation.save()
-                print(f"✓ Tous les passages réalisés → Statut opération: realise")
-        else:
-            messages.info(request, f"ℹ️ Passage {passage.numero} marqué comme non réalisé")
-            action = f"Passage {passage.numero} marqué comme non réalisé"
+            # Compter les passages non réalisés APRÈS cette validation
+            passages_non_realises = operation.passages.filter(realise=False).count()
             
-            # ✅ Si on annule un passage réalisé, repasser en planifié
+            if passages_non_realises == 0:
+                # ✅ C'était le DERNIER passage !
+                if confirmer_realise:
+                    # L'utilisateur a confirmé → passer l'opération en réalisé
+                    operation.statut = 'realise'
+                    operation.date_realisation = timezone.now()
+                    operation.save()
+                    
+                    messages.success(
+                        request, 
+                        "🎉 Tous les passages sont réalisés ! L'opération est marquée comme RÉALISÉE."
+                    )
+                    action += " - ✅ Opération marquée comme réalisée"
+                else:
+                    # L'utilisateur n'a pas confirmé → garder en planifié
+                    messages.info(
+                        request,
+                        "ℹ️ Tous les passages sont validés. Vous pouvez marquer l'opération comme réalisée manuellement."
+                    )
+            else:
+                # Il reste des passages → s'assurer que le statut est cohérent
+                if operation.statut == 'a_planifier':
+                    operation.statut = 'planifie'
+                    operation.save()
+        else:
+            # ✅ Passage marqué comme NON réalisé (annulation)
+            messages.info(request, f"ℹ️ Passage {passage.numero} marqué comme non réalisé")
+            action = f"Passage {passage.numero} annulé (non réalisé)"
+            
+            # Si l'opération était réalisée, repasser en planifié
             if operation.statut == 'realise':
                 operation.statut = 'planifie'
                 operation.save()
-                print(f"✓ Passage annulé → Statut opération: planifie")
+                messages.warning(request, "⚠️ L'opération repasse en 'Planifié' car un passage n'est plus réalisé.")
+                action += " - ⚠️ Opération repassée en 'planifie'"
         
         HistoriqueOperation.objects.create(
             operation=operation,
@@ -3096,7 +3171,7 @@ def ajouter_commentaire_passage(request, operation_id, passage_id):
 @login_required
 def planifier_passage_operation(request, operation_id, passage_id):
     """
-    Planifie ou modifie la date d'un passage
+    Planifie ou modifie la date d'un passage existant
     """
     operation = get_object_or_404(Operation, id=operation_id, user=request.user)
     passage = get_object_or_404(PassageOperation, id=passage_id, operation=operation)
@@ -3111,23 +3186,53 @@ def planifier_passage_operation(request, operation_id, passage_id):
                 passage.date_prevue = date_prevue
                 passage.save()
                 
-                # ✅ Mettre à jour le statut de l'opération
-                if operation.statut in ['en_attente_devis', 'a_planifier']:
-                    ancien_statut = operation.statut
+                # ✅ Mémoriser le statut avant
+                statut_avant = operation.statut
+                
+                # ✅ LOGIQUE DE MISE À JOUR DU STATUT
+                if operation.statut in ['realise', 'paye']:
+                    # Opération terminée → repasse en planifié
                     operation.statut = 'planifie'
                     operation.save()
-                    print(f"✓ Statut opération mis à jour : {ancien_statut} → planifie")
-                
-                messages.success(
-                    request,
-                    f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
-                )
-                
-                HistoriqueOperation.objects.create(
-                    operation=operation,
-                    utilisateur=request.user,
-                    action=f"Passage {passage.numero} planifié : {date_prevue.strftime('%d/%m/%Y %H:%M')}"
-                )
+                    
+                    messages.warning(
+                        request,
+                        f"⚠️ Passage {passage.numero} replanifié ! L'opération repasse de '{statut_avant}' à 'Planifié'."
+                    )
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        utilisateur=request.user,
+                        action=f"Passage {passage.numero} planifié : {date_prevue.strftime('%d/%m/%Y %H:%M')} - ⚠️ Opération repassée en 'planifie'"
+                    )
+                    
+                elif operation.statut in ['en_attente_devis', 'a_planifier']:
+                    # Pas encore planifié → passe en planifié
+                    operation.statut = 'planifie'
+                    operation.save()
+                    
+                    messages.success(
+                        request,
+                        f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
+                    )
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        utilisateur=request.user,
+                        action=f"Passage {passage.numero} planifié : {date_prevue.strftime('%d/%m/%Y %H:%M')}"
+                    )
+                else:
+                    # Déjà planifié → juste mettre à jour
+                    messages.success(
+                        request,
+                        f"✅ Passage {passage.numero} planifié le {date_prevue.strftime('%d/%m/%Y à %H:%M')}"
+                    )
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        utilisateur=request.user,
+                        action=f"Passage {passage.numero} planifié : {date_prevue.strftime('%d/%m/%Y %H:%M')}"
+                    )
                 
             except ValueError:
                 messages.error(request, "❌ Format de date invalide")
