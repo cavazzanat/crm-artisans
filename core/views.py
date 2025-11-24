@@ -384,35 +384,6 @@ def operations_list(request):
     
     # Filtrer par période (sauf pour certains filtres)
     filtre = request.GET.get('filtre', 'toutes')
-    
-    # ════════════════════════════════════════════════════════════
-    # 🔍 DEBUG TEMPORAIRE - À SUPPRIMER APRÈS TEST
-    # ════════════════════════════════════════════════════════════
-    if filtre == 'planifie':
-        print("\n" + "="*60)
-        print("DEBUG FILTRE PLANIFIÉ")
-        print("="*60)
-        
-        # Toutes les opérations avec devis
-        ops_avec_devis = Operation.objects.filter(user=request.user, avec_devis=True)
-        print(f"\nOpérations avec devis ({ops_avec_devis.count()}):")
-        
-        for op in ops_avec_devis:
-            passages = op.passages.all()
-            passages_planifies = passages.filter(date_prevue__isnull=False, realise=False)
-            
-            print(f"\n  📋 {op.id_operation}")
-            print(f"     Statut opération: {op.statut}")
-            print(f"     Nombre de passages: {passages.count()}")
-            
-            for p in passages:
-                print(f"       - Passage #{p.numero}: date_prevue={p.date_prevue}, realise={p.realise}")
-            
-            print(f"     Passages planifiés (avec date, non réalisés): {passages_planifies.count()}")
-            print(f"     → Devrait apparaître dans 'Planifié': {op.statut == 'planifie'}")
-        
-        print("="*60 + "\n")
-    # ════════════════════════════════════════════════════════════
 
     recherche = request.GET.get('recherche', '')
     
