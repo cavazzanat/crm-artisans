@@ -159,21 +159,31 @@ def dashboard(request):
                 total=Sum('montant')
             )['total'] or 0
             
+            # ✅ Déterminer le statut brut pour le JS
+            if passage.realise:
+                statut_brut = 'realise'
+            elif passage.est_en_retard:
+                statut_brut = 'a_traiter'
+            elif passage.est_planifie:
+                statut_brut = 'planifie'
+            else:
+                statut_brut = 'a_planifier'
+
             calendar_events.append({
                 'id': op.id,
-                'passage_id': passage.id,  # ← NOUVEAU : ID du passage
+                'passage_id': passage.id,
                 'client_nom': f"{op.client.nom} {op.client.prenom}",
-                'service': f"{op.type_prestation} - Passage #{passage.numero}",  # ← Affiche le n° de passage
+                'service': f"{op.type_prestation} - Passage #{passage.numero}",
                 'date': date_affichage.strftime('%Y-%m-%d'),
                 'time': date_affichage.strftime('%H:%M'),
                 'address': op.adresse_intervention,
                 'phone': op.client.telephone,
                 'url': f'/operations/{op.id}/',
-                'statut': passage.statut_display,  # ← Statut du passage
-                'statut_display': status_text,
+                'statut': statut_brut,  # ✅ Valeur brute pour JS
+                'statut_display': status_text,  # ✅ Texte pour affichage
                 'color_class': color_class,
                 'is_past': is_past,
-                'commentaires': passage.commentaire or op.commentaires or '',  # ← Commentaire du passage ou de l'op
+                'commentaires': passage.commentaire or op.commentaires or '',
                 'has_retard_paiement': has_retard,
                 'nb_retards': nb_retards_op,
                 'montant_retard': float(montant_retard_op)
