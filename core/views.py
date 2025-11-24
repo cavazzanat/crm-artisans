@@ -2979,10 +2979,15 @@ def ajouter_passage_operation(request, operation_id):
         # Si une date est fournie, l'assigner
         if date_prevue_str:
             try:
-                from datetime import datetime
                 date_prevue = datetime.fromisoformat(date_prevue_str)
                 passage.date_prevue = date_prevue
                 passage.save()
+                
+                # ✅ NOUVEAU : Mettre à jour le statut de l'opération
+                if operation.statut in ['en_attente_devis', 'a_planifier']:
+                    operation.statut = 'planifie'
+                    operation.save()
+                    print(f"✓ Statut opération mis à jour : {operation.statut}")
                 
                 messages.success(
                     request,
@@ -2997,11 +3002,10 @@ def ajouter_passage_operation(request, operation_id):
         HistoriqueOperation.objects.create(
             operation=operation,
             utilisateur=request.user,
-            action=f"Passage {passage.numero} ajouté"
+            action=f"Passage {passage.numero} ajouté" + (f" - Planifié le {date_prevue.strftime('%d/%m/%Y %H:%M')}" if date_prevue_str else " (à planifier)")
         )
     
     return redirect('operation_detail', operation_id=operation.id)
-
 
 @login_required
 def planifier_passage_operation(request, operation_id, passage_id):
