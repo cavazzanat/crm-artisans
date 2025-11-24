@@ -900,7 +900,7 @@ def operation_detail(request, operation_id):
                 devis = Devis.objects.get(id=devis_id, operation=operation)
                 
                 # Date de réponse = aujourd'hui
-                devis.date_reponse = datetime.now().date()
+                devis.date_reponse = timezone.now().date()
                 devis.statut = 'accepte'
                 devis.save()
                 
@@ -952,7 +952,7 @@ def operation_detail(request, operation_id):
                 devis = Devis.objects.get(id=devis_id, operation=operation)
                 
                 # Date de réponse = aujourd'hui
-                devis.date_reponse = datetime.now().date()
+                devis.date_reponse = timezone.now().date()
                 devis.statut = 'refuse'
                 devis.save()
                 
@@ -1555,7 +1555,7 @@ def operation_detail(request, operation_id):
                     return redirect('operation_detail', operation_id=operation.id)
                 
                 # ✅ GÉNÉRATION DU NUMÉRO DE FACTURE
-                annee_courante = datetime.now().year
+                annee_courante = timezone.now().year
                 prefix = f'FACTURE-{annee_courante}-U{request.user.id}-'
                 
                 dernieres_factures = Echeance.objects.filter(
