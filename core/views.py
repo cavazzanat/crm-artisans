@@ -96,24 +96,38 @@ def dashboard(request):
         start_date = today - timedelta(days=30)
         end_date = today + timedelta(days=14)
 
-        # ✅ NOUVEAU : Récupérer tous les PASSAGES dans la période
-        passages_calendrier = PassageOperation.objects.filter(
+        # ========================================
+        # 🔥 CALENDRIER - VERSION HYBRIDE
+        # ========================================
+        
+        # 1️⃣ Passages AVEC dates (dans la période)
+        passages_avec_dates = PassageOperation.objects.filter(
             operation__user=request.user
         ).filter(
             Q(date_prevue__isnull=False, date_prevue__date__gte=start_date, date_prevue__date__lte=end_date) |
             Q(date_realisation__isnull=False, date_realisation__date__gte=start_date, date_realisation__date__lte=end_date)
-        ).select_related('operation', 'operation__client').order_by('date_prevue', 'date_realisation')
+        ).select_related('operation', 'operation__client')
+        
+        # 2️⃣ Passages SANS dates (à planifier) - on les affiche à aujourd'hui
+        passages_sans_dates = PassageOperation.objects.filter(
+            operation__user=request.user,
+            date_prevue__isnull=True,
+            date_realisation__isnull=True,
+            realise=False
+        ).select_related('operation', 'operation__client')
+        
+        # 3️⃣ Combiner les deux listes
+        passages_calendrier = list(passages_avec_dates) + list(passages_sans_dates)
 
         calendar_events = []
         
         for passage in passages_calendrier:
             op = passage.operation
             
-            # ✅ Utiliser date_prevue du PASSAGE en priorité
-            date_affichage = passage.date_prevue or passage.date_realisation
-            
-            if not date_affichage:
-                continue
+            #   ✅ Utiliser date_prevue du PASSAGE en priorité
+            # Si pas de date, afficher à aujourd'hui (pour les "à planifier")
+            date_affichage = passage.date_prevue or passage.date_realisation or timezone.now()
+
             
             is_past = date_affichage < timezone.now()
             
