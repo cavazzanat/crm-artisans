@@ -986,18 +986,18 @@
         </div>
       </div>
 
-      <!-- ✅ Devis en attente - Lien vers filtre devis -->
-      <div class="kpi-card">
-        <div class="kpi-label">📄 Devis</div>
-        <div class="kpi-value">{{ nb_en_attente_devis }}</div>
-        <div class="kpi-subtitle">
-          {% if nb_en_attente_devis > 0 %}
-            <a href="{% url 'operations' %}?filtre=en_attente_devis">Consulter →</a>
-          {% else %}
-            <span style="color: var(--success);">✓ Aucun en attente</span>
-          {% endif %}
-        </div>
+    <!-- ✅ Devis en attente - Lien vers filtre devis_en_attente -->
+    <div class="kpi-card">
+      <div class="kpi-label">📄 Devis en attente</div>
+      <div class="kpi-value">{{ nb_en_attente_devis }}</div>
+      <div class="kpi-subtitle">
+        {% if nb_en_attente_devis > 0 %}
+          <a href="{% url 'operations' %}?filtre=devis_en_attente">Consulter →</a>
+        {% else %}
+          <span style="color: var(--success);">✓ Aucun en attente</span>
+        {% endif %}
       </div>
+    </div>
 
       <!-- ✅ À planifier - Lien vers filtre à planifier -->
       <div class="kpi-card">

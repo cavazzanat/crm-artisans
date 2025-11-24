@@ -55,10 +55,12 @@ def dashboard(request):
             date_echeance__gte=debut_mois
         ).aggregate(total=Sum('montant'))['total'] or 0
         
-        nb_en_attente_devis = Operation.objects.filter(
-            user=request.user, 
-            statut='en_attente_devis'
-        ).count()
+        # ✅ Compter les DEVIS en attente (envoyés, non expirés, non répondus)
+        nb_en_attente_devis = 0
+        for op in Operation.objects.filter(user=request.user, avec_devis=True):
+            for devis in op.devis_set.filter(statut='envoye', date_envoi__isnull=False):
+                if not devis.est_expire:
+                    nb_en_attente_devis += 1
         
         nb_a_planifier = Operation.objects.filter(
             user=request.user, 
