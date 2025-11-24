@@ -430,16 +430,27 @@ def operations_list(request):
         operations = operations.filter(id__in=operations_expire_ids)
 
     elif filtre == 'a_traiter':
-        # Opérations avec passages en retard (date passée, non réalisé)
+        # ✅ CORRECTION : Passages en retard OU opérations planifiées en retard
         now = timezone.now()
         
+        # 1. Passages avec date passée et non réalisés
         passages_en_retard = PassageOperation.objects.filter(
             operation__user=request.user,
             date_prevue__lt=now,
             realise=False
         ).values_list('operation_id', flat=True).distinct()
         
-        operations = operations.filter(id__in=passages_en_retard)
+        # 2. Opérations planifiées (ancien système) avec date_prevue passée
+        operations_planifiees_retard = Operation.objects.filter(
+            user=request.user,
+            statut='planifie',
+            date_prevue__lt=now
+        ).values_list('id', flat=True)
+        
+        # 3. Combiner les deux listes
+        ids_a_traiter = set(passages_en_retard) | set(operations_planifiees_retard)
+        
+        operations = operations.filter(id__in=ids_a_traiter)
 
     # ✅ ENRICHISSEMENT POUR FILTRES SPÉCIAUX
     elif filtre == 'retards':
@@ -2136,7 +2147,15 @@ def operation_create(request):
                         action=f"📄 Premier devis créé : {premier_devis.numero_devis} (brouillon)",
                         utilisateur=request.user
                     )
-                    
+
+                    # ✅ NOUVEAU : Créer le premier passage (à planifier)
+                    PassageOperation.objects.create(
+                        operation=operation,
+                        date_prevue=None,
+                        realise=False
+                    )
+                    print(f"✓ Passage créé pour opération avec devis (à planifier)")
+                
                     if client_type == 'nouveau':
                         HistoriqueOperation.objects.create(
                             operation=operation,
