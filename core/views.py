@@ -894,7 +894,19 @@ def operation_detail(request, operation_id):
                 
                 # Changer le statut de l'opération si besoin
                 if operation.statut == 'en_attente_devis':
-                    operation.statut = 'a_planifier'
+                    # ✅ Vérifier si un passage est déjà planifié
+                    passage_planifie = operation.passages.filter(
+                        date_prevue__isnull=False,
+                        realise=False
+                    ).exists()
+                    
+                    if passage_planifie:
+                        # Si déjà planifié, passer en statut "planifie"
+                        operation.statut = 'planifie'
+                    else:
+                        # Sinon, à planifier
+                        operation.statut = 'a_planifier'
+                    
                     operation.save()
                 
                 # Calculer délai de réponse
