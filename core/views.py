@@ -2745,25 +2745,6 @@ def simple_logout(request):
         logout(request)
     return redirect('/login/')
 
-def run_migration(request):
-    """Vue temporaire pour exécuter les migrations"""
-    try:
-        # Capturer la sortie
-        old_stdout = sys.stdout
-        sys.stdout = buffer = io.StringIO()
-        
-        call_command('migrate', verbosity=2)
-        
-        # Restaurer stdout
-        sys.stdout = old_stdout
-        output = buffer.getvalue()
-        
-        return HttpResponse(f"<pre>Migration exécutée:\n{output}</pre>")
-    except Exception as e:
-        sys.stdout = old_stdout
-        return HttpResponse(f"<pre>Erreur migration: {str(e)}</pre>")
-    
-
 # ════════════════════════════════════════════════════════════════════════
 # ✅ NOUVELLES ACTIONS POUR INTERVENTIONS MULTIPLES
 # ════════════════════════════════════════════════════════════════════════
