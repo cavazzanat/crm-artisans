@@ -35,9 +35,6 @@ urlpatterns = [
     path('operations/<int:operation_id>/ajax/add-ligne-devis/', views.ajax_add_ligne_devis, name='ajax_add_ligne_devis'),
     path('operations/<int:operation_id>/ajax/delete-ligne-devis/', views.ajax_delete_ligne_devis, name='ajax_delete_ligne_devis'),
     
-    # Utilitaires
-    path('run-migration/', views.run_migration, name='run_migration'),
-    
     # ✅ ROUTES POUR INTERVENTIONS MULTIPLES
     path('operation/<int:operation_id>/intervention/<int:intervention_id>/planifier/', 
         views.planifier_intervention, name='planifier_intervention'),
