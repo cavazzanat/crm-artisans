@@ -437,7 +437,7 @@ class Devis(models.Model):
             import re
             from datetime import datetime
             
-            annee_courante = datetime.now().year
+            annee_courante = timezone.now().year
             prefix = f'DEVIS-{annee_courante}-U{self.operation.user.id}-'
             
             # Récupérer tous les devis existants de cet utilisateur pour cette année
