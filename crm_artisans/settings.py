@@ -11,10 +11,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SÉCURITÉ CRITIQUE
 # =============================================================================
 
-# SECRET_KEY : DOIT être définie en variable d'environnement, pas de fallback
+# SECRET_KEY : Variable d'environnement en prod, fallback en dev local
 SECRET_KEY = os.environ.get('SECRET_KEY')
 if not SECRET_KEY:
-    raise ValueError("SECRET_KEY environment variable is required")
+    if os.environ.get('DEBUG', 'True').lower() == 'true':
+        # Clé de développement local uniquement
+        SECRET_KEY = 'dev-secret-key-not-for-production-use-only-local'
+    else:
+        raise ValueError("SECRET_KEY environment variable is required in production")
 
 # DEBUG : Toujours False en production
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
@@ -41,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'whitenoise.runserver_nostatic',
     'django.contrib.staticfiles',
+    'axes',  # Protection brute-force
     'core',
 ]
 
@@ -53,6 +58,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'axes.middleware.AxesMiddleware',  # Doit être en dernier
 ]
 
 ROOT_URLCONF = 'crm_artisans.urls'
@@ -128,6 +134,21 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/login/'
+
+AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesStandaloneBackend',  # Doit être en premier
+    'django.contrib.auth.backends.ModelBackend',
+]
+
+# =============================================================================
+# PROTECTION BRUTE-FORCE (django-axes)
+# =============================================================================
+
+AXES_FAILURE_LIMIT = 5              # 5 tentatives max
+AXES_COOLOFF_TIME = 0.25            # 15 minutes de blocage
+AXES_LOCK_OUT_BY_COMBINATION_USER_AND_IP = True  # Bloque combo user+IP
+AXES_RESET_ON_SUCCESS = True        # Reset compteur après succès
+AXES_VERBOSE = True                 # Logs détaillés
 
 # =============================================================================
 # SÉCURITÉ PRODUCTION
