@@ -219,6 +219,11 @@ def dashboard(request):
 # ========================================
 # Remplace la fonction operations_list dans views.py
 
+# ========================================
+# NOUVELLE VUE OPERATIONS_LIST - VERSION FUSIONNÉE
+# ========================================
+# Remplace la fonction operations_list dans views.py
+
 @login_required
 def operations_list(request):
     """
@@ -656,6 +661,12 @@ def operations_list(request):
     operations_list = list(operations)
     
     for op in operations_list:
+        # Dernier devis (pour le template)
+        if op.avec_devis:
+            op.dernier_devis_obj = op.devis_set.order_by('-version').first()
+        else:
+            op.dernier_devis_obj = None
+        
         # Dernière action depuis l'historique
         derniere_entree = op.historique.order_by('-date').first()
         op.derniere_action = derniere_entree.action[:50] if derniere_entree else None
@@ -744,7 +755,6 @@ def operations_list(request):
     }
     
     return render(request, 'operations/list.html', context)
-
 
 
 # ========================================

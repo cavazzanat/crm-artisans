@@ -912,7 +912,7 @@
               <td data-label="Statut">
                 {% if operation.avec_devis %}
                   <!-- OPÉRATION AVEC DEVIS -->
-                  {% with operation.devis_set.all|last as dernier_devis %}
+                  {% with operation.dernier_devis_obj as dernier_devis %}
                     {% if not dernier_devis %}
                       <span class="status warn">📝 Sans devis</span>
                       
