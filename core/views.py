@@ -2737,9 +2737,9 @@ def register(request):
             # ✅ CRÉER LE PROFIL ENTREPRISE AUTOMATIQUEMENT
             ProfilEntreprise.objects.create(user=user)
             
-            messages.success(request, f'Compte créé pour {username}!')
-            login(request, user)  # Connexion automatique
-            return redirect('dashboard')
+            messages.success(request, f'Compte créé pour {username}! Connectez-vous maintenant.')
+            # ✅ REDIRIGER VERS LOGIN (compatible axes)
+            return redirect('login')
     else:
         form = UserCreationForm()
     return render(request, 'registration/register.html', {'form': form})
