@@ -18,6 +18,7 @@ import sys
 import json
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
+from django.contrib.auth.hashers import check_password
 
 # ✅ IMPORTS MODIFIÉS
 from .models import (
@@ -3221,3 +3222,28 @@ def planifier_passage_operation(request, operation_id, passage_id):
             messages.error(request, "❌ Veuillez saisir une date")
     
     return redirect('operation_detail', operation_id=operation.id)
+
+
+@login_required
+def supprimer_compte(request):
+    """Suppression définitive du compte utilisateur"""
+    if request.method == 'POST':
+        password = request.POST.get('password', '')
+        confirmation = request.POST.get('confirmation', '')
+        
+        if confirmation != 'SUPPRIMER':
+            messages.error(request, "Veuillez taper SUPPRIMER pour confirmer.")
+            return redirect('profil')
+        
+        if not check_password(password, request.user.password):
+            messages.error(request, "Mot de passe incorrect.")
+            return redirect('profil')
+        
+        user = request.user
+        logout(request)
+        user.delete()
+        
+        messages.success(request, "Votre compte a été supprimé.")
+        return redirect('login')
+    
+    return redirect('profil')

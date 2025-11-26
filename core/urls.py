@@ -53,4 +53,7 @@ urlpatterns = [
     path('operations/<int:operation_id>/passages/<int:passage_id>/realise/', views.marquer_passage_realise, name='marquer_passage_realise'),
     path('operations/<int:operation_id>/passages/<int:passage_id>/supprimer/', views.supprimer_passage_operation, name='supprimer_passage_operation'),
     path('operations/<int:operation_id>/passages/<int:passage_id>/commentaire/', views.ajouter_commentaire_passage, name='ajouter_commentaire_passage'),
+    
+    
+    path('mon-compte/supprimer/', views.supprimer_compte, name='supprimer_compte'),
 ]

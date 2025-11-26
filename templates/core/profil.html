@@ -34,7 +34,6 @@
       padding-bottom: 3rem;
     }
 
-    /* Header identique au reste de l'app */
     .header{
       position: sticky;
       top: 0;
@@ -115,12 +114,23 @@
     }
     .user form button:hover{ color: var(--text); }
 
-    /* Layout */
     .container{ max-width: 900px; margin: 2rem auto; padding: 0 1rem }
-    .page-title{ font-size: 1.8rem; font-weight: 800; margin-bottom: .5rem }
-    .subtitle{ color: var(--muted); margin-bottom: 1.75rem; font-size: .95rem }
+    
+    /* Header de page avec bouton */
+    .page-header{
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+    .page-header-text{
+      flex: 1;
+    }
+    .page-title{ font-size: 1.8rem; font-weight: 800; margin: 0 0 .25rem }
+    .subtitle{ color: var(--muted); margin: 0; font-size: .95rem }
 
-    /* Sections */
     .section{
       background: white;
       border: 1px solid var(--border);
@@ -145,7 +155,6 @@
       gap: .6rem;
     }
 
-    /* Forms */
     .form-grid{
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -198,7 +207,6 @@
       margin-top: -.25rem;
     }
 
-    /* Alerts */
     .alert{
       padding: .85rem 1rem;
       border-radius: 10px;
@@ -223,17 +231,12 @@
       color: #1e40af;
       border-color: #bfdbfe;
     }
-
-    /* Actions */
-    .form-actions{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 1rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-      margin-top: 1.5rem;
+    .alert.error{
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #fecaca;
     }
+
     .btn{
       display: inline-flex;
       align-items: center;
@@ -263,16 +266,78 @@
       background: #4f46e5;
     }
 
+    .delete-section{
+      border-color: #fecaca;
+      background: #fef2f2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+    .btn.danger{
+      background: var(--danger);
+      border-color: var(--danger);
+      color: white;
+    }
+    .btn.danger:hover{
+      background: #dc2626;
+    }
+
+    .modal-overlay{
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.5);
+      z-index: 100;
+      place-items: center;
+      padding: 1rem;
+    }
+    .modal-overlay.active{
+      display: grid;
+    }
+    .modal{
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0,0,0,.2);
+    }
+    .modal h3{
+      margin: 0 0 .5rem;
+      color: var(--danger);
+    }
+    .modal > p{
+      color: var(--muted);
+      margin: 0 0 1rem;
+    }
+    .modal .form-group{
+      margin-bottom: 1rem;
+    }
+    .modal .form-group label{
+      display: block;
+      font-weight: 600;
+      margin-bottom: .4rem;
+      font-size: .9rem;
+    }
+    .modal .actions{
+      display: flex;
+      gap: .75rem;
+      margin-top: 1.25rem;
+    }
+    .modal .actions .btn{
+      flex: 1;
+    }
+
     @media (max-width: 640px){
-      .form-actions{
+      .page-header{
         flex-direction: column;
-        align-items: stretch;
       }
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
   <header class="header">
     <div class="header-inner">
       <div class="brand">
@@ -299,42 +364,47 @@
     </div>
   </header>
 
-  <!-- Main -->
   <main class="container">
-    <h1 class="page-title">⚙️ Profil entreprise</h1>
-    <p class="subtitle">
-      Renseignez les informations essentielles pour générer des devis professionnels.
-    </p>
-
-    <!-- Alerte profil incomplet -->
-    {% if not profil.est_complet %}
-    <div class="alert warning">
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-        <path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="2"/>
-      </svg>
-      <div>
-        <strong>Profil incomplet</strong><br>
-        Complétez les champs obligatoires (*) pour activer la génération de devis.
-      </div>
-    </div>
-    {% endif %}
-
-    <!-- Messages -->
-    {% if messages %}
-      {% for message in messages %}
-      <div class="alert {{ message.tags }}">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
-        </svg>
-        {{ message }}
-      </div>
-      {% endfor %}
-    {% endif %}
-
     <form method="POST">
       {% csrf_token %}
 
-      <!-- 1. Identification entreprise -->
+      <!-- En-tête avec bouton Enregistrer -->
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1 class="page-title">⚙️ Profil entreprise</h1>
+          <p class="subtitle">Renseignez les informations essentielles pour générer des devis professionnels.</p>
+        </div>
+        <button type="submit" class="btn primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          💾 Enregistrer
+        </button>
+      </div>
+
+      {% if not profil.est_complet %}
+      <div class="alert warning">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        <div>
+          <strong>Profil incomplet</strong><br>
+          Complétez les champs obligatoires (*) pour activer la génération de devis.
+        </div>
+      </div>
+      {% endif %}
+
+      {% if messages %}
+        {% for message in messages %}
+        <div class="alert {{ message.tags }}">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
+          </svg>
+          {{ message }}
+        </div>
+        {% endfor %}
+      {% endif %}
+
       <section class="section">
         <div class="section-header">
           <div class="section-title">
@@ -348,25 +418,12 @@
         <div class="form-grid">
           <div class="form-group full">
             <label class="required" for="nom_entreprise">Nom / Raison sociale</label>
-            <input class="input" 
-                   type="text" 
-                   id="nom_entreprise" 
-                   name="nom_entreprise" 
-                   value="{{ profil.nom_entreprise }}" 
-                   placeholder="Ex: Plomberie Dupont"
-                   required>
+            <input class="input" type="text" id="nom_entreprise" name="nom_entreprise" value="{{ profil.nom_entreprise }}" placeholder="Ex: Plomberie Dupont" required>
           </div>
           
           <div class="form-group">
             <label class="required" for="siret">N° SIRET (14 chiffres)</label>
-            <input class="input" 
-                   type="text" 
-                   id="siret" 
-                   name="siret" 
-                   value="{{ profil.siret }}" 
-                   maxlength="14"
-                   placeholder="12345678900012"
-                   required>
+            <input class="input" type="text" id="siret" name="siret" value="{{ profil.siret }}" maxlength="14" placeholder="12345678900012" required>
           </div>
           
           <div class="form-group">
@@ -374,16 +431,13 @@
             <select class="select" id="forme_juridique" name="forme_juridique">
               <option value="">— Sélectionner —</option>
               {% for value, label in formes_juridiques %}
-              <option value="{{ value }}" {% if profil.forme_juridique == value %}selected{% endif %}>
-                {{ label }}
-              </option>
+              <option value="{{ value }}" {% if profil.forme_juridique == value %}selected{% endif %}>{{ label }}</option>
               {% endfor %}
             </select>
           </div>
         </div>
       </section>
 
-      <!-- 2. Adresse -->
       <section class="section">
         <div class="section-header">
           <div class="section-title">
@@ -397,39 +451,21 @@
         <div class="form-grid">
           <div class="form-group full">
             <label class="required" for="adresse">Adresse complète</label>
-            <textarea class="textarea" 
-                      id="adresse" 
-                      name="adresse" 
-                      rows="2"
-                      placeholder="Ex: 15 rue de la Paix"
-                      required>{{ profil.adresse }}</textarea>
+            <textarea class="textarea" id="adresse" name="adresse" rows="2" placeholder="Ex: 15 rue de la Paix" required>{{ profil.adresse }}</textarea>
           </div>
           
           <div class="form-group">
             <label class="required" for="code_postal">Code postal</label>
-            <input class="input" 
-                   type="text" 
-                   id="code_postal" 
-                   name="code_postal" 
-                   value="{{ profil.code_postal }}"
-                   placeholder="75010"
-                   required>
+            <input class="input" type="text" id="code_postal" name="code_postal" value="{{ profil.code_postal }}" placeholder="75010" required>
           </div>
           
           <div class="form-group">
             <label class="required" for="ville">Ville</label>
-            <input class="input" 
-                   type="text" 
-                   id="ville" 
-                   name="ville" 
-                   value="{{ profil.ville }}"
-                   placeholder="Paris"
-                   required>
+            <input class="input" type="text" id="ville" name="ville" value="{{ profil.ville }}" placeholder="Paris" required>
           </div>
         </div>
       </section>
 
-      <!-- 3. Coordonnées professionnelles -->
       <section class="section">
         <div class="section-header">
           <div class="section-title">
@@ -443,39 +479,21 @@
         <div class="form-grid">
           <div class="form-group">
             <label class="required" for="telephone">Téléphone</label>
-            <input class="input" 
-                   type="tel" 
-                   id="telephone" 
-                   name="telephone" 
-                   value="{{ profil.telephone }}"
-                   placeholder="01 23 45 67 89"
-                   required>
+            <input class="input" type="tel" id="telephone" name="telephone" value="{{ profil.telephone }}" placeholder="01 23 45 67 89" required>
           </div>
           
           <div class="form-group">
             <label class="required" for="email">Email professionnel</label>
-            <input class="input" 
-                   type="email" 
-                   id="email" 
-                   name="email" 
-                   value="{{ profil.email }}"
-                   placeholder="contact@entreprise.fr"
-                   required>
+            <input class="input" type="email" id="email" name="email" value="{{ profil.email }}" placeholder="contact@entreprise.fr" required>
           </div>
           
           <div class="form-group full">
             <label for="site_web">Site web (optionnel)</label>
-            <input class="input" 
-                   type="url" 
-                   id="site_web" 
-                   name="site_web" 
-                   value="{{ profil.site_web }}"
-                   placeholder="https://www.monentreprise.fr">
+            <input class="input" type="url" id="site_web" name="site_web" value="{{ profil.site_web }}" placeholder="https://www.monentreprise.fr">
           </div>
         </div>
       </section>
 
-      <!-- 4. Mentions légales du devis -->
       <section class="section">
         <div class="section-header">
           <div class="section-title">
@@ -488,33 +506,70 @@
         
         <div class="form-group full">
           <label for="mentions_legales_devis">Conditions et mentions (optionnel)</label>
-          <textarea class="textarea" 
-                    id="mentions_legales_devis" 
-                    name="mentions_legales_devis" 
-                    rows="4"
-                    placeholder="Ex: Devis valable 30 jours. Paiement comptant ou en 3 fois. Pénalités de retard : 10% du montant HT.">{{ profil.mentions_legales_devis }}</textarea>
+          <textarea class="textarea" id="mentions_legales_devis" name="mentions_legales_devis" rows="4" placeholder="Ex: Devis valable 30 jours. Paiement comptant ou en 3 fois. Pénalités de retard : 10% du montant HT.">{{ profil.mentions_legales_devis }}</textarea>
           <small class="help-text">
             💡 Ces mentions apparaîtront en bas de vos devis (conditions de paiement, délais, etc.)
           </small>
         </div>
       </section>
-
-      <!-- Actions -->
-      <div class="form-actions">
-        <a href="{% url 'dashboard' %}" class="btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M19 12H5M12 19l-7-7 7-7" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          Annuler
-        </a>
-        <button type="submit" class="btn primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="2"/>
-          </svg>
-          💾 Enregistrer le profil
-        </button>
-      </div>
     </form>
+
+    <!-- Suppression compte (bien séparé du formulaire) -->
+    <section class="section delete-section">
+      <div>
+        <strong style="color: var(--danger);">Supprimer mon compte</strong>
+        <p style="color: var(--muted); margin: .25rem 0 0; font-size: .9rem;">
+          Action irréversible. Toutes vos données seront définitivement supprimées.
+        </p>
+      </div>
+      <button type="button" onclick="openDeleteModal()" class="btn danger">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+          <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14Z" stroke="currentColor" stroke-width="2"/>
+        </svg>
+        Supprimer mon compte
+      </button>
+    </section>
   </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+      <h3>⚠️ Supprimer mon compte</h3>
+      <p>Cette action supprimera définitivement tous vos clients, opérations, devis et factures.</p>
+      
+      <form method="POST" action="{% url 'supprimer_compte' %}">
+        {% csrf_token %}
+        
+        <div class="form-group">
+          <label for="delete_password">Mot de passe</label>
+          <input type="password" id="delete_password" name="password" class="input" placeholder="Votre mot de passe" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="delete_confirmation">Tapez SUPPRIMER pour confirmer</label>
+          <input type="text" id="delete_confirmation" name="confirmation" class="input" placeholder="SUPPRIMER" autocomplete="off" required>
+        </div>
+        
+        <div class="actions">
+          <button type="button" onclick="closeDeleteModal()" class="btn">Annuler</button>
+          <button type="submit" class="btn danger">Supprimer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openDeleteModal() {
+      document.getElementById('deleteModal').classList.add('active');
+    }
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').classList.remove('active');
+      document.getElementById('delete_password').value = '';
+      document.getElementById('delete_confirmation').value = '';
+    }
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+      if (e.target === this) closeDeleteModal();
+    });
+  </script>
 </body>
 </html>
