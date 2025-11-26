@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inscription - CRM Artisans</title>
-      {% load static %}
-  <link rel="icon" type="image/png" href="/static/core/image/favicon.png">
+    {% load static %}
+    <link rel="icon" type="image/png" href="/static/core/image/favicon.png">
     <style>
         * {
             margin: 0;
@@ -94,24 +94,6 @@
             background-color: #218838;
         }
         
-        .error-messages {
-            background-color: #f8d7da;
-            color: #721c24;
-            padding: 0.75rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .success-messages {
-            background-color: #d4edda;
-            color: #155724;
-            padding: 0.75rem;
-            border-radius: 4px;
-            margin-bottom: 1rem;
-            border: 1px solid #c3e6cb;
-        }
-        
         .login-link {
             text-align: center;
             padding-top: 1.5rem;
@@ -157,14 +139,6 @@
             <h2>Créer un compte</h2>
         </div>
         
-        {% if messages %}
-            {% for message in messages %}
-                <div class="success-messages">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-        
         <form method="post">
             {% csrf_token %}
             
@@ -202,18 +176,5 @@
             <p>Vous avez déjà un compte ? <a href="{% url 'login' %}">Se connecter</a></p>
         </div>
     </div>
-{% if messages %}
-{% for message in messages %}
-<div class="alert {{ message.tags }}">
-  {{ message }}
-</div>
-{% endfor %}
-
-<script>
-setTimeout(function() {
-  document.querySelectorAll('.alert').forEach(el => el.remove());
-}, 3000); // 3 secondes
-</script>
-{% endif %}
 </body>
 </html>

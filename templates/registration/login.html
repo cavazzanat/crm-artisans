@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Connexion - CRM Artisans</title>
-      {% load static %}
-  <link rel="icon" type="image/png" href="/static/core/image/favicon.png">
+    {% load static %}
+    <link rel="icon" type="image/png" href="/static/core/image/favicon.png">
     <style>
         * {
             margin: 0;
@@ -101,6 +101,16 @@
             border: 1px solid #f5c6cb;
         }
         
+        .success-messages {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 0.75rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            border: 1px solid #c3e6cb;
+            text-align: center;
+        }
+        
         .register-link {
             text-align: center;
             margin-top: 1.5rem;
@@ -126,13 +136,17 @@
             <h2>Connexion</h2>
         </div>
         
+        {% if messages %}
+            {% for message in messages %}
+                <div class="success-messages">
+                    ✅ {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
         {% if form.errors %}
             <div class="error-messages">
-                {% for field, errors in form.errors.items %}
-                    {% for error in errors %}
-                        <div>{{ error }}</div>
-                    {% endfor %}
-                {% endfor %}
+                Identifiants incorrects. Veuillez réessayer.
             </div>
         {% endif %}
         
@@ -155,18 +169,5 @@
             <p>Pas encore de compte ? <a href="{% url 'register' %}">Créer un compte</a></p>
         </div>
     </div>
-{% if messages %}
-{% for message in messages %}
-<div class="alert {{ message.tags }}">
-  {{ message }}
-</div>
-{% endfor %}
-
-<script>
-setTimeout(function() {
-  document.querySelectorAll('.alert').forEach(el => el.remove());
-}, 3000); // 3 secondes
-</script>
-{% endif %}
 </body>
 </html>
