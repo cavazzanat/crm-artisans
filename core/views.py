@@ -2733,6 +2733,10 @@ def register(request):
         if form.is_valid():
             user = form.save()
             username = form.cleaned_data.get('username')
+            
+            # ✅ CRÉER LE PROFIL ENTREPRISE AUTOMATIQUEMENT
+            ProfilEntreprise.objects.create(user=user)
+            
             messages.success(request, f'Compte créé pour {username}!')
             login(request, user)  # Connexion automatique
             return redirect('dashboard')
