@@ -41,7 +41,7 @@ from .pdf_generator import generer_devis_pdf
 @login_required
 def dashboard(request):
     """Dashboard simplifié : KPI essentiels + Calendrier"""
-    fix_client_constraint()
+    #fix_client_constraint()
     try:
         # ========================================
         # KPI ESSENTIELS (INCHANGÉS)

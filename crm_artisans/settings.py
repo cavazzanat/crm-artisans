@@ -23,8 +23,18 @@ if not SECRET_KEY:
 # DEBUG : Toujours False en production
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-# ALLOWED_HOSTS : Domaines explicites uniquement
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
+# ALLOWED_HOSTS : Domaines explicites
+_allowed = os.environ.get('ALLOWED_HOSTS', '')
+if _allowed:
+    ALLOWED_HOSTS = _allowed.split(',')
+else:
+    ALLOWED_HOSTS = [
+        'manay.fr',
+        'www.manay.fr',
+        'crm-artisans.onrender.com',
+        'localhost',
+        '127.0.0.1',
+    ]
 # Variable Render : ALLOWED_HOSTS=manay.fr,www.manay.fr
 
 # CSRF : Obligatoire Django 4+
