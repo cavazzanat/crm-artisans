@@ -911,34 +911,47 @@
               <!-- Statut -->
               <td data-label="Statut">
                 {% if operation.avec_devis %}
-                  {% with operation.dernier_devis as dernier_devis %}
+                  <!-- OPÉRATION AVEC DEVIS -->
+                  {% with operation.devis_set.all|last as dernier_devis %}
                     {% if not dernier_devis %}
                       <span class="status warn">📝 Sans devis</span>
+                      
                     {% elif dernier_devis.statut == 'brouillon' %}
                       <span class="status warn">📝 Brouillon</span>
+                      
                     {% elif dernier_devis.statut == 'pret' %}
                       <span class="status info">📄 À envoyer</span>
+                      
                     {% elif dernier_devis.statut == 'envoye' %}
                       {% if dernier_devis.est_expire %}
                         <span class="status bad">⏰ Expiré</span>
                       {% else %}
                         <span class="status info">⏳ En attente</span>
                       {% endif %}
+                      
                     {% elif dernier_devis.statut == 'refuse' %}
                       <span class="status bad">❌ Refusé</span>
+                      
                     {% elif dernier_devis.statut == 'accepte' %}
+                      <!-- Devis accepté → afficher statut opération -->
                       {% if operation.statut == 'paye' %}
                         <span class="status ok">💰 Payé</span>
                       {% elif operation.statut == 'realise' %}
                         <span class="status ok">✅ Réalisé</span>
                       {% elif operation.statut == 'planifie' %}
                         <span class="status info">⏰ Planifié</span>
-                      {% else %}
+                      {% elif operation.statut == 'a_planifier' %}
                         <span class="status">📅 À planifier</span>
+                      {% else %}
+                        <span class="status ok">✅ Accepté</span>
                       {% endif %}
+                      
+                    {% else %}
+                      <span class="status">{{ dernier_devis.get_statut_display }}</span>
                     {% endif %}
                   {% endwith %}
                 {% else %}
+                  <!-- OPÉRATION SANS DEVIS (PARCOURS DIRECT) -->
                   {% if operation.statut == 'paye' %}
                     <span class="status ok">💰 Payé</span>
                   {% elif operation.statut == 'realise' %}
@@ -947,6 +960,10 @@
                     <span class="status info">⏰ Planifié</span>
                   {% elif operation.statut == 'a_planifier' %}
                     <span class="status">📅 À planifier</span>
+                  {% elif operation.statut == 'en_attente_devis' %}
+                    <span class="status warn">📝 Attente devis</span>
+                  {% elif operation.statut == 'devis_refuse' %}
+                    <span class="status bad">❌ Annulée</span>
                   {% else %}
                     <span class="status">{{ operation.get_statut_display }}</span>
                   {% endif %}
