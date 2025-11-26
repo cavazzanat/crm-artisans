@@ -347,6 +347,50 @@
       font-size: .7rem;
       opacity: .8;
     }
+    
+    /* BARRE DE TRI */
+    .sort-bar {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      padding: .75rem 1rem;
+      background: white;
+      border-top: 1px solid var(--border);
+    }
+    
+    .sort-label {
+      font-size: .8rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-right: .25rem;
+    }
+    
+    .sort-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .35rem .65rem;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: white;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: .8rem;
+      font-weight: 500;
+      transition: all 0.15s ease;
+    }
+    
+    .sort-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(99,102,241,.03);
+    }
+    
+    .sort-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
 
     /* SECTION LISTE */
     .section{
@@ -687,6 +731,11 @@
     <!-- ONGLETS PRINCIPAUX -->
     <div class="tabs-container">
       <div class="tabs">
+        <a href="?filtre=toutes{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="tab {% if filtre_actif == 'toutes' %}active{% endif %}">
+          📋 Toutes
+          <span class="tab-badge">{{ nb_total }}</span>
+        </a>
         <a href="?filtre=urgences{% if recherche %}&recherche={{ recherche }}{% endif %}" 
            class="tab urgent {% if filtre_actif == 'urgences' %}active{% endif %}">
           🔴 Urgences
@@ -698,7 +747,7 @@
           <span class="tab-badge">{{ nb_a_faire }}</span>
         </a>
         <a href="?filtre=en_cours{% if recherche %}&recherche={{ recherche }}{% endif %}" 
-           class="tab {% if filtre_actif == 'en_cours' or filtre_actif == 'toutes' %}active{% endif %}">
+           class="tab {% if filtre_actif == 'en_cours' %}active{% endif %}">
           🔵 En cours
           <span class="tab-badge">{{ nb_en_cours }}</span>
         </a>
@@ -763,6 +812,23 @@
         </a>
       </div>
       {% endif %}
+      
+      <!-- TRI PAR DATE -->
+      <div class="sort-bar">
+        <span class="sort-label">Trier par :</span>
+        <a href="?filtre={{ filtre_actif }}{% if sous_filtre %}&sous={{ sous_filtre }}{% endif %}{% if recherche %}&recherche={{ recherche }}{% endif %}&tri=recent" 
+           class="sort-btn {% if tri_actif == 'recent' or not tri_actif %}active{% endif %}">
+          ↓ Plus récent
+        </a>
+        <a href="?filtre={{ filtre_actif }}{% if sous_filtre %}&sous={{ sous_filtre }}{% endif %}{% if recherche %}&recherche={{ recherche }}{% endif %}&tri=ancien" 
+           class="sort-btn {% if tri_actif == 'ancien' %}active{% endif %}">
+          ↑ Plus ancien
+        </a>
+        <a href="?filtre={{ filtre_actif }}{% if sous_filtre %}&sous={{ sous_filtre }}{% endif %}{% if recherche %}&recherche={{ recherche }}{% endif %}&tri=activite" 
+           class="sort-btn {% if tri_actif == 'activite' %}active{% endif %}">
+          🔄 Dernière activité
+        </a>
+      </div>
     </div>
 
     <!-- LISTE DES OPÉRATIONS -->
