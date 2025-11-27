@@ -43,6 +43,9 @@ def dashboard(request):
     """Dashboard simplifié : KPI essentiels + Calendrier"""
     #fix_client_constraint()
     try:
+        
+        today = timezone.now().date()
+        
         # ========================================
         # KPI ESSENTIELS (INCHANGÉS)
         # ========================================
@@ -92,10 +95,74 @@ def dashboard(request):
             if reste_a_planifier > 0:
                 nb_operations_sans_paiement += 1
         
+                # ========================================
+        # NOUVEAUX KPI ESSENTIELS
+        # ========================================
+        
+        # 1. URGENCES (total)
+        # Déjà calculé dans operations_list, on le refait ici pour le dashboard
+        
+        # Paiements en retard
+        ops_paiements_retard = []
+        for op in Operation.objects.filter(user=request.user, statut='realise').prefetch_related('echeances'):
+            retards = op.echeances.filter(paye=False, date_echeance__lt=today)
+            if retards.exists():
+                ops_paiements_retard.append(op.id)
+        
+        nb_paiements_retard_dashboard = len(ops_paiements_retard)
+        
+        # Devis expirés
+        ops_devis_expires = []
+        for op in Operation.objects.filter(user=request.user, avec_devis=True).prefetch_related('devis_set'):
+            for devis in op.devis_set.filter(statut='envoye'):
+                if devis.est_expire:
+                    ops_devis_expires.append(op.id)
+                    break
+        
+        nb_devis_expire_dashboard = len(ops_devis_expires)
+        
+        # Interventions aujourd'hui
+        nb_aujourdhui = PassageOperation.objects.filter(
+            operation__user=request.user,
+            date_prevue__date=today,
+            realise=False
+        ).values('operation').distinct().count()
+        
+        # Interventions demain
+        demain = today + timedelta(days=1)
+        nb_demain = PassageOperation.objects.filter(
+            operation__user=request.user,
+            date_prevue__date=demain,
+            realise=False
+        ).values('operation').distinct().count()
+        
+        # Total urgences (sans doublons)
+        ids_urgences = set(ops_paiements_retard + ops_devis_expires)
+        # + opérations avec passage aujourd'hui/demain
+        ids_aujourdhui = set(PassageOperation.objects.filter(
+            operation__user=request.user,
+            date_prevue__date=today,
+            realise=False
+        ).values_list('operation_id', flat=True))
+        ids_demain = set(PassageOperation.objects.filter(
+            operation__user=request.user,
+            date_prevue__date=demain,
+            realise=False
+        ).values_list('operation_id', flat=True))
+        
+        ids_urgences = ids_urgences | ids_aujourdhui | ids_demain
+        nb_urgences = len(ids_urgences)
+        
+        # 2. À ENCAISSER (réalisées avec reste à payer)
+        nb_a_encaisser = 0
+        for op in Operation.objects.filter(user=request.user, statut='realise').prefetch_related('echeances'):
+            total_paye = op.echeances.filter(paye=True).aggregate(total=Sum('montant'))['total'] or 0
+            if op.montant_total and total_paye < op.montant_total:
+                nb_a_encaisser += 1
+        
         # ========================================
         # 🔥 CALENDRIER - VERSION PASSAGES
         # ========================================
-        today = timezone.now().date()
         start_date = today - timedelta(days=30)
         end_date = today + timedelta(days=14)
 
@@ -191,17 +258,22 @@ def dashboard(request):
             })
         
         context = {
-            # KPI essentiels
+            # KPI essentiels (NOUVEAU)
+            'nb_urgences': nb_urgences,
+            'nb_aujourdhui': nb_aujourdhui,
+            'nb_en_attente_devis': nb_en_attente_devis,  # Déjà existant
+            'nb_a_encaisser': nb_a_encaisser,
+            'ca_mois': ca_mois,  # Déjà existant
+            
+            # Calendrier (existant)
+            'calendar_events_json': json.dumps(calendar_events),
+            'calendar_events': calendar_events,
+            
+            # Anciens KPI (garder pour compatibilité si besoin)
             'nb_clients': nb_clients,
-            'ca_mois': ca_mois,
-            'nb_en_attente_devis': nb_en_attente_devis,
             'nb_a_planifier': nb_a_planifier,
             'nb_paiements_retard': nb_paiements_retard,
             'nb_operations_sans_paiement': nb_operations_sans_paiement,
-            
-            # Calendrier
-            'calendar_events_json': json.dumps(calendar_events),
-            'calendar_events': calendar_events,
         }
         
         return render(request, 'core/dashboard.html', context)
