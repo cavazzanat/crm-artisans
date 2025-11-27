@@ -107,25 +107,33 @@
             color: #333;
             border: 1px solid #ddd;
         }
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
     </style>
 </head>
 <body>
-    <header class="header">
-        <h1>CRM Artisans</h1>
-        <nav class="nav-menu">
-            <a href="{% url 'dashboard' %}">Accueil</a>
-            <a href="{% url 'operations' %}">Opérations</a>
-            <a href="{% url 'clients' %}" class="active">Clients</a>
-            <a href="{% url 'profil' %}">Profil</a>
-        </nav>
-        <div class="user">
-            <span>{{ user.username }}</span>
-            <form method="post" action="{% url 'logout' %}">
-            {% csrf_token %}
-            <button type="submit">Déconnexion</button>
-            </form>
-        </div>
-    </header>
+<header class="header">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <img src="{% static 'core/image/manay-logo.png' %}" alt="manay" style="width: 32px; height: 32px; object-fit: contain;">
+        <h1>manay</h1>
+    </div>
+    <nav class="nav-menu">
+        <a href="{% url 'dashboard' %}">Accueil</a>
+        <a href="{% url 'operations' %}">Opérations</a>
+        <a href="{% url 'clients' %}" class="active">Clients</a>
+        <a href="{% url 'profil' %}">Profil</a>
+    </nav>
+    <div class="user">
+        <span>{{ user.username }}</span>
+        <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit">Déconnexion</button>
+        </form>
+    </div>
+</header>
 
     <div class="container">
         <div class="delete-card">

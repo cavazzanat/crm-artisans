@@ -505,6 +505,11 @@
       .main-content{ grid-template-columns: 1fr }
       .nav{ flex-wrap: wrap; }
     }
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
   </style>
 </head>
 <body>
@@ -512,13 +517,10 @@
   <header class="header">
     <div class="header-inner">
       <div class="brand">
-        <div class="logo">
-          <svg viewBox="0 0 24 24" fill="none">
-            <path d="M4 14.5 12 4l8 10.5-8 5.5-8-5.5Z" stroke="currentColor" stroke-width="1.6"/>
-          </svg>
-        </div>
+        <img src="{% static 'core/image/manay-logo.png' %}" alt="manay" class="logo-img">
         <span>manay</span>
       </div>
+
       <nav class="nav">
         <a href="{% url 'dashboard' %}">Accueil</a>
         <a href="{% url 'operations' %}" class="active">Opérations</a>
