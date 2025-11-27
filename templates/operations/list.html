@@ -272,6 +272,15 @@
       background: rgba(34,197,94,.03);
     }
     
+    /* NOUVEAU: Style pour onglet Devis */
+    .tab.devis {
+      color: var(--accent);
+    }
+    .tab.devis.active {
+      border-bottom-color: var(--accent);
+      background: rgba(139,92,246,.03);
+    }
+    
     .tab-badge {
       display: inline-flex;
       align-items: center;
@@ -296,6 +305,11 @@
       color: var(--success);
     }
     
+    .tab.devis .tab-badge {
+      background: rgba(139,92,246,.15);
+      color: var(--accent);
+    }
+    
     .tab.active .tab-badge {
       background: rgba(99,102,241,.15);
     }
@@ -307,8 +321,12 @@
     .tab.encaisser.active .tab-badge {
       background: rgba(34,197,94,.2);
     }
+    
+    .tab.devis.active .tab-badge {
+      background: rgba(139,92,246,.2);
+    }
 
-    /* SOUS-FILTRES (optionnel, affiché sous les onglets) */
+    /* SOUS-FILTRES */
     .sub-filters {
       padding: .75rem 1rem;
       display: flex;
@@ -574,6 +592,11 @@
       border-color: rgba(99,102,241,.3);
       background: rgba(99,102,241,.1);
     }
+    .status.purple{
+      color: var(--accent);
+      border-color: rgba(139,92,246,.3);
+      background: rgba(139,92,246,.1);
+    }
     
     /* DERNIÈRE ACTIVITÉ */
     .activity {
@@ -606,6 +629,31 @@
     }
     .amount-success {
       color: var(--success);
+    }
+
+    /* DEVIS INFO (nouveau) */
+    .devis-info {
+      display: flex;
+      flex-direction: column;
+      gap: .2rem;
+    }
+    .devis-numero {
+      font-weight: 600;
+      color: var(--accent);
+      font-size: .85rem;
+    }
+    .devis-version {
+      font-size: .75rem;
+      color: var(--muted);
+    }
+    .devis-date {
+      font-size: .75rem;
+      color: var(--muted);
+    }
+    .devis-expire {
+      font-size: .75rem;
+      color: var(--danger);
+      font-weight: 600;
     }
 
     /* EMPTY STATE */
@@ -721,7 +769,7 @@
         type="text" 
         name="recherche" 
         value="{{ recherche|default:'' }}" 
-        placeholder="Rechercher par client, ville, téléphone, ID opération, type de prestation..."
+        placeholder="Rechercher par client, ville, téléphone, ID opération, numéro de devis..."
         autocomplete="off"
       >
       <input type="hidden" name="filtre" value="{{ filtre_actif }}">
@@ -741,6 +789,14 @@
           🔴 Urgences
           <span class="tab-badge">{{ nb_urgences }}</span>
         </a>
+        
+        <!-- NOUVEL ONGLET DEVIS -->
+        <a href="?filtre=devis{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="tab devis {% if filtre_actif == 'devis' %}active{% endif %}">
+          📄 Devis
+          <span class="tab-badge">{{ nb_devis_total }}</span>
+        </a>
+        
         <a href="?filtre=a_faire{% if recherche %}&recherche={{ recherche }}{% endif %}" 
            class="tab {% if filtre_actif == 'a_faire' %}active{% endif %}">
           🟠 À faire
@@ -771,43 +827,94 @@
       <!-- SOUS-FILTRES CONTEXTUELS -->
       {% if filtre_actif == 'urgences' %}
       <div class="sub-filters">
-        <a href="?filtre=urgences&sous=retards" class="sub-filter {% if sous_filtre == 'retards' %}active{% endif %}">
+        <a href="?filtre=urgences&sous=retards{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'retards' %}active{% endif %}">
           🚨 Paiements en retard <span class="sub-filter-badge">({{ nb_paiements_retard }})</span>
         </a>
-        <a href="?filtre=urgences&sous=expires" class="sub-filter {% if sous_filtre == 'expires' %}active{% endif %}">
+        <a href="?filtre=urgences&sous=expires{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'expires' %}active{% endif %}">
           ⏰ Devis expirés <span class="sub-filter-badge">({{ nb_devis_expire }})</span>
         </a>
-        <a href="?filtre=urgences&sous=aujourdhui" class="sub-filter {% if sous_filtre == 'aujourdhui' %}active{% endif %}">
+        <a href="?filtre=urgences&sous=aujourdhui{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'aujourdhui' %}active{% endif %}">
           📍 Aujourd'hui <span class="sub-filter-badge">({{ nb_aujourdhui }})</span>
         </a>
-        <a href="?filtre=urgences&sous=demain" class="sub-filter {% if sous_filtre == 'demain' %}active{% endif %}">
+        <a href="?filtre=urgences&sous=demain{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'demain' %}active{% endif %}">
           📆 Demain <span class="sub-filter-badge">({{ nb_demain }})</span>
         </a>
       </div>
+      
+      {% elif filtre_actif == 'devis' %}
+      <!-- SOUS-FILTRES DEVIS -->
+      <div class="sub-filters">
+        <a href="?filtre=devis{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if not sous_filtre %}active{% endif %}">
+          Tous <span class="sub-filter-badge">({{ nb_devis_total }})</span>
+        </a>
+        <a href="?filtre=devis&sous=brouillon{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'brouillon' %}active{% endif %}"
+           style="{% if nb_devis_brouillon > 0 %}border-color: var(--warning); color: var(--warning);{% endif %}">
+          📝 Brouillons <span class="sub-filter-badge">({{ nb_devis_brouillon }})</span>
+        </a>
+        <a href="?filtre=devis&sous=pret{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'pret' %}active{% endif %}"
+           style="{% if nb_devis_pret > 0 %}border-color: var(--accent); color: var(--accent);{% endif %}">
+          📄 À envoyer <span class="sub-filter-badge">({{ nb_devis_pret }})</span>
+        </a>
+        <a href="?filtre=devis&sous=envoye{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'envoye' %}active{% endif %}"
+           style="{% if nb_devis_envoye > 0 %}border-color: var(--primary); color: var(--primary);{% endif %}">
+          ⏳ En attente <span class="sub-filter-badge">({{ nb_devis_envoye }})</span>
+        </a>
+        <a href="?filtre=devis&sous=expire{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'expire' %}active{% endif %}"
+           style="{% if nb_devis_expire > 0 %}border-color: var(--danger); color: var(--danger); background: rgba(239,68,68,.05);{% endif %}">
+          ⚠️ Expirés <span class="sub-filter-badge">({{ nb_devis_expire }})</span>
+        </a>
+        <a href="?filtre=devis&sous=accepte{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'accepte' %}active{% endif %}"
+           style="{% if nb_devis_accepte > 0 %}border-color: var(--success); color: var(--success);{% endif %}">
+          ✅ Acceptés <span class="sub-filter-badge">({{ nb_devis_accepte }})</span>
+        </a>
+        <a href="?filtre=devis&sous=refuse{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'refuse' %}active{% endif %}">
+          ❌ Refusés <span class="sub-filter-badge">({{ nb_devis_refuse }})</span>
+        </a>
+      </div>
+      
       {% elif filtre_actif == 'a_faire' %}
       <div class="sub-filters">
-        <a href="?filtre=a_faire&sous=a_planifier" class="sub-filter {% if sous_filtre == 'a_planifier' %}active{% endif %}">
+        <a href="?filtre=a_faire&sous=a_planifier{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'a_planifier' %}active{% endif %}">
           📅 À planifier <span class="sub-filter-badge">({{ nb_a_planifier }})</span>
         </a>
-        <a href="?filtre=a_faire&sous=devis_brouillon" class="sub-filter {% if sous_filtre == 'devis_brouillon' %}active{% endif %}">
+        <a href="?filtre=a_faire&sous=devis_brouillon{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'devis_brouillon' %}active{% endif %}">
           📝 Devis brouillon <span class="sub-filter-badge">({{ nb_devis_brouillon }})</span>
         </a>
-        <a href="?filtre=a_faire&sous=paiements_non_planifies" class="sub-filter {% if sous_filtre == 'paiements_non_planifies' %}active{% endif %}">
+        <a href="?filtre=a_faire&sous=paiements_non_planifies{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'paiements_non_planifies' %}active{% endif %}">
           💳 Paiements non planifiés <span class="sub-filter-badge">({{ nb_operations_sans_paiement }})</span>
         </a>
       </div>
+      
       {% elif filtre_actif == 'a_venir' %}
       <div class="sub-filters">
-        <a href="?filtre=a_venir&sous=semaine" class="sub-filter {% if sous_filtre == 'semaine' %}active{% endif %}">
+        <a href="?filtre=a_venir&sous=semaine{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'semaine' %}active{% endif %}">
           Cette semaine
         </a>
-        <a href="?filtre=a_venir&sous=semaine_prochaine" class="sub-filter {% if sous_filtre == 'semaine_prochaine' %}active{% endif %}">
+        <a href="?filtre=a_venir&sous=semaine_prochaine{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'semaine_prochaine' %}active{% endif %}">
           Semaine prochaine
         </a>
-        <a href="?filtre=a_venir&sous=mois" class="sub-filter {% if sous_filtre == 'mois' %}active{% endif %}">
+        <a href="?filtre=a_venir&sous=mois{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'mois' %}active{% endif %}">
           Ce mois
         </a>
-        <a href="?filtre=a_venir&sous=plus_tard" class="sub-filter {% if sous_filtre == 'plus_tard' %}active{% endif %}">
+        <a href="?filtre=a_venir&sous=plus_tard{% if recherche %}&recherche={{ recherche }}{% endif %}" 
+           class="sub-filter {% if sous_filtre == 'plus_tard' %}active{% endif %}">
           Plus tard
         </a>
       </div>
@@ -828,6 +935,12 @@
            class="sort-btn {% if tri_actif == 'activite' %}active{% endif %}">
           🔄 Dernière activité
         </a>
+        {% if filtre_actif == 'devis' %}
+        <a href="?filtre={{ filtre_actif }}{% if sous_filtre %}&sous={{ sous_filtre }}{% endif %}{% if recherche %}&recherche={{ recherche }}{% endif %}&tri=montant" 
+           class="sort-btn {% if tri_actif == 'montant' %}active{% endif %}">
+          💰 Montant
+        </a>
+        {% endif %}
       </div>
     </div>
 
@@ -837,6 +950,8 @@
         <h2>
           {% if filtre_actif == 'urgences' %}
             🔴 Urgences à traiter
+          {% elif filtre_actif == 'devis' %}
+            📄 Suivi des devis
           {% elif filtre_actif == 'a_faire' %}
             🟠 Tâches à faire
           {% elif filtre_actif == 'en_cours' or filtre_actif == 'toutes' %}
@@ -867,6 +982,9 @@
             <tr>
               <th style="width:100px">ID</th>
               <th>Client / Opération</th>
+              {% if filtre_actif == 'devis' %}
+              <th style="width:150px">Devis</th>
+              {% endif %}
               <th style="width:100px">Ville</th>
               <th style="width:110px">Montant</th>
               <th style="width:130px">Statut</th>
@@ -891,6 +1009,34 @@
                 </div>
               </td>
               
+              {% if filtre_actif == 'devis' %}
+              <!-- Infos Devis (colonne spéciale pour onglet Devis) -->
+              <td data-label="Devis">
+                {% with operation.dernier_devis_obj as devis %}
+                {% if devis %}
+                <div class="devis-info">
+                  <span class="devis-numero">{{ devis.numero_devis }}</span>
+                  {% if devis.version > 1 %}
+                  <span class="devis-version">Version {{ devis.version }}</span>
+                  {% endif %}
+                  {% if devis.date_creation %}
+                  <span class="devis-date">Créé le {{ devis.date_creation|date:"d/m/Y" }}</span>
+                  {% endif %}
+                  {% if devis.statut == 'envoye' and devis.date_limite %}
+                    {% if devis.est_expire %}
+                    <span class="devis-expire">⚠️ Expiré le {{ devis.date_limite|date:"d/m/Y" }}</span>
+                    {% else %}
+                    <span class="devis-date">Valide jusqu'au {{ devis.date_limite|date:"d/m/Y" }}</span>
+                    {% endif %}
+                  {% endif %}
+                </div>
+                {% else %}
+                <span class="muted">—</span>
+                {% endif %}
+                {% endwith %}
+              </td>
+              {% endif %}
+              
               <!-- Ville -->
               <td data-label="Ville">{{ operation.client.ville|default:"—" }}</td>
               
@@ -903,6 +1049,9 @@
                       Reste: {{ operation.reste_a_payer|floatformat:0 }} €
                     </div>
                   {% endif %}
+                {% elif operation.dernier_devis_obj and operation.dernier_devis_obj.total_ttc %}
+                  <div class="amount">{{ operation.dernier_devis_obj.total_ttc|floatformat:0 }} €</div>
+                  <div class="amount-detail">(devis v{{ operation.dernier_devis_obj.version }})</div>
                 {% else %}
                   <span class="muted">—</span>
                 {% endif %}
@@ -920,7 +1069,7 @@
                       <span class="status warn">📝 Brouillon</span>
                       
                     {% elif dernier_devis.statut == 'pret' %}
-                      <span class="status info">📄 À envoyer</span>
+                      <span class="status purple">📄 À envoyer</span>
                       
                     {% elif dernier_devis.statut == 'envoye' %}
                       {% if dernier_devis.est_expire %}
@@ -1024,6 +1173,8 @@
           <div class="empty-state-icon">
             {% if filtre_actif == 'urgences' %}
               🎉
+            {% elif filtre_actif == 'devis' %}
+              📄
             {% elif filtre_actif == 'a_encaisser' %}
               💰
             {% else %}
@@ -1033,6 +1184,8 @@
           <div class="empty-state-title">
             {% if filtre_actif == 'urgences' %}
               Aucune urgence !
+            {% elif filtre_actif == 'devis' %}
+              Aucun devis dans cette catégorie
             {% elif recherche %}
               Aucun résultat pour "{{ recherche }}"
             {% else %}
@@ -1042,6 +1195,8 @@
           <p class="empty-state-text">
             {% if filtre_actif == 'urgences' %}
               Tout est sous contrôle. Bravo ! 🎊
+            {% elif filtre_actif == 'devis' %}
+              Créez une opération avec devis pour commencer.
             {% elif recherche %}
               Essayez avec d'autres termes de recherche.
             {% else %}

@@ -209,20 +209,144 @@ def dashboard(request):
     except Exception as e:
         return HttpResponse(f"<h1>CRM Artisans</h1><p>Erreur : {str(e)}</p>")
 
-# ========================================
-# NOUVELLE VUE OPERATIONS_LIST - VERSION FUSIONNÉE
-# ========================================
-# Remplace la fonction operations_list dans views.py
+# ════════════════════════════════════════════════════════════════════════════════
+# FONCTION 1 : COMPTEURS DEVIS
+# ════════════════════════════════════════════════════════════════════════════════
 
-# ========================================
-# NOUVELLE VUE OPERATIONS_LIST - VERSION FUSIONNÉE
-# ========================================
-# Remplace la fonction operations_list dans views.py
+def get_devis_counters(request, all_operations):
+    """
+    Calcule les compteurs pour l'onglet Devis et ses sous-filtres.
+    
+    Retourne un dictionnaire avec :
+    - nb_devis_total : Toutes les opérations avec au moins un devis
+    - nb_devis_brouillon : Dernier devis en statut 'brouillon'
+    - nb_devis_pret : Dernier devis en statut 'pret' (à envoyer)
+    - nb_devis_envoye : Dernier devis en statut 'envoye' et NON expiré
+    - nb_devis_expire : Dernier devis en statut 'envoye' et expiré
+    - nb_devis_accepte : Dernier devis en statut 'accepte'
+    - nb_devis_refuse : Dernier devis en statut 'refuse'
+    
+    IMPORTANT : On compte par OPÉRATION (pas par devis), basé sur le DERNIER devis de chaque opération.
+    """
+    
+    # Filtrer les opérations avec devis
+    operations_avec_devis = all_operations.filter(avec_devis=True).prefetch_related('devis_set')
+    
+    # Initialiser les compteurs
+    nb_devis_total = 0
+    nb_devis_brouillon = 0
+    nb_devis_pret = 0
+    nb_devis_envoye = 0
+    nb_devis_expire = 0
+    nb_devis_accepte = 0
+    nb_devis_refuse = 0
+    
+    # Parcourir chaque opération avec devis
+    for op in operations_avec_devis:
+        # Récupérer le DERNIER devis (version la plus élevée)
+        dernier_devis = op.devis_set.order_by('-version').first()
+        
+        if not dernier_devis:
+            continue
+        
+        # Compter le total
+        nb_devis_total += 1
+        
+        # Classer selon le statut du dernier devis
+        if dernier_devis.statut == 'brouillon':
+            nb_devis_brouillon += 1
+            
+        elif dernier_devis.statut == 'pret':
+            nb_devis_pret += 1
+            
+        elif dernier_devis.statut == 'envoye':
+            # Vérifier si expiré ou en attente
+            if dernier_devis.est_expire:
+                nb_devis_expire += 1
+            else:
+                nb_devis_envoye += 1
+                
+        elif dernier_devis.statut == 'accepte':
+            nb_devis_accepte += 1
+            
+        elif dernier_devis.statut == 'refuse':
+            nb_devis_refuse += 1
+    
+    return {
+        'nb_devis_total': nb_devis_total,
+        'nb_devis_brouillon': nb_devis_brouillon,
+        'nb_devis_pret': nb_devis_pret,
+        'nb_devis_envoye': nb_devis_envoye,
+        'nb_devis_expire': nb_devis_expire,
+        'nb_devis_accepte': nb_devis_accepte,
+        'nb_devis_refuse': nb_devis_refuse,
+    }
 
-# ========================================
-# NOUVELLE VUE OPERATIONS_LIST - VERSION FUSIONNÉE
-# ========================================
-# Remplace la fonction operations_list dans views.py
+def filter_operations_by_devis(request, filtre_actif, sous_filtre, all_operations):
+    """
+    Filtre les opérations selon le sous-filtre devis sélectionné.
+    
+    Paramètres :
+    - request : La requête HTTP
+    - filtre_actif : Le filtre principal ('devis' pour cet onglet)
+    - sous_filtre : Le sous-filtre ('brouillon', 'pret', 'envoye', 'expire', 'accepte', 'refuse')
+    - all_operations : QuerySet de toutes les opérations
+    
+    Retourne :
+    - QuerySet filtré des opérations, ou None si filtre_actif != 'devis'
+    """
+    
+    # Ne traiter que si on est sur l'onglet Devis
+    if filtre_actif != 'devis':
+        return None
+    
+    # Filtrer les opérations avec devis
+    operations_avec_devis = all_operations.filter(avec_devis=True).prefetch_related('devis_set')
+    
+    # Liste des IDs à retourner
+    filtered_ids = []
+    
+    # Parcourir chaque opération
+    for op in operations_avec_devis:
+        # Récupérer le DERNIER devis
+        dernier_devis = op.devis_set.order_by('-version').first()
+        
+        if not dernier_devis:
+            continue
+        
+        # Appliquer le filtre selon le sous-filtre
+        should_include = False
+        
+        if not sous_filtre:
+            # Pas de sous-filtre = TOUS les devis
+            should_include = True
+            
+        elif sous_filtre == 'brouillon':
+            should_include = (dernier_devis.statut == 'brouillon')
+            
+        elif sous_filtre == 'pret':
+            should_include = (dernier_devis.statut == 'pret')
+            
+        elif sous_filtre == 'envoye':
+            # En attente = envoyé mais PAS expiré
+            should_include = (dernier_devis.statut == 'envoye' and not dernier_devis.est_expire)
+            
+        elif sous_filtre == 'expire':
+            # Expiré = envoyé ET date dépassée
+            should_include = (dernier_devis.statut == 'envoye' and dernier_devis.est_expire)
+            
+        elif sous_filtre == 'accepte':
+            should_include = (dernier_devis.statut == 'accepte')
+            
+        elif sous_filtre == 'refuse':
+            should_include = (dernier_devis.statut == 'refuse')
+        
+        if should_include:
+            filtered_ids.append(op.id)
+    
+    # Retourner le QuerySet filtré
+    return all_operations.filter(id__in=filtered_ids)
+
 
 @login_required
 def operations_list(request):
@@ -298,6 +422,9 @@ def operations_list(request):
     ).select_related('client').prefetch_related(
         'interventions', 'echeances', 'historique', 'devis_set', 'passages'
     )
+    
+    # --- COMPTEURS DEVIS ---
+    devis_counters = get_devis_counters(request, all_operations)
     
     # ========================================
     # CALCULS FINANCIERS (CONSERVÉ)
@@ -518,6 +645,9 @@ def operations_list(request):
         for op in operations:
             op.est_urgent = True
             
+    elif filtre == 'devis':
+        operations = filter_operations_by_devis(request, filtre, sous_filtre, all_operations)
+    
     elif filtre == 'a_faire':
         if sous_filtre == 'a_planifier':
             operations = operations.filter(statut='a_planifier')
@@ -752,6 +882,14 @@ def operations_list(request):
         'nb_devis_genere_non_envoye': nb_devis_genere_non_envoye,
         'nb_devis_en_attente': nb_devis_en_attente,
         'nb_sans_devis': nb_sans_devis,
+        
+        'nb_devis_total': devis_counters['nb_devis_total'],
+        'nb_devis_brouillon': devis_counters['nb_devis_brouillon'],
+        'nb_devis_pret': devis_counters['nb_devis_pret'],
+        'nb_devis_envoye': devis_counters['nb_devis_envoye'],
+        'nb_devis_expire': devis_counters['nb_devis_expire'],
+        'nb_devis_accepte': devis_counters['nb_devis_accepte'],
+        'nb_devis_refuse': devis_counters['nb_devis_refuse'],
     }
     
     return render(request, 'operations/list.html', context)
