@@ -962,11 +962,10 @@
     <h1 class="page-title">Tableau de bord</h1>
     <p class="subtitle">Vue d'ensemble de vos performances et planning</p>
 
-    <!-- KPI -->
-     <!-- KPI - 5 ESSENTIELS -->
+    <!-- KPI - 4 ESSENTIELS -->
     <div class="kpi-grid">
       
-      <!-- 🚨 URGENCES (retards + devis expirés + aujourd'hui/demain) -->
+      <!-- 🚨 URGENCES (retards + devis expirés) -->
       <div class="kpi-card {% if nb_urgences > 0 %}alert{% endif %}">
         <div class="kpi-label">🚨 Urgences</div>
         <div class="kpi-value">{{ nb_urgences }}</div>
@@ -975,19 +974,6 @@
             <a href="{% url 'operations' %}?filtre=urgences">Traiter →</a>
           {% else %}
             <span style="color: var(--success);">✓ Rien d'urgent</span>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- 📅 AUJOURD'HUI -->
-      <div class="kpi-card">
-        <div class="kpi-label">📅 Aujourd'hui</div>
-        <div class="kpi-value">{{ nb_aujourdhui }}</div>
-        <div class="kpi-subtitle">
-          {% if nb_aujourdhui > 0 %}
-            <a href="{% url 'operations' %}?filtre=urgences&sous=aujourdhui">Voir →</a>
-          {% else %}
-            <span style="color: var(--muted);">Aucune intervention</span>
           {% endif %}
         </div>
       </div>
