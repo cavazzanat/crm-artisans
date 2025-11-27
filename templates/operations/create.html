@@ -316,7 +316,7 @@
     </div>
     {% endif %}
 
-    <form method="POST" id="operation-form" onsubmit="return validateForm(event)">
+    <form method="POST" action="{% url 'operation_create' %}" id="operation-form" onsubmit="return validateForm(event)">
       {% csrf_token %}
       
       <!-- ========================================
