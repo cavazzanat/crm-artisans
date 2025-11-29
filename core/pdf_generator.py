@@ -461,9 +461,19 @@ from io import BytesIO
 
 def generer_facture_pdf(echeance, profil):
     """
-    Génère une facture avec la même DA que le devis,
+    Génère une facture PDF avec la même DA que le devis,
     en respectant une grille rigoureuse (9 cm / 7 cm).
+    
+    ✅ CORRIGÉ : Gère les opérations AVEC et SANS devis
     """
+
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.units import cm
+    from reportlab.lib import colors
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+    from reportlab.lib.enums import TA_RIGHT, TA_LEFT
+    from io import BytesIO
 
     buffer = BytesIO()
     doc = SimpleDocTemplate(
@@ -567,8 +577,6 @@ def generer_facture_pdf(echeance, profil):
             Paragraph(f"Email : {profil.email}", style_small)
         )
 
-    # TODO plus tard : forme juridique, TVA, RCS / RM, etc.
-
     style_doc_type = ParagraphStyle(
         "DocType",
         parent=style_base,
@@ -589,7 +597,7 @@ def generer_facture_pdf(echeance, profil):
 
     right_cells = [
         Paragraph(type_label, style_doc_type),
-        Spacer(1, 0.25 * cm),  # espace ajouté
+        Spacer(1, 0.25 * cm),
         Paragraph(f"N° {echeance.numero_facture}", style_doc_num),
         Spacer(1, 0.1 * cm),
         Paragraph(
@@ -601,7 +609,6 @@ def generer_facture_pdf(echeance, profil):
             style_right_small,
         ),
     ]
-
 
     header_table = Table(
         [[left_cells, right_cells]],
@@ -657,11 +664,10 @@ def generer_facture_pdf(echeance, profil):
         )
 
     info_block = [
-        Spacer(1, 0.2 * cm),   # équilibre vertical
+        Spacer(1, 0.2 * cm),
         Paragraph("Informations", style_section_title),
         Paragraph(f"Opération : {operation.id_operation}", style_base),
         Paragraph(f"Montant facturé : {echeance.montant:.2f} €", style_small),
-        # TODO plus tard : conditions de paiement, mode de règlement, etc.
     ]
 
     info_table = Table(
@@ -687,7 +693,7 @@ def generer_facture_pdf(echeance, profil):
     elements.append(Spacer(1, 0.7 * cm))
 
     # =======================================================
-    # DÉTAIL DES LIGNES (tableau)
+    # ✅ DÉTAIL DES LIGNES (CORRIGÉ)
     # =======================================================
     data = [
         [
@@ -700,15 +706,54 @@ def generer_facture_pdf(echeance, profil):
         ]
     ]
 
-    for intervention in operation.interventions.all():
+    # ✅ CORRECTION : Choisir la source des lignes selon le type d'opération
+    if operation.avec_devis:
+        # Opération AVEC DEVIS → Utiliser les lignes du devis accepté
+        devis_accepte = operation.devis_set.filter(statut='accepte').first()
+        
+        if not devis_accepte:
+            # Fallback : prendre le dernier devis
+            devis_accepte = operation.devis_set.order_by('-version').first()
+        
+        if devis_accepte:
+            lignes = devis_accepte.lignes.all()
+            
+            for ligne in lignes:
+                data.append(
+                    [
+                        Paragraph(ligne.description or "", style_base),
+                        f"{ligne.quantite:.2f}".replace(".", ","),
+                        ligne.get_unite_display(),
+                        f"{ligne.prix_unitaire_ht:.2f} €".replace(".", ","),
+                        f"{ligne.taux_tva:.0f}%",
+                        f"{ligne.montant:.2f} €".replace(".", ","),
+                    ]
+                )
+    else:
+        # Opération SANS DEVIS → Utiliser les interventions
+        for intervention in operation.interventions.all():
+            data.append(
+                [
+                    Paragraph(intervention.description or "", style_base),
+                    f"{intervention.quantite:.2f}".replace(".", ","),
+                    intervention.get_unite_display(),
+                    f"{intervention.prix_unitaire_ht:.2f} €".replace(".", ","),
+                    f"{intervention.taux_tva:.0f}%",
+                    f"{intervention.montant:.2f} €".replace(".", ","),
+                ]
+            )
+
+    # ✅ VÉRIFICATION : S'assurer qu'il y a des lignes
+    if len(data) == 1:
+        # Aucune ligne → Ajouter une ligne par défaut avec le montant de l'échéance
         data.append(
             [
-                Paragraph(intervention.description or "", style_base),
-                f"{intervention.quantite:.2f}".replace(".", ","),
-                intervention.get_unite_display(),
-                f"{intervention.prix_unitaire_ht:.2f} €".replace(".", ","),
-                f"{intervention.taux_tva:.0f}%",
-                f"{intervention.montant:.2f} €".replace(".", ","),
+                Paragraph(operation.type_prestation or "Prestation", style_base),
+                "1,00",
+                "Forfait",
+                f"{echeance.montant:.2f} €".replace(".", ","),
+                "10%",
+                f"{echeance.montant:.2f} €".replace(".", ","),
             ]
         )
 
@@ -737,19 +782,43 @@ def generer_facture_pdf(echeance, profil):
     elements.append(Spacer(1, 0.7 * cm))
 
     # =======================================================
-    # TOTAUX (alignés, compact)
+    # ✅ TOTAUX (CORRIGÉ)
     # =======================================================
+    
+    # ✅ CORRECTION : Calculer les totaux selon le type d'opération
+    if operation.avec_devis:
+        devis_accepte = operation.devis_set.filter(statut='accepte').first()
+        if not devis_accepte:
+            devis_accepte = operation.devis_set.order_by('-version').first()
+        
+        if devis_accepte:
+            sous_total_ht = devis_accepte.sous_total_ht
+            total_tva = devis_accepte.total_tva
+            total_ttc = devis_accepte.total_ttc
+        else:
+            # Fallback si aucun devis
+            sous_total_ht = operation.montant_total or echeance.montant
+            total_tva = 0
+            total_ttc = sous_total_ht
+    else:
+        # Opération SANS devis → utiliser les propriétés de l'opération
+        sous_total_ht = operation.sous_total_ht
+        total_tva = operation.total_tva
+        total_ttc = operation.total_ttc
+
     totaux = [
-        ["Sous-total HT", f"{operation.sous_total_ht:.2f} €"],
-        ["TVA", f"{operation.total_tva:.2f} €"],
-        ["TOTAL TTC", f"{operation.total_ttc:.2f} €"],
+        ["Sous-total HT", f"{sous_total_ht:.2f} €"],
+        ["TVA", f"{total_tva:.2f} €"],
+        ["TOTAL TTC", f"{total_ttc:.2f} €"],
     ]
 
     if echeance.facture_type in ["acompte", "solde"]:
         totaux.append(["", ""])
         totaux.append(
-            [Paragraph(f"Montant de la facture<br/>({echeance.facture_type})", style_totaux_label),
-            Paragraph(f"{echeance.montant:.2f} €", style_totaux_value)]
+            [
+                Paragraph(f"Montant de la facture<br/>({echeance.facture_type})", style_totaux_label),
+                Paragraph(f"{echeance.montant:.2f} €", style_totaux_value)
+            ]
         )
 
     totaux_table = Table(
