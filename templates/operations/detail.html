@@ -672,11 +672,11 @@
           <span>manay</span>
         </a>
         
+        <!-- ✅ Navigation SANS Profil -->
         <nav class="nav">
           <a href="{% url 'dashboard' %}">Accueil</a>
-          <a href="{% url 'operations' %}" class="active">Opérations</a>
+          <a href="{% url 'operations' %}">Opérations</a>
           <a href="{% url 'clients' %}">Clients</a>
-          <a href="{% url 'profil' %}">Profil</a>
         </nav>
         
         <div class="user-menu">
@@ -689,6 +689,7 @@
               </svg>
             </div>
             
+            <!-- ✅ Dropdown SANS Paramètres -->
             <div class="dropdown-menu">
               <a href="{% url 'profil' %}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -696,13 +697,6 @@
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
                 Mon profil
-              </a>
-              <a href="{% url 'profil' %}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="3"/>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-                Paramètres
               </a>
               
               <div class="dropdown-divider"></div>
