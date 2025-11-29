@@ -73,22 +73,10 @@
             margin-bottom: 2rem;
         }
 
-        .logo-wrapper {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 16px;
-            margin-bottom: 1rem;
-            box-shadow: 0 4px 12px rgba(99,102,241,0.25);
-        }
-
-        .logo-wrapper img {
-            width: 40px;
-            height: 40px;
-            filter: brightness(0) invert(1);
+        .logo-img {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 0.75rem;
         }
 
         .login-header h1 {
@@ -269,9 +257,7 @@
 <body>
     <div class="login-container">
         <div class="login-header">
-            <div class="logo-wrapper">
-                <img src="{% static 'core/image/manay-logo.png' %}" alt="manay">
-            </div>
+            <img src="{% static 'core/image/manay-logo.png' %}" alt="manay" class="logo-img">
             <h1>manay</h1>
             <p>Connectez-vous à votre espace</p>
         </div>
