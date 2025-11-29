@@ -63,6 +63,7 @@
       align-items: center;
       justify-content: space-between;
       height: 64px;
+      line-height: 1; /* ✅ Base cohérente pour tout le header */
     }
 
     /* Brand / Logo */
@@ -74,6 +75,7 @@
       font-size: 1.15rem;
       color: var(--text);
       text-decoration: none;
+      flex-shrink: 0; /* ✅ Ne jamais comprimer le logo */
     }
 
     .brand:link,
@@ -86,6 +88,7 @@
     .logo-img {
       width: 32px;
       height: 32px;
+      min-width: 32px; /* ✅ Largeur minimale fixe */
       object-fit: contain;
     }
 
@@ -126,11 +129,13 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      flex-shrink: 0; /* ✅ Empêche le menu user de se comprimer */
     }
 
     .avatar {
       width: 36px;
       height: 36px;
+      min-width: 36px; /* ✅ Largeur minimale fixe */
       border-radius: 50%;
       background: linear-gradient(135deg, var(--primary), var(--accent));
       display: flex;
@@ -139,9 +144,11 @@
       color: white;
       font-weight: 600;
       font-size: 0.85rem;
+      line-height: 1; /* ✅ Force le line-height pour centrer verticalement */
       cursor: pointer;
       transition: transform 0.2s;
       text-transform: uppercase;
+      flex-shrink: 0; /* ✅ Ne jamais comprimer l'avatar */
     }
 
     .avatar:hover {
@@ -162,6 +169,7 @@
       cursor: pointer;
       transition: all 0.15s;
       border: 1px solid transparent;
+      line-height: 1; /* ✅ Alignement vertical cohérent */
     }
 
     .dropdown-toggle:hover {
@@ -173,6 +181,7 @@
       font-size: 0.9rem;
       font-weight: 500;
       color: var(--text);
+      line-height: 1; /* ✅ Alignement vertical cohérent */
     }
 
     .dropdown-toggle .chevron {
