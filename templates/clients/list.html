@@ -29,6 +29,12 @@
        RESET & BASE
        ════════════════════════════════════════════════════════════════════════════ */
     * { box-sizing: border-box; }
+    
+    /* ✅ FIX SCROLLBAR : Évite le décalage du header quand la scrollbar apparaît */
+    html {
+      overflow-y: scroll; /* Force la scrollbar à être toujours visible */
+    }
+    
     html, body { height: 100%; }
     body {
       margin: 0;
@@ -90,9 +96,10 @@
       background: var(--bg);
       padding: 4px;
       border-radius: 10px;
+      flex-shrink: 0; /* ✅ Empêche la nav de se comprimer */
     }
 
-    .nav a {
+    .header .nav a {
       text-decoration: none;
       color: var(--muted);
       padding: 0.5rem 1rem;
@@ -100,13 +107,15 @@
       font-size: 0.9rem;
       font-weight: 500;
       transition: all 0.2s;
+      white-space: nowrap; /* ✅ Empêche le texte de se wrapper */
     }
 
-    .nav a:hover {
+    .header .nav a:hover {
       color: var(--text);
+      text-decoration: none; /* ✅ Override le style global */
     }
 
-    .nav a.active {
+    .header .nav a.active {
       background: white;
       color: var(--text);
       box-shadow: 0 1px 3px rgba(0,0,0,0.08);
@@ -410,7 +419,7 @@
        TABLE
        ════════════════════════════════════════════════════════════════════════════ */
     .table-wrap {
-      overflow-y: scroll;
+      overflow: auto;
       border-radius: 12px;
       border: 1px solid var(--border);
       margin-top: 1rem;
