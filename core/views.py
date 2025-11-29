@@ -2612,13 +2612,7 @@ def operation_create(request):
 
                 # Créer le passage selon le statut
                 if statut_initial == 'a_planifier':
-                    # Passage vide (à planifier plus tard)
-                    PassageOperation.objects.create(
-                        operation=operation,
-                        date_prevue=None,
-                        realise=False
-                    )
-                    print(f"✓ Passage créé (à planifier)")
+                    print(f"✓ Aucun passage créé (l'utilisateur ajoutera manuellement)")
 
                 elif statut_initial == 'planifie':
                     # Passage planifié avec date
