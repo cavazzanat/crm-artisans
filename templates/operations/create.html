@@ -8,18 +8,18 @@
   <link rel="icon" type="image/png" href="/static/core/image/favicon.png">
   <style>
     :root{
-      --bg: #0b1220;
-      --card: #0f172a;
-      --muted: #94a3b8;
-      --text: #e2e8f0;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --muted: #64748b;
+      --text: #1e293b;
       --primary: #6366f1;
       --success: #22c55e;
       --warning: #f59e0b;
       --danger: #ef4444;
       --accent: #8b5cf6;
+      --border: #e2e8f0;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04);
       --ring: rgba(99,102,241,.35);
-      --border: rgba(148,163,184,.15);
-      --shadow: 0 10px 25px rgba(2,6,23,.3), 0 1px 0 rgba(255,255,255,.03) inset;
     }
 
     *{box-sizing:border-box}
@@ -410,33 +410,243 @@
                     radial-gradient(1000px 600px at 80% 10%, rgba(139,92,246,.05), transparent 40%), 
                     var(--bg) 
       }
-      
-      .header{ 
-        background: linear-gradient(180deg, rgba(255,255,255,.9), rgba(255,255,255,.8));
-        backdrop-filter: saturate(180%) blur(8px);
-      }
-      
-      .section, .intervention-row, .form-actions, .radio-card{ 
-        background: var(--card); 
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow);
-      }
-      
-      .input, .select, .textarea{ 
-        background: #fff; 
-        border-color: var(--border); 
-        color: var(--text) 
-      }
-      
-      .nav {
-        background: rgba(30,41,59,.06);
-      }
 
-      .nav a.active {
-        color: var(--text);
-        background: white;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-      }
+/* ════════════════════════════════════════════════════════════════════════════
+   HEADER OPTION A - MINIMALISTE ÉLÉGANT
+   ════════════════════════════════════════════════════════════════════════════ */
+.header {
+  background: white;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.brand:link,
+.brand:visited,
+.brand:hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.logo-img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
+/* Navigation en pill */
+.nav {
+  display: flex;
+  gap: 0.25rem;
+  background: var(--bg);
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.nav a {
+  text-decoration: none;
+  color: var(--muted);
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: none;
+}
+
+.nav a:hover {
+  color: var(--text);
+}
+
+.nav a.active {
+  background: white;
+  color: var(--text);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* Menu utilisateur */
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform 0.2s;
+  text-transform: uppercase;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+}
+
+/* Dropdown menu */
+.dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.35rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: 1px solid transparent;
+}
+
+.dropdown-toggle:hover {
+  background: var(--bg);
+  border-color: var(--border);
+}
+
+.dropdown-toggle .user-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.dropdown-toggle .chevron {
+  width: 16px;
+  height: 16px;
+  color: var(--muted);
+  transition: transform 0.2s;
+}
+
+.dropdown:hover .chevron {
+  transform: rotate(180deg);
+}
+
+/* Menu déroulant */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  min-width: 180px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+  padding: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+
+.dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-menu a,
+.dropdown-menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+}
+
+.dropdown-menu a:hover,
+.dropdown-menu button:hover {
+  background: var(--bg);
+}
+
+.dropdown-menu svg {
+  width: 18px;
+  height: 18px;
+  color: var(--muted);
+}
+
+.dropdown-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 0.5rem 0;
+}
+
+.dropdown-menu .logout-btn {
+  color: var(--danger);
+}
+
+.dropdown-menu .logout-btn:hover {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.dropdown-menu .logout-btn svg {
+  color: var(--danger);
+}
+
+/* Responsive header */
+@media (max-width: 768px) {
+  .header-inner {
+    height: auto;
+    padding: 0.75rem 1rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .nav a {
+    padding: 0.45rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  
+  .dropdown-toggle .user-name {
+    display: none;
+  }
+}
+
     }
 .logo-img {
   width: 32px;
@@ -446,58 +656,56 @@
   </style>
 </head>
 <body>
-  <header class="header">
-    <div class="header-inner">
-      <a href="{% url 'dashboard' %}" class="brand">
-        <img src="{% static 'core/image/manay-logo.png' %}" alt="manay" class="logo-img">
-        <span>manay</span>
-      </a>
-      
-      <!-- ✅ Navigation SANS Profil -->
-      <nav class="nav">
-        <a href="{% url 'dashboard' %}">Accueil</a>
-        <a href="{% url 'operations' %}">Opérations</a>
-        <a href="{% url 'clients' %}">Clients</a>
-      </nav>
-      
-      <div class="user-menu">
-        <div class="dropdown">
-          <div class="dropdown-toggle">
-            <div class="avatar">{{ user.username|slice:":2" }}</div>
-            <span class="user-name">{{ user.username }}</span>
-            <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6,9 12,15 18,9"/>
+<header class="header">
+  <div class="header-inner">
+    <a href="{% url 'dashboard' %}" class="brand">
+      <img src="{% static 'core/image/manay-logo.png' %}" alt="manay" class="logo-img">
+      <span>manay</span>
+    </a>
+    
+    <nav class="nav">
+      <a href="{% url 'dashboard' %}">Accueil</a>
+      <a href="{% url 'operations' %}" class="active">Opérations</a>
+      <a href="{% url 'clients' %}">Clients</a>
+    </nav>
+    
+    <div class="user-menu">
+      <div class="dropdown">
+        <div class="dropdown-toggle">
+          <div class="avatar">{{ user.username|slice:":2" }}</div>
+          <span class="user-name">{{ user.username }}</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6,9 12,15 18,9"/>
+          </svg>
+        </div>
+        
+        <div class="dropdown-menu">
+          <a href="{% url 'profil' %}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
             </svg>
-          </div>
+            Mon profil
+          </a>
           
-          <!-- ✅ Dropdown SANS Paramètres -->
-          <div class="dropdown-menu">
-            <a href="{% url 'profil' %}">
+          <div class="dropdown-divider"></div>
+          
+          <form method="post" action="{% url 'logout' %}" style="margin: 0;">
+            {% csrf_token %}
+            <button type="submit" class="logout-btn">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                <polyline points="16,17 21,12 16,7"/>
+                <line x1="21" y1="12" x2="9" y2="12"/>
               </svg>
-              Mon profil
-            </a>
-            
-            <div class="dropdown-divider"></div>
-            
-            <form method="post" action="{% url 'logout' %}" style="margin: 0;">
-              {% csrf_token %}
-              <button type="submit" class="logout-btn">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-                  <polyline points="16,17 21,12 16,7"/>
-                  <line x1="21" y1="12" x2="9" y2="12"/>
-                </svg>
-                Déconnexion
-              </button>
-            </form>
-          </div>
+              Déconnexion
+            </button>
+          </form>
         </div>
       </div>
     </div>
-  </header>
+  </div>
+</header>
 
   <main class="container">
     <div class="breadcrumb">
