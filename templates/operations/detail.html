@@ -2326,27 +2326,16 @@ function toggleForm(formId) {
             <div class="label">✅ Statut</div>
             <div class="value">
               <select name="paye" class="select" id="paye-select">
-                <option value="true">Déjà payé</option>
-                <option value="false">Prévu / À venir</option>
+                <option value="true">💰 Déjà payé (+ facture auto)</option>
+                <option value="false">📅 Prévu / À venir</option>
               </select>
-              <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
-                💡 "Déjà payé" = reçu aujourd'hui<br>
-                "Prévu" = attendu plus tard
-              </small>
+                <small style="display:block; margin-top:0.5rem; color:var(--muted); font-size:0.85rem">
+                  💡 "Déjà payé" génère automatiquement la facture
+                </small>
             </div>
           </div>
         </div>
         
-        <!-- ✅ NOUVELLE OPTION : Génération auto de facture -->
-        <div id="facture-auto-option" style="display:none; margin-bottom:1rem; padding:1rem; background:#f0f9ff; border:1px solid #bfdbfe; border-radius:8px">
-          <label style="display:flex; align-items:center; gap:.5rem; cursor:pointer">
-            <input type="checkbox" name="generer_facture_auto" value="true" checked>
-            <span style="font-weight:600; color:#1e40af">📄 Générer automatiquement la facture</span>
-          </label>
-          <small style="display:block; margin-top:.5rem; color:#1e40af; font-size:.85rem">
-            💡 Gagne du temps en créant la facture directement
-          </small>
-        </div>
         
         <button type="submit" class="btn success" style="width:100%">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2"/></svg>
@@ -2372,22 +2361,28 @@ function toggleForm(formId) {
   </div>
 </section>
 
-<!-- ✅ Script pour afficher/masquer l'option facture auto -->
+<!-- ✅ Script pour activer la génération auto quand "Déjà payé" -->
 <script>
 document.addEventListener('DOMContentLoaded', function() {
   const payeSelect = document.getElementById('paye-select');
-  const factureAutoOption = document.getElementById('facture-auto-option');
+  const form = payeSelect ? payeSelect.closest('form') : null;
   
-  if (payeSelect && factureAutoOption) {
-    payeSelect.addEventListener('change', function() {
-      // Afficher l'option seulement si "Déjà payé"
-      factureAutoOption.style.display = (this.value === 'true') ? 'block' : 'none';
-    });
+  if (form && !form.querySelector('[name="generer_facture_auto"]')) {
+    // Ajouter un champ caché pour la génération auto
+    const hiddenInput = document.createElement('input');
+    hiddenInput.type = 'hidden';
+    hiddenInput.name = 'generer_facture_auto';
+    hiddenInput.id = 'hidden-generer-facture';
+    hiddenInput.value = 'false';
+    form.appendChild(hiddenInput);
     
-    // Vérif initiale
-    if (payeSelect.value === 'true') {
-      factureAutoOption.style.display = 'block';
+    // Mettre à jour la valeur selon le statut
+    function updateFactureAuto() {
+      hiddenInput.value = (payeSelect.value === 'true') ? 'true' : 'false';
     }
+    
+    payeSelect.addEventListener('change', updateFactureAuto);
+    updateFactureAuto(); // Valeur initiale
   }
 });
 </script>

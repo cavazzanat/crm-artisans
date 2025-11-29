@@ -1724,12 +1724,11 @@ def operation_detail(request, operation_id):
             montant_str = request.POST.get('montant', '')
             date_paiement_str = request.POST.get('date_paiement', '')
             paye_str = request.POST.get('paye', 'false')
+            generer_facture_auto = request.POST.get('generer_facture_auto') == 'true'
             
             if montant_str and date_paiement_str:
                 try:
-                    
-                    
-                    montant = Decimal(montant_str)  # ✅ CORRECTION
+                    montant = Decimal(montant_str)
                     date_paiement = datetime.strptime(date_paiement_str, '%Y-%m-%d').date()
                     paye = (paye_str == 'true')
                     
@@ -1738,10 +1737,8 @@ def operation_detail(request, operation_id):
                         total=Sum('montant')
                     )['total'] or 0
                     
-                    # Total si on ajoute ce paiement
                     nouveau_total = total_actuel_tout + montant
                     
-                    # Vérifier le dépassement
                     if nouveau_total > operation.montant_total:
                         depassement = nouveau_total - operation.montant_total
                         messages.error(
@@ -1760,7 +1757,8 @@ def operation_detail(request, operation_id):
                         max_ordre=Max('ordre')
                     )['max_ordre'] or 0
                     
-                    Echeance.objects.create(
+                    # Créer l'échéance
+                    echeance = Echeance.objects.create(
                         operation=operation,
                         numero=dernier_numero + 1,
                         montant=montant,
@@ -1777,6 +1775,76 @@ def operation_detail(request, operation_id):
                         utilisateur=request.user
                     )
                     
+                    # ════════════════════════════════════════════════════════════
+                    # ✅ NOUVEAU : GÉNÉRATION AUTOMATIQUE DE FACTURE SI PAYÉ
+                    # ════════════════════════════════════════════════════════════
+                    facture_generee = False
+                    
+                    if paye and generer_facture_auto:
+                        # Générer automatiquement la facture
+                        annee_courante = timezone.now().year
+                        prefix = f'FACTURE-{annee_courante}-U{request.user.id}-'
+                        
+                        dernieres_factures = Echeance.objects.filter(
+                            operation__user=request.user,
+                            facture_generee=True,
+                            numero_facture__startswith=prefix
+                        ).values_list('numero_facture', flat=True)
+                        
+                        max_numero_facture = 0
+                        for facture in dernieres_factures:
+                            match = re.search(r'-(\d+)$', facture)
+                            if match:
+                                numero = int(match.group(1))
+                                if numero > max_numero_facture:
+                                    max_numero_facture = numero
+                        
+                        nouveau_numero_facture = f'{prefix}{max_numero_facture + 1:05d}'
+                        
+                        # Déterminer le type de facture
+                        total_echeances = operation.echeances.count()
+                        echeances_payees_count = operation.echeances.filter(paye=True).count()
+                        echeances_payees_non_facturees = operation.echeances.filter(
+                            paye=True,
+                            facture_generee=False
+                        ).count()
+                        total_planifie = operation.echeances.aggregate(
+                            total=Sum('montant')
+                        )['total'] or Decimal('0')
+                        reste_non_enregistre = operation.montant_total - total_planifie
+                        
+                        if echeances_payees_count == 1 and total_echeances == 1:
+                            facture_type = 'globale'
+                        elif echeances_payees_non_facturees == 1 and reste_non_enregistre <= 0:
+                            facture_type = 'solde'
+                        else:
+                            facture_type = 'acompte'
+                        
+                        # Enregistrer la facture
+                        echeance.facture_generee = True
+                        echeance.numero_facture = nouveau_numero_facture
+                        echeance.facture_date_emission = timezone.now().date()
+                        echeance.facture_type = facture_type
+                        echeance.save()
+                        
+                        facture_generee = True
+                        
+                        type_label = {
+                            'globale': 'globale',
+                            'acompte': "d'acompte",
+                            'solde': 'de solde'
+                        }.get(facture_type, '')
+                        
+                        HistoriqueOperation.objects.create(
+                            operation=operation,
+                            action=f"📄 Facture {type_label} {nouveau_numero_facture} générée automatiquement",
+                            utilisateur=request.user
+                        )
+                    
+                    # ════════════════════════════════════════════════════════════
+                    # FIN GÉNÉRATION AUTOMATIQUE
+                    # ════════════════════════════════════════════════════════════
+                    
                     # Vérifier si tout est payé
                     total_paye = operation.echeances.filter(paye=True).aggregate(
                         total=Sum('montant')
@@ -1785,9 +1853,22 @@ def operation_detail(request, operation_id):
                     if total_paye >= operation.montant_total:
                         operation.statut = 'paye'
                         operation.save()
-                        messages.success(request, f"✅ Paiement enregistré - Opération soldée ! 🎉")
+                        
+                        if facture_generee:
+                            messages.success(
+                                request, 
+                                f"✅ Paiement de {montant}€ enregistré + Facture {echeance.numero_facture} générée - Opération soldée ! 🎉"
+                            )
+                        else:
+                            messages.success(request, f"✅ Paiement enregistré - Opération soldée ! 🎉")
                     else:
-                        messages.success(request, f"✅ Paiement de {montant}€ enregistré")
+                        if facture_generee:
+                            messages.success(
+                                request, 
+                                f"✅ Paiement de {montant}€ enregistré + Facture {echeance.numero_facture} générée"
+                            )
+                        else:
+                            messages.success(request, f"✅ Paiement de {montant}€ enregistré")
                     
                 except (ValueError, TypeError) as e:
                     messages.error(request, f"Données invalides : {str(e)}")
@@ -1802,6 +1883,67 @@ def operation_detail(request, operation_id):
                 echeance.paye = True
                 echeance.save()
                 
+                # ════════════════════════════════════════════════════════════
+                # ✅ NOUVEAU : GÉNÉRATION AUTOMATIQUE DE FACTURE
+                # ════════════════════════════════════════════════════════════
+                if not echeance.facture_generee:
+                    annee_courante = timezone.now().year
+                    prefix = f'FACTURE-{annee_courante}-U{request.user.id}-'
+                    
+                    dernieres_factures = Echeance.objects.filter(
+                        operation__user=request.user,
+                        facture_generee=True,
+                        numero_facture__startswith=prefix
+                    ).values_list('numero_facture', flat=True)
+                    
+                    max_numero_facture = 0
+                    for facture in dernieres_factures:
+                        match = re.search(r'-(\d+)$', facture)
+                        if match:
+                            numero = int(match.group(1))
+                            if numero > max_numero_facture:
+                                max_numero_facture = numero
+                    
+                    nouveau_numero_facture = f'{prefix}{max_numero_facture + 1:05d}'
+                    
+                    # Déterminer le type de facture
+                    total_echeances = operation.echeances.count()
+                    echeances_payees_count = operation.echeances.filter(paye=True).count()
+                    echeances_payees_non_facturees = operation.echeances.filter(
+                        paye=True,
+                        facture_generee=False
+                    ).count()
+                    total_planifie = operation.echeances.aggregate(
+                        total=Sum('montant')
+                    )['total'] or Decimal('0')
+                    reste_non_enregistre = operation.montant_total - total_planifie
+                    
+                    if echeances_payees_count == 1 and total_echeances == 1:
+                        facture_type = 'globale'
+                    elif echeances_payees_non_facturees == 1 and reste_non_enregistre <= 0:
+                        facture_type = 'solde'
+                    else:
+                        facture_type = 'acompte'
+                    
+                    echeance.facture_generee = True
+                    echeance.numero_facture = nouveau_numero_facture
+                    echeance.facture_date_emission = timezone.now().date()
+                    echeance.facture_type = facture_type
+                    echeance.save()
+                    
+                    type_label = {
+                        'globale': 'globale',
+                        'acompte': "d'acompte",
+                        'solde': 'de solde'
+                    }.get(facture_type, '')
+                    
+                    HistoriqueOperation.objects.create(
+                        operation=operation,
+                        action=f"📄 Facture {type_label} {nouveau_numero_facture} générée automatiquement",
+                        utilisateur=request.user
+                    )
+                # ════════════════════════════════════════════════════════════
+                
                 # Vérifier si tout est payé
                 total_paye = operation.echeances.filter(paye=True).aggregate(
                     total=Sum('montant')
@@ -1813,17 +1955,23 @@ def operation_detail(request, operation_id):
                     
                     HistoriqueOperation.objects.create(
                         operation=operation,
-                        action=f"✅ Paiement de {echeance.montant}€ confirmé - Opération soldée ! 🎉",
+                        action=f"✅ Paiement de {echeance.montant}€ confirmé + Facture {echeance.numero_facture} - Opération soldée ! 🎉",
                         utilisateur=request.user
                     )
-                    messages.success(request, "🎉 Opération soldée !")
+                    messages.success(
+                        request, 
+                        f"🎉 Paiement confirmé + Facture {echeance.numero_facture} générée - Opération soldée !"
+                    )
                 else:
                     HistoriqueOperation.objects.create(
                         operation=operation,
-                        action=f"✅ Paiement de {echeance.montant}€ marqué comme reçu",
+                        action=f"✅ Paiement de {echeance.montant}€ confirmé + Facture {echeance.numero_facture}",
                         utilisateur=request.user
                     )
-                    messages.success(request, f"✅ Paiement de {echeance.montant}€ confirmé")
+                    messages.success(
+                        request, 
+                        f"✅ Paiement de {echeance.montant}€ confirmé + Facture {echeance.numero_facture} générée"
+                    )
                     
             except Echeance.DoesNotExist:
                 messages.error(request, "Paiement introuvable")
